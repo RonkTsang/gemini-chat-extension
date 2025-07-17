@@ -1,27 +1,19 @@
 /* styles.css */
 
 :root {
-  --index-bg-color: #ffffff;
-  --index-border-color: #dadce0;
-  --index-text-color: #3c4043;
-  --index-header-border-color: #e0e0e0;
-  --index-button-text-color: #1a73e8;
-  --index-button-hover-bg: #f1f3f4;
-  --index-button-hover-text: #174ea6;
-  --index-box-shadow: 0 1px 3px rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15);
+  --toc-bg-color: #ffffff;
+  --toc-text-color: #3c4043;
+  --toc-hover-bg: #f1f3f4;
+  --toc-shadow: 0 4px 12px rgba(0,0,0,0.1), 0 0 1px rgba(0,0,0,0.1);
   --icon-hover-bg: rgba(60,64,67,0.08);
   --icon-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%235f6368' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='8' y1='6' x2='21' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='12' x2='21' y2='12'%3E%3C/line%3E%3Cline x1='8' y1='18' x2='21' y2='18'%3E%3C/line%3E%3Cline x1='3' y1='6' x2='3.01' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='12' x2='3.01' y2='12'%3E%3C/line%3E%3Cline x1='3' y1='18' x2='3.01' y2='18'%3E%3C/line%3E%3C/svg%3E");
 }
 
 body.dark-theme, :root[theme=dark] {
-  --index-bg-color: #202124;
-  --index-border-color: #5f6368;
-  --index-text-color: #e8eaed;
-  --index-header-border-color: #5f6368;
-  --index-button-text-color: #8ab4f8;
-  --index-button-hover-bg: #282a2d;
-  --index-button-hover-text: #c7d8f8;
-  --index-box-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 8px 3px rgba(0,0,0,0.15);
+  --toc-bg-color: #2d2d2d;
+  --toc-text-color: #e8eaed;
+  --toc-hover-bg: #3a3a3a;
+  --toc-shadow: 0 4px 12px rgba(0,0,0,0.3), 0 0 1px rgba(0,0,0,0.3);
   --icon-hover-bg: rgba(232,234,237,0.08);
   --icon-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%239aa0a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='8' y1='6' x2='21' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='12' x2='21' y2='12'%3E%3C/line%3E%3Cline x1='8' y1='18' x2='21' y2='18'%3E%3C/line%3E%3Cline x1='3' y1='6' x2='3.01' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='12' x2='3.01' y2='12'%3E%3C/line%3E%3Cline x1='3' y1='18' x2='3.01' y2='18'%3E%3C/line%3E%3C/svg%3E");
 }
@@ -45,58 +37,28 @@ body.dark-theme, :root[theme=dark] {
   transition: background-color 0.2s;
 }
 
-#gemini-entry-icon:hover {
+#gemini-entry-icon:hover, #gemini-entry-icon.active {
   background-color: var(--icon-hover-bg);
 }
 
-#gemini-chat-index {
+#gemini-toc-popover {
   position: absolute;
-  top: 10px;
-  left: 10px;
-  width: 280px;
-  max-height: calc(100% - 20px);
-  background-color: var(--index-bg-color);
-  border: 1px solid var(--index-border-color);
-  border-radius: 12px;
+  top: 60px; /* Position below the icon */
+  left: 16px;
   z-index: 9999;
-  box-shadow: var(--index-box-shadow);
-  font-family: 'Google Sans', sans-serif;
+  min-width: 300px;
+  max-width: 350px;
+  max-height: 60vh;
+  background-color: var(--toc-bg-color);
+  border-radius: 8px;
+  box-shadow: var(--toc-shadow);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: background-color 0.3s, border-color 0.3s;
+  font-family: 'Google Sans', sans-serif;
 }
 
-#gemini-chat-index-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 8px 8px 16px;
-  border-bottom: 1px solid var(--index-header-border-color);
-  flex-shrink: 0;
-}
-
-#gemini-chat-index h3 {
-  margin: 0;
-  font-size: 16px;
-  color: var(--index-text-color);
-}
-
-#gemini-index-close {
-  background: none;
-  border: none;
-  font-size: 24px;
-  font-weight: 300;
-  cursor: pointer;
-  color: var(--index-text-color);
-  padding: 4px 8px;
-  border-radius: 50%;
-  line-height: 1;
-}
-#gemini-index-close:hover {
-  background-color: var(--icon-hover-bg);
-}
-
-#gemini-chat-index ul {
+#gemini-toc-popover ul {
   list-style: none;
   padding: 8px;
   margin: 0;
@@ -104,11 +66,11 @@ body.dark-theme, :root[theme=dark] {
   flex-grow: 1;
 }
 
-#gemini-chat-index li {
-  margin-bottom: 4px;
+#gemini-toc-popover li {
+  margin: 0;
 }
 
-#gemini-chat-index button {
+#gemini-toc-popover button {
   background: none;
   border: none;
   padding: 8px 12px;
@@ -116,12 +78,14 @@ body.dark-theme, :root[theme=dark] {
   width: 100%;
   cursor: pointer;
   font-size: 14px;
-  color: var(--index-button-text-color);
-  border-radius: 8px;
-  transition: background-color 0.2s, color 0.2s;
+  color: var(--toc-text-color);
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-#gemini-chat-index button:hover {
-  background-color: var(--index-button-hover-bg);
-  color: var(--index-button-hover-text);
+#gemini-toc-popover button:hover {
+  background-color: var(--toc-hover-bg);
 }
