@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Gemini Chat Index",
+  "version": "0.0.1",
+  "description": "Adds a quick index to Gemini chat history.",
+  "permissions": [],
+  "content_scripts": [
+    {
+      "matches": ["https://gemini.google.com/*"],
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    }
+  ]
+}
