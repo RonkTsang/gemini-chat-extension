@@ -7,8 +7,15 @@
   "content_scripts": [
     {
       "matches": ["https://gemini.google.com/*"],
-      "js": ["content.js"],
-      "css": ["styles.css"]
+      "css": [
+        "vendor/tippy.css",
+        "styles.css"
+      ],
+      "js": [
+        "vendor/popper.min.js",
+        "vendor/tippy-bundle.umd.min.js",
+        "content.js"
+      ]
     }
   ],
   "icons": {

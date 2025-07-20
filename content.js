@@ -21,7 +21,7 @@ function updateTocList(popover) {
       button.textContent = text.substring(0, 80) + (text.length > 80 ? '...' : '');
       button.title = text;
       button.onclick = (e) => {
-        e.stopPropagation(); // Prevent click from closing the popover
+        e.stopPropagation();
         query.scrollIntoView({ behavior: 'smooth', block: 'start' });
         hidePopover();
       };
@@ -38,7 +38,6 @@ function showPopover() {
     updateTocList(popover);
     popover.classList.remove('hidden');
     icon.classList.add('active');
-    // Add a one-time listener to close the popover
     setTimeout(() => {
         document.addEventListener('click', hidePopover, { once: true });
     }, 0);
@@ -48,45 +47,42 @@ function showPopover() {
 function hidePopover() {
   const popover = document.getElementById('gemini-toc-popover');
   const icon = document.getElementById('gemini-entry-icon');
-  if (popover) {
-    popover.classList.add('hidden');
-  }
-  if (icon) {
-    icon.classList.remove('active');
-  }
+  if (popover) popover.classList.add('hidden');
+  if (icon) icon.classList.remove('active');
 }
 
-function init(chatWindow) {
+function initializeUI(chatWindow) {
   if (window.getComputedStyle(chatWindow).position === 'static') {
     chatWindow.style.position = 'relative';
   }
 
-  // 1. Create the popover (initially hidden)
   const popover = document.createElement('div');
   popover.id = 'gemini-toc-popover';
   popover.classList.add('hidden');
   popover.appendChild(document.createElement('ul'));
-  // Stop clicks inside the popover from closing it
   popover.addEventListener('click', (e) => e.stopPropagation());
   chatWindow.appendChild(popover);
 
-  // 2. Create the entry icon
   const entryIcon = document.createElement('div');
   entryIcon.id = 'gemini-entry-icon';
   chatWindow.appendChild(entryIcon);
 
-  // 3. Add event listener to the icon
-  entryIcon.addEventListener('click', (e) => {
-    e.stopPropagation(); // Prevent this click from being caught by the document listener
-    const isHidden = popover.classList.contains('hidden');
-    if (isHidden) {
-      showPopover();
-    } else {
-      hidePopover();
-    }
+  // Initialize Tippy.js tooltip, which is now available globally
+  tippy(entryIcon, {
+    content: 'Chat Index',
+    placement: 'bottom',
+    animation: 'shift-away-subtle',
+    arrow: false,
+    theme: 'gemini-tooltip'
   });
 
-  // 4. Set up MutationObserver
+  entryIcon.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isHidden = popover.classList.contains('hidden');
+    if (isHidden) showPopover();
+    else hidePopover();
+  });
+
   const observer = new MutationObserver((mutations) => {
     let shouldUpdate = false;
     for (const mutation of mutations) {
@@ -114,13 +110,11 @@ function init(chatWindow) {
   observer.observe(chatWindow, { childList: true, subtree: true });
 }
 
-// Dynamic detection of <chat-window>
+
 const checkInterval = setInterval(() => {
   const chatWindow = document.querySelector('chat-window');
-  if (chatWindow) {
+  if (chatWindow && !document.getElementById('gemini-entry-icon')) {
     clearInterval(checkInterval);
-    if (!document.getElementById('gemini-entry-icon')) {
-        init(chatWindow);
-    }
+    initializeUI(chatWindow);
   }
 }, 500);
