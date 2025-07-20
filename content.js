@@ -69,7 +69,7 @@ function initializeUI(chatWindow) {
 
   // Initialize Tippy.js tooltip, which is now available globally
   tippy(entryIcon, {
-    content: 'Chat Index',
+    content: 'Chat Outline',
     placement: 'bottom',
     animation: 'shift-away-subtle',
     arrow: false,

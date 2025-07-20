@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Gemini Chat Index",
+  "name": "Chat Outline",
   "version": "0.0.1",
   "description": "Adds a quick index to Gemini chat history.",
   "permissions": [],
