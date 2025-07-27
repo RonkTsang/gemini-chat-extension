@@ -1,0 +1,6 @@
+{
+  "emptyTocMessage": {
+    "message": "Une fois la conversation commencée, le répertoire sera enregistré ici.",
+    "description": "Message affiché lorsque la table des matières est vide."
+  }
+}

@@ -7,6 +7,17 @@ function updateTocList(popover) {
   list.innerHTML = ''; // Clear old items
   const userQueries = document.querySelectorAll('user-query');
 
+  if (userQueries.length === 0) {
+    const message = chrome.i18n.getMessage('emptyTocMessage');
+    const listItem = document.createElement('li');
+    listItem.textContent = message;
+    listItem.style.padding = '10px';
+    listItem.style.textAlign = 'center';
+    listItem.style.color = '#888';
+    list.appendChild(listItem);
+    return;
+  }
+
   userQueries.forEach((query) => {
     let text = '';
     const messageContent = query.querySelector('.message-content, rich-text-viewer');

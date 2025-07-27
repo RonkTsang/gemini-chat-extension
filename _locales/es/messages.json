@@ -1,0 +1,6 @@
+{
+  "emptyTocMessage": {
+    "message": "Una vez que comience la conversación, el directorio se registrará aquí.",
+    "description": "Mensaje que se muestra cuando la tabla de contenido está vacía."
+  }
+}

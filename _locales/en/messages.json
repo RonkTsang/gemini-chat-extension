@@ -1,0 +1,6 @@
+{
+  "emptyTocMessage": {
+    "message": "Once the conversation starts, the directory will be recorded here.",
+    "description": "Message displayed when the table of contents is empty."
+  }
+}

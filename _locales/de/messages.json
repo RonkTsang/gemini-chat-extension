@@ -1,0 +1,6 @@
+{
+  "emptyTocMessage": {
+    "message": "Sobald die Konversation beginnt, wird das Verzeichnis hier aufgezeichnet.",
+    "description": "Nachricht, die angezeigt wird, wenn das Inhaltsverzeichnis leer ist."
+  }
+}

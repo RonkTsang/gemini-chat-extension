@@ -1,0 +1,6 @@
+{
+  "emptyTocMessage": {
+    "message": "对话开始后，目录将记录在此处。",
+    "description": "当目录为空时显示的消息。"
+  }
+}

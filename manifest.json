@@ -2,8 +2,18 @@
   "manifest_version": 3,
   "name": "Chat Outline",
   "version": "0.0.1",
-  "description": "Adds a quick index to Gemini chat history.",
+  "description": "Adds a quick outline to Gemini chat history.",
+  "default_locale": "en",
   "permissions": [],
+  "action": {
+    "default_title": "Chat Outline",
+    "default_icon": {
+      "16": "images/logo_16.png",
+      "32": "images/logo_32.png",
+      "48": "images/logo_48.png",
+      "128": "images/logo_128.png"
+    }
+  },
   "content_scripts": [
     {
       "matches": ["https://gemini.google.com/*"],
@@ -19,8 +29,9 @@
     }
   ],
   "icons": {
-    "16": "images/icon.svg",
-    "48": "images/icon.svg",
-    "128": "images/icon.svg"
+    "16": "images/logo_16.png",
+    "32": "images/logo_32.png",
+    "48": "images/logo_48.png",
+    "128": "images/logo_128.png"
   }
 }
