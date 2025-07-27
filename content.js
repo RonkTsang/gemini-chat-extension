@@ -1,11 +1,11 @@
 // content.js
 
-function updateTocList(popover) {
+function updateTocList(popover, chatWindow) {
   const list = popover.querySelector('ul');
-  if (!list) return;
+  if (!list || !chatWindow) return;
 
   list.innerHTML = ''; // Clear old items
-  const userQueries = document.querySelectorAll('user-query');
+  const userQueries = chatWindow.querySelectorAll('user-query');
 
   if (userQueries.length === 0) {
     const message = chrome.i18n.getMessage('emptyTocMessage');
@@ -18,6 +18,7 @@ function updateTocList(popover) {
     return;
   }
 
+  const fragment = document.createDocumentFragment();
   userQueries.forEach((query) => {
     let text = '';
     const messageContent = query.querySelector('.message-content, rich-text-viewer');
@@ -37,16 +38,18 @@ function updateTocList(popover) {
         hidePopover();
       };
       listItem.appendChild(button);
-      list.appendChild(listItem);
+      fragment.appendChild(listItem);
     }
   });
+  list.appendChild(fragment);
 }
 
 function showPopover() {
   const popover = document.getElementById('gemini-toc-popover');
   const icon = document.getElementById('gemini-entry-icon');
-  if (popover && icon) {
-    updateTocList(popover);
+  const chatWindow = document.querySelector('chat-window');
+  if (popover && icon && chatWindow) {
+    updateTocList(popover, chatWindow);
     popover.classList.remove('hidden');
     icon.classList.add('active');
     setTimeout(() => {
@@ -115,17 +118,49 @@ function initializeUI(chatWindow) {
     // Only update if a relevant change happened AND the popover is visible
     if (shouldUpdate && !popover.classList.contains('hidden')) {
       clearTimeout(window.geminiTocUpdater);
-      window.geminiTocUpdater = setTimeout(() => updateTocList(popover), 300);
+      window.geminiTocUpdater = setTimeout(() => updateTocList(popover, chatWindow), 300);
     }
   });
   observer.observe(chatWindow, { childList: true, subtree: true });
 }
 
+// --- Robust Initialization ---
 
-const checkInterval = setInterval(() => {
-  const chatWindow = document.querySelector('chat-window');
-  if (chatWindow && !document.getElementById('gemini-entry-icon')) {
-    clearInterval(checkInterval);
-    initializeUI(chatWindow);
+function findAndInitialize(node) {
+  if (node.nodeType !== 1) return; // We only care about elements
+
+  // Case 1: The node itself is a chat-window
+  if (node.matches('chat-window')) {
+    // Check if it's already initialized to prevent re-running
+    if (!node.querySelector('#gemini-entry-icon')) {
+      initializeUI(node);
+    }
   }
-}, 500);
+
+  // Case 2: The node contains one or more chat-windows
+  // This is common when the main app container is added to the DOM
+  const chatWindows = node.querySelectorAll('chat-window');
+  chatWindows.forEach(cw => {
+    if (!cw.querySelector('#gemini-entry-icon')) {
+      initializeUI(cw);
+    }
+  });
+}
+
+// Create a persistent observer to watch for chat-window additions
+const mainObserver = new MutationObserver((mutations) => {
+  for (const mutation of mutations) {
+    for (const addedNode of mutation.addedNodes) {
+      findAndInitialize(addedNode);
+    }
+  }
+});
+
+// Start by checking if the chat-window is already on the page
+findAndInitialize(document.body);
+
+// Then, observe the entire body for future changes
+mainObserver.observe(document.body, {
+  childList: true,
+  subtree: true
+});

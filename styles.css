@@ -6,7 +6,7 @@
   --toc-hover-bg: #f1f3f4;
   --toc-shadow: 0 4px 12px rgba(0,0,0,0.1), 0 0 1px rgba(0,0,0,0.1);
   --icon-hover-bg: rgba(60,64,67,0.08);
-  --icon-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%235f6368' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='4' y1='6' x2='20' y2='6' /%3E%3Cline x1='4' y1='12' x2='16' y2='12' /%3E%3Cline x1='4' y1='18' x2='12' y2='18' /%3E%3C/svg%3E");
+  --icon-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%235f6368' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='4' y1='6' x2='20' y2='6' /%3E%3Cline x1='4' y1='12' x2='20' y2='12' /%3E%3Cline x1='4' y1='18' x2='12' y2='18' /%3E%3C/svg%3E");
   --tooltip-bg: #3c4043;
   --tooltip-text: #ffffff;
 }
@@ -17,7 +17,7 @@ body.dark-theme, :root[theme=dark] {
   --toc-hover-bg: #3a3a3a;
   --toc-shadow: 0 4px 12px rgba(0,0,0,0.3), 0 0 1px rgba(0,0,0,0.3);
   --icon-hover-bg: rgba(232,234,237,0.08);
-  --icon-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%239aa0a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='4' y1='6' x2='20' y2='6' /%3E%3Cline x1='4' y1='12' x2='16' y2='12' /%3E%3Cline x1='4' y1='18' x2='12' y2='18' /%3E%3C/svg%3E");
+  --icon-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%239aa0a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='4' y1='6' x2='20' y2='6' /%3E%3Cline x1='4' y1='12' x2='20' y2='12' /%3E%3Cline x1='4' y1='18' x2='12' y2='18' /%3E%3C/svg%3E");
   --tooltip-bg: #e8eaed;
   --tooltip-text: #202124;
 }
