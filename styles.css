@@ -94,6 +94,28 @@ body.dark-theme, :root[theme=dark] {
   background-color: var(--toc-hover-bg);
 }
 
+/* New styles for TOC items with file icons */
+.toc-item-button {
+  display: flex;
+  align-items: center;
+  height: 28px; /* Ensure consistent row height */
+}
+
+.toc-file-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  flex-shrink: 0; /* Prevent icon from shrinking */
+}
+
+.toc-item-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-grow: 1;
+}
+
+
 /* Custom Tippy.js Theme */
 .tippy-box[data-theme~='gemini-tooltip'] {
   background-color: var(--tooltip-bg);

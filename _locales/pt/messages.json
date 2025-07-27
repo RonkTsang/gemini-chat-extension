@@ -2,5 +2,8 @@
   "emptyTocMessage": {
     "message": "Assim que a conversa começar, o diretório será gravado aqui.",
     "description": "Mensagem exibida quando o índice está vazio."
+  },
+  "attachmentLabel": {
+    "message": "[Anexo]"
   }
 }

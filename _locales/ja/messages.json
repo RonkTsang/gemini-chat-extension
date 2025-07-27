@@ -2,5 +2,8 @@
   "emptyTocMessage": {
     "message": "会話が始まると、ここにディレクトリが記録されます。",
     "description": "目次が空の場合に表示されるメッセージ。"
+  },
+  "attachmentLabel": {
+    "message": "[添付ファイル]"
   }
 }

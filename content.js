@@ -20,23 +20,52 @@ function updateTocList(popover, chatWindow) {
 
   const fragment = document.createDocumentFragment();
   userQueries.forEach((query) => {
+    // 1. Extract text from the 'query-text' element for accuracy
     let text = '';
-    const messageContent = query.querySelector('.message-content, rich-text-viewer');
-    if (messageContent) text = messageContent.innerText;
-    if (!text) text = query.innerText;
-    
+    const textEl = query.querySelector('.query-text');
+    if (textEl) {
+      text = textEl.innerText;
+    } else {
+      // Fallback for older structures or plain text queries
+      const messageContent = query.querySelector('.message-content, rich-text-viewer');
+      if (messageContent) text = messageContent.innerText;
+      if (!text) text = query.innerText;
+    }
     text = text.trim();
 
-    if (text) {
+    // 2. Check for a file preview icon or image
+    const filePreview = query.querySelector('.new-file-icon, .preview-image');
+
+    // Only create an entry if there is text or a file
+    if (text || filePreview) {
       const listItem = document.createElement('li');
       const button = document.createElement('button');
-      button.textContent = text.substring(0, 80) + (text.length > 80 ? '...' : '');
-      button.title = text;
+      // Add a class for easier styling
+      button.className = 'toc-item-button';
+
+      // 3. Prepend cloned file icon if it exists
+      if (filePreview) {
+        const iconClone = filePreview.cloneNode(true);
+        iconClone.className = 'toc-file-icon'; // Assign a class for styling
+        button.appendChild(iconClone);
+      }
+
+      // 4. Append text content
+      const textSpan = document.createElement('span');
+      textSpan.className = 'toc-item-text';
+      // If no text, use a placeholder like [Attachment]
+      const buttonText = text ? (text.substring(0, 80) + (text.length > 80 ? '...' : '')) : chrome.i18n.getMessage('attachmentLabel');
+      textSpan.textContent = buttonText;
+      button.appendChild(textSpan);
+      
+      button.title = text || 'Attachment'; // Set tooltip for the full text or indicator
+
       button.onclick = (e) => {
         e.stopPropagation();
         query.scrollIntoView({ behavior: 'smooth', block: 'start' });
         hidePopover();
       };
+
       listItem.appendChild(button);
       fragment.appendChild(listItem);
     }

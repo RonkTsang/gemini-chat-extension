@@ -1,6 +1,18 @@
 {
+  "extensionName": {
+    "message": "Table of Contents for Gemini",
+    "description": "The name of the extension."
+  },
+  "extensionDescription": {
+    "message": "Generates a table of contents for your Gemini chats for easy navigation.",
+    "description": "A brief description of the extension."
+  },
   "emptyTocMessage": {
-    "message": "Once the conversation starts, the directory will be recorded here.",
+    "message": "No user prompts found in this chat yet.",
     "description": "Message displayed when the table of contents is empty."
+  },
+  "attachmentLabel": {
+    "message": "[Attachment]",
+    "description": "Label for a user message that contains only an attachment and no text."
   }
 }
