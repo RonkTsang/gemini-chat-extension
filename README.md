@@ -47,8 +47,9 @@ The key to success is providing the AI with the right context. Our project's "so
 If you wanted to implement the "copy button" feature described above, you could use a command like this:
 
 ```bash
-gemini edit -p "Your detailed prompt from step 3 goes here..." \
-content.js docs/tech.md
+gemini
+
+@docs/tech.md {YOUR PROMPT}
 ```
 
-This command tells Gemini to edit `content.js` using your prompt, with the additional context of the technical documentation.
+This command tells Gemini to edit using your prompt, with the additional context of the technical documentation.
