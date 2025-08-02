@@ -1,3 +1,11 @@
+<div align="center">
+  <img src="images/logo_512.png" alt="Chat Outline for Gemini Logo" width="128"/>
+  <br/>
+  <a href="https://github.com/google-gemini/gemini-cli">
+    <img src="https://img.shields.io/badge/Made%20with-Gemini%20Cli-4285F4?style=for-the-badge&logo=google-gemini&logoColor=white" alt="Made with Gemini-Cli"/>
+  </a>
+</div>
+
 # Chat Outline - A Chrome Extension for Gemini
 
 This is a simple Chrome extension that adds a clickable outline to your [Gemini](https://gemini.google.com) chat history, making it easier to navigate long conversations.
