@@ -1,0 +1,108 @@
+# Technical Documentation - v0.0.1
+
+**Project Name:** Chat Outline for Gemini
+**Version:** 0.0.1
+**Date:** 2025-07-30
+
+## 1. Architecture Overview
+
+This project is a standard **Manifest V3** Chrome extension driven by a single content script (`content.js`). It is designed to run exclusively on `gemini.google.com`, injecting UI elements and providing functionality by directly manipulating the DOM.
+
+The architecture follows these principles:
+- **Structured & Buildable**: The project uses Node.js and Rollup for a formal build process, bundling scripts and managing dependencies.
+- **Minimal Permissions**: The extension requests no special Chrome API permissions.
+- **DOM Injection**: All UI elements (icon, popover) are dynamically created and injected into the page's `<chat-window>` component to ensure correct relative positioning and context awareness.
+- **Event-Driven**: Functionality is driven by user interactions (icon clicks) and DOM changes (new messages appearing), which are monitored by a `MutationObserver`.
+- **Local Dependencies**: Third-party libraries (Tippy.js, Popper.js) are included locally in the `vendor/` directory to comply with the target website's Content Security Policy (CSP).
+
+---
+
+## 2. File Structure & Core Components
+
+```
+.
+├── content.js          # Core logic: UI injection, event handling, DOM observation
+├── manifest.json       # Extension manifest (V3)
+├── package.json        # Project metadata and npm scripts
+├── rollup.config.js    # Rollup configuration for bundling
+├── scripts/
+│   └── zip.js          # Node.js script to package the extension
+├── styles.css          # Main styles for UI, layout, and themes
+├── vendor/             # Third-party libraries
+├── images/             # Extension icons
+└── dist/               # Build output directory (ignored by git)
+```
+
+### 2.1 `manifest.json`
+
+- **`manifest_version`**: 3, adhering to the latest Chrome extension standard.
+- **`name` & `description`**: Updated to be more descriptive for the Chrome Web Store.
+- **`content_scripts`**:
+    - `matches`: Specifies that the extension only activates on `https://gemini.google.com/*`.
+    - `css` & `js`: Injects all necessary CSS and JS files. **The order is critical**: dependency libraries must be loaded before `content.js`.
+- **`web_accessible_resources`**: Added to explicitly grant the Gemini website access to the extension's image resources (`.png` files), a requirement under Manifest V3.
+
+### 2.2 `package.json`
+
+- Defines the project's name, version, and dev dependencies (`rollup`, `archiver`, etc.).
+- **`scripts`**:
+    - `build:rollup`: Bundles the JavaScript using Rollup.
+    - `build:zip`: Executes the `scripts/zip.js` script to create a distributable `.zip` file in the `releases/` directory.
+    - `build`: A convenience script that runs both `build:rollup` and `build:zip` in sequence.
+
+### 2.3 `rollup.config.js`
+
+- Configures the Rollup bundler.
+- It takes `content.js` as input and produces a minified version in the `dist/` directory.
+- This helps reduce the script's size and slightly obfuscates the code.
+
+### 2.4 `scripts/zip.js`
+
+- A simple Node.js script that uses the `archiver` library to package the entire extension (including `manifest.json`, `dist/`, `vendor/`, `images/`, and `styles.css`) into a versioned zip file, ready for upload.
+
+### 2.5 `content.js` (Core Logic)
+
+- **Initialization (`MutationObserver` for UI)**:
+    - Instead of a polling `setInterval`, the script now uses a `MutationObserver` at the root level (`document.body`) to wait for the `<chat-window>` element to be added to the DOM.
+    - Once detected, the observer disconnects, and `initializeUI()` is called. This is a more robust and performant method for handling UI initialization in Single-Page Applications (SPAs).
+
+- **UI Creation (`initializeUI`)**:
+    - Creates the entry icon (`#gemini-entry-icon`) and the hidden TOC popover (`#gemini-toc-popover`).
+    - Sets `position: relative` on the `<chat-window>` to ensure the absolutely positioned UI elements are anchored correctly.
+    - Initializes Tippy.js for the icon's hover tooltip.
+
+- **TOC Updates (`updateTocList`)**:
+    - Triggered by a `MutationObserver` that specifically watches for new `<user-query>` or `<model-response>` elements being added to the chat window.
+    - This targeted observation prevents unnecessary updates when minor DOM changes (like streaming text) occur.
+    - It extracts text from user prompts, creates list items, and attaches click event listeners for navigation.
+
+### 2.6 `styles.css`
+
+- **CSS Custom Properties (Variables)**:
+    - Heavily utilizes CSS variables for colors, shadows, and spacing to simplify theming.
+    - Defines two sets of variables: one for the default light theme (`:root`) and another for the dark theme (`body.dark-theme, :root[theme=dark]`), allowing automatic theme switching based on the Gemini website's own theme.
+- **SVG Icon**:
+    - The entry icon is loaded via `background-image: var(--icon-svg)`, where the variable contains a **Data URI** of the `images/icon.svg` file. This embeds the icon directly into the CSS, avoiding potential conflicts.
+
+---
+
+## 3. Build & Dependency Management
+
+- **Dependencies**: Third-party libraries (Popper, Tippy) are vendored in the `vendor/` directory. Project development dependencies are managed by npm and listed in `package.json`.
+- **Installation**: Run `npm install` to download the required development tools.
+- **Build Process**: Run `npm run build` to generate the final, distributable extension package. The process is:
+    1.  Rollup bundles and minifies `content.js` into `dist/content.js`.
+    2.  The `zip.js` script packages all necessary files (`manifest.json`, `dist/`, `styles.css`, etc.) into `releases/chat-outline-vX.X.X.zip`.
+
+---
+
+## 4. Development Guide
+
+- **Modifying Styles**: Edit `styles.css`. Prioritize changing CSS variables for theme consistency.
+- **Modifying Logic**: All interactive logic is in `content.js`.
+- **DOM Structure Changes**: If the Gemini front-end updates, first inspect the query selectors in `updateTocList` and the initial observer in `content.js`.
+- **Debugging**:
+    1.  Run `npm run build:rollup` after making changes to `content.js`.
+    2.  Go to `chrome://extensions`, enable "Developer mode", and click "Load unpacked", selecting the project's root directory.
+    3.  Use the "Reload" button on the extension card after making changes.
+    4.  Open the DevTools (F12) on the Gemini page to inspect injected elements and view console output from `content.js`.
