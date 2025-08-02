@@ -4,4 +4,16 @@
 # macOS
 .DS_Store
 
+# Node.js
+node_modules/
+
+# Build output
+dist/
+releases/
+*.zip
+
+# Build scripts directory - typically not versioned if only for local builds
+# scripts/
+
+
 .original

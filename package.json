@@ -1,0 +1,19 @@
+{
+  "name": "toc-extension",
+  "version": "0.0.1",
+  "description": "A Chrome extension that generates a table of contents for Gemini chats.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:rollup": "NODE_ENV=production rollup -c",
+    "build:zip": "node scripts/zip.js",
+    "build": "npm run build:rollup && npm run build:zip"
+  },
+  "devDependencies": {
+    "@rollup/plugin-terser": "^0.4.4",
+    "archiver": "^7.0.1",
+    "rimraf": "^6.0.1",
+    "rollup": "^4.46.0",
+    "rollup-plugin-copy": "^3.5.0"
+  }
+}
