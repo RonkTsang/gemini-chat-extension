@@ -17,7 +17,13 @@ This is a simple Chrome extension that adds a clickable outline to your [Gemini]
 -   **Minimalist UI**: The outline is accessible via a simple icon and can be opened or closed.
 -   **Light & Dark Theme**: Automatically adapts to the Gemini website's theme.
 
-## How to Install
+## Install from Chrome Web Store
+
+You can install the extension directly from the Chrome Web Store:
+
+[**Add to Chrome**](https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn?utm_source=item-share-cb)
+
+## How to Install (from source)
 
 1.  Clone or download this repository.
 2.  Open Google Chrome and navigate to `chrome://extensions`.
