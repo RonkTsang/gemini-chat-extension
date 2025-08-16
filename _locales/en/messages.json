@@ -14,5 +14,13 @@
   "attachmentLabel": {
     "message": "[Attachment]",
     "description": "Label for a user message that contains only an attachment and no text."
+  },
+  "clickToPin": {
+    "message": "Click to pin",
+    "description": "Tooltip for the entry icon when the outline is not pinned."
+  },
+  "unpin": {
+    "message": "Unpin",
+    "description": "Tooltip for the entry icon when the outline is pinned."
   }
 }

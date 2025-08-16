@@ -4,6 +4,15 @@
     "description": "Mensaje que se muestra cuando la tabla de contenido está vacía."
   },
   "attachmentLabel": {
-    "message": "[Archivo adjunto]"
+    "message": "[Archivo adjunto]",
+    "description": "Label for a user message that contains only an attachment and no text."
+  },
+  "clickToPin": {
+    "message": "Hacer clic para fijar",
+    "description": "Tooltip for the entry icon when the outline is not pinned."
+  },
+  "unpin": {
+    "message": "Quitar",
+    "description": "Tooltip for the entry icon when the outline is pinned."
   }
 }

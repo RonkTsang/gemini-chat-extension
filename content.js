@@ -75,20 +75,28 @@ function updateTocList(popover, chatWindow) {
 
 function showPopover() {
   const popover = document.getElementById('gemini-toc-popover');
+  // --- BUG FIX ---
+  // If the popover is already visible, do nothing. This prevents
+  // the list from being destructively re-rendered during quick mouse movements.
+  if (popover && !popover.classList.contains('hidden')) {
+    return;
+  }
+  // --- END FIX ---
+
   const icon = document.getElementById('gemini-entry-icon');
   const chatWindow = document.querySelector('chat-window');
   if (popover && icon && chatWindow) {
     updateTocList(popover, chatWindow);
     popover.classList.remove('hidden');
-    icon.classList.add('active');
-    setTimeout(() => {
-        document.addEventListener('click', hidePopover, { once: true });
-    }, 0);
   }
 }
 
 function hidePopover() {
   const popover = document.getElementById('gemini-toc-popover');
+  // Do not hide if it's pinned
+  if (popover && popover.classList.contains('pinned')) {
+    return;
+  }
   const icon = document.getElementById('gemini-entry-icon');
   if (popover) popover.classList.add('hidden');
   if (icon) icon.classList.remove('active');
@@ -102,28 +110,72 @@ function initializeUI(chatWindow) {
   const popover = document.createElement('div');
   popover.id = 'gemini-toc-popover';
   popover.classList.add('hidden');
+  
   popover.appendChild(document.createElement('ul'));
-  popover.addEventListener('click', (e) => e.stopPropagation());
   chatWindow.appendChild(popover);
 
   const entryIcon = document.createElement('div');
   entryIcon.id = 'gemini-entry-icon';
+  // Add the badge element inside the icon
+  entryIcon.innerHTML = '<div id="gemini-pin-badge"></div>';
   chatWindow.appendChild(entryIcon);
 
-  // Initialize Tippy.js tooltip, which is now available globally
-  tippy(entryIcon, {
-    content: 'Chat Outline',
-    placement: 'bottom',
+  const entryTooltip = tippy(entryIcon, {
+    content: chrome.i18n.getMessage('clickToPin'),
+    placement: 'right',
     animation: 'shift-away-subtle',
     arrow: false,
-    theme: 'gemini-tooltip'
+    theme: 'gemini-tooltip',
+    duration: [null, 0],
+    // delay: [150, 0] // 150ms delay on entry, 0ms on exit
   });
 
+  let hideTimeout;
+
+  function togglePinState() {
+    clearTimeout(hideTimeout); // Prevent hiding right after pinning
+    
+    // isNowPinned is true if the class was added, false if removed.
+    const isNowPinned = popover.classList.toggle('pinned');
+    entryIcon.classList.toggle('active');
+
+    if (isNowPinned) {
+      // This runs when we PIN the element.
+      showPopover(); // Ensure it's visible. 
+    }
+
+    if (isNowPinned) {
+      // This runs when we PIN the element.
+      entryTooltip.setContent(chrome.i18n.getMessage('unpin'));
+    } else {
+      // This runs when we UNPIN the element.
+      entryTooltip.setContent(chrome.i18n.getMessage('clickToPin'));
+    }
+  }
+
+  // --- Hybrid Hover and Click Logic ---
+
+  // 1. Hover Logic
+  const setupHoverListeners = (element) => {
+    element.addEventListener('mouseenter', () => {
+      if (popover.classList.contains('pinned')) return;
+      clearTimeout(hideTimeout);
+      showPopover();
+    });
+
+    element.addEventListener('mouseleave', () => {
+      hideTimeout = setTimeout(hidePopover, 300);
+    });
+  };
+
+  setupHoverListeners(entryIcon);
+  setupHoverListeners(popover);
+
+  // 2. Click Logic
   entryIcon.addEventListener('click', (e) => {
     e.stopPropagation();
-    const isHidden = popover.classList.contains('hidden');
-    if (isHidden) showPopover();
-    else hidePopover();
+    entryTooltip.hide();
+    togglePinState();
   });
 
   const observer = new MutationObserver((mutations) => {
@@ -131,10 +183,8 @@ function initializeUI(chatWindow) {
     for (const mutation of mutations) {
       if (mutation.type === 'childList') {
         for (const node of mutation.addedNodes) {
-          // We only care about element nodes
           if (node.nodeType !== 1) continue;
           
-          // Check if the added node is, or contains, a query or response
           if (node.matches('user-query, model-response') || node.querySelector('user-query, model-response')) {
             shouldUpdate = true;
             break;
@@ -144,7 +194,6 @@ function initializeUI(chatWindow) {
       if (shouldUpdate) break;
     }
 
-    // Only update if a relevant change happened AND the popover is visible
     if (shouldUpdate && !popover.classList.contains('hidden')) {
       clearTimeout(window.geminiTocUpdater);
       window.geminiTocUpdater = setTimeout(() => updateTocList(popover, chatWindow), 300);

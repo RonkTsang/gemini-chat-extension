@@ -1,6 +1,6 @@
 {
   "name": "toc-extension",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A Chrome extension that generates a table of contents for Gemini chats.",
   "private": true,
   "type": "module",

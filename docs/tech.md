@@ -68,8 +68,15 @@ The architecture follows these principles:
 
 - **UI Creation (`initializeUI`)**:
     - Creates the entry icon (`#gemini-entry-icon`) and the hidden TOC popover (`#gemini-toc-popover`).
+    - A pin icon badge (`#gemini-pin-badge`) is added to the entry icon to control the popover's pinned state.
     - Sets `position: relative` on the `<chat-window>` to ensure the absolutely positioned UI elements are anchored correctly.
     - Initializes Tippy.js for the icon's hover tooltip.
+
+- **Pinning Logic**:
+    - Clicking the entry icon (`#gemini-entry-icon`) toggles the main visibility of the popover.
+    - When the popover is visible, the pin badge also becomes visible.
+    - Clicking the pin badge toggles a `.pinned` class on the `#gemini-toc-popover` element.
+    - This class change is handled by CSS to keep the popover visible on the screen even when the mouse moves away. The state is not persisted between page loads.
 
 - **TOC Updates (`updateTocList`)**:
     - Triggered by a `MutationObserver` that specifically watches for new `<user-query>` or `<model-response>` elements being added to the chat window.
@@ -82,7 +89,10 @@ The architecture follows these principles:
     - Heavily utilizes CSS variables for colors, shadows, and spacing to simplify theming.
     - Defines two sets of variables: one for the default light theme (`:root`) and another for the dark theme (`body.dark-theme, :root[theme=dark]`), allowing automatic theme switching based on the Gemini website's own theme.
 - **SVG Icon**:
-    - The entry icon is loaded via `background-image: var(--icon-svg)`, where the variable contains a **Data URI** of the `images/icon.svg` file. This embeds the icon directly into the CSS, avoiding potential conflicts.
+    - The entry icon and pin badge icon are loaded via `background-image` variables (`--icon-svg`, `--icon-pin-badge-filled`), which contain **Data URIs**. This embeds the icons directly into the CSS, avoiding potential conflicts.
+- **Pinned State**:
+    - A `.pinned` class selector is used to apply styles that keep the popover visible (`position: absolute`) and enhance its appearance with a more prominent box shadow.
+    - Animations (`@keyframes pop-in`) and transitions are used to provide smooth visual feedback when the popover is pinned or the badge appears.
 
 ---
 

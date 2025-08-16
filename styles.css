@@ -7,6 +7,7 @@
   --toc-shadow: 0 4px 12px rgba(0,0,0,0.1), 0 0 1px rgba(0,0,0,0.1);
   --icon-hover-bg: rgba(60,64,67,0.08);
   --icon-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%235f6368' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='4' y1='6' x2='20' y2='6' /%3E%3Cline x1='4' y1='12' x2='20' y2='12' /%3E%3Cline x1='4' y1='18' x2='12' y2='18' /%3E%3C/svg%3E");
+  --icon-pin-badge-filled: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%235f6368' fill-rule='evenodd' d='M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12S6.477 2 12 2s10 4.477 10 10m-7.89-3.581l1.482 1.484c1.006 1.006 1.509 1.51 1.392 2.053c-.118.543-.784.793-2.116 1.293l-.922.346c-.356.134-.535.201-.672.32q-.091.08-.161.177c-.106.148-.157.332-.258.7c-.23.836-.345 1.254-.62 1.41a.76.76 0 0 1-.378.1c-.315 0-.622-.307-1.234-.92l-.473-.473l-1.619 1.62a.75.75 0 0 1-1.062-1.059l1.62-1.622l-.446-.448c-.61-.61-.914-.914-.916-1.228c0-.135.035-.269.102-.386c.157-.271.572-.386 1.402-.615c.368-.101.552-.152.7-.259a1 1 0 0 0 .18-.166c.119-.138.185-.318.316-.677l.334-.911c.494-1.347.74-2.02 1.285-2.14s1.05.386 2.064 1.4' clip-rule='evenodd'/%3E%3C/svg%3E");
   --tooltip-bg: #3c4043;
   --tooltip-text: #ffffff;
 }
@@ -18,8 +19,14 @@ body.dark-theme, :root[theme=dark] {
   --toc-shadow: 0 4px 12px rgba(0,0,0,0.3), 0 0 1px rgba(0,0,0,0.3);
   --icon-hover-bg: rgba(232,234,237,0.08);
   --icon-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%239aa0a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='4' y1='6' x2='20' y2='6' /%3E%3Cline x1='4' y1='12' x2='20' y2='12' /%3E%3Cline x1='4' y1='18' x2='12' y2='18' /%3E%3C/svg%3E");
+  --icon-pin-badge-filled: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' fill-rule='evenodd' d='M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12S6.477 2 12 2s10 4.477 10 10' clip-rule='evenodd' opacity='0.3'/%3E%3Cpath fill='%23fff' d='m15.592 9.903l-1.483-1.484c-1.013-1.015-1.52-1.522-2.064-1.402s-.79.794-1.284 2.14l-.334.912c-.132.36-.197.539-.316.677a1 1 0 0 1-.18.166c-.148.107-.332.158-.7.26c-.83.228-1.246.342-1.402.614a.77.77 0 0 0-.102.386c.002.314.306.618.915 1.228l.447.448l-1.62 1.622a.75.75 0 0 0 1.062 1.06l1.618-1.621l.473.473c.613.613.92.92 1.235.92a.76.76 0 0 0 .379-.1c.274-.156.389-.574.619-1.41c.1-.368.152-.552.258-.7q.07-.098.16-.176c.138-.12.316-.187.673-.32l.922-.347c1.332-.5 1.998-.75 2.115-1.293s-.385-1.046-1.391-2.053'/%3E%3C/svg%3E");
   --tooltip-bg: #e8eaed;
   --tooltip-text: #202124;
+}
+
+@keyframes pop-in {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 .hidden {
@@ -45,6 +52,27 @@ body.dark-theme, :root[theme=dark] {
   background-color: var(--icon-hover-bg);
 }
 
+#gemini-pin-badge {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 18px;
+  height: 18px;
+  background-image: var(--icon-pin-badge-filled);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  /* Start hidden and prepare for animation */
+  transform: scale(0);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  color: var(--toc-text-color);
+}
+
+#gemini-entry-icon.active #gemini-pin-badge {
+  /* Animate into view */
+  transform: scale(1);
+}
+
 #gemini-toc-popover {
   position: absolute;
   top: 60px; /* Position below the icon */
@@ -54,12 +82,22 @@ body.dark-theme, :root[theme=dark] {
   max-width: 350px;
   max-height: 60vh;
   background-color: var(--toc-bg-color);
-  border-radius: 8px;
+  border-radius: 12px;
   box-shadow: var(--toc-shadow);
   overflow: hidden;
   display: flex;
   flex-direction: column;
   font-family: 'Google Sans', sans-serif;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+#gemini-toc-popover.pinned {
+  /* Now stays absolute, relying on the parent for positioning */
+  position: absolute;
+  /* Enhanced shadow and border for "pinned" state */
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15), 0 0 2px rgba(0,0,0,0.1);
+  /* border: 1px solid var(--toc-hover-bg); */
+  animation: pop-in 0.2s ease-out;
 }
 
 #gemini-toc-popover ul {
@@ -123,6 +161,7 @@ body.dark-theme, :root[theme=dark] {
   border-radius: 4px;
   font-size: 12px;
   line-height: 1.4;
-  font-weight: 600;
+  font-weight: 400;
+  font-family: "Google Sans", "Helvetica Neue", sans-serif;
   box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
 }

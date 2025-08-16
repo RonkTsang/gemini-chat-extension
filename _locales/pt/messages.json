@@ -5,5 +5,13 @@
   },
   "attachmentLabel": {
     "message": "[Anexo]"
+  },
+  "clickToPin": {
+    "message": "Clique para fixar",
+    "description": "Tooltip for the entry icon when the outline is not pinned."
+  },
+  "unpin": {
+    "message": "Desafixar",
+    "description": "Tooltip for the entry icon when the outline is pinned."
   }
 }

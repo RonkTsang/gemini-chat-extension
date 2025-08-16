@@ -4,6 +4,15 @@
     "description": "目次が空の場合に表示されるメッセージ。"
   },
   "attachmentLabel": {
-    "message": "[添付ファイル]"
+    "message": "[添付ファイル]",
+    "description": "Label for a user message that contains only an attachment and no text."
+  },
+  "clickToPin": {
+    "message": "クリックしてピン留め",
+    "description": "Tooltip for the entry icon when the outline is not pinned."
+  },
+  "unpin": {
+    "message": "ピン留めを解除",
+    "description": "Tooltip for the entry icon when the outline is pinned."
   }
 }

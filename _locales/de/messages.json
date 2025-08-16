@@ -4,6 +4,15 @@
     "description": "Nachricht, die angezeigt wird, wenn das Inhaltsverzeichnis leer ist."
   },
   "attachmentLabel": {
-    "message": "[Anhang]"
+    "message": "[Anhang]",
+    "description": "Label for a user message that contains only an attachment and no text."
+  },
+  "clickToPin": {
+    "message": "Klicken zum Anheften",
+    "description": "Tooltip for the entry icon when the outline is not pinned."
+  },
+  "unpin": {
+    "message": "Lösen",
+    "description": "Tooltip for the entry icon when the outline is pinned."
   }
 }

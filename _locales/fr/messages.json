@@ -4,6 +4,15 @@
     "description": "Message affiché lorsque la table des matières est vide."
   },
   "attachmentLabel": {
-    "message": "[Pièce jointe]"
+    "message": "[Pièce jointe]",
+    "description": "Label for a user message that contains only an attachment and no text."
+  },
+  "clickToPin": {
+    "message": "Cliquer pour épingler",
+    "description": "Tooltip for the entry icon when the outline is not pinned."
+  },
+  "unpin": {
+    "message": "Détacher",
+    "description": "Tooltip for the entry icon when the outline is pinned."
   }
 }

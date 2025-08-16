@@ -5,5 +5,13 @@
   },
   "attachmentLabel": {
     "message": "[첨부 파일]"
+  },
+  "clickToPin": {
+    "message": "클릭하여 고정",
+    "description": "Tooltip for the entry icon when the outline is not pinned."
+  },
+  "unpin": {
+    "message": "고정 해제",
+    "description": "Tooltip for the entry icon when the outline is pinned."
   }
 }

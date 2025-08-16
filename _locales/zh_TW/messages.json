@@ -5,5 +5,13 @@
   },
   "attachmentLabel": {
     "message": "[附件]"
+  },
+  "clickToPin": {
+    "message": "點擊固定",
+    "description": "Tooltip for the entry icon when the outline is not pinned."
+  },
+  "unpin": {
+    "message": "取消固定",
+    "description": "Tooltip for the entry icon when the outline is pinned."
   }
 }
