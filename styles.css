@@ -45,7 +45,7 @@ body.dark-theme, :root[theme=dark] {
   background-image: var(--icon-svg);
   background-position: center;
   background-repeat: no-repeat;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, top 0.2s, left 0.2s;
 }
 
 #gemini-entry-icon:hover, #gemini-entry-icon.active {
@@ -88,7 +88,7 @@ body.dark-theme, :root[theme=dark] {
   display: flex;
   flex-direction: column;
   font-family: 'Google Sans', sans-serif;
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, top 0.2s, left 0.2s;
 }
 
 #gemini-toc-popover.pinned {
@@ -164,4 +164,16 @@ body.dark-theme, :root[theme=dark] {
   font-weight: 400;
   font-family: "Google Sans", "Helvetica Neue", sans-serif;
   box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+}
+
+/* --- Immersive Mode --- */
+/* When chat-window has this class, move the icon and popover to the top-left corner */
+chat-window.immersives-mode #gemini-entry-icon {
+  top: 0;
+  left: 0;
+}
+
+chat-window.immersives-mode #gemini-toc-popover {
+  top: 45px; /* Position below the icon (40px height + 5px margin) */
+  left: 10px;
 }

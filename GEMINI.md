@@ -48,8 +48,6 @@ To run the extension in a development environment:
 -   **Dependencies:** Third-party libraries (Tippy.js, Popper.js) are included locally in the `vendor/` directory to comply with the website's Content Security Policy (CSP). Development dependencies are managed via `package.json`.
 -   **Commits:** While there is no strict commit message format, aim for clear and descriptive messages that explain the "why" behind the changes.
 
-The orignal prompt is from: https://www.dzombak.com/blog/2025/08/getting-good-results-from-claude-code/
-
 ---
 
 # Development Guidelines
