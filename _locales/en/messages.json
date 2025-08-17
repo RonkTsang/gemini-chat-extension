@@ -22,5 +22,9 @@
   "unpin": {
     "message": "Unpin",
     "description": "Tooltip for the entry icon when the outline is pinned."
+  },
+  "askGemini": {
+    "message": "Ask Gemini",
+    "description": "Button text for the quick quote feature."
   }
 }

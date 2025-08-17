@@ -13,5 +13,9 @@
   "unpin": {
     "message": "取消固定",
     "description": "Tooltip for the entry icon when the outline is pinned."
+  },
+  "askGemini": {
+    "message": "詢問 Gemini",
+    "description": "Button text for the quick quote feature."
   }
 }

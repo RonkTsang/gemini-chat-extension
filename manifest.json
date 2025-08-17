@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Chat Outline for Gemini: Reclaim Your Focus",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Quickly navigate your Gemini chats with a clickable outline. Never get lost in long conversations again.",
   "default_locale": "en",
   "permissions": [],
@@ -36,7 +36,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["images/*.png"],
+      "resources": ["images/*.png", "images/*.svg"],
       "matches": ["https://gemini.google.com/*"]
     }
   ]

@@ -13,5 +13,9 @@
   "unpin": {
     "message": "Desafixar",
     "description": "Tooltip for the entry icon when the outline is pinned."
+  },
+  "askGemini": {
+    "message": "Perguntar ao Gemini",
+    "description": "Button text for the quick quote feature."
   }
 }

@@ -14,5 +14,9 @@
   "unpin": {
     "message": "ピン留めを解除",
     "description": "Tooltip for the entry icon when the outline is pinned."
+  },
+  "askGemini": {
+    "message": "Geminiに質問",
+    "description": "Button text for the quick quote feature."
   }
 }

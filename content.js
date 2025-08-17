@@ -212,6 +212,7 @@ function findAndInitialize(node) {
     // Check if it's already initialized to prevent re-running
     if (!node.querySelector('#gemini-entry-icon')) {
       initializeUI(node);
+      initializeQuoteFeature(node);
     }
   }
 
@@ -221,8 +222,166 @@ function findAndInitialize(node) {
   chatWindows.forEach(cw => {
     if (!cw.querySelector('#gemini-entry-icon')) {
       initializeUI(cw);
+      initializeQuoteFeature(cw);
     }
   });
+}
+
+function initializeQuoteFeature(chatWindow) {
+  const quoteTooltip = tippy(chatWindow, {
+    content: chrome.i18n.getMessage('askGemini'),
+    placement: 'top',
+    animation: 'shift-away-subtle',
+    arrow: false,
+    theme: 'quote-tooltip-theme',
+    trigger: 'manual',
+    hideOnClick: false,
+    interactive: true,
+    appendTo: chatWindow,
+    onShow(instance) {
+      const button = document.createElement('button');
+      button.className = 'gemini-quote-button';
+      button.innerHTML = `
+        <span class="gemini-quote-button-icon"></span>
+        <span>${chrome.i18n.getMessage('askGemini')}</span>
+      `;
+      button.onclick = () => {
+        const selectedText = window.getSelection().toString();
+        if (selectedText) {
+          addQuoteUI(selectedText);
+        }
+        instance.hide();
+      };
+      instance.setContent(button);
+    },
+  });
+
+  chatWindow.addEventListener('mouseup', (event) => {
+    // Debounce the event to prevent firing multiple times
+    if (window.geminiQuoteTooltipDebounce) {
+      clearTimeout(window.geminiQuoteTooltipDebounce);
+    }
+    window.geminiQuoteTooltipDebounce = setTimeout(() => {
+      const selection = window.getSelection();
+      const selectedText = selection.toString().trim();
+
+      if (selectedText && event.target.closest('message-content') && selection.rangeCount > 0) {
+        // Prevent the tooltip from showing if the selection is part of the TOC popover
+        if (event.target.closest('#gemini-toc-popover')) {
+          quoteTooltip.hide();
+          return;
+        }
+
+        const range = selection.getRangeAt(0);
+        const selectionRect = range.getBoundingClientRect();
+
+        // Clamp the mouse position to be within the selection's bounds
+        const clampedX = Math.max(
+          selectionRect.left,
+          Math.min(event.clientX, selectionRect.right)
+        );
+        const clampedY = Math.max(
+          selectionRect.top,
+          Math.min(event.clientY, selectionRect.bottom)
+        );
+
+        const virtualRect = {
+          width: 0,
+          height: 0,
+          top: clampedY,
+          bottom: clampedY,
+          left: clampedX,
+          right: clampedX,
+        };
+
+        quoteTooltip.setProps({
+          getReferenceClientRect: () => virtualRect,
+        });
+        quoteTooltip.show();
+      } else {
+        quoteTooltip.hide();
+      }
+    }, 100);
+  });
+
+  document.addEventListener('mousedown', (event) => {
+    // Also check the tippy's parent, which is now chatWindow
+    if (!event.target.closest('.tippy-box') && !event.target.closest('#gemini-quote-button')) {
+      quoteTooltip.hide();
+    }
+  });
+}
+
+function addQuoteUI(selectedText) {
+  const inputContainer = document.querySelector('rich-textarea');
+  if (!inputContainer) return;
+
+  // --- Robust Cleanup ---
+  // Disconnect any existing observer before removing elements
+  const existingQuoteUI = document.getElementById('gemini-quote-ui');
+  if (existingQuoteUI && existingQuoteUI.observer) {
+    existingQuoteUI.observer.disconnect();
+  }
+  // Now, safely remove old elements
+  if (existingQuoteUI) {
+    existingQuoteUI.remove();
+  }
+  const existingFakeContent = document.getElementById('gemini-fake-content');
+  if (existingFakeContent) {
+    existingFakeContent.remove();
+  }
+  // --- End Cleanup ---
+
+  const quoteUI = document.createElement('div');
+  quoteUI.id = 'gemini-quote-ui';
+  quoteUI.innerHTML = `
+    <span class="quote-icon"></span>
+    <span class="quote-text">"${selectedText}"</span>
+    <button id="gemini-quote-close-btn">&times;</button>
+  `;
+
+  const qlEditor = inputContainer.querySelector('.ql-editor');
+  if (qlEditor) {
+    inputContainer.insertBefore(quoteUI, qlEditor);
+  }
+
+  const fakeContent = document.createElement('p');
+  fakeContent.id = 'gemini-fake-content';
+  fakeContent.style.display = 'none';
+  fakeContent.style.userSelect = 'none';
+  fakeContent.style.pointerEvents = 'none';
+  fakeContent.contentEditable = 'false';
+  fakeContent.innerHTML = `Referring to this in particular: ${selectedText}<br/>`;
+  
+  if (qlEditor) {
+    qlEditor.prepend(fakeContent);
+    qlEditor.focus();
+
+    // --- State Synchronization Logic ---
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (Array.from(mutation.removedNodes).includes(fakeContent)) {
+          quoteUI.remove();
+          observer.disconnect();
+          return;
+        }
+      }
+    });
+
+    observer.observe(qlEditor, { childList: true });
+    // Store the observer on the UI element for later cleanup
+    quoteUI.observer = observer;
+  }
+
+  const closeButton = document.getElementById('gemini-quote-close-btn');
+  closeButton.onclick = () => {
+    // Manually trigger cleanup
+    if (quoteUI.observer) {
+      quoteUI.observer.disconnect();
+    }
+    quoteUI.remove();
+    fakeContent.remove();
+  };
 }
 
 // Create a persistent observer to watch for chat-window additions
