@@ -4,8 +4,9 @@
   "version": "0.0.3",
   "description": "Quickly navigate your Gemini chats with a clickable outline. Never get lost in long conversations again.",
   "default_locale": "en",
-  "permissions": [],
+  "permissions": ["storage"],
   "action": {
+    "default_popup": "popup.html",
     "default_title": "Chat Outline",
     "default_icon": {
       "16": "images/logo_16.png",

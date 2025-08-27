@@ -18,5 +18,13 @@
   "askGemini": {
     "message": "Gemini fragen",
     "description": "Button text for the quick quote feature."
+  },
+  "regardingThis": {
+    "message": "Diesbezüglich",
+    "description": "Hidden text prepended to the user's input when using the quick quote feature."
+  },
+  "enableQuickQuoteLabel": {
+    "message": "Schnellzitat aktivieren",
+    "description": "Label for the toggle switch in the popup."
   }
 }

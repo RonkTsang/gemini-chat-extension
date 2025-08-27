@@ -17,5 +17,13 @@
   "askGemini": {
     "message": "詢問 Gemini",
     "description": "Button text for the quick quote feature."
+  },
+  "regardingThis": {
+    "message": "關於此",
+    "description": "Hidden text prepended to the user's input when using the quick quote feature."
+  },
+  "enableQuickQuoteLabel": {
+    "message": "啟用快速引用",
+    "description": "Label for the toggle switch in the popup."
   }
 }

@@ -13,6 +13,10 @@
   --icon-refer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 512 512'%3E%3Cg fill='%23606060' fill-rule='evenodd'%3E%3Cpath d='M106.667 85.333V128c0 80.756 64.102 146.54 144.2 149.246l5.133.087h149.333V320H256c-104.145 0-188.924-82.919-191.918-186.34L64 128.001V85.333z'/%3E%3Cpath fill-rule='nonzero' d='m315.582 217.751l30.17-30.17l111.085 111.085l-111.085 111.085l-30.17-30.17l80.898-80.915z'/%3E%3C/g%3E%3C/svg%3E");
   --tooltip-bg: #3c4043;
   --tooltip-text: #ffffff;
+  --quote-display-bg: #f7f7f7;
+  --quote-display-border: #dcdcdc;
+  --quote-display-text: #5f6368;
+  --quote-user-msg-bg: #f6f6f6;
 }
 
 body.dark-theme, :root[theme=dark] {
@@ -27,6 +31,10 @@ body.dark-theme, :root[theme=dark] {
   --icon-refer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 512 512'%3E%3Cg fill='%23fff' fill-rule='evenodd'%3E%3Cpath d='M106.667 85.333V128c0 80.756 64.102 146.54 144.2 149.246l5.133.087h149.333V320H256c-104.145 0-188.924-82.919-191.918-186.34L64 128.001V85.333z'/%3E%3Cpath fill-rule='nonzero' d='m315.582 217.751l30.17-30.17l111.085 111.085l-111.085 111.085l-30.17-30.17l80.898-80.915z'/%3E%3C/g%3E%3C/svg%3E");
   --tooltip-bg: #e8eaed;
   --tooltip-text: #202124;
+  --quote-display-bg: #282a2c;
+  --quote-display-border: #5f6368;
+  --quote-display-text: #bdc1c6;
+  --quote-user-msg-bg: #2b2d2e;
 }
 
 @keyframes pop-in {
@@ -158,6 +166,18 @@ body.dark-theme, :root[theme=dark] {
   flex-grow: 1;
 }
 
+.toc-quote-refer-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  flex-shrink: 0;
+  background-image: var(--icon-refer);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.7;
+}
+
 
 /* Custom Tippy.js Theme */
 .tippy-box[data-theme~='gemini-tooltip'] {
@@ -209,7 +229,7 @@ chat-window.immersives-mode #gemini-toc-popover {
   display: flex;
   align-items: center;
   padding: 8px;
-  margin: 8px 0;
+  margin-bottom: 8px;
   border-radius: 8px;
   background-color: var(--toc-hover-bg);
   color: var(--toc-text-color);
@@ -243,6 +263,18 @@ chat-window.immersives-mode #gemini-toc-popover {
   font-size: 20px;
   color: var(--toc-text-color);
   padding: 0 8px;
+}
+
+.quote-ref-icon {
+  display: inline-block;
+  width: 1.2em;
+  height: 1.2em;
+  margin-right: 0.5em;
+  vertical-align: text-bottom;
+  background-image: var(--icon-refer);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 /* --- Quote Tooltip Theme --- */
@@ -287,4 +319,28 @@ chat-window.immersives-mode #gemini-toc-popover {
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
+}
+
+/* --- Quote Display in Chat History --- */
+.gemini-quote-display {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background-color: var(--quote-user-msg-bg);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--toc-text-color);
+  cursor: default;
+}
+
+.gemini-quote-display .quote-icon {
+  margin-top: 4px;
+  margin-right: 0;
+}
+
+.gemini-quote-display-text {
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }

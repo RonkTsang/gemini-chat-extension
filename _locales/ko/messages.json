@@ -17,5 +17,13 @@
   "askGemini": {
     "message": "Gemini에게 물어보기",
     "description": "Button text for the quick quote feature."
+  },
+  "regardingThis": {
+    "message": "이것에 관하여",
+    "description": "Hidden text prepended to the user's input when using the quick quote feature."
+  },
+  "enableQuickQuoteLabel": {
+    "message": "빠른 인용 사용",
+    "description": "Label for the toggle switch in the popup."
   }
 }

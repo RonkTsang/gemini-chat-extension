@@ -1,0 +1,87 @@
+:root {
+    --bg-color: #f9f9f9;
+    --text-color: #333;
+    --switch-bg-color: #ccc;
+    --switch-handle-color: white;
+    --switch-bg-active-color: #4285F4;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-color: #202124;
+        --text-color: #e8eaed;
+        --switch-bg-color: #5f6368;
+        --switch-handle-color: #202124;
+        --switch-bg-active-color: #8ab4f8;
+    }
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    width: 220px;
+    padding: 15px;
+    background-color: var(--bg-color);
+    border-radius: 8px; /* Added for rounded corners */
+    color: var(--text-color);
+}
+
+.container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.toggle-label {
+    font-size: 14px;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--switch-bg-color);
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: var(--switch-handle-color);
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: var(--switch-bg-active-color);
+}
+
+input:checked + .slider:before {
+    transform: translateX(16px);
+}
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
