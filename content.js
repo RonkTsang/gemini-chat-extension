@@ -316,7 +316,7 @@ function initializeQuoteFeature(chatWindow) {
   const quoteTooltip = tippy(chatWindow, {
     content: chrome.i18n.getMessage('askGemini'),
     placement: 'top',
-    animation: 'shift-away-subtle',
+    animation: 'slide-up-subtle',
     arrow: false,
     theme: 'quote-tooltip-theme',
     trigger: 'manual',

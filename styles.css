@@ -344,3 +344,12 @@ chat-window.immersives-mode #gemini-toc-popover {
   white-space: pre-wrap;
   word-wrap: break-word;
 }
+
+/* --- Animation for Quick Quote Button --- */
+.tippy-box[data-animation="slide-up-subtle"][data-state="hidden"] {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.tippy-box[data-animation="slide-up-subtle"] {
+  transition: opacity 250ms cubic-bezier(0.16, 1, 0.3, 1), transform 250ms cubic-bezier(0.16, 1, 0.3, 1);
+}
