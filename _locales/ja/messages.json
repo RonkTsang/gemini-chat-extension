@@ -26,5 +26,13 @@
   "enableQuickQuoteLabel": {
     "message": "クイック引用を有効にする",
     "description": "Label for the toggle switch in the popup."
+  },
+  "reportIssueLabel": {
+    "message": "問題を報告",
+    "description": "Label for the feedback link in the popup."
+  },
+  "enableChatOutlineLabel": {
+    "message": "チャットアウトラインを有効にする",
+    "description": "Label for the toggle switch in the popup for the chat outline feature."
   }
 }

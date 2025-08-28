@@ -223,31 +223,49 @@ function initializeUI(chatWindow) {
 
 // --- Robust Initialization ---
 
+let isChatOutlineEnabled = true;
+
+function destroyUI(chatWindow) {
+  const popover = chatWindow.querySelector('#gemini-toc-popover');
+  if (popover) popover.remove();
+
+  const entryIcon = chatWindow.querySelector('#gemini-entry-icon');
+  if (entryIcon) {
+    if (entryIcon._tippy) {
+      entryIcon._tippy.destroy();
+    }
+    entryIcon.remove();
+  }
+  // Note: This doesn't remove the mutation observer from initializeUI for simplicity.
+}
+
 function findAndInitialize(node) {
   if (node.nodeType !== 1) return; // We only care about elements
 
+  const processChatWindow = (cw) => {
+    if (isChatOutlineEnabled) {
+      if (!cw.querySelector('#gemini-entry-icon')) {
+        initializeUI(cw);
+      }
+    } else {
+      destroyUI(cw);
+    }
+
+    if (isQuickQuoteEnabled) {
+      initializeQuoteFeature(cw);
+    } else {
+      destroyQuoteFeature(cw);
+    }
+  };
+
   // Case 1: The node itself is a chat-window
   if (node.matches('chat-window')) {
-    // Check if it's already initialized to prevent re-running
-    if (!node.querySelector('#gemini-entry-icon')) {
-      initializeUI(node);
-    }
-    if (isQuickQuoteEnabled) {
-        initializeQuoteFeature(node);
-    }
+    processChatWindow(node);
   }
 
   // Case 2: The node contains one or more chat-windows
-  // This is common when the main app container is added to the DOM
   const chatWindows = node.querySelectorAll('chat-window');
-  chatWindows.forEach(cw => {
-    if (!cw.querySelector('#gemini-entry-icon')) {
-      initializeUI(cw);
-    }
-    if (isQuickQuoteEnabled) {
-        initializeQuoteFeature(cw);
-    }
-  });
+  chatWindows.forEach(processChatWindow);
 }
 
 function handleMouseUp(event) {
@@ -547,7 +565,11 @@ function transformQuoteInHistory(userQueryElement) {
 // --- Main Execution ---
 
 // 1. Load settings and then initialize
-chrome.storage.sync.get({ enableQuickQuote: true }, (data) => {
+chrome.storage.sync.get({
+  enableChatOutline: true,
+  enableQuickQuote: true 
+}, (data) => {
+    isChatOutlineEnabled = data.enableChatOutline;
     isQuickQuoteEnabled = data.enableQuickQuote;
 
     // Create a persistent observer to watch for chat-window additions
@@ -583,9 +605,22 @@ chrome.storage.sync.get({ enableQuickQuote: true }, (data) => {
 
 // 2. Listen for changes in settings
 chrome.storage.onChanged.addListener((changes, namespace) => {
-    if (namespace === 'sync' && changes.enableQuickQuote) {
+    if (namespace !== 'sync') return;
+    const chatWindows = document.querySelectorAll('chat-window');
+
+    if (changes.enableChatOutline) {
+        isChatOutlineEnabled = changes.enableChatOutline.newValue;
+        chatWindows.forEach(cw => {
+            if (isChatOutlineEnabled) {
+                initializeUI(cw);
+            } else {
+                destroyUI(cw);
+            }
+        });
+    }
+
+    if (changes.enableQuickQuote) {
         isQuickQuoteEnabled = changes.enableQuickQuote.newValue;
-        const chatWindows = document.querySelectorAll('chat-window');
         chatWindows.forEach(cw => {
             if (isQuickQuoteEnabled) {
                 initializeQuoteFeature(cw);

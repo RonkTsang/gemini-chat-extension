@@ -25,5 +25,13 @@
   "enableQuickQuoteLabel": {
     "message": "빠른 인용 사용",
     "description": "Label for the toggle switch in the popup."
+  },
+  "reportIssueLabel": {
+    "message": "문제 보고",
+    "description": "Label for the feedback link in the popup."
+  },
+  "enableChatOutlineLabel": {
+    "message": "채팅 개요 활성화",
+    "description": "Label for the toggle switch in the popup for the chat outline feature."
   }
 }

@@ -26,5 +26,13 @@
   "enableQuickQuoteLabel": {
     "message": "Schnellzitat aktivieren",
     "description": "Label for the toggle switch in the popup."
+  },
+  "reportIssueLabel": {
+    "message": "Problem melden",
+    "description": "Label for the feedback link in the popup."
+  },
+  "enableChatOutlineLabel": {
+    "message": "Chat-Gliederung aktivieren",
+    "description": "Label for the toggle switch in the popup for the chat outline feature."
   }
 }

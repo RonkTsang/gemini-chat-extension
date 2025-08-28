@@ -34,5 +34,13 @@
   "enableQuickQuoteLabel": {
     "message": "Ativar Cotação Rápida",
     "description": "Label for the toggle switch in the popup."
+  },
+  "reportIssueLabel": {
+    "message": "Reportar um Problema",
+    "description": "Label for the feedback link in the popup."
+  },
+  "enableChatOutlineLabel": {
+    "message": "Ativar Esboço de Chat",
+    "description": "Label for the toggle switch in the popup for the chat outline feature."
   }
 }
