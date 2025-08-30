@@ -399,6 +399,24 @@ function destroyQuoteFeature(chatWindow) {
     chatWindow._geminiQuoteInitialized = false;
 }
 
+function removeQuoteUI() {
+  const quoteUI = document.getElementById('gemini-quote-ui');
+  if (quoteUI) {
+    if (quoteUI.observer) {
+      quoteUI.observer.disconnect();
+    }
+    quoteUI.remove();
+  }
+  
+  const refText = document.getElementById('gemini-quote-reference-text');
+  if (refText) refText.remove();
+  
+  const separator = document.getElementById('gemini-quote-separator');
+  if (separator) separator.remove();
+
+  const sentinel = document.getElementById('gemini-quote-sentinel');
+  if (sentinel) sentinel.remove();
+}
 
 function addQuoteUI(selectedText) {
   const inputContainer = document.querySelector('rich-textarea');
@@ -413,20 +431,7 @@ function addQuoteUI(selectedText) {
   const HIDDEN_END_SNIPPET = 900;
 
   // --- Robust Cleanup ---
-  const existingQuoteUI = document.getElementById('gemini-quote-ui');
-  if (existingQuoteUI && existingQuoteUI.observer) {
-    existingQuoteUI.observer.disconnect();
-  }
-  if (existingQuoteUI) existingQuoteUI.remove();
-  
-  const existingRefText = document.getElementById('gemini-quote-reference-text');
-  if (existingRefText) existingRefText.remove();
-  
-  const existingSeparator = document.getElementById('gemini-quote-separator');
-  if (existingSeparator) existingSeparator.remove();
-
-  const existingSentinel = document.getElementById('gemini-quote-sentinel');
-  if (existingSentinel) existingSentinel.remove();
+  removeQuoteUI();
 
   // --- Prepare Text Versions ---
   let displayText = selectedText;
@@ -508,10 +513,7 @@ function addQuoteUI(selectedText) {
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         if (Array.from(mutation.removedNodes).includes(sentinel)) {
-          quoteUI.remove();
-          referenceText.remove();
-          separator.remove();
-          observer.disconnect();
+          removeQuoteUI();
           return;
         }
       }
@@ -521,15 +523,7 @@ function addQuoteUI(selectedText) {
     quoteUI.observer = observer;
   }
 
-  closeButton.onclick = () => {
-    if (quoteUI.observer) {
-      quoteUI.observer.disconnect();
-    }
-    quoteUI.remove();
-    referenceText.remove();
-    separator.remove();
-    sentinel.remove();
-  };
+  closeButton.onclick = removeQuoteUI;
 }
 
 function transformQuoteInHistory(userQueryElement) {
@@ -606,6 +600,20 @@ chrome.storage.sync.get({
     // Create a persistent observer to watch for chat-window additions
     const mainObserver = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
+            // Proactive cleanup on chat switch
+            if (mutation.removedNodes.length > 0 && document.getElementById('gemini-quote-sentinel')) {
+                let chatWasCleared = false;
+                for (const node of mutation.removedNodes) {
+                    if (node.nodeType === 1 && (node.matches('user-query, model-response') || node.querySelector('user-query, model-response'))) {
+                        chatWasCleared = true;
+                        break;
+                    }
+                }
+                if (chatWasCleared) {
+                    removeQuoteUI();
+                }
+            }
+
             for (const addedNode of mutation.addedNodes) {
                 if (addedNode.nodeType !== 1) continue;
                 
