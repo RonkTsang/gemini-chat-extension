@@ -26,10 +26,10 @@ function updateTocList(popover, chatWindow) {
   userQueries.forEach((query) => {
     const listItem = document.createElement('li');
     const button = document.createElement('button');
-    button.className = 'toc-item-button';
-
+    
     let isQuote = false;
     let questionText = '';
+    let quoteText = '';
     let fullTextToDisplay = '';
 
     // --- Defensive Reading Logic ---
@@ -37,8 +37,8 @@ function updateTocList(popover, chatWindow) {
     if (query.dataset.isQuote === 'true') {
       isQuote = true;
       questionText = query.dataset.questionText || '';
+      quoteText = query.dataset.quoteText || '';
       fullTextToDisplay = questionText;
-    
     // 2. Fallback: If dataset is not ready, check the raw text content.
     // This handles the race condition where TOC updates before the transformation runs.
     } else {
@@ -48,6 +48,8 @@ function updateTocList(popover, chatWindow) {
 
       if (currentText.startsWith(regardingThisText) && separatorIndex !== -1) {
         isQuote = true;
+        const fullQuotePart = currentText.substring(0, separatorIndex).replace(regardingThisText, '').trim();
+        quoteText = fullQuotePart.substring(1); // Remove leading 
         questionText = currentText.substring(separatorIndex + SEPARATOR.length).trim();
         fullTextToDisplay = questionText;
       } else {
@@ -62,23 +64,52 @@ function updateTocList(popover, chatWindow) {
 
     // --- UI Construction ---
     if (isQuote) {
-      const iconSpan = document.createElement('span');
-      iconSpan.className = 'toc-quote-refer-icon';
-      button.appendChild(iconSpan);
-    } else if (filePreview) {
-      const iconClone = filePreview.cloneNode(true);
-      iconClone.className = 'toc-file-icon';
-      button.appendChild(iconClone);
+        button.className = 'toc-item-button toc-item-button-multiline';
+
+        const quoteLine = document.createElement('div');
+        quoteLine.className = 'toc-quote-line';
+
+        const iconSpan = document.createElement('span');
+        iconSpan.className = 'toc-quote-refer-icon';
+        quoteLine.appendChild(iconSpan);
+
+        const quoteSpan = document.createElement('span');
+        quoteSpan.className = 'toc-item-quote-text';
+        const truncatedQuote = quoteText.substring(0, 70) + (quoteText.length > 70 ? '...' : '');
+        quoteSpan.textContent = `"${truncatedQuote}"`;
+        quoteLine.appendChild(quoteSpan);
+
+        button.appendChild(quoteLine);
+
+        const textSpan = document.createElement('span');
+        textSpan.className = 'toc-item-text';
+        const buttonText = fullTextToDisplay.substring(0, 80) + (fullTextToDisplay.length > 80 ? '...' : '');
+        textSpan.textContent = buttonText;
+        button.appendChild(textSpan);
+
+    } else {
+        button.className = 'toc-item-button';
+        const iconSpan = document.createElement('span');
+        if (filePreview) {
+            const iconClone = filePreview.cloneNode(true);
+            iconSpan.className = 'toc-file-icon';
+            iconSpan.appendChild(iconClone);
+        }
+        button.appendChild(iconSpan);
+
+        const textSpan = document.createElement('span');
+        textSpan.className = 'toc-item-text';
+        const buttonText = fullTextToDisplay ? (fullTextToDisplay.substring(0, 80) + (fullTextToDisplay.length > 80 ? '...' : '')) : chrome.i18n.getMessage('attachmentLabel');
+        textSpan.textContent = buttonText;
+        button.appendChild(textSpan);
     }
 
-    const textSpan = document.createElement('span');
-    textSpan.className = 'toc-item-text';
-    
-    const buttonText = fullTextToDisplay ? (fullTextToDisplay.substring(0, 80) + (fullTextToDisplay.length > 80 ? '...' : '')) : chrome.i18n.getMessage('attachmentLabel');
-    textSpan.textContent = buttonText;
-    button.title = fullTextToDisplay || 'Attachment';
-    
-    button.appendChild(textSpan);
+    if (isQuote) {
+      button.title = `"${quoteText}"
+${questionText}`;
+    } else {
+      button.title = fullTextToDisplay || 'Attachment';
+    }
 
     button.onclick = (e) => {
       e.stopPropagation();

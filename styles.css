@@ -149,7 +149,38 @@ body.dark-theme, :root[theme=dark] {
 .toc-item-button {
   display: flex;
   align-items: center;
-  height: 28px; /* Ensure consistent row height */
+  /* Let height be determined by content now */
+}
+
+.toc-item-button-multiline {
+  align-items: flex-start; /* Align icon to the top */
+  flex-direction: column;
+}
+
+.toc-quote-line {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.toc-text-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  overflow: hidden; /* Prevent text from overflowing the container */
+  flex: 1; /* Allow this container to grow and shrink */
+  min-width: 0; /* Allow this container to shrink below its content's intrinsic width */
+}
+
+.toc-item-quote-text {
+  font-style: italic;
+  font-size: 13px;
+  color: var(--quote-display-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%; /* Ensure it takes full width for ellipsis to work */
 }
 
 .toc-file-icon {
@@ -159,17 +190,24 @@ body.dark-theme, :root[theme=dark] {
   flex-shrink: 0; /* Prevent icon from shrinking */
 }
 
+.toc-file-icon > * {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
 .toc-item-text {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex-grow: 1;
+  width: 100%; /* Fill the container, allowing ellipsis to work */
 }
 
 .toc-quote-refer-icon {
   width: 16px;
   height: 16px;
-  margin-right: 8px;
+  margin-right: 4px; /* Adjusted spacing */
   flex-shrink: 0;
   background-image: var(--icon-refer);
   background-size: contain;
