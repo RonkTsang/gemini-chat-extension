@@ -1,6 +1,6 @@
 # Privacy Policy for Chat Outline for Gemini
 
-**Last Updated:** August 02, 2025
+**Last Updated:** August 31, 2025
 
 Thank you for using Chat Outline for Gemini ("the Extension"). Your privacy is important to us. This Privacy Policy explains what information the Extension does and does not collect from you.
 
@@ -21,7 +21,10 @@ The Extension operates by reading the content of the active Gemini webpage in yo
 
 ## 3. Permissions
 
-The Extension requires minimal permissions to function, specifically to access the content on `gemini.google.com` pages. This permission is solely used to create the outline and for no other purpose.
+The Extension requires minimal permissions to function:
+
+-   **Access to `gemini.google.com`**: This permission is necessary for the Extension to read the content of the active Gemini webpage and generate the chat outline. It is used for no other purpose.
+-   **Storage**: This permission is used to save your preferences, such as the state of feature switches. All data is stored locally on your device and is never transmitted to any external server.
 
 ## 4. Changes to This Policy
 

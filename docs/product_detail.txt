@@ -1,12 +1,7 @@
 ✨ WHAT'S NEW IN VERSION V0.0.3 ✨
 
 Introducing the "Quick-Quote" feature!
-You can now easily copy any part of the conversation to your clipboard.
-
-✨ WHAT'S NEW IN VERSION V0.0.2 ✨
-
-Introducing "📌 Pinned Mode"!
-You can now click to keep your Chat Outline permanently visible on the screen. No more hovering needed! Perfect for power users who need constant access to their conversation structure.
+You can now easily quote a section of a message for clarification or follow-up, which streamlines your workflow
 
 ---
 
@@ -17,8 +12,8 @@ It adds a minimal, unobtrusive icon to the Gemini page. Hover over it, and a cli
 Key Features:
   👀 Instant Overview: Get a bird's-eye view of all your prompts in the current chat.
   ☝️ One-Click Navigation: Simply click on any prompt in the outline to navigate directly to it. No more endless scrolling.
-  📌 (NEW!) Pinned Mode: Keep your chat outline always visible for instant access.
-  ✨ (NEW!) Quick-Quote: Easily copy any part of the conversation to your clipboard.
+  📌 Pinned Mode: Keep your chat outline always visible for instant access.
+  ✨ (NEW!) Quick-Quote: Quickly quote a specific part of a message to ask a follow-up question. It's incredibly efficient.
   🍃 Lightweight & Clean: Designed to be minimal and out of the way, keeping your workspace clean and focused. 
 
 A Fun Fact: 
