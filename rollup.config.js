@@ -5,13 +5,13 @@ import { rimraf } from 'rimraf';
 const isProduction = process.env.NODE_ENV === 'production';
 
 export default {
-  // Input file
-  input: 'content.js',
+  // Input files for content script and popup
+  input: ['content.js', 'popup.js'],
 
   // Output configuration
   output: {
-    file: 'dist/content.js',
-    format: 'iife' // Immediately Invoked Function Expression, suitable for browser scripts
+    dir: 'dist',
+    format: 'es' // Use ES module format for multiple outputs
   },
 
   // Plugin configuration
@@ -24,22 +24,24 @@ export default {
       }
     },
 
-    // In production, enable terser for minification and obfuscation
+    // In production, enable terser for minification
     isProduction && terser({
       compress: {
-        drop_console: true, // Remove all console.* calls
+        drop_console: true,
       },
-      mangle: true, // Obfuscate variable names
+      mangle: true,
       format: {
-        comments: false, // Remove all comments
+        comments: false,
       },
     }),
 
-    // Copy all non-JS static assets to the dist directory
+    // Copy all static assets to the dist directory
     copy({
       targets: [
         { src: 'manifest.json', dest: 'dist' },
         { src: 'styles.css', dest: 'dist' },
+        { src: 'popup.html', dest: 'dist' },
+        { src: 'popup.css', dest: 'dist' },
         { src: 'images', dest: 'dist' },
         { src: '_locales', dest: 'dist' },
         { src: 'vendor', dest: 'dist' }
