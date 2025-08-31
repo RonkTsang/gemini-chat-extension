@@ -15,6 +15,7 @@ This is a simple Chrome extension that adds a clickable outline to your [Gemini]
 -   **Clickable Outline**: Generates a list of all your prompts in a conversation.
 -   **Easy Navigation**: Click any prompt in the outline to instantly scroll to that point in the chat.
 -   **Pin the Outline**: Keep the outline popover open and visible while you scroll and interact with the chat.
+-   **Quick-Quote**: Easily copy any part of the conversation to your clipboard.
 -   **Minimalist UI**: The outline is accessible via a simple icon and can be opened or closed.
 -   **Light & Dark Theme**: Automatically adapts to the Gemini website's theme.
 

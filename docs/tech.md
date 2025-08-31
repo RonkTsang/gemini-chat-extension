@@ -1,8 +1,8 @@
-# Technical Documentation - v0.0.1
+# Technical Documentation - v0.0.2
 
 **Project Name:** Chat Outline for Gemini
-**Version:** 0.0.1
-**Date:** 2025-07-30
+**Version:** 0.0.2
+**Date:** 2025-08-01
 
 ## 1. Architecture Overview
 
@@ -94,6 +94,13 @@ The architecture follows these principles:
     - A `.pinned` class selector is used to apply styles that keep the popover visible (`position: absolute`) and enhance its appearance with a more prominent box shadow.
     - Animations (`@keyframes pop-in`) and transitions are used to provide smooth visual feedback when the popover is pinned or the badge appears.
 
+### 2.7 Quick-Quote Logic
+
+- **UI Injection**: A quote icon (`.gemini-quote-icon`) is injected into each message container (`message-content.text-content`) when the `updateTocList` function runs.
+- **Event Handling**: A single `click` event listener is attached to the main chat container (`.chat-container`). It uses event delegation to detect clicks specifically on `.gemini-quote-icon` elements.
+- **Clipboard API**: When the quote icon is clicked, the handler finds the parent message container, clones its content to preserve the original, removes the quote icon from the clone, and then uses the `navigator.clipboard.writeText()` API to copy the cleaned text content to the user's clipboard.
+- **Visual Feedback**: After a successful copy, the icon's appearance briefly changes to provide visual confirmation to the user.
+
 ---
 
 ## 3. Build & Dependency Management
@@ -116,3 +123,12 @@ The architecture follows these principles:
     2.  Go to `chrome://extensions`, enable "Developer mode", and click "Load unpacked", selecting the project's root directory.
     3.  Use the "Reload" button on the extension card after making changes.
     4.  Open the DevTools (F12) on the Gemini page to inspect injected elements and view console output from `content.js`.
+
+---
+
+## 5. Future Improvements
+
+- **Persist Pinned State**: Use `chrome.storage.local` to remember the pinned state across sessions.
+- **Refactor `content.js`**: As the script grows, consider breaking it down into smaller, more manageable modules (e.g., `ui.js`, `observer.js`).
+- **Add Linter/Formatter**: Integrate a tool like ESLint or Prettier to enforce a consistent code style.
+- **Improve Accessibility**: Add ARIA attributes to the injected UI elements to improve screen reader support.
