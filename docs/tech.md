@@ -96,14 +96,31 @@ The architecture follows these principles:
 
 ### 2.7 Quick-Quote Logic
 
-- **UI Injection**: A quote icon (`.gemini-quote-icon`) is injected into each message container (`message-content.text-content`) when the `updateTocList` function runs.
-- **Event Handling**: A single `click` event listener is attached to the main chat container (`.chat-container`). It uses event delegation to detect clicks specifically on `.gemini-quote-icon` elements.
-- **Clipboard API**: When the quote icon is clicked, the handler finds the parent message container, clones its content to preserve the original, removes the quote icon from the clone, and then uses the `navigator.clipboard.writeText()` API to copy the cleaned text content to the user's clipboard.
-- **Visual Feedback**: After a successful copy, the icon's appearance briefly changes to provide visual confirmation to the user.
+The "Quick-Quote" feature is a context-injection system that allows a user to select any text within the conversation and ask a follow-up question about it. The implementation is divided into three stages:
+
+- **1. Triggering and UI Injection**:
+    - An event listener on `mouseup` detects when a user finishes selecting text within a message.
+    - If the selection is valid, a Tippy.js tooltip appears, prompting the user to "Ask Gemini".
+    - Clicking this prompt triggers `addQuoteUI()`, which injects a visible quote summary above the main chat input box.
+    - **Core Mechanism**: Crucially, `addQuoteUI()` also prepends **hidden, structured text** into the chat input's editor (`.ql-editor`). This text is formatted as: `Regarding this: [selected_text]
+---------
+`. This ensures the context is sent with the user's next prompt.
+
+- **2. History Transformation**:
+    - After the user sends their question, a `MutationObserver` detects the new `<user-query>` element appearing in the chat history.
+    - The `transformQuoteInHistory()` function inspects the element's content. If it finds the special `Regarding this...` and `---------` format, it dynamically alters the element's DOM.
+    - It hides the original raw text and inserts a new, formatted UI that visually separates the quoted text from the user's actual question, making the relationship clear.
+    - For future reference (e.g., by the TOC), the parsed quote and question are stored in the `<user-query>` element's `dataset` attributes (`.dataset.isQuote`, `.dataset.quoteText`, etc.).
+
+- **3. Table of Contents (TOC) Integration**:
+    - When `updateTocList()` runs, it checks the `dataset` of each `<user-query>` element.
+    - If `dataset.isQuote` is `'true'`, it creates a special multi-line list item in the outline.
+    - This special item displays a snippet of the quoted text along with the user's question, providing clear context directly within the navigation outline.
 
 ---
 
 ## 3. Build & Dependency Management
+
 
 - **Dependencies**: Third-party libraries (Popper, Tippy) are vendored in the `vendor/` directory. Project development dependencies are managed by npm and listed in `package.json`.
 - **Installation**: Run `npm install` to download the required development tools.
