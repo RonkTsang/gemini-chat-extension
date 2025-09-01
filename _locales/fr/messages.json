@@ -28,7 +28,7 @@
     "description": "Button text for the quick quote feature."
   },
   "regardingThis": {
-    "message": "À ce sujet",
+    "message": "En se référant à ceci en particulier",
     "description": "Hidden text prepended to the user's input when using the quick quote feature."
   },
   "enableQuickQuoteLabel": {

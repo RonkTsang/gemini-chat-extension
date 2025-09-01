@@ -19,7 +19,7 @@
     "description": "Button text for the quick quote feature."
   },
   "regardingThis": {
-    "message": "이것에 관하여",
+    "message": "특히 이 부분에 대하여",
     "description": "Hidden text prepended to the user's input when using the quick quote feature."
   },
   "enableQuickQuoteLabel": {
