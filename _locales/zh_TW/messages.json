@@ -19,7 +19,7 @@
     "description": "Button text for the quick quote feature."
   },
   "regardingThis": {
-    "message": "關於此",
+    "message": "特指這段內容",
     "description": "Hidden text prepended to the user's input when using the quick quote feature."
   },
   "enableQuickQuoteLabel": {

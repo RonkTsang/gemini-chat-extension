@@ -28,7 +28,7 @@
     "description": "Button text for the quick quote feature."
   },
   "regardingThis": {
-    "message": "A este respeito",
+    "message": "Referindo-se a isto em particular",
     "description": "Hidden text prepended to the user's input when using the quick quote feature."
   },
   "enableQuickQuoteLabel": {
