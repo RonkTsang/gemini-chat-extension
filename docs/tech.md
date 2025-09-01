@@ -1,8 +1,8 @@
-# Technical Documentation - v0.0.1
+# Technical Documentation - v0.0.2
 
 **Project Name:** Chat Outline for Gemini
-**Version:** 0.0.1
-**Date:** 2025-07-30
+**Version:** 0.0.2
+**Date:** 2025-08-01
 
 ## 1. Architecture Overview
 
@@ -94,9 +94,33 @@ The architecture follows these principles:
     - A `.pinned` class selector is used to apply styles that keep the popover visible (`position: absolute`) and enhance its appearance with a more prominent box shadow.
     - Animations (`@keyframes pop-in`) and transitions are used to provide smooth visual feedback when the popover is pinned or the badge appears.
 
+### 2.7 Quick-Quote Logic
+
+The "Quick-Quote" feature is a context-injection system that allows a user to select any text within the conversation and ask a follow-up question about it. The implementation is divided into three stages:
+
+- **1. Triggering and UI Injection**:
+    - An event listener on `mouseup` detects when a user finishes selecting text within a message.
+    - If the selection is valid, a Tippy.js tooltip appears, prompting the user to "Ask Gemini".
+    - Clicking this prompt triggers `addQuoteUI()`, which injects a visible quote summary above the main chat input box.
+    - **Core Mechanism**: Crucially, `addQuoteUI()` also prepends **hidden, structured text** into the chat input's editor (`.ql-editor`). This text is formatted as: `Regarding this: [selected_text]
+---------
+`. This ensures the context is sent with the user's next prompt.
+
+- **2. History Transformation**:
+    - After the user sends their question, a `MutationObserver` detects the new `<user-query>` element appearing in the chat history.
+    - The `transformQuoteInHistory()` function inspects the element's content. If it finds the special `Regarding this...` and `---------` format, it dynamically alters the element's DOM.
+    - It hides the original raw text and inserts a new, formatted UI that visually separates the quoted text from the user's actual question, making the relationship clear.
+    - For future reference (e.g., by the TOC), the parsed quote and question are stored in the `<user-query>` element's `dataset` attributes (`.dataset.isQuote`, `.dataset.quoteText`, etc.).
+
+- **3. Table of Contents (TOC) Integration**:
+    - When `updateTocList()` runs, it checks the `dataset` of each `<user-query>` element.
+    - If `dataset.isQuote` is `'true'`, it creates a special multi-line list item in the outline.
+    - This special item displays a snippet of the quoted text along with the user's question, providing clear context directly within the navigation outline.
+
 ---
 
 ## 3. Build & Dependency Management
+
 
 - **Dependencies**: Third-party libraries (Popper, Tippy) are vendored in the `vendor/` directory. Project development dependencies are managed by npm and listed in `package.json`.
 - **Installation**: Run `npm install` to download the required development tools.
@@ -116,3 +140,12 @@ The architecture follows these principles:
     2.  Go to `chrome://extensions`, enable "Developer mode", and click "Load unpacked", selecting the project's root directory.
     3.  Use the "Reload" button on the extension card after making changes.
     4.  Open the DevTools (F12) on the Gemini page to inspect injected elements and view console output from `content.js`.
+
+---
+
+## 5. Future Improvements
+
+- **Persist Pinned State**: Use `chrome.storage.local` to remember the pinned state across sessions.
+- **Refactor `content.js`**: As the script grows, consider breaking it down into smaller, more manageable modules (e.g., `ui.js`, `observer.js`).
+- **Add Linter/Formatter**: Integrate a tool like ESLint or Prettier to enforce a consistent code style.
+- **Improve Accessibility**: Add ARIA attributes to the injected UI elements to improve screen reader support.

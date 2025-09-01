@@ -14,5 +14,25 @@
   "unpin": {
     "message": "Lösen",
     "description": "Tooltip for the entry icon when the outline is pinned."
+  },
+  "askGemini": {
+    "message": "Gemini fragen",
+    "description": "Button text for the quick quote feature."
+  },
+  "regardingThis": {
+    "message": "Diesbezüglich",
+    "description": "Hidden text prepended to the user's input when using the quick quote feature."
+  },
+  "enableQuickQuoteLabel": {
+    "message": "Schnellzitat aktivieren",
+    "description": "Label for the toggle switch in the popup."
+  },
+  "reportIssueLabel": {
+    "message": "Problem melden",
+    "description": "Label for the feedback link in the popup."
+  },
+  "enableChatOutlineLabel": {
+    "message": "Chat-Gliederung aktivieren",
+    "description": "Label for the toggle switch in the popup for the chat outline feature."
   }
 }

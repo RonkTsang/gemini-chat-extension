@@ -1,17 +1,46 @@
 {
+  "appName": {
+    "message": "Esboço de Chat para o Gemini",
+    "description": "The name of the application"
+  },
+  "appDescription": {
+    "message": "Navegue rapidamente pelos seus chats do Gemini com um esboço clicável. Nunca mais se perca em conversas longas.",
+    "description": "The description of the application"
+  },
   "emptyTocMessage": {
-    "message": "Assim que a conversa começar, o diretório será gravado aqui.",
-    "description": "Mensagem exibida quando o índice está vazio."
+    "message": "Nenhuma consulta de usuário encontrada neste chat ainda.",
+    "description": "Message displayed when the table of contents is empty."
   },
   "attachmentLabel": {
-    "message": "[Anexo]"
+    "message": "[Anexo]",
+    "description": "Label for TOC items that are file attachments instead of text."
   },
   "clickToPin": {
-    "message": "Clique para fixar",
+    "message": "Clicar para fixar",
     "description": "Tooltip for the entry icon when the outline is not pinned."
   },
   "unpin": {
     "message": "Desafixar",
     "description": "Tooltip for the entry icon when the outline is pinned."
+  },
+  "askGemini": {
+    "message": "Perguntar ao Gemini",
+    "description": "Button text for the quick quote feature."
+  },
+  "regardingThis": {
+    "message": "A este respeito",
+    "description": "Hidden text prepended to the user's input when using the quick quote feature."
+  },
+  "enableQuickQuoteLabel": {
+    "message": "Ativar Cotação Rápida",
+    "description": "Label for the toggle switch in the popup."
+  },
+  "reportIssueLabel": {
+    "message": "Reportar um Problema",
+    "description": "Label for the feedback link in the popup."
+  },
+  "enableChatOutlineLabel": {
+    "message": "Ativar Esboço de Chat",
+    "description": "Label for the toggle switch in the popup for the chat outline feature."
   }
 }
