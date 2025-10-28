@@ -1,0 +1,274 @@
+{
+  "emptyTocMessage": "Sobald die Konversation beginnt, wird das Verzeichnis hier aufgezeichnet.",
+  "attachmentLabel": "[Anhang]",
+  "clickToPin": "Klicken zum Anheften",
+  "unpin": "Lösen",
+  "askGemini": "Gemini fragen",
+  "regardingThis": "Bezugnehmend auf diesen Punkt im Besonderen",
+  "enableQuickQuoteLabel": "Schnellzitat aktivieren",
+  "reportIssueLabel": "Problem melden",
+  "enableChatOutlineLabel": "Chat-Gliederung aktivieren",
+  "settingsTitle": "Gemini-Einstellungen",
+  "settingsDescription": "Passen Sie Ihre Gemini-Chat-Erfahrung an",
+  "chatOutlineDescription": "Klickbare Gliederung für einfache Navigation generieren",
+  "quickQuoteDescription": "Text auswählen, um schnell zu zitieren und Fragen zu stellen",
+
+  "settingPanel": {
+    "chainPrompt": {
+      "new": "Neuer Chain Prompt",
+      "searchPlaceholder": "Nach Name oder Beschreibung suchen...",
+      "emptyTitle": "Noch keine Chain Prompts",
+      "emptyTitleSearch": "Keine passenden Chain Prompts gefunden",
+      "emptyDesc": "Erstellen Sie Ihren ersten Chain Prompt, um komplexe Gespräche zu automatisieren",
+      "emptyDescSearch": "Passen Sie die Suchanfrage an",
+      "create": "Chain Prompt erstellen",
+      "menu": {
+        "edit": "Bearbeiten",
+        "copy": "Kopieren",
+        "delete": "Löschen",
+        "moreOptions": "Weitere Optionen"
+      },
+      "stats": {
+        "steps": {
+          "1": "$1 Schritt",
+          "n": "$1 Schritte"
+        },
+        "variables": {
+          "1": "$1 Variable",
+          "n": "$1 Variablen"
+        }
+      },
+      "run": "Ausführen",
+      "toast": {
+        "loadFailed": "Laden der Chain Prompts fehlgeschlagen",
+        "unknownError": "Unbekannter Fehler",
+        "copied": "Chain Prompt kopiert",
+        "copiedDesc": "\"$1\" wurde erstellt",
+        "copyFailed": "Kopieren fehlgeschlagen",
+        "deleted": "Chain Prompt gelöscht",
+        "deleteFailed": "Löschen fehlgeschlagen",
+        "templateImported": "Vorlage importiert",
+        "templateImportedDesc": "\"$1\" wurde zu Ihren Prompts hinzugefügt",
+        "importFailed": "Vorlagenimport fehlgeschlagen"
+      },
+      "confirmDelete": "Möchten Sie \"$1\" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "templates": "Vorlagen",
+      "browseTemplates": "Vorlagen durchsuchen",
+      "import": "Importieren",
+      "categories": {
+        "all": "Alle",
+        "contentCreation": "Inhaltserstellung",
+        "codeDevelopment": "Code-Entwicklung",
+        "learningResearch": "Lernen & Forschung",
+        "businessOffice": "Business & Büro"
+      },
+      "templateModal": {
+        "title": "Vorlagenbibliothek",
+        "description": "Wählen Sie aus unseren kuratierten Vorlagen, um schnell zu starten",
+        "searchPlaceholder": "Vorlagen suchen...",
+        "emptyTitle": "Keine Vorlagen gefunden",
+        "emptyDesc": "Versuchen Sie, Ihre Suche oder Kategoriefilter anzupassen",
+        "close": "Schließen"
+      }
+    },
+    "editor": {
+      "stepsTitle": "Schritte",
+      "addStep": "Schritt hinzufügen",
+      "addAsVariable": "Als Variable hinzufügen",
+      "variableKeyUpdated": "Variablenschlüssel aktualisiert",
+      "variableReferencesUpdated": "Variablenreferenzen wurden aktualisiert",
+      "variableUpdateError": "Variablen-Update-Fehler",
+      "variableUpdateErrorDesc": "Fehler beim Aktualisieren der Variablenreferenzen in Schritten",
+      "startTitle": "Beginnen Sie mit dem Aufbau Ihrer Kette",
+      "startDesc": "Fügen Sie Schritte hinzu, um festzulegen, was Ihr Chain Prompt tun soll",
+      "addFirstStep": "Ersten Schritt hinzufügen",
+      "placeholders": {
+        "stepName": "Schritt $1",
+        "prompt": "Geben Sie hier Ihren Prompt ein. Verwenden Sie {{VARIABLE}} für Variablen.",
+        "name": "z. B. Blog-Artikel-Generator",
+        "desc": "Beschreiben Sie, was diese Kette tut...",
+        "variableKey": "Schlüssel (erforderlich)",
+        "variableDefault": "Standard (optional)"
+      },
+      "insert": "Einfügen:",
+      "variables": "Variablen",
+      "addVariable": "Variable hinzufügen",
+      "aria": {
+        "removeStep": "Schritt entfernen",
+        "addStep": "Schritt hinzufügen",
+        "addVariable": "Variable hinzufügen",
+        "removeVariable": "Variable entfernen"
+      },
+      "sidebar": {
+        "name": "Name *",
+        "description": "Beschreibung",
+        "inputVariables": "Eingangsvariablen",
+        "noVariables": "Keine Variablen definiert"
+      },
+      "footer": {
+        "cancel": "Abbrechen",
+        "save": "Speichern"
+      },
+      "validation": {
+        "title": "Validierungsfehler",
+        "enterName": "Bitte geben Sie einen Namen ein",
+        "addOneStep": "Bitte fügen Sie mindestens einen Schritt hinzu",
+        "allStepsHaveContent": "Alle Schritte müssen Prompt-Inhalt haben",
+        "duplicateKeys": "Doppelte Variablenschlüssel: $1"
+      },
+      "saveToast": {
+        "created": "Chain Prompt erstellt",
+        "updated": "Chain Prompt aktualisiert",
+        "ignoredVars": "$1 leere Variable(n) wurden nicht gespeichert",
+        "failed": "Speichern fehlgeschlagen"
+      },
+      "confirmDiscard": "Änderungen verwerfen?"
+    },
+    "runModal": {
+      "title": "Chain Prompt ausführen: $1",
+      "edit": "Bearbeiten",
+      "close": "Schließen",
+      "inputVariables": "Eingangsvariablen",
+      "noVariables": "Keine Variablen definiert",
+      "preview": "Vorschau",
+      "errorPrefix": "Fehler: $1",
+      "footer": {
+        "cancel": "Abbrechen",
+        "execute": "Ausführen",
+        "executing": "Wird ausgeführt..."
+      },
+      "placeholders": {
+        "enterVariable": "$1 eingeben"
+      },
+      "toaster": {
+        "completed": "Chain Prompt erfolgreich abgeschlossen",
+        "failed": "Chain Prompt fehlgeschlagen",
+        "aborted": "Chain Prompt abgebrochen",
+        "executionFailed": "Ausführung fehlgeschlagen",
+        "unknownError": "Unbekannter Fehler"
+      },
+      "log": {
+        "stepStart": "Schritt $1 gestartet:",
+        "stepCompleted": "Schritt $1 abgeschlossen:",
+        "stepFailed": "Schritt $1 fehlgeschlagen:"
+      }
+    },
+    "runStatus": {
+      "running": "$1 läuft ($2/$3)",
+      "succeeded": "$1 erfolgreich",
+      "failed": "$1 fehlgeschlagen",
+      "aborted": "$1 abgebrochen",
+      "stepPending": "Ausstehend",
+      "stepRunning": "Läuft...",
+      "stepSucceeded": "Abgeschlossen",
+      "stepFailed": "Fehlgeschlagen",
+      "stopExecution": "Ausführung stoppen",
+      "close": "Schließen",
+      "tooltip": {
+        "abortRun": "Ausführung abbrechen",
+        "closeStatus": "Status-Erinnerung schließen"
+      }
+    },
+    "config": {
+      "chainPrompt": {
+        "label": "Chain Prompt",
+        "title": "Chain Prompt",
+        "description": "Erstellen und verwalten Sie Chain Prompts für komplexe Gespräche.",
+        "views": {
+          "index": {
+            "title": "Chain Prompt",
+            "description": "Hauptübersicht für Chain Prompts."
+          },
+          "editor": {
+            "title": "Chain Prompt-Editor"
+          }
+        }
+      },
+      "quickFollowup": {
+        "label": "Schnelle Rückfrage",
+        "title": "Schnelle Rückfrage",
+        "description": "Richten Sie schnelle Folgeprompts für effiziente Kommunikation ein.",
+        "views": {
+          "index": {
+            "title": "Schnelle Rückfrage",
+            "description": "Hauptübersicht für schnelle Rückfragen."
+          },
+          "detail": {
+            "title": "Details zur schnellen Rückfrage",
+            "description": "Detaillierte Konfiguration für schnelle Rückfragen."
+          }
+        }
+      },
+      "chatOutline": {
+        "label": "Chat-Gliederung",
+        "title": "Chat-Gliederung",
+        "description": "Organisieren und strukturieren Sie Ihre Chat-Konversationen.",
+        "views": {
+          "index": {
+            "title": "Chat-Gliederung",
+            "description": "Hauptübersicht für Chat-Gliederungen."
+          },
+          "detail": {
+            "title": "Chat-Gliederung Details",
+            "description": "Detaillierte Konfiguration für Chat-Gliederungen."
+          }
+        }
+      },
+      "theme": {
+        "label": "Thema",
+        "title": "Thema",
+        "description": "Aussehen und Thema anpassen.",
+        "views": {
+          "index": {
+            "title": "Thema",
+            "description": "Hauptübersicht für Theme-Einstellungen."
+          },
+          "detail": {
+            "title": "Thema-Details",
+            "description": "Detaillierte Konfiguration für Theme-Einstellungen."
+          }
+        }
+      },
+      "support": {
+        "label": "Support",
+        "title": "Support",
+        "description": "Hilfe und Support für die Nutzung der Anwendung.",
+        "views": {
+          "index": {
+            "title": "Support",
+            "description": "Hauptübersicht für Support-Optionen."
+          },
+          "detail": {
+            "title": "Support-Details",
+            "description": "Detaillierte Support-Optionen und Kontaktinformationen."
+          }
+        }
+      },
+      "feedback": {
+        "label": "Feedback",
+        "title": "Feedback",
+        "description": "Teilen Sie uns Ihr Feedback und Ihre Vorschläge mit.",
+        "views": {
+          "index": {
+            "title": "Feedback",
+            "description": "Hauptübersicht für Feedback."
+          },
+          "detail": {
+            "title": "Feedback-Details",
+            "description": "Detaillierte Optionen zur Übermittlung von Feedback."
+          }
+        }
+      }
+    }
+  },
+  "executionCoordinator": {
+    "toast": {
+      "chatSwitched": {
+        "title": "Chain Prompt unterbrochen",
+        "description": "Ausführung wurde aufgrund von Chat-Wechsel abgebrochen"
+      }
+    }
+  }
+}
+
+

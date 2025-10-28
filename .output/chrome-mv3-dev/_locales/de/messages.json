@@ -1,0 +1,497 @@
+{
+  "emptyTocMessage": {
+    "message": "Sobald die Konversation beginnt, wird das Verzeichnis hier aufgezeichnet."
+  },
+  "attachmentLabel": {
+    "message": "[Anhang]"
+  },
+  "clickToPin": {
+    "message": "Klicken zum Anheften"
+  },
+  "unpin": {
+    "message": "Lösen"
+  },
+  "askGemini": {
+    "message": "Gemini fragen"
+  },
+  "regardingThis": {
+    "message": "Bezugnehmend auf diesen Punkt im Besonderen"
+  },
+  "enableQuickQuoteLabel": {
+    "message": "Schnellzitat aktivieren"
+  },
+  "reportIssueLabel": {
+    "message": "Problem melden"
+  },
+  "enableChatOutlineLabel": {
+    "message": "Chat-Gliederung aktivieren"
+  },
+  "settingsTitle": {
+    "message": "Gemini-Einstellungen"
+  },
+  "settingsDescription": {
+    "message": "Passen Sie Ihre Gemini-Chat-Erfahrung an"
+  },
+  "chatOutlineDescription": {
+    "message": "Klickbare Gliederung für einfache Navigation generieren"
+  },
+  "quickQuoteDescription": {
+    "message": "Text auswählen, um schnell zu zitieren und Fragen zu stellen"
+  },
+  "settingPanel_chainPrompt_new": {
+    "message": "Neuer Chain Prompt"
+  },
+  "settingPanel_chainPrompt_searchPlaceholder": {
+    "message": "Nach Name oder Beschreibung suchen..."
+  },
+  "settingPanel_chainPrompt_emptyTitle": {
+    "message": "Noch keine Chain Prompts"
+  },
+  "settingPanel_chainPrompt_emptyTitleSearch": {
+    "message": "Keine passenden Chain Prompts gefunden"
+  },
+  "settingPanel_chainPrompt_emptyDesc": {
+    "message": "Erstellen Sie Ihren ersten Chain Prompt, um komplexe Gespräche zu automatisieren"
+  },
+  "settingPanel_chainPrompt_emptyDescSearch": {
+    "message": "Passen Sie die Suchanfrage an"
+  },
+  "settingPanel_chainPrompt_create": {
+    "message": "Chain Prompt erstellen"
+  },
+  "settingPanel_chainPrompt_menu_edit": {
+    "message": "Bearbeiten"
+  },
+  "settingPanel_chainPrompt_menu_copy": {
+    "message": "Kopieren"
+  },
+  "settingPanel_chainPrompt_menu_delete": {
+    "message": "Löschen"
+  },
+  "settingPanel_chainPrompt_menu_moreOptions": {
+    "message": "Weitere Optionen"
+  },
+  "settingPanel_chainPrompt_stats_steps": {
+    "message": "$1 Schritt | $1 Schritte"
+  },
+  "settingPanel_chainPrompt_stats_variables": {
+    "message": "$1 Variable | $1 Variablen"
+  },
+  "settingPanel_chainPrompt_run": {
+    "message": "Ausführen"
+  },
+  "settingPanel_chainPrompt_toast_loadFailed": {
+    "message": "Laden der Chain Prompts fehlgeschlagen"
+  },
+  "settingPanel_chainPrompt_toast_unknownError": {
+    "message": "Unbekannter Fehler"
+  },
+  "settingPanel_chainPrompt_toast_copied": {
+    "message": "Chain Prompt kopiert"
+  },
+  "settingPanel_chainPrompt_toast_copiedDesc": {
+    "message": "\"$1\" wurde erstellt"
+  },
+  "settingPanel_chainPrompt_toast_copyFailed": {
+    "message": "Kopieren fehlgeschlagen"
+  },
+  "settingPanel_chainPrompt_toast_deleted": {
+    "message": "Chain Prompt gelöscht"
+  },
+  "settingPanel_chainPrompt_toast_deleteFailed": {
+    "message": "Löschen fehlgeschlagen"
+  },
+  "settingPanel_chainPrompt_toast_templateImported": {
+    "message": "Vorlage importiert"
+  },
+  "settingPanel_chainPrompt_toast_templateImportedDesc": {
+    "message": "\"$1\" wurde zu Ihren Prompts hinzugefügt"
+  },
+  "settingPanel_chainPrompt_toast_importFailed": {
+    "message": "Vorlagenimport fehlgeschlagen"
+  },
+  "settingPanel_chainPrompt_confirmDelete": {
+    "message": "Möchten Sie \"$1\" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+  },
+  "settingPanel_chainPrompt_templates": {
+    "message": "Vorlagen"
+  },
+  "settingPanel_chainPrompt_browseTemplates": {
+    "message": "Vorlagen durchsuchen"
+  },
+  "settingPanel_chainPrompt_import": {
+    "message": "Importieren"
+  },
+  "settingPanel_chainPrompt_categories_all": {
+    "message": "Alle"
+  },
+  "settingPanel_chainPrompt_categories_contentCreation": {
+    "message": "Inhaltserstellung"
+  },
+  "settingPanel_chainPrompt_categories_codeDevelopment": {
+    "message": "Code-Entwicklung"
+  },
+  "settingPanel_chainPrompt_categories_learningResearch": {
+    "message": "Lernen & Forschung"
+  },
+  "settingPanel_chainPrompt_categories_businessOffice": {
+    "message": "Business & Büro"
+  },
+  "settingPanel_chainPrompt_templateModal_title": {
+    "message": "Vorlagenbibliothek"
+  },
+  "settingPanel_chainPrompt_templateModal_description": {
+    "message": "Wählen Sie aus unseren kuratierten Vorlagen, um schnell zu starten"
+  },
+  "settingPanel_chainPrompt_templateModal_searchPlaceholder": {
+    "message": "Vorlagen suchen..."
+  },
+  "settingPanel_chainPrompt_templateModal_emptyTitle": {
+    "message": "Keine Vorlagen gefunden"
+  },
+  "settingPanel_chainPrompt_templateModal_emptyDesc": {
+    "message": "Versuchen Sie, Ihre Suche oder Kategoriefilter anzupassen"
+  },
+  "settingPanel_chainPrompt_templateModal_close": {
+    "message": "Schließen"
+  },
+  "settingPanel_editor_stepsTitle": {
+    "message": "Schritte"
+  },
+  "settingPanel_editor_addStep": {
+    "message": "Schritt hinzufügen"
+  },
+  "settingPanel_editor_addAsVariable": {
+    "message": "Als Variable hinzufügen"
+  },
+  "settingPanel_editor_variableKeyUpdated": {
+    "message": "Variablenschlüssel aktualisiert"
+  },
+  "settingPanel_editor_variableReferencesUpdated": {
+    "message": "Variablenreferenzen wurden aktualisiert"
+  },
+  "settingPanel_editor_variableUpdateError": {
+    "message": "Variablen-Update-Fehler"
+  },
+  "settingPanel_editor_variableUpdateErrorDesc": {
+    "message": "Fehler beim Aktualisieren der Variablenreferenzen in Schritten"
+  },
+  "settingPanel_editor_startTitle": {
+    "message": "Beginnen Sie mit dem Aufbau Ihrer Kette"
+  },
+  "settingPanel_editor_startDesc": {
+    "message": "Fügen Sie Schritte hinzu, um festzulegen, was Ihr Chain Prompt tun soll"
+  },
+  "settingPanel_editor_addFirstStep": {
+    "message": "Ersten Schritt hinzufügen"
+  },
+  "settingPanel_editor_placeholders_stepName": {
+    "message": "Schritt $1"
+  },
+  "settingPanel_editor_placeholders_prompt": {
+    "message": "Geben Sie hier Ihren Prompt ein. Verwenden Sie {{VARIABLE}} für Variablen."
+  },
+  "settingPanel_editor_placeholders_name": {
+    "message": "z. B. Blog-Artikel-Generator"
+  },
+  "settingPanel_editor_placeholders_desc": {
+    "message": "Beschreiben Sie, was diese Kette tut..."
+  },
+  "settingPanel_editor_placeholders_variableKey": {
+    "message": "Schlüssel (erforderlich)"
+  },
+  "settingPanel_editor_placeholders_variableDefault": {
+    "message": "Standard (optional)"
+  },
+  "settingPanel_editor_insert": {
+    "message": "Einfügen:"
+  },
+  "settingPanel_editor_variables": {
+    "message": "Variablen"
+  },
+  "settingPanel_editor_addVariable": {
+    "message": "Variable hinzufügen"
+  },
+  "settingPanel_editor_aria_removeStep": {
+    "message": "Schritt entfernen"
+  },
+  "settingPanel_editor_aria_addStep": {
+    "message": "Schritt hinzufügen"
+  },
+  "settingPanel_editor_aria_addVariable": {
+    "message": "Variable hinzufügen"
+  },
+  "settingPanel_editor_aria_removeVariable": {
+    "message": "Variable entfernen"
+  },
+  "settingPanel_editor_sidebar_name": {
+    "message": "Name *"
+  },
+  "settingPanel_editor_sidebar_description": {
+    "message": "Beschreibung"
+  },
+  "settingPanel_editor_sidebar_inputVariables": {
+    "message": "Eingangsvariablen"
+  },
+  "settingPanel_editor_sidebar_noVariables": {
+    "message": "Keine Variablen definiert"
+  },
+  "settingPanel_editor_footer_cancel": {
+    "message": "Abbrechen"
+  },
+  "settingPanel_editor_footer_save": {
+    "message": "Speichern"
+  },
+  "settingPanel_editor_validation_title": {
+    "message": "Validierungsfehler"
+  },
+  "settingPanel_editor_validation_enterName": {
+    "message": "Bitte geben Sie einen Namen ein"
+  },
+  "settingPanel_editor_validation_addOneStep": {
+    "message": "Bitte fügen Sie mindestens einen Schritt hinzu"
+  },
+  "settingPanel_editor_validation_allStepsHaveContent": {
+    "message": "Alle Schritte müssen Prompt-Inhalt haben"
+  },
+  "settingPanel_editor_validation_duplicateKeys": {
+    "message": "Doppelte Variablenschlüssel: $1"
+  },
+  "settingPanel_editor_saveToast_created": {
+    "message": "Chain Prompt erstellt"
+  },
+  "settingPanel_editor_saveToast_updated": {
+    "message": "Chain Prompt aktualisiert"
+  },
+  "settingPanel_editor_saveToast_ignoredVars": {
+    "message": "$1 leere Variable(n) wurden nicht gespeichert"
+  },
+  "settingPanel_editor_saveToast_failed": {
+    "message": "Speichern fehlgeschlagen"
+  },
+  "settingPanel_editor_confirmDiscard": {
+    "message": "Änderungen verwerfen?"
+  },
+  "settingPanel_runModal_title": {
+    "message": "Chain Prompt ausführen: $1"
+  },
+  "settingPanel_runModal_edit": {
+    "message": "Bearbeiten"
+  },
+  "settingPanel_runModal_close": {
+    "message": "Schließen"
+  },
+  "settingPanel_runModal_inputVariables": {
+    "message": "Eingangsvariablen"
+  },
+  "settingPanel_runModal_noVariables": {
+    "message": "Keine Variablen definiert"
+  },
+  "settingPanel_runModal_preview": {
+    "message": "Vorschau"
+  },
+  "settingPanel_runModal_errorPrefix": {
+    "message": "Fehler: $1"
+  },
+  "settingPanel_runModal_footer_cancel": {
+    "message": "Abbrechen"
+  },
+  "settingPanel_runModal_footer_execute": {
+    "message": "Ausführen"
+  },
+  "settingPanel_runModal_footer_executing": {
+    "message": "Wird ausgeführt..."
+  },
+  "settingPanel_runModal_placeholders_enterVariable": {
+    "message": "$1 eingeben"
+  },
+  "settingPanel_runModal_toaster_completed": {
+    "message": "Chain Prompt erfolgreich abgeschlossen"
+  },
+  "settingPanel_runModal_toaster_failed": {
+    "message": "Chain Prompt fehlgeschlagen"
+  },
+  "settingPanel_runModal_toaster_aborted": {
+    "message": "Chain Prompt abgebrochen"
+  },
+  "settingPanel_runModal_toaster_executionFailed": {
+    "message": "Ausführung fehlgeschlagen"
+  },
+  "settingPanel_runModal_toaster_unknownError": {
+    "message": "Unbekannter Fehler"
+  },
+  "settingPanel_runModal_log_stepStart": {
+    "message": "Schritt $1 gestartet:"
+  },
+  "settingPanel_runModal_log_stepCompleted": {
+    "message": "Schritt $1 abgeschlossen:"
+  },
+  "settingPanel_runModal_log_stepFailed": {
+    "message": "Schritt $1 fehlgeschlagen:"
+  },
+  "settingPanel_runStatus_running": {
+    "message": "$1 läuft ($2/$3)"
+  },
+  "settingPanel_runStatus_succeeded": {
+    "message": "$1 erfolgreich"
+  },
+  "settingPanel_runStatus_failed": {
+    "message": "$1 fehlgeschlagen"
+  },
+  "settingPanel_runStatus_aborted": {
+    "message": "$1 abgebrochen"
+  },
+  "settingPanel_runStatus_stepPending": {
+    "message": "Ausstehend"
+  },
+  "settingPanel_runStatus_stepRunning": {
+    "message": "Läuft..."
+  },
+  "settingPanel_runStatus_stepSucceeded": {
+    "message": "Abgeschlossen"
+  },
+  "settingPanel_runStatus_stepFailed": {
+    "message": "Fehlgeschlagen"
+  },
+  "settingPanel_runStatus_stopExecution": {
+    "message": "Ausführung stoppen"
+  },
+  "settingPanel_runStatus_close": {
+    "message": "Schließen"
+  },
+  "settingPanel_runStatus_tooltip_abortRun": {
+    "message": "Ausführung abbrechen"
+  },
+  "settingPanel_runStatus_tooltip_closeStatus": {
+    "message": "Status-Erinnerung schließen"
+  },
+  "settingPanel_config_chainPrompt_label": {
+    "message": "Chain Prompt"
+  },
+  "settingPanel_config_chainPrompt_title": {
+    "message": "Chain Prompt"
+  },
+  "settingPanel_config_chainPrompt_description": {
+    "message": "Erstellen und verwalten Sie Chain Prompts für komplexe Gespräche."
+  },
+  "settingPanel_config_chainPrompt_views_index_title": {
+    "message": "Chain Prompt"
+  },
+  "settingPanel_config_chainPrompt_views_index_description": {
+    "message": "Hauptübersicht für Chain Prompts."
+  },
+  "settingPanel_config_chainPrompt_views_editor_title": {
+    "message": "Chain Prompt-Editor"
+  },
+  "settingPanel_config_quickFollowup_label": {
+    "message": "Schnelle Rückfrage"
+  },
+  "settingPanel_config_quickFollowup_title": {
+    "message": "Schnelle Rückfrage"
+  },
+  "settingPanel_config_quickFollowup_description": {
+    "message": "Richten Sie schnelle Folgeprompts für effiziente Kommunikation ein."
+  },
+  "settingPanel_config_quickFollowup_views_index_title": {
+    "message": "Schnelle Rückfrage"
+  },
+  "settingPanel_config_quickFollowup_views_index_description": {
+    "message": "Hauptübersicht für schnelle Rückfragen."
+  },
+  "settingPanel_config_quickFollowup_views_detail_title": {
+    "message": "Details zur schnellen Rückfrage"
+  },
+  "settingPanel_config_quickFollowup_views_detail_description": {
+    "message": "Detaillierte Konfiguration für schnelle Rückfragen."
+  },
+  "settingPanel_config_chatOutline_label": {
+    "message": "Chat-Gliederung"
+  },
+  "settingPanel_config_chatOutline_title": {
+    "message": "Chat-Gliederung"
+  },
+  "settingPanel_config_chatOutline_description": {
+    "message": "Organisieren und strukturieren Sie Ihre Chat-Konversationen."
+  },
+  "settingPanel_config_chatOutline_views_index_title": {
+    "message": "Chat-Gliederung"
+  },
+  "settingPanel_config_chatOutline_views_index_description": {
+    "message": "Hauptübersicht für Chat-Gliederungen."
+  },
+  "settingPanel_config_chatOutline_views_detail_title": {
+    "message": "Chat-Gliederung Details"
+  },
+  "settingPanel_config_chatOutline_views_detail_description": {
+    "message": "Detaillierte Konfiguration für Chat-Gliederungen."
+  },
+  "settingPanel_config_theme_label": {
+    "message": "Thema"
+  },
+  "settingPanel_config_theme_title": {
+    "message": "Thema"
+  },
+  "settingPanel_config_theme_description": {
+    "message": "Aussehen und Thema anpassen."
+  },
+  "settingPanel_config_theme_views_index_title": {
+    "message": "Thema"
+  },
+  "settingPanel_config_theme_views_index_description": {
+    "message": "Hauptübersicht für Theme-Einstellungen."
+  },
+  "settingPanel_config_theme_views_detail_title": {
+    "message": "Thema-Details"
+  },
+  "settingPanel_config_theme_views_detail_description": {
+    "message": "Detaillierte Konfiguration für Theme-Einstellungen."
+  },
+  "settingPanel_config_support_label": {
+    "message": "Support"
+  },
+  "settingPanel_config_support_title": {
+    "message": "Support"
+  },
+  "settingPanel_config_support_description": {
+    "message": "Hilfe und Support für die Nutzung der Anwendung."
+  },
+  "settingPanel_config_support_views_index_title": {
+    "message": "Support"
+  },
+  "settingPanel_config_support_views_index_description": {
+    "message": "Hauptübersicht für Support-Optionen."
+  },
+  "settingPanel_config_support_views_detail_title": {
+    "message": "Support-Details"
+  },
+  "settingPanel_config_support_views_detail_description": {
+    "message": "Detaillierte Support-Optionen und Kontaktinformationen."
+  },
+  "settingPanel_config_feedback_label": {
+    "message": "Feedback"
+  },
+  "settingPanel_config_feedback_title": {
+    "message": "Feedback"
+  },
+  "settingPanel_config_feedback_description": {
+    "message": "Teilen Sie uns Ihr Feedback und Ihre Vorschläge mit."
+  },
+  "settingPanel_config_feedback_views_index_title": {
+    "message": "Feedback"
+  },
+  "settingPanel_config_feedback_views_index_description": {
+    "message": "Hauptübersicht für Feedback."
+  },
+  "settingPanel_config_feedback_views_detail_title": {
+    "message": "Feedback-Details"
+  },
+  "settingPanel_config_feedback_views_detail_description": {
+    "message": "Detaillierte Optionen zur Übermittlung von Feedback."
+  },
+  "executionCoordinator_toast_chatSwitched_title": {
+    "message": "Chain Prompt unterbrochen"
+  },
+  "executionCoordinator_toast_chatSwitched_description": {
+    "message": "Ausführung wurde aufgrund von Chat-Wechsel abgebrochen"
+  }
+}

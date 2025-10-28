@@ -1,0 +1,497 @@
+{
+  "emptyTocMessage": {
+    "message": "대화가 시작되면 여기에 디렉토리가 기록됩니다."
+  },
+  "attachmentLabel": {
+    "message": "[첨부 파일]"
+  },
+  "clickToPin": {
+    "message": "클릭하여 고정"
+  },
+  "unpin": {
+    "message": "고정 해제"
+  },
+  "askGemini": {
+    "message": "Gemini에게 물어보기"
+  },
+  "regardingThis": {
+    "message": "특히 이 부분에 대하여"
+  },
+  "enableQuickQuoteLabel": {
+    "message": "빠른 인용 사용"
+  },
+  "reportIssueLabel": {
+    "message": "문제 보고"
+  },
+  "enableChatOutlineLabel": {
+    "message": "채팅 개요 활성화"
+  },
+  "settingsTitle": {
+    "message": "Gemini 설정"
+  },
+  "settingsDescription": {
+    "message": "Gemini 채팅 경험을 사용자 정의"
+  },
+  "chatOutlineDescription": {
+    "message": "쉬운 탐색을 위한 클릭 가능한 개요 생성"
+  },
+  "quickQuoteDescription": {
+    "message": "텍스트를 선택하여 빠르게 인용하고 질문하기"
+  },
+  "settingPanel_chainPrompt_new": {
+    "message": "새 Chain Prompt"
+  },
+  "settingPanel_chainPrompt_searchPlaceholder": {
+    "message": "이름 또는 설명으로 검색..."
+  },
+  "settingPanel_chainPrompt_emptyTitle": {
+    "message": "아직 Chain Prompt가 없습니다"
+  },
+  "settingPanel_chainPrompt_emptyTitleSearch": {
+    "message": "일치하는 Chain Prompt가 없습니다"
+  },
+  "settingPanel_chainPrompt_emptyDesc": {
+    "message": "복잡한 대화를 자동화하기 위해 첫 번째 Chain Prompt를 만들어보세요"
+  },
+  "settingPanel_chainPrompt_emptyDescSearch": {
+    "message": "검색어를 조정해 보세요"
+  },
+  "settingPanel_chainPrompt_create": {
+    "message": "Chain Prompt 만들기"
+  },
+  "settingPanel_chainPrompt_menu_edit": {
+    "message": "편집"
+  },
+  "settingPanel_chainPrompt_menu_copy": {
+    "message": "복사"
+  },
+  "settingPanel_chainPrompt_menu_delete": {
+    "message": "삭제"
+  },
+  "settingPanel_chainPrompt_menu_moreOptions": {
+    "message": "더 많은 옵션"
+  },
+  "settingPanel_chainPrompt_stats_steps": {
+    "message": "$1 단계 | $1 단계"
+  },
+  "settingPanel_chainPrompt_stats_variables": {
+    "message": "$1 변수 | $1 변수"
+  },
+  "settingPanel_chainPrompt_run": {
+    "message": "실행"
+  },
+  "settingPanel_chainPrompt_toast_loadFailed": {
+    "message": "Chain Prompt 로드 실패"
+  },
+  "settingPanel_chainPrompt_toast_unknownError": {
+    "message": "알 수 없는 오류"
+  },
+  "settingPanel_chainPrompt_toast_copied": {
+    "message": "Chain Prompt 복사됨"
+  },
+  "settingPanel_chainPrompt_toast_copiedDesc": {
+    "message": "\"$1\" 이(가) 생성되었습니다"
+  },
+  "settingPanel_chainPrompt_toast_copyFailed": {
+    "message": "복사 실패"
+  },
+  "settingPanel_chainPrompt_toast_deleted": {
+    "message": "Chain Prompt 삭제됨"
+  },
+  "settingPanel_chainPrompt_toast_deleteFailed": {
+    "message": "삭제 실패"
+  },
+  "settingPanel_chainPrompt_toast_templateImported": {
+    "message": "템플릿이 가져와졌습니다"
+  },
+  "settingPanel_chainPrompt_toast_templateImportedDesc": {
+    "message": "\"$1\" 이(가) 프롬프트에 추가되었습니다"
+  },
+  "settingPanel_chainPrompt_toast_importFailed": {
+    "message": "템플릿 가져오기 실패"
+  },
+  "settingPanel_chainPrompt_confirmDelete": {
+    "message": "\"$1\" 을(를) 삭제하시겠습니까? 이 작업은 취소할 수 없습니다."
+  },
+  "settingPanel_chainPrompt_templates": {
+    "message": "템플릿"
+  },
+  "settingPanel_chainPrompt_browseTemplates": {
+    "message": "템플릿 찾아보기"
+  },
+  "settingPanel_chainPrompt_import": {
+    "message": "가져오기"
+  },
+  "settingPanel_chainPrompt_categories_all": {
+    "message": "모두"
+  },
+  "settingPanel_chainPrompt_categories_contentCreation": {
+    "message": "콘텐츠 제작"
+  },
+  "settingPanel_chainPrompt_categories_codeDevelopment": {
+    "message": "코드 개발"
+  },
+  "settingPanel_chainPrompt_categories_learningResearch": {
+    "message": "학습 및 연구"
+  },
+  "settingPanel_chainPrompt_categories_businessOffice": {
+    "message": "비즈니스 및 사무"
+  },
+  "settingPanel_chainPrompt_templateModal_title": {
+    "message": "템플릿 라이브러리"
+  },
+  "settingPanel_chainPrompt_templateModal_description": {
+    "message": "선별된 템플릿에서 선택하여 빠르게 시작하세요"
+  },
+  "settingPanel_chainPrompt_templateModal_searchPlaceholder": {
+    "message": "템플릿 검색..."
+  },
+  "settingPanel_chainPrompt_templateModal_emptyTitle": {
+    "message": "템플릿을 찾을 수 없습니다"
+  },
+  "settingPanel_chainPrompt_templateModal_emptyDesc": {
+    "message": "검색어나 카테고리 필터를 조정해 보세요"
+  },
+  "settingPanel_chainPrompt_templateModal_close": {
+    "message": "닫기"
+  },
+  "settingPanel_editor_stepsTitle": {
+    "message": "단계"
+  },
+  "settingPanel_editor_addStep": {
+    "message": "단계 추가"
+  },
+  "settingPanel_editor_addAsVariable": {
+    "message": "변수로 추가"
+  },
+  "settingPanel_editor_variableKeyUpdated": {
+    "message": "변수 키가 업데이트되었습니다"
+  },
+  "settingPanel_editor_variableReferencesUpdated": {
+    "message": "변수 참조가 업데이트되었습니다"
+  },
+  "settingPanel_editor_variableUpdateError": {
+    "message": "변수 업데이트 오류"
+  },
+  "settingPanel_editor_variableUpdateErrorDesc": {
+    "message": "단계의 변수 참조 업데이트에 실패했습니다"
+  },
+  "settingPanel_editor_startTitle": {
+    "message": "체인 구축 시작"
+  },
+  "settingPanel_editor_startDesc": {
+    "message": "Chain Prompt가 수행할 작업을 정의하기 위해 단계를 추가하세요"
+  },
+  "settingPanel_editor_addFirstStep": {
+    "message": "첫 번째 단계 추가"
+  },
+  "settingPanel_editor_placeholders_stepName": {
+    "message": "단계 $1"
+  },
+  "settingPanel_editor_placeholders_prompt": {
+    "message": "여기에 프롬프트를 입력하세요. 변수에는 {{VARIABLE}} 를 사용하세요."
+  },
+  "settingPanel_editor_placeholders_name": {
+    "message": "예: 블로그 글 생성기"
+  },
+  "settingPanel_editor_placeholders_desc": {
+    "message": "이 체인이 수행하는 작업을 설명하세요..."
+  },
+  "settingPanel_editor_placeholders_variableKey": {
+    "message": "키(필수)"
+  },
+  "settingPanel_editor_placeholders_variableDefault": {
+    "message": "기본값(선택)"
+  },
+  "settingPanel_editor_insert": {
+    "message": "삽입:"
+  },
+  "settingPanel_editor_variables": {
+    "message": "변수"
+  },
+  "settingPanel_editor_addVariable": {
+    "message": "변수 추가"
+  },
+  "settingPanel_editor_aria_removeStep": {
+    "message": "단계 제거"
+  },
+  "settingPanel_editor_aria_addStep": {
+    "message": "단계 추가"
+  },
+  "settingPanel_editor_aria_addVariable": {
+    "message": "변수 추가"
+  },
+  "settingPanel_editor_aria_removeVariable": {
+    "message": "변수 제거"
+  },
+  "settingPanel_editor_sidebar_name": {
+    "message": "이름 *"
+  },
+  "settingPanel_editor_sidebar_description": {
+    "message": "설명"
+  },
+  "settingPanel_editor_sidebar_inputVariables": {
+    "message": "입력 변수"
+  },
+  "settingPanel_editor_sidebar_noVariables": {
+    "message": "변수가 정의되지 않았습니다"
+  },
+  "settingPanel_editor_footer_cancel": {
+    "message": "취소"
+  },
+  "settingPanel_editor_footer_save": {
+    "message": "저장"
+  },
+  "settingPanel_editor_validation_title": {
+    "message": "검증 오류"
+  },
+  "settingPanel_editor_validation_enterName": {
+    "message": "이름을 입력하세요"
+  },
+  "settingPanel_editor_validation_addOneStep": {
+    "message": "최소 한 개의 단계를 추가하세요"
+  },
+  "settingPanel_editor_validation_allStepsHaveContent": {
+    "message": "모든 단계에는 프롬프트 내용이 있어야 합니다"
+  },
+  "settingPanel_editor_validation_duplicateKeys": {
+    "message": "중복된 변수 키: $1"
+  },
+  "settingPanel_editor_saveToast_created": {
+    "message": "Chain Prompt가 생성되었습니다"
+  },
+  "settingPanel_editor_saveToast_updated": {
+    "message": "Chain Prompt가 업데이트되었습니다"
+  },
+  "settingPanel_editor_saveToast_ignoredVars": {
+    "message": "$1개의 빈 변수는 저장되지 않았습니다"
+  },
+  "settingPanel_editor_saveToast_failed": {
+    "message": "저장 실패"
+  },
+  "settingPanel_editor_confirmDiscard": {
+    "message": "변경 사항을 취소하시겠습니까?"
+  },
+  "settingPanel_runModal_title": {
+    "message": "Chain Prompt 실행: $1"
+  },
+  "settingPanel_runModal_edit": {
+    "message": "편집"
+  },
+  "settingPanel_runModal_close": {
+    "message": "닫기"
+  },
+  "settingPanel_runModal_inputVariables": {
+    "message": "입력 변수"
+  },
+  "settingPanel_runModal_noVariables": {
+    "message": "변수가 정의되지 않았습니다"
+  },
+  "settingPanel_runModal_preview": {
+    "message": "미리보기"
+  },
+  "settingPanel_runModal_errorPrefix": {
+    "message": "오류: $1"
+  },
+  "settingPanel_runModal_footer_cancel": {
+    "message": "취소"
+  },
+  "settingPanel_runModal_footer_execute": {
+    "message": "실행"
+  },
+  "settingPanel_runModal_footer_executing": {
+    "message": "실행 중..."
+  },
+  "settingPanel_runModal_placeholders_enterVariable": {
+    "message": "$1 입력"
+  },
+  "settingPanel_runModal_toaster_completed": {
+    "message": "Chain Prompt가 성공적으로 완료되었습니다"
+  },
+  "settingPanel_runModal_toaster_failed": {
+    "message": "Chain Prompt 실패"
+  },
+  "settingPanel_runModal_toaster_aborted": {
+    "message": "Chain Prompt가 중단되었습니다"
+  },
+  "settingPanel_runModal_toaster_executionFailed": {
+    "message": "실행 실패"
+  },
+  "settingPanel_runModal_toaster_unknownError": {
+    "message": "알 수 없는 오류"
+  },
+  "settingPanel_runModal_log_stepStart": {
+    "message": "단계 $1 시작:"
+  },
+  "settingPanel_runModal_log_stepCompleted": {
+    "message": "단계 $1 완료:"
+  },
+  "settingPanel_runModal_log_stepFailed": {
+    "message": "단계 $1 실패:"
+  },
+  "settingPanel_runStatus_running": {
+    "message": "$1 실행 중 ($2/$3)"
+  },
+  "settingPanel_runStatus_succeeded": {
+    "message": "$1 성공"
+  },
+  "settingPanel_runStatus_failed": {
+    "message": "$1 실패"
+  },
+  "settingPanel_runStatus_aborted": {
+    "message": "$1 중단됨"
+  },
+  "settingPanel_runStatus_stepPending": {
+    "message": "대기 중"
+  },
+  "settingPanel_runStatus_stepRunning": {
+    "message": "실행 중..."
+  },
+  "settingPanel_runStatus_stepSucceeded": {
+    "message": "완료"
+  },
+  "settingPanel_runStatus_stepFailed": {
+    "message": "실패"
+  },
+  "settingPanel_runStatus_stopExecution": {
+    "message": "실행 중지"
+  },
+  "settingPanel_runStatus_close": {
+    "message": "닫기"
+  },
+  "settingPanel_runStatus_tooltip_abortRun": {
+    "message": "실행 중단"
+  },
+  "settingPanel_runStatus_tooltip_closeStatus": {
+    "message": "상태 알림 닫기"
+  },
+  "settingPanel_config_chainPrompt_label": {
+    "message": "Chain Prompt"
+  },
+  "settingPanel_config_chainPrompt_title": {
+    "message": "Chain Prompt"
+  },
+  "settingPanel_config_chainPrompt_description": {
+    "message": "복잡한 대화를 위한 Chain Prompt를 생성하고 관리합니다."
+  },
+  "settingPanel_config_chainPrompt_views_index_title": {
+    "message": "Chain Prompt"
+  },
+  "settingPanel_config_chainPrompt_views_index_description": {
+    "message": "Chain Prompt의 기본 개요."
+  },
+  "settingPanel_config_chainPrompt_views_editor_title": {
+    "message": "Chain Prompt 편집기"
+  },
+  "settingPanel_config_quickFollowup_label": {
+    "message": "빠른 후속 질문"
+  },
+  "settingPanel_config_quickFollowup_title": {
+    "message": "빠른 후속 질문"
+  },
+  "settingPanel_config_quickFollowup_description": {
+    "message": "효율적인 커뮤니케이션을 위한 빠른 후속 프롬프트를 설정합니다."
+  },
+  "settingPanel_config_quickFollowup_views_index_title": {
+    "message": "빠른 후속 질문"
+  },
+  "settingPanel_config_quickFollowup_views_index_description": {
+    "message": "빠른 후속 질문의 기본 개요."
+  },
+  "settingPanel_config_quickFollowup_views_detail_title": {
+    "message": "빠른 후속 질문 상세"
+  },
+  "settingPanel_config_quickFollowup_views_detail_description": {
+    "message": "빠른 후속 질문의 상세 구성."
+  },
+  "settingPanel_config_chatOutline_label": {
+    "message": "채팅 개요"
+  },
+  "settingPanel_config_chatOutline_title": {
+    "message": "채팅 개요"
+  },
+  "settingPanel_config_chatOutline_description": {
+    "message": "채팅 대화를 구성하고 구조화합니다."
+  },
+  "settingPanel_config_chatOutline_views_index_title": {
+    "message": "채팅 개요"
+  },
+  "settingPanel_config_chatOutline_views_index_description": {
+    "message": "채팅 개요의 기본 개요."
+  },
+  "settingPanel_config_chatOutline_views_detail_title": {
+    "message": "채팅 개요 상세"
+  },
+  "settingPanel_config_chatOutline_views_detail_description": {
+    "message": "채팅 개요의 상세 구성."
+  },
+  "settingPanel_config_theme_label": {
+    "message": "테마"
+  },
+  "settingPanel_config_theme_title": {
+    "message": "테마"
+  },
+  "settingPanel_config_theme_description": {
+    "message": "모양과 테마 설정을 사용자 지정합니다."
+  },
+  "settingPanel_config_theme_views_index_title": {
+    "message": "테마"
+  },
+  "settingPanel_config_theme_views_index_description": {
+    "message": "테마 설정의 기본 개요."
+  },
+  "settingPanel_config_theme_views_detail_title": {
+    "message": "테마 상세"
+  },
+  "settingPanel_config_theme_views_detail_description": {
+    "message": "테마 설정의 상세 구성."
+  },
+  "settingPanel_config_support_label": {
+    "message": "지원"
+  },
+  "settingPanel_config_support_title": {
+    "message": "지원"
+  },
+  "settingPanel_config_support_description": {
+    "message": "애플리케이션 사용에 대한 도움말 및 지원을 받으세요."
+  },
+  "settingPanel_config_support_views_index_title": {
+    "message": "지원"
+  },
+  "settingPanel_config_support_views_index_description": {
+    "message": "지원 옵션의 기본 개요."
+  },
+  "settingPanel_config_support_views_detail_title": {
+    "message": "지원 상세"
+  },
+  "settingPanel_config_support_views_detail_description": {
+    "message": "상세 지원 옵션 및 연락처 정보."
+  },
+  "settingPanel_config_feedback_label": {
+    "message": "피드백"
+  },
+  "settingPanel_config_feedback_title": {
+    "message": "피드백"
+  },
+  "settingPanel_config_feedback_description": {
+    "message": "피드백과 제안을 공유해주세요."
+  },
+  "settingPanel_config_feedback_views_index_title": {
+    "message": "피드백"
+  },
+  "settingPanel_config_feedback_views_index_description": {
+    "message": "피드백의 기본 개요."
+  },
+  "settingPanel_config_feedback_views_detail_title": {
+    "message": "피드백 상세"
+  },
+  "settingPanel_config_feedback_views_detail_description": {
+    "message": "피드백 제출을 위한 상세 옵션."
+  },
+  "executionCoordinator_toast_chatSwitched_title": {
+    "message": "Chain Prompt가 중단되었습니다"
+  },
+  "executionCoordinator_toast_chatSwitched_description": {
+    "message": "채팅 전환으로 인해 실행이 중단되었습니다"
+  }
+}

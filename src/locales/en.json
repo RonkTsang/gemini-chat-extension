@@ -1,0 +1,273 @@
+{
+  "emptyTocMessage": "No user prompts found in this chat yet.",
+  "attachmentLabel": "[Attachment]",
+  "clickToPin": "Click to pin",
+  "unpin": "Unpin",
+  "askGemini": "Ask Gemini",
+  "regardingThis": "Referring to this in particular",
+  "enableQuickQuoteLabel": "Enable Quick Follow-up",
+  "reportIssueLabel": "Report an Issue",
+  "enableChatOutlineLabel": "Enable Chat Outline",
+  "settingsTitle":  "Gemini Settings",
+  "settingsDescription": "Customize your Gemini chat experience",
+  "chatOutlineDescription": "Generate clickable outline for easy navigation",
+  "quickQuoteDescription": "Select text to quickly quote and ask questions",
+  "settingPanel": {
+    "chainPrompt": {
+      "new": "New Chain Prompt",
+      "searchPlaceholder": "Search by name or description...",
+      "emptyTitle": "No chain prompts yet",
+      "emptyTitleSearch": "No matching chain prompts found",
+      "emptyDesc": "Create your first chain prompt to automate complex conversations",
+      "emptyDescSearch": "Try adjusting your search query",
+      "create": "Create Chain Prompt",
+      "menu": {
+        "edit": "Edit",
+        "copy": "Copy",
+        "delete": "Delete",
+        "moreOptions": "More options"
+      },
+      "stats": {
+        "steps": {
+          "1": "$1 step",
+          "n": "$1 steps"
+        },
+        "variables": {
+          "1": "$1 variable",
+          "n": "$1 variables"
+        }
+      },
+      "run": "Run",
+      "toast": {
+        "loadFailed": "Failed to load chain prompts",
+        "unknownError": "Unknown error",
+        "copied": "Chain prompt copied",
+        "copiedDesc": "\"$1\" has been created",
+        "copyFailed": "Failed to copy",
+        "deleted": "Chain prompt deleted",
+        "deleteFailed": "Failed to delete",
+        "templateImported": "Template imported",
+        "templateImportedDesc": "\"$1\" has been added to your prompts",
+        "importFailed": "Failed to import template"
+      },
+      "confirmDelete": "Are you sure you want to delete \"$1\"? This action cannot be undone.",
+      "templates": "Templates",
+      "browseTemplates": "Browse Templates",
+      "import": "Import",
+      "categories": {
+        "all": "All",
+        "contentCreation": "Content Creation",
+        "codeDevelopment": "Code Development",
+        "learningResearch": "Learning & Research",
+        "businessOffice": "Business & Office"
+      },
+      "templateModal": {
+        "title": "Template Library",
+        "description": "Choose from our curated templates to get started quickly",
+        "searchPlaceholder": "Search templates...",
+        "emptyTitle": "No templates found",
+        "emptyDesc": "Try adjusting your search or category filter",
+        "close": "Close"
+      }
+    },
+    "editor": {
+      "stepsTitle": "Steps",
+      "addStep": "Add Step",
+      "addAsVariable": "Add as Variable",
+      "variableKeyUpdated": "Variable Key Updated",
+      "variableReferencesUpdated": "Variable references have been updated",
+      "variableUpdateError": "Variable Update Error",
+      "variableUpdateErrorDesc": "Failed to update variable references in steps",
+      "startTitle": "Start building your chain",
+      "startDesc": "Add steps to define what your chain prompt will do",
+      "addFirstStep": "Add First Step",
+      "placeholders": {
+        "stepName": "Step $1",
+        "prompt": "Enter your prompt here. Use {{VARIABLE}} for variables.",
+        "name": "e.g., Blog Article Generator",
+        "desc": "Describe what this chain does...",
+        "variableKey": "Key (required)",
+        "variableDefault": "Default (optional)"
+      },
+      "insert": "Insert:",
+      "variables": "variables",
+      "addVariable": "Add Variable",
+      "aria": {
+        "removeStep": "Remove step",
+        "addStep": "Add step",
+        "addVariable": "Add variable",
+        "removeVariable": "Remove variable"
+      },
+      "sidebar": {
+        "name": "Name *",
+        "description": "Description",
+        "inputVariables": "Input Variables",
+        "noVariables": "No variables defined"
+      },
+      "footer": {
+        "cancel": "Cancel",
+        "save": "Save"
+      },
+      "validation": {
+        "title": "Validation Error",
+        "enterName": "Please enter a name",
+        "addOneStep": "Please add at least one step",
+        "allStepsHaveContent": "All steps must have prompt content",
+        "duplicateKeys": "Duplicate variable keys: $1"
+      },
+      "saveToast": {
+        "created": "Chain prompt created",
+        "updated": "Chain prompt updated",
+        "ignoredVars": "$1 empty variable(s) were not saved",
+        "failed": "Failed to save"
+      },
+      "confirmDiscard": "Discard changes?"
+    },
+    "runModal": {
+      "title": "Run Chain Prompt: $1",
+      "edit": "Edit",
+      "close": "Close",
+      "inputVariables": "Input Variables",
+      "noVariables": "No variables defined",
+      "preview": "Preview",
+      "errorPrefix": "Error: $1",
+      "footer": {
+        "cancel": "Cancel",
+        "execute": "Execute",
+        "executing": "Executing..."
+      },
+      "placeholders": {
+        "enterVariable": "Enter $1"
+      },
+      "toaster": {
+        "completed": "Chain prompt completed successfully",
+        "failed": "Chain prompt failed",
+        "aborted": "Chain prompt aborted",
+        "executionFailed": "Execution failed",
+        "unknownError": "Unknown error"
+      },
+      "log": {
+        "stepStart": "Step $1 started:",
+        "stepCompleted": "Step $1 completed:",
+        "stepFailed": "Step $1 failed:"
+      }
+    },
+    "runStatus": {
+      "running": "$1 is running ($2/$3)",
+      "succeeded": "$1 is success",
+      "failed": "$1 failed",
+      "aborted": "$1 aborted",
+      "stepPending": "Pending",
+      "stepRunning": "Running...",
+      "stepSucceeded": "Completed",
+      "stepFailed": "Failed",
+      "stopExecution": "Stop execution",
+      "close": "Close",
+      "tooltip": {
+        "abortRun": "Abort execution",
+        "closeStatus": "Close status reminder"
+      }
+    },
+    "config": {
+      "chainPrompt": {
+        "label": "Chain Prompt",
+        "title": "Chain Prompt",
+        "description": "Create and manage chain prompts for complex conversations.",
+        "views": {
+          "index": {
+            "title": "Chain Prompt",
+            "description": "Main overview for chain prompts."
+          },
+          "editor": {
+            "title": "Chain Prompt Editor"
+          }
+        }
+      },
+      "quickFollowup": {
+        "label": "Quick Follow-up",
+        "title": "Quick Follow-up",
+        "description": "Set up quick follow-up prompts for efficient communication.",
+        "views": {
+          "index": {
+            "title": "Quick Follow-up",
+            "description": "Main overview for quick follow-ups."
+          },
+          "detail": {
+            "title": "Quick Follow-up Detail",
+            "description": "Detailed configuration for quick follow-ups."
+          }
+        }
+      },
+      "chatOutline": {
+        "label": "Chat Outline",
+        "title": "Chat Outline",
+        "description": "Organize and structure your chat conversations.",
+        "views": {
+          "index": {
+            "title": "Chat Outline",
+            "description": "Main overview for chat outlines."
+          },
+          "detail": {
+            "title": "Chat Outline Detail",
+            "description": "Detailed configuration for chat outlines."
+          }
+        }
+      },
+      "theme": {
+        "label": "Theme",
+        "title": "Theme",
+        "description": "Customize the appearance and theme settings.",
+        "views": {
+          "index": {
+            "title": "Theme",
+            "description": "Main overview for theme settings."
+          },
+          "detail": {
+            "title": "Theme Detail",
+            "description": "Detailed configuration for theme settings."
+          }
+        }
+      },
+      "support": {
+        "label": "Support",
+        "title": "Support",
+        "description": "Get help and support for using the application.",
+        "views": {
+          "index": {
+            "title": "Support",
+            "description": "Main overview for support options."
+          },
+          "detail": {
+            "title": "Support Detail",
+            "description": "Detailed support options and contact info."
+          }
+        }
+      },
+      "feedback": {
+        "label": "Feedback",
+        "title": "Feedback",
+        "description": "Share your feedback and suggestions with us.",
+        "views": {
+          "index": {
+            "title": "Feedback",
+            "description": "Main overview for feedback."
+          },
+          "detail": {
+            "title": "Feedback Detail",
+            "description": "Detailed feedback submission options."
+          }
+        }
+      }
+    }
+  },
+  "executionCoordinator": {
+    "toast": {
+      "chatSwitched": {
+        "title": "Chain Prompt Interrupted",
+        "description": "Execution was aborted due to chat switching"
+      }
+    }
+  }
+}
+
+

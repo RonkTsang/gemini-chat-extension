@@ -1,6 +1,6 @@
 ✨ WHAT'S NEW IN VERSION V0.0.3 ✨
 
-Introducing the "Quick-Quote" feature!
+Introducing the "Quick Follow-up" feature!
 You can now easily quote a section of a message for clarification or follow-up, which streamlines your workflow
 
 ---
@@ -13,7 +13,7 @@ Key Features:
   👀 Instant Overview: Get a bird's-eye view of all your prompts in the current chat.
   ☝️ One-Click Navigation: Simply click on any prompt in the outline to navigate directly to it. No more endless scrolling.
   📌 Pinned Mode: Keep your chat outline always visible for instant access.
-  ✨ (NEW!) Quick-Quote: Quickly quote a specific part of a message to ask a follow-up question. It's incredibly efficient.
+  ✨ (NEW!) Quick Follow-up: Quickly quote a specific part of a message to ask a follow-up question. It's incredibly efficient.
   🍃 Lightweight & Clean: Designed to be minimal and out of the way, keeping your workspace clean and focused. 
 
 A Fun Fact: 
@@ -24,8 +24,8 @@ Stop scrolling, start navigating. Add Chat Outline to your browser and streamlin
 ---
 
 📅 Version History
-v0.0.3 - Quick-Quote
-  - Introduced the "Quick-Quote" feature.
+v0.0.3 - Quick Follow-up
+  - Introduced the "Quick Follow-up" feature.
 
 v0.0.2 - Pin It!
   - Introduced the ability to pin the chat outline for persistent navigation.

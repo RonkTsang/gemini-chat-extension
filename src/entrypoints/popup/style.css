@@ -1,0 +1,22 @@
+/* 最小化样式 - 只保留 Chakra UI 无法提供的必要样式 */
+
+:root {
+  /* 告诉浏览器支持主题切换 - 这对 Chakra UI 主题系统很重要 */
+  color-scheme: light dark;
+  
+  /* 字体渲染优化 - Chakra UI 不会自动提供这些性能优化 */
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  /* Popup 布局样式 - Chakra UI 不会自动提供这种特定布局 */
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}

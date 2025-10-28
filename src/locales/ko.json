@@ -1,0 +1,274 @@
+{
+  "emptyTocMessage": "대화가 시작되면 여기에 디렉토리가 기록됩니다.",
+  "attachmentLabel": "[첨부 파일]",
+  "clickToPin": "클릭하여 고정",
+  "unpin": "고정 해제",
+  "askGemini": "Gemini에게 물어보기",
+  "regardingThis": "특히 이 부분에 대하여",
+  "enableQuickQuoteLabel": "빠른 인용 사용",
+  "reportIssueLabel": "문제 보고",
+  "enableChatOutlineLabel": "채팅 개요 활성화",
+  "settingsTitle": "Gemini 설정",
+  "settingsDescription": "Gemini 채팅 경험을 사용자 정의",
+  "chatOutlineDescription": "쉬운 탐색을 위한 클릭 가능한 개요 생성",
+  "quickQuoteDescription": "텍스트를 선택하여 빠르게 인용하고 질문하기",
+
+  "settingPanel": {
+    "chainPrompt": {
+      "new": "새 Chain Prompt",
+      "searchPlaceholder": "이름 또는 설명으로 검색...",
+      "emptyTitle": "아직 Chain Prompt가 없습니다",
+      "emptyTitleSearch": "일치하는 Chain Prompt가 없습니다",
+      "emptyDesc": "복잡한 대화를 자동화하기 위해 첫 번째 Chain Prompt를 만들어보세요",
+      "emptyDescSearch": "검색어를 조정해 보세요",
+      "create": "Chain Prompt 만들기",
+      "menu": {
+        "edit": "편집",
+        "copy": "복사",
+        "delete": "삭제",
+        "moreOptions": "더 많은 옵션"
+      },
+      "stats": {
+        "steps": {
+          "1": "$1 단계",
+          "n": "$1 단계"
+        },
+        "variables": {
+          "1": "$1 변수",
+          "n": "$1 변수"
+        }
+      },
+      "run": "실행",
+      "toast": {
+        "loadFailed": "Chain Prompt 로드 실패",
+        "unknownError": "알 수 없는 오류",
+        "copied": "Chain Prompt 복사됨",
+        "copiedDesc": "\"$1\" 이(가) 생성되었습니다",
+        "copyFailed": "복사 실패",
+        "deleted": "Chain Prompt 삭제됨",
+        "deleteFailed": "삭제 실패",
+        "templateImported": "템플릿이 가져와졌습니다",
+        "templateImportedDesc": "\"$1\" 이(가) 프롬프트에 추가되었습니다",
+        "importFailed": "템플릿 가져오기 실패"
+      },
+      "confirmDelete": "\"$1\" 을(를) 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.",
+      "templates": "템플릿",
+      "browseTemplates": "템플릿 찾아보기",
+      "import": "가져오기",
+      "categories": {
+        "all": "모두",
+        "contentCreation": "콘텐츠 제작",
+        "codeDevelopment": "코드 개발",
+        "learningResearch": "학습 및 연구",
+        "businessOffice": "비즈니스 및 사무"
+      },
+      "templateModal": {
+        "title": "템플릿 라이브러리",
+        "description": "선별된 템플릿에서 선택하여 빠르게 시작하세요",
+        "searchPlaceholder": "템플릿 검색...",
+        "emptyTitle": "템플릿을 찾을 수 없습니다",
+        "emptyDesc": "검색어나 카테고리 필터를 조정해 보세요",
+        "close": "닫기"
+      }
+    },
+    "editor": {
+      "stepsTitle": "단계",
+      "addStep": "단계 추가",
+      "addAsVariable": "변수로 추가",
+      "variableKeyUpdated": "변수 키가 업데이트되었습니다",
+      "variableReferencesUpdated": "변수 참조가 업데이트되었습니다",
+      "variableUpdateError": "변수 업데이트 오류",
+      "variableUpdateErrorDesc": "단계의 변수 참조 업데이트에 실패했습니다",
+      "startTitle": "체인 구축 시작",
+      "startDesc": "Chain Prompt가 수행할 작업을 정의하기 위해 단계를 추가하세요",
+      "addFirstStep": "첫 번째 단계 추가",
+      "placeholders": {
+        "stepName": "단계 $1",
+        "prompt": "여기에 프롬프트를 입력하세요. 변수에는 {{VARIABLE}} 를 사용하세요.",
+        "name": "예: 블로그 글 생성기",
+        "desc": "이 체인이 수행하는 작업을 설명하세요...",
+        "variableKey": "키(필수)",
+        "variableDefault": "기본값(선택)"
+      },
+      "insert": "삽입:",
+      "variables": "변수",
+      "addVariable": "변수 추가",
+      "aria": {
+        "removeStep": "단계 제거",
+        "addStep": "단계 추가",
+        "addVariable": "변수 추가",
+        "removeVariable": "변수 제거"
+      },
+      "sidebar": {
+        "name": "이름 *",
+        "description": "설명",
+        "inputVariables": "입력 변수",
+        "noVariables": "변수가 정의되지 않았습니다"
+      },
+      "footer": {
+        "cancel": "취소",
+        "save": "저장"
+      },
+      "validation": {
+        "title": "검증 오류",
+        "enterName": "이름을 입력하세요",
+        "addOneStep": "최소 한 개의 단계를 추가하세요",
+        "allStepsHaveContent": "모든 단계에는 프롬프트 내용이 있어야 합니다",
+        "duplicateKeys": "중복된 변수 키: $1"
+      },
+      "saveToast": {
+        "created": "Chain Prompt가 생성되었습니다",
+        "updated": "Chain Prompt가 업데이트되었습니다",
+        "ignoredVars": "$1개의 빈 변수는 저장되지 않았습니다",
+        "failed": "저장 실패"
+      },
+      "confirmDiscard": "변경 사항을 취소하시겠습니까?"
+    },
+    "runModal": {
+      "title": "Chain Prompt 실행: $1",
+      "edit": "편집",
+      "close": "닫기",
+      "inputVariables": "입력 변수",
+      "noVariables": "변수가 정의되지 않았습니다",
+      "preview": "미리보기",
+      "errorPrefix": "오류: $1",
+      "footer": {
+        "cancel": "취소",
+        "execute": "실행",
+        "executing": "실행 중..."
+      },
+      "placeholders": {
+        "enterVariable": "$1 입력"
+      },
+      "toaster": {
+        "completed": "Chain Prompt가 성공적으로 완료되었습니다",
+        "failed": "Chain Prompt 실패",
+        "aborted": "Chain Prompt가 중단되었습니다",
+        "executionFailed": "실행 실패",
+        "unknownError": "알 수 없는 오류"
+      },
+      "log": {
+        "stepStart": "단계 $1 시작:",
+        "stepCompleted": "단계 $1 완료:",
+        "stepFailed": "단계 $1 실패:"
+      }
+    },
+    "runStatus": {
+      "running": "$1 실행 중 ($2/$3)",
+      "succeeded": "$1 성공",
+      "failed": "$1 실패",
+      "aborted": "$1 중단됨",
+      "stepPending": "대기 중",
+      "stepRunning": "실행 중...",
+      "stepSucceeded": "완료",
+      "stepFailed": "실패",
+      "stopExecution": "실행 중지",
+      "close": "닫기",
+      "tooltip": {
+        "abortRun": "실행 중단",
+        "closeStatus": "상태 알림 닫기"
+      }
+    },
+    "config": {
+      "chainPrompt": {
+        "label": "Chain Prompt",
+        "title": "Chain Prompt",
+        "description": "복잡한 대화를 위한 Chain Prompt를 생성하고 관리합니다.",
+        "views": {
+          "index": {
+            "title": "Chain Prompt",
+            "description": "Chain Prompt의 기본 개요."
+          },
+          "editor": {
+            "title": "Chain Prompt 편집기"
+          }
+        }
+      },
+      "quickFollowup": {
+        "label": "빠른 후속 질문",
+        "title": "빠른 후속 질문",
+        "description": "효율적인 커뮤니케이션을 위한 빠른 후속 프롬프트를 설정합니다.",
+        "views": {
+          "index": {
+            "title": "빠른 후속 질문",
+            "description": "빠른 후속 질문의 기본 개요."
+          },
+          "detail": {
+            "title": "빠른 후속 질문 상세",
+            "description": "빠른 후속 질문의 상세 구성."
+          }
+        }
+      },
+      "chatOutline": {
+        "label": "채팅 개요",
+        "title": "채팅 개요",
+        "description": "채팅 대화를 구성하고 구조화합니다.",
+        "views": {
+          "index": {
+            "title": "채팅 개요",
+            "description": "채팅 개요의 기본 개요."
+          },
+          "detail": {
+            "title": "채팅 개요 상세",
+            "description": "채팅 개요의 상세 구성."
+          }
+        }
+      },
+      "theme": {
+        "label": "테마",
+        "title": "테마",
+        "description": "모양과 테마 설정을 사용자 지정합니다.",
+        "views": {
+          "index": {
+            "title": "테마",
+            "description": "테마 설정의 기본 개요."
+          },
+          "detail": {
+            "title": "테마 상세",
+            "description": "테마 설정의 상세 구성."
+          }
+        }
+      },
+      "support": {
+        "label": "지원",
+        "title": "지원",
+        "description": "애플리케이션 사용에 대한 도움말 및 지원을 받으세요.",
+        "views": {
+          "index": {
+            "title": "지원",
+            "description": "지원 옵션의 기본 개요."
+          },
+          "detail": {
+            "title": "지원 상세",
+            "description": "상세 지원 옵션 및 연락처 정보."
+          }
+        }
+      },
+      "feedback": {
+        "label": "피드백",
+        "title": "피드백",
+        "description": "피드백과 제안을 공유해주세요.",
+        "views": {
+          "index": {
+            "title": "피드백",
+            "description": "피드백의 기본 개요."
+          },
+          "detail": {
+            "title": "피드백 상세",
+            "description": "피드백 제출을 위한 상세 옵션."
+          }
+        }
+      }
+    }
+  },
+  "executionCoordinator": {
+    "toast": {
+      "chatSwitched": {
+        "title": "Chain Prompt가 중단되었습니다",
+        "description": "채팅 전환으로 인해 실행이 중단되었습니다"
+      }
+    }
+  }
+}
+
+

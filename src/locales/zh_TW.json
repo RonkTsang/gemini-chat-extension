@@ -1,0 +1,274 @@
+{
+  "emptyTocMessage": "對話開始後，目錄將記錄在此處。",
+  "attachmentLabel": "[附件]",
+  "clickToPin": "點擊固定",
+  "unpin": "取消固定",
+  "askGemini": "詢問 Gemini",
+  "regardingThis": "特指這段內容",
+  "enableQuickQuoteLabel": "啟用快速引用",
+  "reportIssueLabel": "回報問題",
+  "enableChatOutlineLabel": "啟用聊天大綱",
+  "settingsTitle": "Gemini 設定",
+  "settingsDescription": "自訂您的 Gemini 聊天體驗",
+  "chatOutlineDescription": "生成可點擊大綱，便於導航",
+  "quickQuoteDescription": "選擇文字快速引用並提問",
+
+  "settingPanel": {
+    "chainPrompt": {
+      "new": "新建 Chain Prompt",
+      "searchPlaceholder": "按名稱或描述搜尋...",
+      "emptyTitle": "尚無 Chain Prompt",
+      "emptyTitleSearch": "未找到符合的 Chain Prompt",
+      "emptyDesc": "建立您的第一個 Chain Prompt 以自動化複雜對話",
+      "emptyDescSearch": "嘗試調整搜尋條件",
+      "create": "建立 Chain Prompt",
+      "menu": {
+        "edit": "編輯",
+        "copy": "複製",
+        "delete": "刪除",
+        "moreOptions": "更多操作"
+      },
+      "stats": {
+        "steps": {
+          "1": "$1 個步驟",
+          "n": "$1 個步驟"
+        },
+        "variables": {
+          "1": "$1 個變數",
+          "n": "$1 個變數"
+        }
+      },
+      "run": "執行",
+      "toast": {
+        "loadFailed": "載入 Chain Prompt 失敗",
+        "unknownError": "未知錯誤",
+        "copied": "已複製 Chain Prompt",
+        "copiedDesc": "已建立 \"$1\"",
+        "copyFailed": "複製失敗",
+        "deleted": "已刪除 Chain Prompt",
+        "deleteFailed": "刪除失敗",
+        "templateImported": "模板已匯入",
+        "templateImportedDesc": "\"$1\" 已新增至您的提示中",
+        "importFailed": "匯入模板失敗"
+      },
+      "confirmDelete": "確定刪除 \"$1\" 嗎？此操作無法復原。",
+      "templates": "模板",
+      "browseTemplates": "瀏覽模板",
+      "import": "匯入",
+      "categories": {
+        "all": "全部",
+        "contentCreation": "內容創作",
+        "codeDevelopment": "程式開發",
+        "learningResearch": "學習研究",
+        "businessOffice": "商務辦公"
+      },
+      "templateModal": {
+        "title": "模板庫",
+        "description": "從我們精選的模板中選擇，快速開始使用",
+        "searchPlaceholder": "搜尋模板...",
+        "emptyTitle": "未找到模板",
+        "emptyDesc": "嘗試調整搜尋條件或分類篩選",
+        "close": "關閉"
+      }
+    },
+    "editor": {
+      "stepsTitle": "步驟",
+      "addStep": "新增步驟",
+      "addAsVariable": "新增為變數",
+      "variableKeyUpdated": "變數鍵已更新",
+      "variableReferencesUpdated": "變數引用已更新",
+      "variableUpdateError": "變數更新錯誤",
+      "variableUpdateErrorDesc": "更新步驟中的變數引用失敗",
+      "startTitle": "開始建立您的鏈",
+      "startDesc": "新增步驟以定義此 Chain Prompt 的行為",
+      "addFirstStep": "新增第一個步驟",
+      "placeholders": {
+        "stepName": "步驟 $1",
+        "prompt": "在此輸入您的提示。使用 {{VARIABLE}} 表示變數。",
+        "name": "例如：部落格文章產生器",
+        "desc": "描述此鏈的作用...",
+        "variableKey": "鍵（必填）",
+        "variableDefault": "預設值（可選）"
+      },
+      "insert": "插入：",
+      "variables": "變數",
+      "addVariable": "新增變數",
+      "aria": {
+        "removeStep": "移除步驟",
+        "addStep": "新增步驟",
+        "addVariable": "新增變數",
+        "removeVariable": "移除變數"
+      },
+      "sidebar": {
+        "name": "名稱 *",
+        "description": "描述",
+        "inputVariables": "輸入變數",
+        "noVariables": "尚未定義變數"
+      },
+      "footer": {
+        "cancel": "取消",
+        "save": "儲存"
+      },
+      "validation": {
+        "title": "驗證錯誤",
+        "enterName": "請輸入名稱",
+        "addOneStep": "請至少新增一個步驟",
+        "allStepsHaveContent": "所有步驟必須有提示內容",
+        "duplicateKeys": "重複的變數鍵：$1"
+      },
+      "saveToast": {
+        "created": "已建立 Chain Prompt",
+        "updated": "已更新 Chain Prompt",
+        "ignoredVars": "已忽略 $1 個空變數",
+        "failed": "儲存失敗"
+      },
+      "confirmDiscard": "放棄變更？"
+    },
+    "runModal": {
+      "title": "執行 Chain Prompt：$1",
+      "edit": "編輯",
+      "close": "關閉",
+      "inputVariables": "輸入變數",
+      "noVariables": "尚未定義變數",
+      "preview": "預覽",
+      "errorPrefix": "錯誤：$1",
+      "footer": {
+        "cancel": "取消",
+        "execute": "執行",
+        "executing": "正在執行..."
+      },
+      "placeholders": {
+        "enterVariable": "輸入 $1"
+      },
+      "toaster": {
+        "completed": "Chain Prompt 執行成功",
+        "failed": "Chain Prompt 執行失敗",
+        "aborted": "已中止 Chain Prompt",
+        "executionFailed": "執行失敗",
+        "unknownError": "未知錯誤"
+      },
+      "log": {
+        "stepStart": "步驟 $1 開始：",
+        "stepCompleted": "步驟 $1 完成：",
+        "stepFailed": "步驟 $1 失敗："
+      }
+    },
+    "runStatus": {
+      "running": "$1 正在執行（$2/$3）",
+      "succeeded": "$1 執行成功",
+      "failed": "$1 執行失敗",
+      "aborted": "$1 已中止",
+      "stepPending": "等待中",
+      "stepRunning": "執行中...",
+      "stepSucceeded": "已完成",
+      "stepFailed": "失敗",
+      "stopExecution": "停止執行",
+      "close": "關閉",
+      "tooltip": {
+        "abortRun": "終止執行",
+        "closeStatus": "關閉狀態提醒"
+      }
+    },
+    "config": {
+      "chainPrompt": {
+        "label": "Chain Prompt",
+        "title": "Chain Prompt",
+        "description": "建立與管理用於複雜對話的鏈式提示。",
+        "views": {
+          "index": {
+            "title": "Chain Prompt",
+            "description": "Chain Prompt 總覽。"
+          },
+          "editor": {
+            "title": "Chain Prompt 編輯器"
+          }
+        }
+      },
+      "quickFollowup": {
+        "label": "快速追問",
+        "title": "快速追問",
+        "description": "設定快速追問提示以提升溝通效率。",
+        "views": {
+          "index": {
+            "title": "快速追問",
+            "description": "快速追問總覽。"
+          },
+          "detail": {
+            "title": "快速追問詳情",
+            "description": "快速追問的詳細設定。"
+          }
+        }
+      },
+      "chatOutline": {
+        "label": "聊天大綱",
+        "title": "聊天大綱",
+        "description": "組織與結構化您的聊天會話。",
+        "views": {
+          "index": {
+            "title": "聊天大綱",
+            "description": "聊天大綱總覽。"
+          },
+          "detail": {
+            "title": "聊天大綱詳情",
+            "description": "聊天大綱的詳細設定。"
+          }
+        }
+      },
+      "theme": {
+        "label": "主題",
+        "title": "主題",
+        "description": "自訂外觀與主題設定。",
+        "views": {
+          "index": {
+            "title": "主題",
+            "description": "主題設定總覽。"
+          },
+          "detail": {
+            "title": "主題詳情",
+            "description": "主題設定的詳細配置。"
+          }
+        }
+      },
+      "support": {
+        "label": "支援",
+        "title": "支援",
+        "description": "取得使用支援與協助。",
+        "views": {
+          "index": {
+            "title": "支援",
+            "description": "支援選項總覽。"
+          },
+          "detail": {
+            "title": "支援詳情",
+            "description": "詳細的支援選項與聯絡資訊。"
+          }
+        }
+      },
+      "feedback": {
+        "label": "回饋",
+        "title": "回饋",
+        "description": "與我們分享您的建議與回饋。",
+        "views": {
+          "index": {
+            "title": "回饋",
+            "description": "回饋總覽。"
+          },
+          "detail": {
+            "title": "回饋詳情",
+            "description": "詳細的回饋提交選項。"
+          }
+        }
+      }
+    }
+  },
+  "executionCoordinator": {
+    "toast": {
+      "chatSwitched": {
+        "title": "Chain Prompt 已中斷",
+        "description": "由於聊天切換，執行已中止"
+      }
+    }
+  }
+}
+
+

@@ -1,0 +1,274 @@
+{
+  "emptyTocMessage": "会話が始まると、ここにディレクトリが記録されます。",
+  "attachmentLabel": "[添付ファイル]",
+  "clickToPin": "クリックしてピン留め",
+  "unpin": "ピン留めを解除",
+  "askGemini": "Geminiに質問",
+  "regardingThis": "特にこれに関して",
+  "enableQuickQuoteLabel": "クイック引用を有効にする",
+  "reportIssueLabel": "問題を報告",
+  "enableChatOutlineLabel": "チャットアウトラインを有効にする",
+  "settingsTitle": "Gemini設定",
+  "settingsDescription": "Geminiチャット体験をカスタマイズ",
+  "chatOutlineDescription": "簡単なナビゲーションのためのクリック可能なアウトラインを生成",
+  "quickQuoteDescription": "テキストを選択して素早く引用し質問する",
+
+  "settingPanel": {
+    "chainPrompt": {
+      "new": "新しい Chain Prompt",
+      "searchPlaceholder": "名前または説明で検索...",
+      "emptyTitle": "Chain Prompt はまだありません",
+      "emptyTitleSearch": "一致する Chain Prompt が見つかりません",
+      "emptyDesc": "複雑な会話を自動化するために最初の Chain Prompt を作成しましょう",
+      "emptyDescSearch": "検索条件を調整してみてください",
+      "create": "Chain Prompt を作成",
+      "menu": {
+        "edit": "編集",
+        "copy": "コピー",
+        "delete": "削除",
+        "moreOptions": "その他のオプション"
+      },
+      "stats": {
+        "steps": {
+          "1": "$1 ステップ",
+          "n": "$1 ステップ"
+        },
+        "variables": {
+          "1": "$1 変数",
+          "n": "$1 変数"
+        }
+      },
+      "run": "実行",
+      "toast": {
+        "loadFailed": "Chain Prompt の読み込みに失敗しました",
+        "unknownError": "不明なエラー",
+        "copied": "Chain Prompt をコピーしました",
+        "copiedDesc": "\"$1\" を作成しました",
+        "copyFailed": "コピーに失敗しました",
+        "deleted": "Chain Prompt を削除しました",
+        "deleteFailed": "削除に失敗しました",
+        "templateImported": "テンプレートをインポートしました",
+        "templateImportedDesc": "\"$1\" がプロンプトに追加されました",
+        "importFailed": "テンプレートのインポートに失敗しました"
+      },
+      "confirmDelete": "\"$1\" を削除しますか？この操作は元に戻せません。",
+      "templates": "テンプレート",
+      "browseTemplates": "テンプレートを閲覧",
+      "import": "インポート",
+      "categories": {
+        "all": "すべて",
+        "contentCreation": "コンテンツ作成",
+        "codeDevelopment": "コード開発",
+        "learningResearch": "学習・研究",
+        "businessOffice": "ビジネス・オフィス"
+      },
+      "templateModal": {
+        "title": "テンプレートライブラリ",
+        "description": "厳選されたテンプレートから選択して、すぐに始めましょう",
+        "searchPlaceholder": "テンプレートを検索...",
+        "emptyTitle": "テンプレートが見つかりません",
+        "emptyDesc": "検索条件やカテゴリフィルターを調整してみてください",
+        "close": "閉じる"
+      }
+    },
+    "editor": {
+      "stepsTitle": "ステップ",
+      "addStep": "ステップを追加",
+      "addAsVariable": "変数として追加",
+      "variableKeyUpdated": "変数キーが更新されました",
+      "variableReferencesUpdated": "変数参照が更新されました",
+      "variableUpdateError": "変数更新エラー",
+      "variableUpdateErrorDesc": "ステップの変数参照の更新に失敗しました",
+      "startTitle": "チェーンの作成を開始",
+      "startDesc": "Chain Prompt が行うことを定義するステップを追加します",
+      "addFirstStep": "最初のステップを追加",
+      "placeholders": {
+        "stepName": "ステップ $1",
+        "prompt": "ここにプロンプトを入力してください。変数には {{VARIABLE}} を使用します。",
+        "name": "例：ブログ記事ジェネレーター",
+        "desc": "このチェーンの内容を説明してください...",
+        "variableKey": "キー（必須）",
+        "variableDefault": "既定値（任意）"
+      },
+      "insert": "挿入:",
+      "variables": "変数",
+      "addVariable": "変数を追加",
+      "aria": {
+        "removeStep": "ステップを削除",
+        "addStep": "ステップを追加",
+        "addVariable": "変数を追加",
+        "removeVariable": "変数を削除"
+      },
+      "sidebar": {
+        "name": "名前 *",
+        "description": "説明",
+        "inputVariables": "入力変数",
+        "noVariables": "変数は定義されていません"
+      },
+      "footer": {
+        "cancel": "キャンセル",
+        "save": "保存"
+      },
+      "validation": {
+        "title": "検証エラー",
+        "enterName": "名前を入力してください",
+        "addOneStep": "少なくとも 1 つのステップを追加してください",
+        "allStepsHaveContent": "すべてのステップにプロンプト内容が必要です",
+        "duplicateKeys": "重複する変数キー: $1"
+      },
+      "saveToast": {
+        "created": "Chain Prompt を作成しました",
+        "updated": "Chain Prompt を更新しました",
+        "ignoredVars": "$1 件の空の変数は保存されませんでした",
+        "failed": "保存に失敗しました"
+      },
+      "confirmDiscard": "変更を破棄しますか？"
+    },
+    "runModal": {
+      "title": "Chain Prompt を実行: $1",
+      "edit": "編集",
+      "close": "閉じる",
+      "inputVariables": "入力変数",
+      "noVariables": "変数は定義されていません",
+      "preview": "プレビュー",
+      "errorPrefix": "エラー: $1",
+      "footer": {
+        "cancel": "キャンセル",
+        "execute": "実行",
+        "executing": "実行中..."
+      },
+      "placeholders": {
+        "enterVariable": "$1 を入力"
+      },
+      "toaster": {
+        "completed": "Chain Prompt が正常に完了しました",
+        "failed": "Chain Prompt が失敗しました",
+        "aborted": "Chain Prompt を中止しました",
+        "executionFailed": "実行に失敗しました",
+        "unknownError": "不明なエラー"
+      },
+      "log": {
+        "stepStart": "ステップ $1 を開始:",
+        "stepCompleted": "ステップ $1 が完了:",
+        "stepFailed": "ステップ $1 が失敗:"
+      }
+    },
+    "runStatus": {
+      "running": "$1 が実行中です（$2/$3）",
+      "succeeded": "$1 が成功しました",
+      "failed": "$1 が失敗しました",
+      "aborted": "$1 が中止されました",
+      "stepPending": "待機中",
+      "stepRunning": "実行中...",
+      "stepSucceeded": "完了",
+      "stepFailed": "失敗",
+      "stopExecution": "実行を停止",
+      "close": "閉じる",
+      "tooltip": {
+        "abortRun": "実行を中止",
+        "closeStatus": "ステータスリマインダーを閉じる"
+      }
+    },
+    "config": {
+      "chainPrompt": {
+        "label": "Chain Prompt",
+        "title": "Chain Prompt",
+        "description": "複雑な会話のための Chain Prompt を作成・管理します。",
+        "views": {
+          "index": {
+            "title": "Chain Prompt",
+            "description": "Chain Prompt の概要。"
+          },
+          "editor": {
+            "title": "Chain Prompt エディター"
+          }
+        }
+      },
+      "quickFollowup": {
+        "label": "クイック追問",
+        "title": "クイック追問",
+        "description": "効率的なコミュニケーションのためにクイックフォローアップのプロンプトを設定します。",
+        "views": {
+          "index": {
+            "title": "クイック追問",
+            "description": "クイック追問の概要。"
+          },
+          "detail": {
+            "title": "クイック追問の詳細",
+            "description": "クイック追問の詳細設定。"
+          }
+        }
+      },
+      "chatOutline": {
+        "label": "チャットアウトライン",
+        "title": "チャットアウトライン",
+        "description": "チャット会話を整理・構造化します。",
+        "views": {
+          "index": {
+            "title": "チャットアウトライン",
+            "description": "チャットアウトラインの概要。"
+          },
+          "detail": {
+            "title": "チャットアウトラインの詳細",
+            "description": "チャットアウトラインの詳細設定。"
+          }
+        }
+      },
+      "theme": {
+        "label": "テーマ",
+        "title": "テーマ",
+        "description": "外観とテーマ設定をカスタマイズします。",
+        "views": {
+          "index": {
+            "title": "テーマ",
+            "description": "テーマ設定の概要。"
+          },
+          "detail": {
+            "title": "テーマの詳細",
+            "description": "テーマ設定の詳細構成。"
+          }
+        }
+      },
+      "support": {
+        "label": "サポート",
+        "title": "サポート",
+        "description": "アプリの使用に関するヘルプとサポートを取得します。",
+        "views": {
+          "index": {
+            "title": "サポート",
+            "description": "サポートオプションの概要。"
+          },
+          "detail": {
+            "title": "サポートの詳細",
+            "description": "サポートオプションと連絡先の詳細。"
+          }
+        }
+      },
+      "feedback": {
+        "label": "フィードバック",
+        "title": "フィードバック",
+        "description": "フィードバックや提案をお寄せください。",
+        "views": {
+          "index": {
+            "title": "フィードバック",
+            "description": "フィードバックの概要。"
+          },
+          "detail": {
+            "title": "フィードバックの詳細",
+            "description": "フィードバック送信の詳細オプション。"
+          }
+        }
+      }
+    }
+  },
+  "executionCoordinator": {
+    "toast": {
+      "chatSwitched": {
+        "title": "Chain Prompt が中断されました",
+        "description": "チャットの切り替えにより実行が中止されました"
+      }
+    }
+  }
+}
+
+
