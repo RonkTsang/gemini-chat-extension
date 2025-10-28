@@ -1,21 +1,28 @@
-# Environment variables
-.env
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# macOS
+node_modules
+.output
+stats.html
+stats-*.json
+.wxt
+web-ext.config.ts
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
 .DS_Store
-
-# Node.js
-node_modules/
-
-# Build output
-dist/
-releases/
-*.zip
-
-# Build scripts directory - typically not versioned if only for local builds
-# scripts/
-
-
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.env
 .original
-
-docs/dom/

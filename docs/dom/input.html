@@ -1,0 +1,128 @@
+<chat-window>
+  <input-container>
+    <!-- 以下为 Gemini 用户消息输入框的DOM结构 -->
+    <input-area-v2>
+      <div data-node-type="input-area" class="input-area  with-toolbox-drawer">
+        <div class="text-input-field with-toolbox-drawer height-expanded-past-single-line">
+          <div class="text-input-field_textarea-wrapper ">
+            <div class="text-input-field-main-area ">
+              <div class="text-input-field_textarea-inner ">
+
+                <!-- 富文本编辑器 -->
+                <rich-textarea>
+                  <!-- 注意：这是用户编辑消息插入文本的元素，每段文本使用 <p> 标签包裹 -->
+                    <div class="ql-editor textarea new-input-ui" data-gramm="false" contenteditable="true" role="textbox"
+                    aria-multiline="true" aria-label="Enter a prompt here" data-placeholder="Ask Gemini">
+                    <p>line-1</p>
+                    <p>line-2</p>
+                  </div>
+                </rich-textarea>
+
+                <at-mentions-menu _nghost-ng-c3638181500="" class=" ng-star-inserted">
+                  <mat-menu "></mat-menu>
+                </at-mentions-menu>
+              </div>
+            </div>
+          </div>
+          <div class=" leading-actions-wrapper ng-star-inserted">
+              </div>
+
+              <toolbox-drawer class="ng-tns-c1251804083-13  ng-star-inserted" style="">
+              </toolbox-drawer>
+
+              <!-- 注意：这是我们的 Prompt 入口按钮的位置 -->
+              <div style="
+                height: 40px;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            ">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"></svg>
+                <span style="
+                color: var(--gem-sys-color--on-surface-variant);
+                font-family: var(--mat-button-text-label-text-font, var(--mat-sys-label-large-font)
+            --mat-sys-label-large-font is not defined
+            );
+                font-size: var(--mat-button-text-label-text-size, var(--mat-sys-label-large-size));
+                letter-spacing: var(--mat-button-text-label-text-tracking, var(--mat-sys-label-large-tracking));
+                text-transform: var(--mat-button-text-label-text-transform);
+                font-weight: var(--mat-button-text-label-text-weight, var(--mat-sys-label-large-weight));
+            " class="">
+                  Prompts
+                </span>
+
+              </div>
+            </div>
+            <!----><!---->
+            <div class="trailing-actions-wrapper "><!---->
+              <div class="input-buttons-wrapper-bottom ">
+                <div class="mic-button-container">
+                  <speech-dictation-mic-button class="speech-dictation-mic-button">
+
+                    <!-- 注意这个是语音输入按钮 -->
+                    <button data-node-type="speech_dictation_mic_button" mattooltip="Use microphone"
+                      aria-label="Microphone">
+                      <div>
+                        <mat-icon role="img"
+                          class="mat-icon notranslate ng-tns-c1854539270-7 icon-filled gds-icon-l google-symbols mat-ligature-font mat-icon-no-color"
+                          aria-hidden="true" data-mat-icon-type="font" data-mat-icon-name="mic" fonticon="mic">
+                        </mat-icon>
+                      </div>
+                      <span class="mat-focus-indicator"></span>
+                      <span class="mat-mdc-button-touch-target"></span>
+                      <span class="mat-ripple mat-mdc-button-ripple"></span>
+                    </button>
+                  </speech-dictation-mic-button>
+                </div>
+
+                <!-- 注意：下面是发送按钮，包含未发送和发送中的两个状态，但是**页面中不会同时存在两个按钮**，为了记录不同的状态，我同时贴在此 html 中 -->
+
+                <!-- 注意：这个元素是发送按钮， 当前状态：发送中，即模型正在响应中，页面中显示的是停止按钮 -->
+                <div _ngcontent-ng-c941018249=""
+                  class="mat-mdc-tooltip-trigger send-button-container ng-tns-c941018249-6 inner ng-star-inserted is-mobile-device visible"
+                  aria-describedby="cdk-describedby-message-ng-1-578" cdk-describedby-host="ng-1">
+                  <button
+                    class="mdc-icon-button mat-mdc-icon-button mat-mdc-button-base send-button ng-tns-c941018249-6 mat-unthemed cdk-focused cdk-mouse-focused stop"
+                    mat-ripple-loader-class-name="mat-mdc-button-ripple" mat-ripple-loader-centered=""
+                    aria-label="Stop response"
+                    jslog="188689;track:generic_click,impression;BardVeMetadataKey:[[&quot;r_6a279f581ec574c0&quot;,&quot;c_66991145654627fd&quot;,null,null,null,null,null,null,1,null,null,null,0]];mutable:true"
+                    aria-disabled="false" tabindex="0">
+                    <span class="mat-mdc-button-persistent-ripple mdc-icon-button__ripple"></span>
+                    <mat-icon role="img" fonticon="send"
+                      class="mat-icon notranslate send-button-icon icon-filled gds-icon-xl google-symbols mat-ligature-font mat-icon-no-color hidden"
+                      aria-hidden="true" data-mat-icon-type="font" data-mat-icon-name="send"></mat-icon>
+                    <div _ngcontent-ng-c941018249="" class="blue-circle stop-icon ng-tns-c941018249-6 ng-star-inserted"
+                      aria-hidden="true" data-mat-icon-type="font" data-mat-icon-name="send"></mat-icon>
+                      <div _ngcontent-ng-c941018249=""
+                        class="blue-circle stop-icon ng-tns-c941018249-6 ng-star-inserted" aria-hidden="true"
+                        data-mat-icon-type="font" data-mat-icon-name="stop"></mat-icon></div>
+                      <span class="mat-focus-indicator"></span>
+                      <span class="mat-mdc-button-touch-target"></span>
+                      <span class="mat-ripple mat-mdc-button-ripple"></span>
+                  </button>
+                </div>
+
+
+                <!-- 注意：这个元素是发送按钮， 当前状态：未发送，即模型响应结束，页面中显示的是发送按钮 -->
+                <div _ngcontent-ng-c941018249=""
+                  class="mat-mdc-tooltip-trigger send-button-container ng-tns-c941018249-6 inner ng-star-inserted is-mobile-device visible"
+                  aria-describedby="cdk-describedby-message-ng-1-579" cdk-describedby-host="ng-1"><button
+                    _ngcontent-ng-c941018249="" mat-icon-button=""
+                    class="mdc-icon-button mat-mdc-icon-button mat-mdc-button-base send-button ng-tns-c941018249-6 mat-unthemed submit"
+                    mat-ripple-loader-class-name="mat-mdc-button-ripple" mat-ripple-loader-centered=""
+                    aria-label="Send message"
+                    jslog="173899;track:generic_click,impression;BardVeMetadataKey:[[null,null,null,null,null,null,null,null,1,null,null,null,0]];mutable:true"
+                    aria-disabled="false" tabindex="0"><span
+                      class="mat-mdc-button-persistent-ripple mdc-icon-button__ripple"></span><mat-icon
+                      _ngcontent-ng-c941018249="" role="img" fonticon="send"
+                      class="mat-icon notranslate send-button-icon icon-filled gds-icon-xl google-symbols mat-ligature-font mat-icon-no-color"
+                      aria-hidden="true" data-mat-icon-type="font" data-mat-icon-name="send"></mat-icon><!----><span
+                      class="mat-focus-indicator"></span><span class="mat-mdc-button-touch-target"></span><span
+                      class="mat-ripple mat-mdc-button-ripple"></span></button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+    </input-area-v2>
+  </input-container>
+</chat-window>
