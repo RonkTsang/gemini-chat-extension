@@ -1,0 +1,8 @@
+---
+alwaysApply: true
+---
+# Legacy Files and Outdated Docs
+
+- The root [`manifest.json`](mdc:manifest.json) and parts of [`docs/tech.md`](mdc:docs/tech.md) describe an older, Rollup-based DOM-injection architecture with vendored assets.
+- Current builds use WXT with React and Chakra UI; the manifest is generated from [`wxt.config.ts`](mdc:wxt.config.ts).
+- Treat `manifest.json` and the Rollup/`vendor/` references in `docs/tech.md` as historical context. Prefer the WXT configuration and the TypeScript/React sources in [`src/`](mdc:src/).

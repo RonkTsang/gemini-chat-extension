@@ -15,6 +15,7 @@ import {
   useColorModeValue,
   useColorMode,
 } from '@/components/ui/color-mode';
+import { t } from '@/utils/i18n';
 import { 
   getAllSettings,
   setChatOutlineEnabled,
@@ -28,16 +29,6 @@ function App() {
     enableChatOutline: true,
     enableQuickQuote: true,
   });
-  const [t, setT] = useState({
-    enableChatOutlineLabel: "Enable Chat Outline",
-    enableQuickQuoteLabel: "Enable Quick Follow-up", 
-    reportIssueLabel: "Report an Issue",
-    settingsTitle: "Gemini Settings",
-    settingsDescription: "Customize your Gemini chat experience",
-    chatOutlineDescription: "Generate clickable outline for easy navigation",
-    quickQuoteDescription: "Select text to quickly quote and ask questions"
-  });
-
   // 主题响应式颜色
   const textColor = useColorModeValue('gray.900', 'gray.100');
   const secondaryTextColor = useColorModeValue('gray.600', 'gray.400');
@@ -82,18 +73,6 @@ function App() {
     };
     
     loadSettings();
-
-    if (browser.i18n) {
-      setT({
-        enableChatOutlineLabel: browser.i18n.getMessage('enableChatOutlineLabel') || "Enable Chat Outline",
-        enableQuickQuoteLabel: browser.i18n.getMessage('enableQuickQuoteLabel') || "Enable Quick Follow-up",
-        reportIssueLabel: browser.i18n.getMessage('reportIssueLabel') || "Report an Issue",
-        settingsTitle: browser.i18n.getMessage('settingsTitle') || "Gemini Settings",
-        settingsDescription: browser.i18n.getMessage('settingsDescription') || "Customize your Gemini chat experience",
-        chatOutlineDescription: browser.i18n.getMessage('chatOutlineDescription') || "Generate clickable outline for easy navigation",
-        quickQuoteDescription: browser.i18n.getMessage('quickQuoteDescription') || "Select text to quickly quote and ask questions"
-      });
-    }
   }, []);
 
   const handleChatOutlineToggle = async (enabled: boolean) => {
@@ -136,11 +115,11 @@ function App() {
         <Card.Header pb={2} px={4} pt={4}>
           <Flex justify="space-between" align="center" mb={1}>
             <Heading size="lg" fontWeight="semibold">
-              {t.settingsTitle}
+              {t('settingsTitle') || "Gemini Settings"}
             </Heading>
           </Flex>
           <Text fontSize="sm" color={secondaryTextColor}>
-            {t.settingsDescription}
+            {t('settingsDescription') || "Customize your Gemini chat experience"}
           </Text>
         </Card.Header>
         
@@ -163,10 +142,10 @@ function App() {
                 </Box>
                 <Box>
                   <Text fontSize="sm" fontWeight="medium" mb={0.5}>
-                    {t.enableChatOutlineLabel}
+                    {t('enableChatOutlineLabel') || "Enable Chat Outline"}
                   </Text>
                   <Text fontSize="xs" color={mutedTextColor}>
-                    {t.chatOutlineDescription}
+                    {t('chatOutlineDescription') || "Generate clickable outline for easy navigation"}
                   </Text>
                 </Box>
               </Flex>
@@ -196,10 +175,10 @@ function App() {
                 </Box>
                 <Box>
                   <Text fontSize="sm" fontWeight="medium" mb={0.5}>
-                    {t.enableQuickQuoteLabel}
+                    {t('enableQuickQuoteLabel') || "Enable Quick Follow-up"}
                   </Text>
                   <Text fontSize="xs" color={mutedTextColor}>
-                    {t.quickQuoteDescription}
+                    {t('quickQuoteDescription') || "Select text to quickly quote and ask questions"}
                   </Text>
                 </Box>
               </Flex>
@@ -231,7 +210,7 @@ function App() {
             py={2}
           >
             <ExternalLinkIcon />
-            <Text ml={2}>{t.reportIssueLabel}</Text>
+            <Text ml={2}>{t('reportIssueLabel') || "Report an Issue"}</Text>
           </Button>
         </Card.Body>
       </Card.Root>

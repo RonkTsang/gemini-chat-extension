@@ -1,0 +1,25 @@
+---
+globs: src/entrypoints/**
+description: Boot sequence, script boundaries, and UI mounting
+---
+# Extension Architecture and Boot Sequence
+
+- Content script entry: [`src/entrypoints/content/index.tsx`](mdc:src/entrypoints/content/index.tsx)
+  1. Inject main-world script [`url-monitor-main-world.ts`](mdc:src/entrypoints/url-monitor-main-world.ts)
+  2. Start `urlMonitor` then `chatChangeDetector`
+  3. Mount UI with `createIntegratedUi` and `renderOverlay`
+- Main-world responsibilities:
+  - Override `history.pushState/replaceState` and dispatch `GEM_EXT_EVENTS.URL_CHANGE`
+  - Never read or mutate React UI here; only emit navigation events
+- Isolated world responsibilities:
+  - Subscribe to URL change events via [`urlMonitor`](mdc:src/services/urlMonitor.ts)
+  - Coordinate services and mount the Shadow DOM UI overlay
+
+## Events
+- Event constant: [`GEM_EXT_EVENTS.URL_CHANGE`](mdc:src/common/event.ts)
+- Prefer the global event bus for cross-module events (see event bus rule)
+
+## Do / Don’t
+- Do: Inject main-world script before starting services that depend on navigation
+- Do: Use `createIntegratedUi` for UI mounting and keep a very high `z-index`
+- Don’t: Directly patch `history` from isolated world; always go through main world

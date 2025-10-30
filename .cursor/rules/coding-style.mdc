@@ -1,0 +1,12 @@
+---
+globs: *.ts,*.tsx
+---
+# Coding Style (TypeScript/React)
+
+- **Naming**: Use descriptive names; avoid abbreviations; functions are verbs; variables are nouns
+- **Types**: Annotate exported/public APIs; avoid `any` and unsafe casts
+- **Control Flow**: Prefer guard clauses and shallow nesting; avoid unnecessary try/catch and swallow-only handlers
+- **Comments**: Only for non-obvious rationale, invariants, or caveats; keep concise
+- **Formatting**: Match existing style; wrap long lines; do not reformat unrelated code
+- **Imports**: Keep paths aligned with existing alias usage (e.g., `@/utils/...`)
+- **UI**: Prefer composition over prop drilling; colocate small helpers near usage

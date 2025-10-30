@@ -1,0 +1,20 @@
+---
+globs: src/components/**,src/entrypoints/content/**
+description: Shadow DOM mounting and Chakra UI v3 conventions
+---
+# UI: Shadow DOM and Chakra UI
+
+- Mount UI inside a Shadow DOM using the `Provider` from [`src/components/ui/provider-shadow-dom.tsx`](mdc:src/components/ui/provider-shadow-dom.tsx)
+  - Ensures style isolation and proper emotion cache container
+  - Syncs theme via `next-themes`; color mode propagates to `:host`
+- Use Chakra components and the configured system theme from [`src/components/ui/theme`](mdc:src/components/ui/theme.ts)
+- Respect CSS vars root `:host` and conditional selectors defined in the provider config
+- Prefer composition via overlay root: [`renderOverlay`](mdc:src/entrypoints/content/overlay/index.tsx)
+- Common UI modules:
+  - Settings panel: [`src/components/setting-panel`](mdc:src/components/setting-panel)
+  - Toaster: [`src/components/ui/toaster.tsx`](mdc:src/components/ui/toaster.tsx)
+
+## Do / Don’t
+- Do: Keep UI rendering within the Shadow DOM subtree
+- Do: Use `Provider` at the overlay root and avoid mixing portals outside the Shadow DOM unless using Chakra/EnvironmentProvider
+- Don’t: Rely on page-level global CSS; style via Chakra tokens or `:host` scoped styles
