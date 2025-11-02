@@ -1,14 +1,13 @@
 import React from 'react'
 import PromptIcon from '~/assets/prompt.svg?react'
 import styles from './index.module.css'
-import { AppEvents } from '@/common/event'
 
 interface PromptButtonProps {
   onClick?: () => void
 }
 
 export const PromptButton: React.FC<PromptButtonProps> = ({ onClick }) => {
-  const { emit } = useEventEmitter<AppEvents>();
+  const { emit } = useEventEmitter();
 
   const handleClick = () => {
     emit('settings:open', {

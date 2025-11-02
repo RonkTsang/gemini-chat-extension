@@ -11,8 +11,8 @@ import { useChainPromptStore } from '@/stores/chainPromptStore'
 import { eventBus } from '@/utils/eventbus'
 import { toaster } from '@/components/ui/toaster'
 import { t } from '@/utils/i18n'
-import type { ChatChangeEvent } from '@/services/chatChangeDetector'
 import { useEvent } from '@/hooks/useEventBus'
+import { AppEvents, ChatChangeEvent } from '@/common/event'
 
 export const RunStatusContainer: React.FC = () => {
   const { running, clearRunStatus, abortRun } = useChainPromptStore()
@@ -82,12 +82,7 @@ export const RunStatusContainer: React.FC = () => {
   // 聊天切换监听 - 切换聊天时自动关闭 run-status
   useEffect(() => {
     // 监听执行中止事件（显示 Toast 提醒）
-    const handleExecutionAborted = (eventData: {
-      reason: string
-      originalUrl: string
-      currentUrl: string
-      timestamp: number
-    }) => {
+    const handleExecutionAborted = (eventData: AppEvents['execution:aborted-by-chat-switch']) => {
       console.log('[RunStatusContainer] Execution aborted by chat switch:', eventData)
       
       // 只显示 Toast 提醒，UI 清理由 chatchange 事件处理

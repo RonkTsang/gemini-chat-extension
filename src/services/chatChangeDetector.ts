@@ -3,16 +3,10 @@
  * 负责检测聊天切换并发出事件
  */
 
+import { ChatChangeEvent, URLChangeEvent } from '@/common/event'
 import { urlMonitor } from './urlMonitor'
 import { eventBus } from '@/utils/eventbus'
-import { hasChatHistory, isTemporaryChat } from '@/utils/messageUtils'
 
-export interface ChatChangeEvent {
-  originalUrl: string
-  currentUrl: string
-  timestamp: number
-  isFromNewChat: boolean
-}
 
 class ChatChangeDetector {
   private originalUrl: string
@@ -62,7 +56,7 @@ class ChatChangeDetector {
   /**
    * 处理 URL 变化
    */
-  private handleURLChange = (eventData: { url: string, timestamp: number }): void => {
+  private handleURLChange = (eventData: URLChangeEvent): void => {
     const currentUrl = eventData.url
     
     // 检查是否切换了聊天

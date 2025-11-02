@@ -4,24 +4,10 @@
  */
 
 import { eventBus } from '@/utils/eventbus'
-import { GEM_EXT_EVENTS } from '@/common/event'
-
-export interface URLChangeEvent {
-  url: string
-  timestamp: number
-}
+import { GEM_EXT_EVENTS, URLChangeEvent } from '@/common/event'
 
 class URLMonitor {
-  private originalPushState: typeof history.pushState
-  private originalReplaceState: typeof history.replaceState
   private isActive = false
-
-  constructor() {
-    // 保存原始方法
-    this.originalPushState = history.pushState
-    this.originalReplaceState = history.replaceState
-  }
-
   /**
    * 开始监听 URL 变化
    */

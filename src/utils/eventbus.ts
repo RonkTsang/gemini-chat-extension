@@ -2,6 +2,7 @@
  * EventBus - A lightweight, type-safe event system for efficient communication
  * Supports both synchronous and asynchronous event handling
  */
+import { AppEvents } from '@/common/event';
 import { nanoid } from 'nanoid';
 export type EventCallback<T = any> = (data: T) => void | Promise<void>;
 export type EventMap = Record<string, any>;
@@ -202,15 +203,4 @@ export class EventBus<TEventMap extends EventMap = EventMap> {
 }
 
 // Create a default global event bus instance
-export const eventBus = new EventBus();
-
-// Utility functions for the global event bus
-export const on = eventBus.on.bind(eventBus);
-export const once = eventBus.once.bind(eventBus);
-export const off = eventBus.off.bind(eventBus);
-export const emit = eventBus.emit.bind(eventBus);
-export const emitSync = eventBus.emitSync.bind(eventBus);
-export const removeAllListeners = eventBus.removeAllListeners.bind(eventBus);
-export const listenerCount = eventBus.listenerCount.bind(eventBus);
-export const eventNames = eventBus.eventNames.bind(eventBus);
-export const hasListeners = eventBus.hasListeners.bind(eventBus);
+export const eventBus = new EventBus<AppEvents>();

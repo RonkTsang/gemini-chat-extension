@@ -7,7 +7,7 @@ import { chainPromptExecutor } from './chainPromptExecutor'
 import { useChainPromptStore } from '@/stores/chainPromptStore'
 import { eventBus } from '@/utils/eventbus'
 import type { ChainPrompt } from '@/domain/chain-prompt/types'
-import type { ChatChangeEvent } from './chatChangeDetector'
+import { ChatChangeEvent } from '@/common/event'
 
 export interface ExecutionCoordinatorOptions {
   enableUrlMonitoring?: boolean

@@ -5,6 +5,7 @@ import { Button, HStack, CloseButton, Dialog, Portal } from "@chakra-ui/react"
 import { Toaster, toaster } from "@/components/ui/toaster"
 import { SettingPanel } from "@/components/setting-panel"
 import { ColorModeButton, useColorMode } from "@/components/ui/color-mode"
+import QuickFollowUp from "./quick-follow-up"
 
 function App() {
   const { setTheme } = useColorMode();
@@ -17,6 +18,7 @@ function App() {
     <>
       <SettingPanel />
       <Toaster />
+      <QuickFollowUp />
     </>
   )
 }

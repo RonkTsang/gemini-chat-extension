@@ -1,15 +1,14 @@
 // @ts-nocheck
 
 import './style.css';
-
+import { SEPARATOR } from '@/common/const';
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 import { eventBus } from '@/utils/eventbus';
-import type { AppEvents } from '@/common/event';
+import { type AppEvents, EVENTS } from '@/common/event';
 import { useChainPromptStore } from '@/stores/chainPromptStore'
 import { browser } from 'wxt/browser';
 
-const SEPARATOR = '---------';
 let isQuickQuoteEnabled = true; // Default value
 
 function updateTocList(popover, chatWindow) {
@@ -331,6 +330,7 @@ function handleMouseUp(event) {
         if (selectedText && event.target.closest('message-content') && selection.rangeCount > 0) {
             if (event.target.closest('#gemini-toc-popover')) {
                 quoteTooltip.hide();
+                eventBus.emit(EVENTS.QUICK_FOLLOW_UP_HIDE);
                 return;
             }
 
@@ -344,8 +344,19 @@ function handleMouseUp(event) {
             };
 
             quoteTooltip.setProps({ getReferenceClientRect: () => virtualRect });
-            quoteTooltip.show();
+            // quoteTooltip.show();
+
+            eventBus.emit(EVENTS.QUICK_FOLLOW_UP_SHOW, {
+              text: selectedText,
+              event: {
+                rangeRect: selectionRect,
+                clientX: event.clientX,
+                clientY: event.clientY,
+                virtualRect: virtualRect,
+              },
+            });
         } else {
+            eventBus.emit(EVENTS.QUICK_FOLLOW_UP_HIDE);
             quoteTooltip.hide();
         }
     }, 100);
@@ -356,6 +367,7 @@ function handleMouseDown(event) {
     if (quoteTooltip && !event.target.closest('.tippy-box') && !event.target.closest('#gemini-quote-button')) {
         quoteTooltip.hide();
     }
+    eventBus.emit(EVENTS.QUICK_FOLLOW_UP_HIDE);
 }
 
 function initializeQuoteFeature(chatWindow) {
@@ -717,7 +729,6 @@ function openChatoutline() {
   });
 }
 
-
 function setupChatoutlineOpenEvent() {
   /**
    * Handle chatoutline:open event
@@ -729,7 +740,11 @@ function setupChatoutlineOpenEvent() {
   eventBus.on('chatoutline:open', handleChatoutlineOpenEvent);
 }
 
-setupChatoutlineOpenEvent()
+function setupQuickFollowUpEvent() {
+  eventBus.on(EVENTS.QUICK_FOLLOW_UP_ADD_QUOTE, (data: AppEvents['quick-follow-up:addQuote']) => {
+    addQuoteUI(data.text);
+  });
+}
 
 function setupRunningStateListener() {
   useChainPromptStore.subscribe((state, prevState) => {
@@ -739,4 +754,10 @@ function setupRunningStateListener() {
   })
 }
 
-setupRunningStateListener()
+function setupEventListeners() {
+  setupChatoutlineOpenEvent()
+  setupRunningStateListener()
+  setupQuickFollowUpEvent()
+}
+
+setupEventListeners()
