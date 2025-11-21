@@ -177,7 +177,7 @@
         "views": {
           "index": {
             "title": "Chain Prompt",
-            "description": "Hauptübersicht für Chain Prompts."
+            "description": "Entwerfen Sie mehrstufige Prompt-Workflows, füllen Sie Variablen aus und führen Sie sie mit einem Klick nacheinander aus."
           },
           "editor": {
             "title": "Chain Prompt-Editor"

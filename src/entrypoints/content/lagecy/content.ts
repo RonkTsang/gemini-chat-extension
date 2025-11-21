@@ -8,8 +8,30 @@ import { eventBus } from '@/utils/eventbus';
 import { type AppEvents, EVENTS } from '@/common/event';
 import { useChainPromptStore } from '@/stores/chainPromptStore'
 import { browser } from 'wxt/browser';
+import { quickFollowStore } from '@/stores/quickFollowStore'
 
-let isQuickQuoteEnabled = true; // Default value
+let isQuickQuoteEnabled = quickFollowStore.getState().settings.enabled;
+
+quickFollowStore.getState().hydrate().catch((error) => {
+  console.error('Failed to hydrate quick follow store:', error)
+})
+
+quickFollowStore.subscribe((state, previousState) => {
+  const prevEnabled = previousState?.settings?.enabled
+  if (prevEnabled === state.settings.enabled) {
+    return
+  }
+
+  isQuickQuoteEnabled = state.settings.enabled
+  const chatWindows = document.querySelectorAll('chat-window')
+  chatWindows.forEach((cw) => {
+    if (isQuickQuoteEnabled) {
+      initializeQuoteFeature(cw)
+    } else {
+      destroyQuoteFeature(cw)
+    }
+  })
+})
 
 function updateTocList(popover, chatWindow) {
   const list = popover.querySelector('ul');
@@ -367,7 +389,9 @@ function handleMouseDown(event) {
     if (quoteTooltip && !event.target.closest('.tippy-box') && !event.target.closest('#gemini-quote-button')) {
         quoteTooltip.hide();
     }
-    eventBus.emit(EVENTS.QUICK_FOLLOW_UP_HIDE);
+    setTimeout(() => {
+      eventBus.emit(EVENTS.QUICK_FOLLOW_UP_HIDE);
+    }, 300)
 }
 
 function initializeQuoteFeature(chatWindow) {
@@ -407,7 +431,7 @@ function initializeQuoteFeature(chatWindow) {
   document.body._geminiGlobalQuoteTooltip = quoteTooltip; // For global mousedown access
 
   chatWindow.addEventListener('mouseup', handleMouseUp);
-  document.addEventListener('mousedown', handleMouseDown);
+  // document.addEventListener('mousedown', handleMouseDown);
 
   chatWindow._geminiQuoteInitialized = true;
 }
@@ -637,11 +661,9 @@ function safeParseBoolean(value: any): boolean {
 
 // 1. Load settings and then initialize
 chrome.storage.sync.get({
-  enableChatOutline: true,
-  enableQuickQuote: true 
+  enableChatOutline: true
 }, (data) => {
     isChatOutlineEnabled = safeParseBoolean(data.enableChatOutline);
-    isQuickQuoteEnabled = safeParseBoolean(data.enableQuickQuote);
 
     // Create a persistent observer to watch for chat-window additions
     const mainObserver = new MutationObserver((mutations) => {
@@ -713,7 +735,12 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
                 destroyQuoteFeature(cw);
             }
         });
+
+        quickFollowStore.getState().hydrate().catch((error) => {
+          console.error('Failed to refresh quick follow settings after storage change:', error)
+        })
     }
+
 });
 
 function openChatoutline() {

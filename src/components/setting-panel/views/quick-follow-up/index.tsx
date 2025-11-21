@@ -1,0 +1,231 @@
+import { useEffect, useMemo, useState } from 'react'
+import {
+  Box,
+  Button,
+  Container,
+  Grid,
+  Heading,
+  IconButton,
+  Stack,
+  Switch,
+  Text
+} from '@chakra-ui/react'
+import { FiPlus } from 'react-icons/fi'
+
+import { InfoTip } from '@/components/ui/toggle-tip'
+import { ICON_CATALOG } from '@/components/quick-follow/icons'
+import { LivePreview } from './LivePreview'
+import { PromptCard } from './PromptCard'
+import { useQuickFollowStore } from '@/stores/quickFollowStore'
+import type { QuickFollowPrompt } from '@/domain/quick-follow/types'
+import { t } from '@/utils/i18n'
+import { toaster } from '@/components/ui/toaster'
+import { Tooltip } from '@/components/ui/tooltip'
+
+function sortPrompts(prompts: QuickFollowPrompt[], orderedIds: string[]) {
+  const orderMap = new Map(orderedIds.map((id, index) => [id, index]))
+  return prompts
+    .slice()
+    .sort((a, b) => {
+      const orderA = orderMap.get(a.id)
+      const orderB = orderMap.get(b.id)
+
+      if (orderA === undefined && orderB === undefined) {
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      }
+      if (orderA === undefined) return 1
+      if (orderB === undefined) return -1
+      return orderA - orderB
+    })
+}
+
+export function QuickFollowSettingsView() {
+  const [draggingId, setDraggingId] = useState<string | null>(null)
+
+  const prompts = useQuickFollowStore(state => state.prompts)
+  const settings = useQuickFollowStore(state => state.settings)
+  const hydrate = useQuickFollowStore(state => state.hydrate)
+  const addPrompt = useQuickFollowStore(state => state.addPrompt)
+  const updatePrompt = useQuickFollowStore(state => state.updatePrompt)
+  const deletePrompt = useQuickFollowStore(state => state.deletePrompt)
+  const reorder = useQuickFollowStore(state => state.reorder)
+  const setEnabled = useQuickFollowStore(state => state.setEnabled)
+  const isHydrated = useQuickFollowStore(state => state.isHydrated)
+  const isHydrating = useQuickFollowStore(state => state.isHydrating)
+
+  const orderedPrompts = useMemo(
+    () => sortPrompts(prompts, settings.orderedIds),
+    [prompts, settings.orderedIds]
+  )
+
+  useEffect(() => {
+    if (!isHydrated && !isHydrating) {
+      void hydrate()
+    }
+  }, [hydrate, isHydrated, isHydrating])
+
+  const handleAddPrompt = async () => {
+    try {
+      const iconIndex = Math.floor(Math.random() * ICON_CATALOG.length)
+      await addPrompt({ iconKey: ICON_CATALOG[iconIndex].key })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to create prompt'
+      toaster.create({ type: 'error', title: message })
+    }
+  }
+
+  const handleUpdatePrompt = async (id: string, patch: Parameters<typeof updatePrompt>[1]) => {
+    try {
+      await updatePrompt(id, patch)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to update prompt'
+      toaster.create({ type: 'error', title: message })
+    }
+  }
+
+  const handleDeletePrompt = async (id: string) => {
+    try {
+      await deletePrompt(id)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to delete prompt'
+      toaster.create({ type: 'error', title: message })
+    }
+  }
+
+  const handleDrop = async (targetId: string) => {
+    if (!draggingId || draggingId === targetId) {
+      setDraggingId(null)
+      return
+    }
+    const sourceIndex = orderedPrompts.findIndex(prompt => prompt.id === draggingId)
+    const targetIndex = orderedPrompts.findIndex(prompt => prompt.id === targetId)
+    if (sourceIndex === -1 || targetIndex === -1) {
+      setDraggingId(null)
+      return
+    }
+
+    const reordered = [...orderedPrompts]
+    const [moved] = reordered.splice(sourceIndex, 1)
+    reordered.splice(targetIndex, 0, moved)
+
+    try {
+      await reorder(reordered.map(item => item.id))
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to reorder prompts'
+      toaster.create({ type: 'error', title: message })
+    } finally {
+      setDraggingId(null)
+    }
+  }
+
+  const handleToggleEnabled = async (checked: boolean) => {
+    try {
+      await setEnabled(checked)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to update setting'
+      toaster.create({ type: 'error', title: message })
+    }
+  }
+
+  return (
+    <Box 
+      position="relative" 
+      height="100%" 
+      display="flex" 
+      flexDirection="column"
+      data-view="quick-follow-settings"
+    >
+      {/* Scrollable content area */}
+      <Box 
+        flex="1" 
+        overflow="auto" 
+        pb="80px"
+      >
+        <Container display={'flex'} justifyContent={'center'}>
+          <Stack direction="column" maxWidth={'740px'} width={'100%'} align="stretch" gap={6}>
+            <Container backgroundColor="gemSurfaceContainer" p={4} borderRadius="2xl">
+              <Stack direction="row" align="center" justify="space-between" gap={3}>
+                <Text>{t('settings.quickFollow.enable')}</Text>
+                <Switch.Root
+                  checked={settings.enabled}
+                  onCheckedChange={(details) => void handleToggleEnabled(details.checked)}
+                  disabled={isHydrating}
+                >
+                  <Switch.HiddenInput />
+                  <Switch.Control>
+                    <Switch.Thumb />
+                  </Switch.Control>
+                </Switch.Root>
+              </Stack>
+            </Container>
+
+            <Container p={2} borderRadius="2xl">
+              <Box>
+                <Stack direction="row" justify="space-between" align="center" mb={3}>
+                  <Stack direction="row" align="center" gap={2}>
+                    <Heading size="sm">{t('settings.quickFollow.customPrompts.title')}</Heading>
+                    <InfoTip content={t('settings.quickFollow.customPrompts.placeholderTip')} />
+                  </Stack>
+                  <Tooltip content={t('settings.quickFollow.customPrompts.add')}>
+                    <IconButton
+                      onClick={handleAddPrompt}
+                      variant="subtle"
+                      size="xs"
+                    >
+                      <FiPlus />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+                
+                {/* grid */}
+                {orderedPrompts.length === 0 ? (
+                  <Box
+                    border="1px dashed"
+                    borderColor="tocHoverBg"
+                    borderRadius="lg"
+                    p={6}
+                    textAlign="center"
+                    color="muted"
+                  >
+                    {t('settings.quickFollow.customPrompts.empty')}
+                  </Box>
+                ) : (
+                  <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
+                    {orderedPrompts.map(prompt => (
+                      <PromptCard
+                        key={prompt.id}
+                        prompt={prompt}
+                        onUpdate={handleUpdatePrompt}
+                        onDelete={handleDeletePrompt}
+                        onDragStart={setDraggingId}
+                        onDragEnd={() => setDraggingId(null)}
+                        onDrop={handleDrop}
+                        isDragging={draggingId === prompt.id}
+                      />
+                    ))}
+                  </Grid>
+                )}
+              </Box>
+            </Container>
+          </Stack>
+        </Container>
+      </Box>
+
+      {/* Fixed Live Preview at bottom */}
+      <Box
+        position="absolute"
+        bottom={2}
+        left={0}
+        right={0}
+        zIndex={10}
+        display="flex"
+        justifyContent="center"
+      >
+        <LivePreview prompts={prompts} settings={settings} />
+      </Box>
+    </Box>
+  )
+}
+
+QuickFollowSettingsView.displayName = 'QuickFollowSettingsView'
+

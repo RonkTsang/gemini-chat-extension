@@ -12,6 +12,35 @@
   "settingsDescription": "自定义您的 Gemini 聊天体验",
   "chatOutlineDescription": "生成可点击大纲，便于导航",
   "quickQuoteDescription": "选择文本快速引用并提问",
+  "quickFollow": {
+    "more": "更多",
+    "moreAriaLabel": "显示更多提示"
+  },
+  "settings": {
+    "quickFollow": {
+      "title": "快速追问",
+      "description": "在快速追问胶囊中管理并配置你的自定义 Prompt。",
+      "enable": "启用 Quick Follow-up",
+      "customPrompts": {
+        "title": "自定义 Prompt",
+        "add": "添加 Prompt",
+        "empty": "暂无自定义 Prompt，点击\"添加 Prompt\"开始创建。",
+        "placeholderTip": "在模板中使用 {{SELECT_TEXT}} 来插入选中的文本。例如：\"将 {{SELECT_TEXT}} 翻译成中文\""
+      },
+      "preview": {
+        "title": "实时预览",
+        "subtitle": "查看快速追问胶囊在 Gemini 页面中的展示效果。",
+        "more": "更多 Prompt"
+      },
+      "card": {
+        "namePlaceholder": "自定义 Prompt 名称（可选）",
+        "templateEmpty": "模板不能为空",
+        "templateMissingPlaceholder": "模板必须包含 {{placeholder}}",
+        "templateHelper": "必须包含 {{placeholder}}",
+        "deleteLabel": "删除 Prompt"
+      }
+    }
+  },
   "settingPanel": {
     "chainPrompt": {
       "new": "新建 Chain Prompt",
@@ -176,7 +205,7 @@
         "views": {
           "index": {
             "title": "Chain Prompt",
-            "description": "Chain Prompt 总览。"
+            "description": "设计多步骤提示词工作流，填写变量，一键按顺序执行。"
           },
           "editor": {
             "title": "Chain Prompt 编辑器"

@@ -5,6 +5,22 @@
 
 import Dexie, { type Table } from 'dexie'
 
+export interface QuickFollowPromptRow {
+  id: string
+  name?: string
+  template: string
+  iconKey: string
+  enabled: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface QuickFollowSettingsRow {
+  id: 'default'
+  orderedIds: string[]
+  enabled: boolean
+}
+
 export interface ChainPromptRow {
   id: string
   name: string
@@ -17,12 +33,23 @@ export interface ChainPromptRow {
 
 export class GeminiExtensionDB extends Dexie {
   chain_prompts!: Table<ChainPromptRow, string>
+  quick_follow_prompts!: Table<QuickFollowPromptRow, string>
+  quick_follow_settings!: Table<QuickFollowSettingsRow, string>
 
   constructor() {
     super('gemini_extension')
     this.version(1).stores({
       chain_prompts: 'id, name, createdAt, updatedAt'
     })
+    this.version(2)
+      .stores({
+        chain_prompts: 'id, name, createdAt, updatedAt',
+        quick_follow_prompts: 'id, updatedAt',
+        quick_follow_settings: 'id'
+      })
+      .upgrade(() => {
+        // no-op: existing installations do not require data migration
+      })
   }
 }
 

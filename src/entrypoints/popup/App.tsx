@@ -19,9 +19,9 @@ import { t } from '@/utils/i18n';
 import { 
   getAllSettings,
   setChatOutlineEnabled,
-  setQuickQuoteEnabled,
 } from './storage';
 import { ChatOutlineIcon, QuickQuoteIcon, ExternalLinkIcon } from '@/components/icons';
+import { quickFollowStore } from '@/stores/quickFollowStore'
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -64,7 +64,22 @@ function App() {
     const loadSettings = async () => {
       try {
         const allSettings = await getAllSettings();
-        setSettings(allSettings);
+        await quickFollowStore.getState().hydrate();
+
+        let quickFollowEnabled = quickFollowStore.getState().settings.enabled;
+        if (quickFollowEnabled !== allSettings.enableQuickQuote) {
+          try {
+            await quickFollowStore.getState().setEnabled(allSettings.enableQuickQuote);
+            quickFollowEnabled = allSettings.enableQuickQuote;
+          } catch (error) {
+            console.error('Failed to sync quick follow toggle with repository:', error);
+          }
+        }
+
+        setSettings({
+          enableChatOutline: allSettings.enableChatOutline,
+          enableQuickQuote: quickFollowEnabled,
+        });
       } catch (error) {
         console.error('Failed to load settings from storage:', error);
       } finally {
@@ -86,7 +101,7 @@ function App() {
 
   const handleQuickQuoteToggle = async (enabled: boolean) => {
     try {
-      await setQuickQuoteEnabled(enabled);
+      await quickFollowStore.getState().setEnabled(enabled);
       setSettings(prev => ({ ...prev, enableQuickQuote: enabled }));
     } catch (error) {
       console.error('Failed to update quick quote setting:', error);

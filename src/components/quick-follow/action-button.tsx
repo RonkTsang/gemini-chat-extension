@@ -1,19 +1,14 @@
-import { Box, Text, Icon } from "@chakra-ui/react"
-import * as React from "react"
-import { Tooltip, type TooltipProps } from "@/components/ui/tooltip"
+import { Box, Icon, Text } from '@chakra-ui/react'
+import * as React from 'react'
+
+import { Tooltip, type TooltipProps } from '@/components/ui/tooltip'
 
 export interface ActionButtonProps {
-  /** Icon component to display */
   icon: React.ReactNode
-  /** Optional button text */
   label?: React.ReactNode
-  /** Optional tooltip content */
   tooltip?: React.ReactNode
-  /** Optional tooltip positioning props */
-  tooltipPositioning?: TooltipProps["positioning"]
-  /** Click handler */
-  onClick?: () => void
-  /** Additional Box props */
+  tooltipPositioning?: TooltipProps['positioning']
+  onClick?: (event?: React.MouseEvent<HTMLDivElement>) => void
   boxProps?: React.ComponentProps<typeof Box>
 }
 
@@ -22,6 +17,22 @@ export const ActionButton = React.forwardRef<HTMLDivElement, ActionButtonProps>(
     { icon, label, tooltip, tooltipPositioning, onClick, boxProps },
     ref
   ) {
+    const { onKeyDown, ...restBoxProps } = boxProps ?? {}
+
+    const handleKeyDown: React.KeyboardEventHandler<HTMLDivElement> = event => {
+      onKeyDown?.(event)
+      if (event.defaultPrevented) {
+        return
+      }
+      if (!onClick) {
+        return
+      }
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault()
+        onClick()
+      }
+    }
+
     const buttonContent = (
       <Box
         ref={ref}
@@ -29,14 +40,20 @@ export const ActionButton = React.forwardRef<HTMLDivElement, ActionButtonProps>(
         display="flex"
         alignItems="center"
         transition="background-color 0.2s"
-        _hover={{ bg: "tocHoverBg" }}
+        _hover={{ bg: 'tocHoverBg' }}
         cursor="pointer"
         padding="0 12px"
         gap={2}
-        onClick={onClick}
-        {...boxProps}
+        onClick={(event) => {
+          onClick?.(event)
+          return event
+        }}
+        onKeyDown={handleKeyDown}
+        role="button"
+        tabIndex={0}
+        {...restBoxProps}
       >
-        <Icon size="md" color="tocText">
+        <Icon fontSize="md" color="tocText">
           {icon}
         </Icon>
         {label && (

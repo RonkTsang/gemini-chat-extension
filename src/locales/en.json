@@ -12,6 +12,35 @@
   "settingsDescription": "Customize your Gemini chat experience",
   "chatOutlineDescription": "Generate clickable outline for easy navigation",
   "quickQuoteDescription": "Select text to quickly quote and ask questions",
+  "quickFollow": {
+    "more": "More",
+    "moreAriaLabel": "Show more prompts"
+  },
+  "settings": {
+    "quickFollow": {
+      "title": "Quick Follow-up",
+      "description": "Create and manage custom follow-up prompts with Quick Follow-up capsules.",
+      "enable": "Enable Quick Follow-up",
+      "customPrompts": {
+        "title": "Custom Prompts",
+        "add": "Add Prompt",
+        "empty": "No custom prompts yet. Click \"Add Prompt\" to create your first one.",
+        "placeholderTip": "Use {{SELECT_TEXT}} in your template to insert the selected text. Example: \"Translate {{SELECT_TEXT}} to Chinese\""
+      },
+      "preview": {
+        "title": "Live Preview",
+        "subtitle": "See how your Quick Follow-up capsule will look on the Gemini page.",
+        "more": "More prompts"
+      },
+      "card": {
+        "namePlaceholder": "Custom Prompt Name (Optional)",
+        "templateEmpty": "Template cannot be empty",
+        "templateMissingPlaceholder": "Template must contain $1",
+        "templateHelper": "Must include $1",
+        "deleteLabel": "Delete prompt"
+      }
+    }
+  },
   "settingPanel": {
     "chainPrompt": {
       "new": "New Chain Prompt",
@@ -176,7 +205,7 @@
         "views": {
           "index": {
             "title": "Chain Prompt",
-            "description": "Main overview for chain prompts."
+            "description": "Design multi-step prompt workflows, fill in variables, and run them in sequence with one click."
           },
           "editor": {
             "title": "Chain Prompt Editor"

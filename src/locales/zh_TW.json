@@ -12,6 +12,35 @@
   "settingsDescription": "自訂您的 Gemini 聊天體驗",
   "chatOutlineDescription": "生成可點擊大綱，便於導航",
   "quickQuoteDescription": "選擇文字快速引用並提問",
+  "quickFollow": {
+    "more": "更多",
+    "moreAriaLabel": "顯示更多提示"
+  },
+  "settings": {
+    "quickFollow": {
+      "title": "快速追問",
+      "description": "管理並設定快速追問膠囊中的自訂 Prompt。",
+      "enable": "啟用 Quick Follow-up",
+      "customPrompts": {
+        "title": "自訂 Prompt",
+        "add": "新增 Prompt",
+        "empty": "尚無自訂 Prompt，點擊「新增 Prompt」立即建立。",
+        "placeholderTip": "在模板中使用 {{SELECT_TEXT}} 來插入選中的文本。例如：「將 {{SELECT_TEXT}} 翻譯成中文」"
+      },
+      "preview": {
+        "title": "即時預覽",
+        "subtitle": "預覽快速追問膠囊在 Gemini 頁面的呈現效果。",
+        "more": "更多 Prompt"
+      },
+      "card": {
+        "namePlaceholder": "自訂 Prompt 名稱（可選）",
+        "templateEmpty": "模板不可為空",
+        "templateMissingPlaceholder": "模板必須包含 {{placeholder}}",
+        "templateHelper": "必須包含 {{placeholder}}",
+        "deleteLabel": "刪除 Prompt"
+      }
+    }
+  },
 
   "settingPanel": {
     "chainPrompt": {
@@ -177,7 +206,7 @@
         "views": {
           "index": {
             "title": "Chain Prompt",
-            "description": "Chain Prompt 總覽。"
+            "description": "設計多步驟提示詞工作流程，填寫變數，一鍵按順序執行。"
           },
           "editor": {
             "title": "Chain Prompt 編輯器"

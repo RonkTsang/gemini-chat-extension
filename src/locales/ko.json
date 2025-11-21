@@ -177,7 +177,7 @@
         "views": {
           "index": {
             "title": "Chain Prompt",
-            "description": "Chain Prompt의 기본 개요."
+            "description": "다단계 프롬프트 워크플로우를 설계하고, 변수를 입력한 후 한 번의 클릭으로 순차적으로 실행합니다."
           },
           "editor": {
             "title": "Chain Prompt 편집기"

@@ -177,7 +177,7 @@
         "views": {
           "index": {
             "title": "Chain Prompt",
-            "description": "Vue d'ensemble principale des Chain Prompts."
+            "description": "Concevez des flux de travail de prompts en plusieurs étapes, remplissez les variables et exécutez-les en séquence en un clic."
           },
           "editor": {
             "title": "Éditeur de Chain Prompt"

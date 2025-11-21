@@ -7,7 +7,7 @@ export function t(id: string, substitutions?: string | string[] | number) {
     if (typeof substitutions === 'number') return (wxtI18n.t as any)(id, substitutions)
     if (Array.isArray(substitutions)) return (wxtI18n.t as any)(id, substitutions)
     // Single string substitution → wrap as array for `$1`
-    return (wxtI18n.t as any)(id, [substitutions])
+    return wxtI18n.t(id, [substitutions])
   }
   // Fallback to browser.i18n: accepts string|string[] for substitutions; pluralization is manual
   const subs = typeof substitutions === 'number' ? String(substitutions) : substitutions

@@ -177,7 +177,7 @@
         "views": {
           "index": {
             "title": "Chain Prompt",
-            "description": "Chain Prompt の概要。"
+            "description": "複数ステップのプロンプトワークフローを設計し、変数を入力して、ワンクリックで順次実行します。"
           },
           "editor": {
             "title": "Chain Prompt エディター"

@@ -1,117 +1,168 @@
-import { Box, Presence, useDisclosure, Container, HStack } from "@chakra-ui/react"
-import { useState, useMemo } from "react"
+import { Presence, useDisclosure } from '@chakra-ui/react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
-import { EVENTS, type AppEvents } from "@/common/event"
-import { useEvent } from "@/hooks/useEventBus"
-import { eventBus } from "@/utils/eventbus"
-import { t } from "@/utils/i18n"
+import { EVENTS, type AppEvents } from '@/common/event'
+import { useEvent } from '@/hooks/useEventBus'
+import { eventBus } from '@/utils/eventbus'
+import { t } from '@/utils/i18n'
 import QuoteIcon from '~/assets/quote.svg?react'
-import { HiAtSymbol } from "react-icons/hi"
-import { ActionButton } from "./action-button"
-
+import { CapsuleBar } from '@/components/quick-follow/capsule-bar'
+import { useQuickFollowStore, quickFollowStore } from '@/stores/quickFollowStore'
+import type { QuickFollowPrompt } from '@/domain/quick-follow/types'
+import { QUICK_FOLLOW_PLACEHOLDER } from '@/domain/quick-follow/types'
+import { insertTextToEditor, sendMessage } from '@/utils/editorUtils'
+import { useMemoizedFn, useMount } from 'ahooks'
+import { sleep } from '@/utils/async'
 
 function QuickFollowUp() {
+  const { open, onOpen, onClose } = useDisclosure()
+  const [positionData, setPositionData] = useState<AppEvents['quick-follow-up:show']['event'] | null>(null)
+  const [selectedText, setSelectedText] = useState('')
 
-  const { open, setOpen } = useDisclosure()
-  const [positionData, setPositionData] = useState<AppEvents['quick-follow-up:show']['event'] | null>(null);
-  const [selectedText, setSelectedText] = useState<string>('');
-
-  useEvent(EVENTS.QUICK_FOLLOW_UP_SHOW, (data) => {
-    setPositionData(data.event);
-    setSelectedText(data.text);
-    setOpen(true);
-  });
-
-  useEvent(EVENTS.QUICK_FOLLOW_UP_HIDE, () => {
-    setOpen(false);
-  });
+  const {
+    prompts,
+    settings,
+  } = useQuickFollowStore()
 
   const displayPosition = useMemo(() => {
-    if (!positionData) return null;
+    if (!positionData) return null
+
+    const { innerWidth } = window
+    const { clientX, clientY } = positionData
+
+    // Estimate dimensions for boundary checks
+    const WIDTH = 220
+    const HEIGHT = 60
+    const MARGIN = 10
+
+    let left = clientX
+    let top = clientY - 15
+    let transform = 'translate(-50%, -100%)'
+
+    // Horizontal alignment
+    const halfWidth = WIDTH / 2
+    if (left - halfWidth < MARGIN) {
+      left = halfWidth + MARGIN
+    } else if (left + halfWidth > innerWidth - MARGIN) {
+      left = innerWidth - halfWidth - MARGIN
+    }
+
+    // Vertical alignment (flip if too close to top)
+    if (top - HEIGHT < MARGIN) {
+      top = clientY + 25
+      transform = 'translate(-50%, 0)'
+    }
 
     return {
-      top: positionData.clientY - 15,
-      left: positionData.clientX,
-      transform: 'translate(-50%, -100%)',
+      top,
+      left,
+      transform
     }
   }, [positionData])
 
-  const handleAddQuote = () => {
-    eventBus.emit(EVENTS.QUICK_FOLLOW_UP_ADD_QUOTE, { text: selectedText });
+  const closeOverlay = useCallback(() => {
+    onClose()
+    setSelectedText('')
+  }, [onClose])
+
+  useEvent(EVENTS.QUICK_FOLLOW_UP_SHOW, data => {
+    void (async () => {
+      setPositionData(data.event)
+      setSelectedText(data.text)
+      onOpen()
+    })()
+  })
+
+  useEvent(EVENTS.QUICK_FOLLOW_UP_HIDE, () => {
+    closeOverlay()
+  })
+
+  useEffect(() => {
+    if (!settings.enabled && open) {
+      closeOverlay()
+    }
+  }, [settings.enabled, open, closeOverlay])
+
+  function handleMouseDown(event: MouseEvent) {
+    // Fix: EventTarget may not have 'closest'; cast to Element if possible
+    const path = event.composedPath();
+    const target = path[0] as Element | null;
+    console.log('handleMouseDown', path);
+    if (!target?.closest('#gemini-quote-button')) {
+      closeOverlay();
+    }
   }
 
-  const handleCustomQuickFollowUpButtonClick = (data: any) => {
-    console.log(data);
-  }
+  useEffect(() => {
+    if (!open) return
+    document.addEventListener('mousedown', handleMouseDown)
 
-  const customQuickFollowUp = [
-    {
-      icon: <HiAtSymbol />,
-      name: 'test',
-      prompt: 'test',
-    },
-  ]
+    return () => {
+      document.removeEventListener('mousedown', handleMouseDown)
+    }
+  }, [open])
+
+  const handleAddQuote = useMemoizedFn(() => {
+    if (!selectedText) {
+      return
+    }
+    eventBus.emit(EVENTS.QUICK_FOLLOW_UP_ADD_QUOTE, { text: selectedText })
+    closeOverlay()
+  })
+
+  const runPrompt = useMemoizedFn(
+    async (prompt: QuickFollowPrompt) => {
+      if (!selectedText) {
+        return
+      }
+      closeOverlay()
+
+      const message = prompt.template
+        .split(QUICK_FOLLOW_PLACEHOLDER)
+        .join(selectedText)
+      const inserted = insertTextToEditor(message)
+      if (!inserted) {
+        return
+      }
+
+      await sleep(500)
+      
+      const result = sendMessage()
+      if (!result.success) {
+        console.warn('Failed to send quick follow-up prompt:', result.reason)
+      }
+      // eventBus.emit(EVENTS.QUICK_FOLLOW_UP_HIDE, undefined)
+    })
 
   return (
     <Presence
       present={open}
       lazyMount
       animationName={{
-        _open: "slide-from-bottom, fade-in",
-        _closed: "slide-to-bottom, fade-out",
+        _open: 'slide-from-bottom, fade-in',
+        _closed: 'slide-to-bottom, fade-out'
       }}
       animationDuration="250ms"
     >
-      <div style={{
-        position: 'absolute',
-        ...displayPosition,
-      }}>
-        {/* 胶囊按钮 */}
-        <Container
-          borderRadius="lg"
-          border="1px solid"
-          borderColor="tocHoverBg"
-          bg="tocBg"
-          boxShadow="tocShadow"
-          _hover={{
-            boxShadow: '0 6px 16px rgba(0,0,0,0.12), 0 0 2px rgba(0,0,0,0.1)'
-          }}
-          p={0}
-          transition="box-shadow 0.2s"
-          overflow="hidden"
-          height="38px"
-        >
-          <HStack height="100%" alignItems="center" gap={0}>
-            {/* Ask Gemini */}
-            <ActionButton
-              icon={<QuoteIcon />}
-              label={t('askGemini')}
-              onClick={handleAddQuote}
-            />
-
-            {/* Custom Action Buttons */}
-            {
-              customQuickFollowUp.length > 0 && (
-                <Box height="60%" width="1px" bg="separatorColor" />
-              )
-            }
-            {
-              customQuickFollowUp.map((data) => (
-                <ActionButton
-                  icon={data.icon}
-                  label={data.name}
-                  tooltipPositioning={{ placement: "top" }}
-                  onClick={() => {
-                    handleCustomQuickFollowUpButtonClick(data);
-                  }}
-                />
-              ))
-            }
-          </HStack>
-
-        </Container>
+      <div
+        style={{
+          position: 'absolute',
+          ...displayPosition
+        }}
+        id="gemini-quote-button"
+      >
+        <CapsuleBar
+          askLabel={t('askGemini')}
+          askIcon={<QuoteIcon />}
+          onAsk={handleAddQuote}
+          prompts={prompts}
+          orderedIds={settings.orderedIds}
+          onRunPrompt={runPrompt}
+          tooltipPlacement="top"
+        />
       </div>
     </Presence>
-  );
+  )
 }
-export default QuickFollowUp;
+
+export default QuickFollowUp

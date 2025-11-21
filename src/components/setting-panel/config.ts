@@ -57,7 +57,7 @@ export const settingSectionDefinitions: SettingSectionDefinition<NavigationSecti
         id: 'index',
         title: t('settingPanel.config.quickFollowup.views.index.title'),
         description: t('settingPanel.config.quickFollowup.views.index.description'),
-        componentId: 'default/index'
+        componentId: 'quick-follow-up/index'
       },
       {
         id: 'detail',
