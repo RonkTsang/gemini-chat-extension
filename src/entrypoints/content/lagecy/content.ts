@@ -338,9 +338,6 @@ function findAndInitialize(node) {
 }
 
 function handleMouseUp(event) {
-    const chatWindow = event.currentTarget;
-    const quoteTooltip = chatWindow._geminiQuoteTooltip;
-    if (!quoteTooltip) return;
 
     if (window.geminiQuoteTooltipDebounce) {
         clearTimeout(window.geminiQuoteTooltipDebounce);
@@ -351,7 +348,6 @@ function handleMouseUp(event) {
 
         if (selectedText && event.target.closest('message-content') && selection.rangeCount > 0) {
             if (event.target.closest('#gemini-toc-popover')) {
-                quoteTooltip.hide();
                 eventBus.emit(EVENTS.QUICK_FOLLOW_UP_HIDE);
                 return;
             }
@@ -365,9 +361,6 @@ function handleMouseUp(event) {
                 width: 0, height: 0, top: clampedY, bottom: clampedY, left: clampedX, right: clampedX,
             };
 
-            quoteTooltip.setProps({ getReferenceClientRect: () => virtualRect });
-            // quoteTooltip.show();
-
             eventBus.emit(EVENTS.QUICK_FOLLOW_UP_SHOW, {
               text: selectedText,
               event: {
@@ -379,76 +372,19 @@ function handleMouseUp(event) {
             });
         } else {
             eventBus.emit(EVENTS.QUICK_FOLLOW_UP_HIDE);
-            quoteTooltip.hide();
         }
     }, 100);
-}
-
-function handleMouseDown(event) {
-    const quoteTooltip = document.body._geminiGlobalQuoteTooltip;
-    if (quoteTooltip && !event.target.closest('.tippy-box') && !event.target.closest('#gemini-quote-button')) {
-        quoteTooltip.hide();
-    }
-    setTimeout(() => {
-      eventBus.emit(EVENTS.QUICK_FOLLOW_UP_HIDE);
-    }, 300)
 }
 
 function initializeQuoteFeature(chatWindow) {
   if (chatWindow._geminiQuoteInitialized) return;
 
-  const quoteTooltip = tippy(chatWindow, {
-    content: chrome.i18n.getMessage('askGemini'),
-    placement: 'top',
-    animation: 'slide-up-subtle',
-    arrow: false,
-    theme: 'quote-tooltip-theme',
-    trigger: 'manual',
-    hideOnClick: false,
-    interactive: true,
-    appendTo: chatWindow,
-    onShow(instance) {
-      const button = document.createElement('button');
-      button.className = 'gemini-quote-button';
-      const icon = document.createElement('span');
-      icon.className = 'gemini-quote-button-icon';
-      const label = document.createElement('span');
-      label.textContent = chrome.i18n.getMessage('askGemini');
-      button.appendChild(icon);
-      button.appendChild(label);
-      button.onclick = () => {
-        const selectedText = window.getSelection().toString();
-        if (selectedText) {
-          addQuoteUI(selectedText);
-        }
-        instance.hide();
-      };
-      instance.setContent(button);
-    },
-  });
-
-  chatWindow._geminiQuoteTooltip = quoteTooltip;
-  document.body._geminiGlobalQuoteTooltip = quoteTooltip; // For global mousedown access
-
   chatWindow.addEventListener('mouseup', handleMouseUp);
-  // document.addEventListener('mousedown', handleMouseDown);
-
   chatWindow._geminiQuoteInitialized = true;
 }
 
 function destroyQuoteFeature(chatWindow) {
-    if (!chatWindow._geminiQuoteInitialized) return;
-
     chatWindow.removeEventListener('mouseup', handleMouseUp);
-    // The mousedown listener is on document, handle it carefully
-    // For simplicity, we'll leave it, but in a complex app, we'd manage it better.
-    
-    if (chatWindow._geminiQuoteTooltip) {
-        chatWindow._geminiQuoteTooltip.destroy();
-        chatWindow._geminiQuoteTooltip = null;
-    }
-    
-    document.body._geminiGlobalQuoteTooltip = null;
     chatWindow._geminiQuoteInitialized = false;
 }
 
