@@ -12,8 +12,34 @@
   "settingsDescription": "Geminiチャット体験をカスタマイズ",
   "chatOutlineDescription": "簡単なナビゲーションのためのクリック可能なアウトラインを生成",
   "quickQuoteDescription": "テキストを選択して素早く引用し質問する",
-
+  "quickFollow": {
+    "more": "もっと見る",
+    "moreAriaLabel": "さらにプロンプトを表示"
+  },
   "settings": {
+    "quickFollow": {
+      "title": "クイック追問",
+      "description": "クイック追問カプセルでカスタム追問プロンプトを作成・管理します。",
+      "enable": "クイック追問を有効にする",
+      "customPrompts": {
+        "title": "カスタムプロンプト",
+        "add": "プロンプトを追加",
+        "empty": "カスタムプロンプトはまだありません。「プロンプトを追加」をクリックして最初のプロンプトを作成してください。",
+        "placeholderTip": "テンプレートで {{SELECT_TEXT}} を使用して、選択したテキストを挿入します。例：「{{SELECT_TEXT}} を中国語に翻訳」"
+      },
+      "preview": {
+        "title": "ライブプレビュー",
+        "subtitle": "クイック追問カプセルがGeminiページでどのように表示されるかを確認します。",
+        "more": "さらにプロンプト"
+      },
+      "card": {
+        "namePlaceholder": "カスタムプロンプト名（オプション）",
+        "templateEmpty": "テンプレートは空にできません",
+        "templateMissingPlaceholder": "テンプレートには $1 を含める必要があります",
+        "templateHelper": "$1 を含める必要があります",
+        "deleteLabel": "プロンプトを削除"
+      }
+    },
     "chatOutline": {
       "enable": "チャットアウトラインを有効にする"
     }
@@ -196,7 +222,7 @@
         "views": {
           "index": {
             "title": "クイック追問",
-            "description": "クイック追問の概要。"
+            "description": "カスタム追問プロンプトを作成・管理します。テキストを選択して、翻訳や説明などの繰り返し作業を自動化します。"
           },
           "detail": {
             "title": "クイック追問の詳細",
@@ -211,7 +237,7 @@
         "views": {
           "index": {
             "title": "チャットアウトライン",
-            "description": "チャットアウトラインの概要。"
+            "description": "左側に会話履歴のクイックインデックスを生成します。クリックして長い会話内の対応するメッセージにジャンプします。"
           },
           "detail": {
             "title": "チャットアウトラインの詳細",

@@ -12,8 +12,34 @@
   "settingsDescription": "Personalize sua experiência de chat com o Gemini",
   "chatOutlineDescription": "Gerar esboço clicável para navegação fácil",
   "quickQuoteDescription": "Selecionar texto para citar rapidamente e fazer perguntas",
-
+  "quickFollow": {
+    "more": "Mais",
+    "moreAriaLabel": "Mostrar mais prompts"
+  },
   "settings": {
+    "quickFollow": {
+      "title": "Seguimento rápido",
+      "description": "Crie e gerencie prompts de seguimento personalizados com cápsulas de Seguimento rápido.",
+      "enable": "Ativar Seguimento rápido",
+      "customPrompts": {
+        "title": "Prompts personalizados",
+        "add": "Adicionar Prompt",
+        "empty": "Ainda não há prompts personalizados. Clique em \"Adicionar Prompt\" para criar o primeiro.",
+        "placeholderTip": "Use {{SELECT_TEXT}} em seu modelo para inserir o texto selecionado. Exemplo: \"Traduzir {{SELECT_TEXT}} para chinês\""
+      },
+      "preview": {
+        "title": "Pré-visualização ao vivo",
+        "subtitle": "Veja como sua cápsula de Seguimento rápido aparecerá na página do Gemini.",
+        "more": "Mais prompts"
+      },
+      "card": {
+        "namePlaceholder": "Nome do Prompt personalizado (Opcional)",
+        "templateEmpty": "O modelo não pode estar vazio",
+        "templateMissingPlaceholder": "O modelo deve conter $1",
+        "templateHelper": "Deve incluir $1",
+        "deleteLabel": "Excluir prompt"
+      }
+    },
     "chatOutline": {
       "enable": "Ativar esboço de chat"
     }
@@ -196,7 +222,7 @@
         "views": {
           "index": {
             "title": "Seguimento rápido",
-            "description": "Visão geral dos seguimentos rápidos."
+            "description": "Crie e gerencie prompts de seguimento personalizados. Automatize fluxos de trabalho repetitivos como tradução e explicação selecionando texto."
           },
           "detail": {
             "title": "Detalhe do seguimento rápido",
@@ -211,7 +237,7 @@
         "views": {
           "index": {
             "title": "Esboço de chat",
-            "description": "Visão geral do esboço de chat."
+            "description": "Gere um índice rápido do histórico de conversas no lado esquerdo. Clique para pular para a mensagem correspondente em conversas longas."
           },
           "detail": {
             "title": "Detalhe do esboço de chat",

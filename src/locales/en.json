@@ -222,7 +222,7 @@
         "views": {
           "index": {
             "title": "Quick Follow-up",
-            "description": "Main overview for quick follow-ups."
+            "description": "Create and manage custom follow-up prompts. Automate repetitive workflows like translation and explanation by selecting text."
           },
           "detail": {
             "title": "Quick Follow-up Detail",
@@ -237,7 +237,7 @@
         "views": {
           "index": {
             "title": "Chat Outline",
-            "description": "Main overview for chat outlines."
+            "description": "Generate a quick index of conversation history on the left side. Click and jump to the corresponding message in long conversations."
           },
           "detail": {
             "title": "Chat Outline Detail",

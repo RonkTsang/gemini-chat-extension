@@ -12,8 +12,34 @@
   "settingsDescription": "Personnalisez votre expérience de chat Gemini",
   "chatOutlineDescription": "Générer un plan cliquable pour une navigation facile",
   "quickQuoteDescription": "Sélectionner du texte pour citer rapidement et poser des questions",
-
+  "quickFollow": {
+    "more": "Plus",
+    "moreAriaLabel": "Afficher plus de prompts"
+  },
   "settings": {
+    "quickFollow": {
+      "title": "Relance rapide",
+      "description": "Créez et gérez des prompts de relance personnalisés avec des capsules de Relance rapide.",
+      "enable": "Activer la Relance rapide",
+      "customPrompts": {
+        "title": "Prompts personnalisés",
+        "add": "Ajouter un Prompt",
+        "empty": "Aucun prompt personnalisé pour le moment. Cliquez sur \"Ajouter un Prompt\" pour créer le premier.",
+        "placeholderTip": "Utilisez {{SELECT_TEXT}} dans votre modèle pour insérer le texte sélectionné. Exemple : \"Traduire {{SELECT_TEXT}} en chinois\""
+      },
+      "preview": {
+        "title": "Aperçu en direct",
+        "subtitle": "Voyez à quoi ressemblera votre capsule de Relance rapide sur la page Gemini.",
+        "more": "Plus de prompts"
+      },
+      "card": {
+        "namePlaceholder": "Nom du Prompt personnalisé (Optionnel)",
+        "templateEmpty": "Le modèle ne peut pas être vide",
+        "templateMissingPlaceholder": "Le modèle doit contenir $1",
+        "templateHelper": "Doit inclure $1",
+        "deleteLabel": "Supprimer le prompt"
+      }
+    },
     "chatOutline": {
       "enable": "Activer le plan de discussion"
     }
@@ -196,7 +222,7 @@
         "views": {
           "index": {
             "title": "Relance rapide",
-            "description": "Vue d'ensemble des relances rapides."
+            "description": "Créez et gérez des prompts de relance personnalisés. Automatisez les flux de travail répétitifs comme la traduction et l'explication en sélectionnant du texte."
           },
           "detail": {
             "title": "Détail de la relance rapide",
@@ -211,7 +237,7 @@
         "views": {
           "index": {
             "title": "Plan de chat",
-            "description": "Vue d'ensemble du plan de chat."
+            "description": "Générez un index rapide de l'historique des conversations sur le côté gauche. Cliquez pour accéder au message correspondant dans les longues conversations."
           },
           "detail": {
             "title": "Détail du plan de chat",

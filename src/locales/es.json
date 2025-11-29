@@ -12,8 +12,34 @@
   "settingsDescription": "Personaliza tu experiencia de chat con Gemini",
   "chatOutlineDescription": "Generar esquema clicable para navegación fácil",
   "quickQuoteDescription": "Seleccionar texto para citar rápidamente y hacer preguntas",
-
+  "quickFollow": {
+    "more": "Más",
+    "moreAriaLabel": "Mostrar más prompts"
+  },
   "settings": {
+    "quickFollow": {
+      "title": "Seguimiento rápido",
+      "description": "Crea y gestiona prompts de seguimiento personalizados con cápsulas de Seguimiento rápido.",
+      "enable": "Activar Seguimiento rápido",
+      "customPrompts": {
+        "title": "Prompts personalizados",
+        "add": "Agregar Prompt",
+        "empty": "Aún no hay prompts personalizados. Haz clic en \"Agregar Prompt\" para crear el primero.",
+        "placeholderTip": "Usa {{SELECT_TEXT}} en tu plantilla para insertar el texto seleccionado. Ejemplo: \"Traducir {{SELECT_TEXT}} al chino\""
+      },
+      "preview": {
+        "title": "Vista previa en vivo",
+        "subtitle": "Ve cómo se verá tu cápsula de Seguimiento rápido en la página de Gemini.",
+        "more": "Más prompts"
+      },
+      "card": {
+        "namePlaceholder": "Nombre del Prompt personalizado (Opcional)",
+        "templateEmpty": "La plantilla no puede estar vacía",
+        "templateMissingPlaceholder": "La plantilla debe contener $1",
+        "templateHelper": "Debe incluir $1",
+        "deleteLabel": "Eliminar prompt"
+      }
+    },
     "chatOutline": {
       "enable": "Habilitar esquema de chat"
     }
@@ -196,7 +222,7 @@
         "views": {
           "index": {
             "title": "Seguimiento rápido",
-            "description": "Resumen principal de seguimientos rápidos."
+            "description": "Crea y gestiona prompts de seguimiento personalizados. Automatiza flujos de trabajo repetitivos como traducción y explicación seleccionando texto."
           },
           "detail": {
             "title": "Detalle de seguimiento rápido",
@@ -211,7 +237,7 @@
         "views": {
           "index": {
             "title": "Esquema de chat",
-            "description": "Resumen principal del esquema de chat."
+            "description": "Genera un índice rápido del historial de conversación en el lado izquierdo. Haz clic para saltar al mensaje correspondiente en conversaciones largas."
           },
           "detail": {
             "title": "Detalle del esquema de chat",

@@ -12,8 +12,34 @@
   "settingsDescription": "Passen Sie Ihre Gemini-Chat-Erfahrung an",
   "chatOutlineDescription": "Klickbare Gliederung für einfache Navigation generieren",
   "quickQuoteDescription": "Text auswählen, um schnell zu zitieren und Fragen zu stellen",
-
+  "quickFollow": {
+    "more": "Mehr",
+    "moreAriaLabel": "Weitere Prompts anzeigen"
+  },
   "settings": {
+    "quickFollow": {
+      "title": "Schnelle Rückfrage",
+      "description": "Erstellen und verwalten Sie benutzerdefinierte Folgeprompts mit Schnelle-Rückfrage-Kapseln.",
+      "enable": "Schnelle Rückfrage aktivieren",
+      "customPrompts": {
+        "title": "Benutzerdefinierte Prompts",
+        "add": "Prompt hinzufügen",
+        "empty": "Noch keine benutzerdefinierten Prompts. Klicken Sie auf \"Prompt hinzufügen\", um Ihren ersten zu erstellen.",
+        "placeholderTip": "Verwenden Sie {{SELECT_TEXT}} in Ihrer Vorlage, um den ausgewählten Text einzufügen. Beispiel: \"{{SELECT_TEXT}} ins Chinesische übersetzen\""
+      },
+      "preview": {
+        "title": "Live-Vorschau",
+        "subtitle": "Sehen Sie, wie Ihre Schnelle-Rückfrage-Kapsel auf der Gemini-Seite aussehen wird.",
+        "more": "Weitere Prompts"
+      },
+      "card": {
+        "namePlaceholder": "Benutzerdefinierter Prompt-Name (Optional)",
+        "templateEmpty": "Vorlage darf nicht leer sein",
+        "templateMissingPlaceholder": "Vorlage muss $1 enthalten",
+        "templateHelper": "Muss $1 enthalten",
+        "deleteLabel": "Prompt löschen"
+      }
+    },
     "chatOutline": {
       "enable": "Chat-Gliederung aktivieren"
     }
@@ -196,7 +222,7 @@
         "views": {
           "index": {
             "title": "Schnelle Rückfrage",
-            "description": "Hauptübersicht für schnelle Rückfragen."
+            "description": "Erstellen und verwalten Sie benutzerdefinierte Folgeprompts. Automatisieren Sie wiederkehrende Arbeitsabläufe wie Übersetzung und Erklärung durch Textauswahl."
           },
           "detail": {
             "title": "Details zur schnellen Rückfrage",
@@ -211,7 +237,7 @@
         "views": {
           "index": {
             "title": "Chat-Gliederung",
-            "description": "Hauptübersicht für Chat-Gliederungen."
+            "description": "Erstellen Sie einen schnellen Index der Gesprächshistorie auf der linken Seite. Klicken Sie, um zur entsprechenden Nachricht in langen Gesprächen zu springen."
           },
           "detail": {
             "title": "Chat-Gliederung Details",

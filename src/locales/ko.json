@@ -12,8 +12,34 @@
   "settingsDescription": "Gemini 채팅 경험을 사용자 정의",
   "chatOutlineDescription": "쉬운 탐색을 위한 클릭 가능한 개요 생성",
   "quickQuoteDescription": "텍스트를 선택하여 빠르게 인용하고 질문하기",
-
+  "quickFollow": {
+    "more": "더보기",
+    "moreAriaLabel": "더 많은 프롬프트 표시"
+  },
   "settings": {
+    "quickFollow": {
+      "title": "빠른 후속 질문",
+      "description": "빠른 후속 질문 캡슐로 사용자 정의 후속 프롬프트를 만들고 관리합니다.",
+      "enable": "빠른 후속 질문 활성화",
+      "customPrompts": {
+        "title": "사용자 정의 프롬프트",
+        "add": "프롬프트 추가",
+        "empty": "아직 사용자 정의 프롬프트가 없습니다. \"프롬프트 추가\"를 클릭하여 첫 번째 프롬프트를 만드세요.",
+        "placeholderTip": "템플릿에서 {{SELECT_TEXT}}를 사용하여 선택한 텍스트를 삽입합니다. 예: \"{{SELECT_TEXT}}를 중국어로 번역\""
+      },
+      "preview": {
+        "title": "라이브 미리보기",
+        "subtitle": "빠른 후속 질문 캡슐이 Gemini 페이지에서 어떻게 보일지 확인하세요.",
+        "more": "더 많은 프롬프트"
+      },
+      "card": {
+        "namePlaceholder": "사용자 정의 프롬프트 이름(선택사항)",
+        "templateEmpty": "템플릿은 비어 있을 수 없습니다",
+        "templateMissingPlaceholder": "템플릿에는 $1이 포함되어야 합니다",
+        "templateHelper": "$1을 포함해야 합니다",
+        "deleteLabel": "프롬프트 삭제"
+      }
+    },
     "chatOutline": {
       "enable": "채팅 개요 활성화"
     }
@@ -196,7 +222,7 @@
         "views": {
           "index": {
             "title": "빠른 후속 질문",
-            "description": "빠른 후속 질문의 기본 개요."
+            "description": "사용자 정의 후속 프롬프트를 만들고 관리합니다. 텍스트를 선택하여 번역 및 설명과 같은 반복적인 작업을 자동화합니다."
           },
           "detail": {
             "title": "빠른 후속 질문 상세",
@@ -211,7 +237,7 @@
         "views": {
           "index": {
             "title": "채팅 개요",
-            "description": "채팅 개요의 기본 개요."
+            "description": "왼쪽에 대화 기록의 빠른 인덱스를 생성합니다. 클릭하여 긴 대화에서 해당 메시지로 이동합니다."
           },
           "detail": {
             "title": "채팅 개요 상세",

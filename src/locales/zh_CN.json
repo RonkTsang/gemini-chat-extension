@@ -222,7 +222,7 @@
         "views": {
           "index": {
             "title": "快速追问",
-            "description": "快速追问总览。"
+            "description": "创建和管理自定义追问提示。通过选择文本自动化重复性工作流，如翻译和解释。"
           },
           "detail": {
             "title": "快速追问详情",
@@ -237,7 +237,7 @@
         "views": {
           "index": {
             "title": "聊天大纲",
-            "description": "聊天大纲总览。"
+            "description": "在页面左侧生成历史对话的快速索引。点击即可跳转到长对话中对应的消息。"
           },
           "detail": {
             "title": "聊天大纲详情",
