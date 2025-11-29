@@ -13,6 +13,11 @@
   "chatOutlineDescription": "Klickbare Gliederung für einfache Navigation generieren",
   "quickQuoteDescription": "Text auswählen, um schnell zu zitieren und Fragen zu stellen",
 
+  "settings": {
+    "chatOutline": {
+      "enable": "Chat-Gliederung aktivieren"
+    }
+  },
   "settingPanel": {
     "chainPrompt": {
       "new": "Neuer Chain Prompt",

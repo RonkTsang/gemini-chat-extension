@@ -39,6 +39,9 @@
         "templateHelper": "Must include $1",
         "deleteLabel": "Delete prompt"
       }
+    },
+    "chatOutline": {
+      "enable": "Enable Chat Outline"
     }
   },
   "settingPanel": {

@@ -13,6 +13,11 @@
   "chatOutlineDescription": "簡単なナビゲーションのためのクリック可能なアウトラインを生成",
   "quickQuoteDescription": "テキストを選択して素早く引用し質問する",
 
+  "settings": {
+    "chatOutline": {
+      "enable": "チャットアウトラインを有効にする"
+    }
+  },
   "settingPanel": {
     "chainPrompt": {
       "new": "新しい Chain Prompt",

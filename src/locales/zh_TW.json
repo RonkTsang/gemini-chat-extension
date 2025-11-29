@@ -39,6 +39,9 @@
         "templateHelper": "必須包含 {{placeholder}}",
         "deleteLabel": "刪除 Prompt"
       }
+    },
+    "chatOutline": {
+      "enable": "啟用對話大綱"
     }
   },
 

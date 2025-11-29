@@ -42,23 +42,6 @@ function App() {
     setTheme('system');
   }, [])
 
-  // 调试：监控主题变化
-  useEffect(() => {
-    console.log('App theme state updated:', {
-      colorMode,
-      systemPrefersDark: window.matchMedia('(prefers-color-scheme: dark)').matches,
-      documentClasses: document.documentElement.className,
-      documentDataTheme: document.documentElement.getAttribute('data-theme')
-    });
-  }, [colorMode]);
-
-  // 添加一个测试按钮来强制检测系统主题
-  const forceDetectSystemTheme = () => {
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    console.log('Force detect system theme:', systemPrefersDark ? 'dark' : 'light');
-    // 这里可以添加强制更新逻辑
-  };
-
   // Load initial settings from storage
   useEffect(() => {
     const loadSettings = async () => {

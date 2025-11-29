@@ -39,6 +39,9 @@
         "templateHelper": "必须包含 {{placeholder}}",
         "deleteLabel": "删除 Prompt"
       }
+    },
+    "chatOutline": {
+      "enable": "启用对话大纲"
     }
   },
   "settingPanel": {

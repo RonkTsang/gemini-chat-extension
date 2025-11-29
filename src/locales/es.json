@@ -13,6 +13,11 @@
   "chatOutlineDescription": "Generar esquema clicable para navegación fácil",
   "quickQuoteDescription": "Seleccionar texto para citar rápidamente y hacer preguntas",
 
+  "settings": {
+    "chatOutline": {
+      "enable": "Habilitar esquema de chat"
+    }
+  },
   "settingPanel": {
     "chainPrompt": {
       "new": "Nuevo Chain Prompt",

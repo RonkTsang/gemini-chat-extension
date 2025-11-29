@@ -79,7 +79,7 @@ export const settingSectionDefinitions: SettingSectionDefinition<NavigationSecti
         id: 'index',
         title: t('settingPanel.config.chatOutline.views.index.title'),
         description: t('settingPanel.config.chatOutline.views.index.description'),
-        componentId: 'default/index'
+        componentId: 'chat-outline/index'
       },
       {
         id: 'detail',

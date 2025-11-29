@@ -13,6 +13,11 @@
   "chatOutlineDescription": "Générer un plan cliquable pour une navigation facile",
   "quickQuoteDescription": "Sélectionner du texte pour citer rapidement et poser des questions",
 
+  "settings": {
+    "chatOutline": {
+      "enable": "Activer le plan de discussion"
+    }
+  },
   "settingPanel": {
     "chainPrompt": {
       "new": "Nouveau Chain Prompt",
