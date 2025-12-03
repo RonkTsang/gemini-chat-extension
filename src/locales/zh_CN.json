@@ -208,7 +208,7 @@
         "views": {
           "index": {
             "title": "Chain Prompt",
-            "description": "设计多步骤提示词工作流，填写变量，一键按顺序执行。"
+            "description": "自动化复杂的多步骤对话。创建可复用的工作流，一键自动执行多个步骤。"
           },
           "editor": {
             "title": "Chain Prompt 编辑器"
@@ -222,7 +222,7 @@
         "views": {
           "index": {
             "title": "快速追问",
-            "description": "创建和管理自定义追问提示。通过选择文本自动化重复性工作流，如翻译和解释。"
+            "description": "快速追问会在你选中文本时出现，帮助你快速执行常用操作，如翻译、解释、总结等。"
           },
           "detail": {
             "title": "快速追问详情",

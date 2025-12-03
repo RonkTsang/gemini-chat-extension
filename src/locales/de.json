@@ -208,7 +208,7 @@
         "views": {
           "index": {
             "title": "Chain Prompt",
-            "description": "Entwerfen Sie mehrstufige Prompt-Workflows, füllen Sie Variablen aus und führen Sie sie mit einem Klick nacheinander aus."
+            "description": "Automatisieren Sie komplexe mehrstufige Gespräche. Erstellen Sie wiederverwendbare Workflows, die mehrere Schritte automatisch mit einem Klick ausführen."
           },
           "editor": {
             "title": "Chain Prompt-Editor"
@@ -222,7 +222,7 @@
         "views": {
           "index": {
             "title": "Schnelle Rückfrage",
-            "description": "Erstellen und verwalten Sie benutzerdefinierte Folgeprompts. Automatisieren Sie wiederkehrende Arbeitsabläufe wie Übersetzung und Erklärung durch Textauswahl."
+            "description": "Schnelle Rückfrage erscheint, wenn Sie Text auswählen, und hilft Ihnen, häufige Aktionen wie Übersetzung, Erklärung und Zusammenfassung schnell auszuführen."
           },
           "detail": {
             "title": "Details zur schnellen Rückfrage",

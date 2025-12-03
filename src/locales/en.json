@@ -208,7 +208,7 @@
         "views": {
           "index": {
             "title": "Chain Prompt",
-            "description": "Design multi-step prompt workflows, fill in variables, and run them in sequence with one click."
+            "description": "Automate complex multi-step conversations. Create reusable workflows that run multiple steps automatically with one click."
           },
           "editor": {
             "title": "Chain Prompt Editor"
@@ -222,7 +222,7 @@
         "views": {
           "index": {
             "title": "Quick Follow-up",
-            "description": "Create and manage custom follow-up prompts. Automate repetitive workflows like translation and explanation by selecting text."
+            "description": "Quick Follow-up appears when you select text, helping you quickly perform common actions like translation, explanation, and summarization."
           },
           "detail": {
             "title": "Quick Follow-up Detail",

@@ -208,7 +208,7 @@
         "views": {
           "index": {
             "title": "Chain Prompt",
-            "description": "Projete fluxos de trabalho de prompts em várias etapas, preencha variáveis e execute-os em sequência com um clique."
+            "description": "Automatize conversas complexas de várias etapas. Crie fluxos de trabalho reutilizáveis que executam múltiplas etapas automaticamente com um clique."
           },
           "editor": {
             "title": "Editor de Chain Prompt"
@@ -222,7 +222,7 @@
         "views": {
           "index": {
             "title": "Seguimento rápido",
-            "description": "Crie e gerencie prompts de seguimento personalizados. Automatize fluxos de trabalho repetitivos como tradução e explicação selecionando texto."
+            "description": "Seguimento rápido aparece quando você seleciona texto, ajudando você a realizar rapidamente ações comuns como tradução, explicação e resumo."
           },
           "detail": {
             "title": "Detalhe do seguimento rápido",

@@ -41,6 +41,7 @@ export const settingSectionDefinitions: SettingSectionDefinition<NavigationSecti
       {
         id: 'editor',
         title: t('settingPanel.config.chainPrompt.views.editor.title'),
+        description: '',
         componentId: 'chain-prompt/editor'
       }
     ]

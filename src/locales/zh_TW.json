@@ -209,7 +209,7 @@
         "views": {
           "index": {
             "title": "Chain Prompt",
-            "description": "設計多步驟提示詞工作流程，填寫變數，一鍵按順序執行。"
+            "description": "自動化複雜的多步驟對話。建立可複用的工作流程，一鍵自動執行多個步驟。"
           },
           "editor": {
             "title": "Chain Prompt 編輯器"
@@ -223,7 +223,7 @@
         "views": {
           "index": {
             "title": "快速追問",
-            "description": "建立和管理自訂追問提示。透過選擇文字自動化重複性工作流程，如翻譯和解釋。"
+            "description": "快速追問會在你選中文字時出現，幫助你快速執行常用操作，如翻譯、解釋、總結等。"
           },
           "detail": {
             "title": "快速追問詳情",

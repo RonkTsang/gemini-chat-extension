@@ -208,7 +208,7 @@
         "views": {
           "index": {
             "title": "Chain Prompt",
-            "description": "Concevez des flux de travail de prompts en plusieurs étapes, remplissez les variables et exécutez-les en séquence en un clic."
+            "description": "Automatisez des conversations complexes en plusieurs étapes. Créez des flux de travail réutilisables qui exécutent automatiquement plusieurs étapes en un clic."
           },
           "editor": {
             "title": "Éditeur de Chain Prompt"
@@ -222,7 +222,7 @@
         "views": {
           "index": {
             "title": "Relance rapide",
-            "description": "Créez et gérez des prompts de relance personnalisés. Automatisez les flux de travail répétitifs comme la traduction et l'explication en sélectionnant du texte."
+            "description": "Relance rapide apparaît lorsque vous sélectionnez du texte, vous aidant à effectuer rapidement des actions courantes comme la traduction, l'explication et le résumé."
           },
           "detail": {
             "title": "Détail de la relance rapide",
