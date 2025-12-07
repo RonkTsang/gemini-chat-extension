@@ -392,30 +392,6 @@ export function PlaceholderChipEditor({
     }
   }, [chipDeletable, selectionContainsChip, getAdjacentChip, moveCursorToChipBoundary])
 
-  // Prevent drag operations that could delete chip
-  const handleDragStart = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    if (chipDeletable) return
-
-    // Prevent dragging if selection contains chip
-    if (selectionContainsChip()) {
-      e.preventDefault()
-    }
-    e.preventDefault();
-    e.stopPropagation(); // 关键
-  }, [chipDeletable, selectionContainsChip])
-
-  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    if (chipDeletable) return
-
-    // Prevent drops that could affect chip
-    // This is a conservative approach - you may want to allow some drops
-    if (selectionContainsChip()) {
-      e.preventDefault()
-    }
-    e.preventDefault();
-    e.stopPropagation(); // 关键
-  }, [chipDeletable, selectionContainsChip])
-
   // Handle paste - strip formatting
   const handlePaste = useCallback(
     (e: React.ClipboardEvent<HTMLDivElement>) => {
@@ -458,8 +434,6 @@ export function PlaceholderChipEditor({
         onPaste={handlePaste}
         onFocus={handleFocus}
         onBlur={handleBlur}
-        onDragStart={handleDragStart}
-        onDrop={handleDrop}
         minH="80px"
         p={3}
         border="1px solid"

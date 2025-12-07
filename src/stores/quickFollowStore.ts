@@ -118,9 +118,22 @@ export const useQuickFollowStore = create<QuickFollowStore>((set, get) => ({
   },
 
   async reorder(idsInOrder) {
-    const prompts = await quickFollowRepository.reorder(idsInOrder)
-    const settings = await quickFollowRepository.getSettings()
-    set({ prompts, settings, isHydrated: true })
+    // Optimistic update: immediately update local state for smooth UI
+    set(state => ({
+      ...state,
+      settings: { ...state.settings, orderedIds: idsInOrder }
+    }))
+
+    // Then persist to database
+    try {
+      await quickFollowRepository.reorder(idsInOrder)
+      // Optionally sync with latest from DB (usually not needed if reorder succeeds)
+    } catch (error) {
+      // Rollback on error: refetch latest state
+      const latest = await fetchLatest()
+      set({ ...latest, isHydrated: true })
+      throw error
+    }
   },
 
   async setEnabled(enabled) {

@@ -1,5 +1,7 @@
 import { Box, Input, Stack, Text, CloseButton } from '@chakra-ui/react'
 import { useEffect, useState } from 'react'
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 
 import type {
   QuickFollowPrompt,
@@ -8,27 +10,33 @@ import type {
 import { QUICK_FOLLOW_PLACEHOLDER } from '@/domain/quick-follow/types'
 import { IconPicker } from './IconPicker'
 import { PlaceholderChipEditor } from './PlaceholderChipEditor'
+import { DragExcluded } from './DragExcluded'
 import { t } from '@/utils/i18n'
 
 export interface PromptCardProps {
   prompt: QuickFollowPrompt
   onUpdate: (id: string, patch: QuickFollowPromptUpdateInput) => Promise<void>
   onDelete: (id: string) => Promise<void> | void
-  onDragStart: (id: string) => void
-  onDragEnd: () => void
-  onDrop: (targetId: string) => void
-  isDragging?: boolean
 }
 
 export function PromptCard({
   prompt,
   onUpdate,
-  onDelete,
-  onDragStart,
-  onDragEnd,
-  onDrop,
-  isDragging
+  onDelete
 }: PromptCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: prompt.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition
+  }
   const [nameValue, setNameValue] = useState(prompt.name ?? '')
   const [templateValue, setTemplateValue] = useState(prompt.template)
   const [templateError, setTemplateError] = useState<string | null>(null)
@@ -83,45 +91,41 @@ export function PromptCard({
 
   return (
     <Box
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
       border="1px solid"
       borderColor="border.emphasized"
       borderRadius="lg"
       padding={6}
       position="relative"
-      draggable
-      onDragStart={event => {
-        event.dataTransfer.effectAllowed = 'move'
-        event.dataTransfer.setData('text/plain', prompt.id)
-        onDragStart(prompt.id)
-      }}
-      onDragEnd={onDragEnd}
-      onDragOver={event => {
-        event.preventDefault()
-        event.dataTransfer.dropEffect = 'move'
-      }}
-      onDrop={event => {
-        event.preventDefault()
-        onDrop(prompt.id)
-      }}
       opacity={isDragging ? 0.6 : 1}
+      cursor="grab"
       _hover={{ boxShadow: 'sm' }}
+      _active={{ cursor: 'grabbing' }}
       className="group"
     >
-      <CloseButton
-        aria-label={t('settings.quickFollow.card.deleteLabel') ?? 'Delete prompt'}
-        variant="ghost"
-        size="2xs"
+      <DragExcluded
         position="absolute"
         top={1}
         right={1}
-        onClick={handleDelete}
-        opacity={0}
-        _groupHover={{ opacity: 1 }}
-        transition="opacity 0.2s"
-      />
+      >
+        <CloseButton
+          aria-label={t('settings.quickFollow.card.deleteLabel') ?? 'Delete prompt'}
+          variant="ghost"
+          size="2xs"
+          onClick={handleDelete}
+          opacity={0}
+          _groupHover={{ opacity: 1 }}
+          transition="opacity 0.2s"
+        />
+      </DragExcluded>
       <Stack direction={{ base: 'column', md: 'row' }} gap={3} align="flex-start">
-        <IconPicker value={prompt.iconKey} onChange={handleIconChange} />
-        <Box flex={1}>
+        <DragExcluded>
+          <IconPicker value={prompt.iconKey} onChange={handleIconChange} />
+        </DragExcluded>
+        <DragExcluded flex={1}>
           <Input
             placeholder={
               t('settings.quickFollow.card.namePlaceholder') ?? 'Custom Prompt Name (Optional)'
@@ -130,10 +134,10 @@ export function PromptCard({
             onChange={event => setNameValue(event.target.value)}
             onBlur={handleNameBlur}
           />
-        </Box>
+        </DragExcluded>
       </Stack>
 
-      <Box mt={3}>
+      <DragExcluded mt={3}>
         <PlaceholderChipEditor
           value={templateValue}
           onChange={setTemplateValue}
@@ -145,7 +149,7 @@ export function PromptCard({
             {templateError}
           </Text>
         ) : null}
-      </Box>
+      </DragExcluded>
     </Box>
   )
 }

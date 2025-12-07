@@ -18,6 +18,9 @@
   },
   "dependencies": {
     "@chakra-ui/react": "^3.27.0",
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
     "@mantine/core": "^8.3.1",

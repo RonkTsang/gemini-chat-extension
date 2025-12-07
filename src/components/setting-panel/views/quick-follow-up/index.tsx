@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo } from 'react'
 import {
   Box,
-  Button,
   Container,
   Grid,
   Heading,
@@ -11,6 +10,18 @@ import {
   Text
 } from '@chakra-ui/react'
 import { FiPlus } from 'react-icons/fi'
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  rectSortingStrategy
+} from '@dnd-kit/sortable'
 
 import { InfoTip } from '@/components/ui/toggle-tip'
 import { ICON_CATALOG } from '@/components/quick-follow/icons'
@@ -40,7 +51,11 @@ function sortPrompts(prompts: QuickFollowPrompt[], orderedIds: string[]) {
 }
 
 export function QuickFollowSettingsView() {
-  const [draggingId, setDraggingId] = useState<string | null>(null)
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 }
+    })
+  )
 
   const prompts = useQuickFollowStore(state => state.prompts)
   const settings = useQuickFollowStore(state => state.settings)
@@ -92,15 +107,15 @@ export function QuickFollowSettingsView() {
     }
   }
 
-  const handleDrop = async (targetId: string) => {
-    if (!draggingId || draggingId === targetId) {
-      setDraggingId(null)
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) {
       return
     }
-    const sourceIndex = orderedPrompts.findIndex(prompt => prompt.id === draggingId)
-    const targetIndex = orderedPrompts.findIndex(prompt => prompt.id === targetId)
+
+    const sourceIndex = orderedPrompts.findIndex(prompt => prompt.id === active.id)
+    const targetIndex = orderedPrompts.findIndex(prompt => prompt.id === over.id)
     if (sourceIndex === -1 || targetIndex === -1) {
-      setDraggingId(null)
       return
     }
 
@@ -113,8 +128,6 @@ export function QuickFollowSettingsView() {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to reorder prompts'
       toaster.create({ type: 'error', title: message })
-    } finally {
-      setDraggingId(null)
     }
   }
 
@@ -190,20 +203,27 @@ export function QuickFollowSettingsView() {
                     {t('settings.quickFollow.customPrompts.empty')}
                   </Box>
                 ) : (
-                  <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
-                    {orderedPrompts.map(prompt => (
-                      <PromptCard
-                        key={prompt.id}
-                        prompt={prompt}
-                        onUpdate={handleUpdatePrompt}
-                        onDelete={handleDeletePrompt}
-                        onDragStart={setDraggingId}
-                        onDragEnd={() => setDraggingId(null)}
-                        onDrop={handleDrop}
-                        isDragging={draggingId === prompt.id}
-                      />
-                    ))}
-                  </Grid>
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext
+                      items={orderedPrompts.map(p => p.id)}
+                      strategy={rectSortingStrategy}
+                    >
+                      <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
+                        {orderedPrompts.map(prompt => (
+                          <PromptCard
+                            key={prompt.id}
+                            prompt={prompt}
+                            onUpdate={handleUpdatePrompt}
+                            onDelete={handleDeletePrompt}
+                          />
+                        ))}
+                      </Grid>
+                    </SortableContext>
+                  </DndContext>
                 )}
               </Box>
             </Container>
