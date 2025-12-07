@@ -17,12 +17,15 @@ export interface PromptCardProps {
   prompt: QuickFollowPrompt
   onUpdate: (id: string, patch: QuickFollowPromptUpdateInput) => Promise<void>
   onDelete: (id: string) => Promise<void> | void
+  /** When true, applies fade-in animation */
+  isNew?: boolean
 }
 
 export function PromptCard({
   prompt,
   onUpdate,
-  onDelete
+  onDelete,
+  isNew = false
 }: PromptCardProps) {
   const {
     attributes,
@@ -105,6 +108,11 @@ export function PromptCard({
       _hover={{ boxShadow: 'sm' }}
       _active={{ cursor: 'grabbing' }}
       className="group"
+      data-state={isNew ? 'open' : undefined}
+      // animationIterationCount={2}
+      _open={{
+        animation: 'pulse .8s ease-in-out 2 alternate'
+      }}
     >
       <DragExcluded
         position="absolute"

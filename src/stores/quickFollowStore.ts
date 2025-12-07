@@ -97,7 +97,16 @@ export const useQuickFollowStore = create<QuickFollowStore>((set, get) => ({
 
     const prompt = await quickFollowRepository.create(payload)
     const latest = await fetchLatest()
-    set({ ...latest, isHydrated: true })
+
+    // Place new prompt at the beginning of orderedIds
+    const newOrderedIds = [prompt.id, ...latest.settings.orderedIds.filter(id => id !== prompt.id)]
+    await quickFollowRepository.reorder(newOrderedIds)
+
+    set({
+      prompts: latest.prompts,
+      settings: { ...latest.settings, orderedIds: newOrderedIds },
+      isHydrated: true
+    })
     return prompt
   },
 

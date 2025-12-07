@@ -1,6 +1,7 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import {
   Box,
+  Button,
   Container,
   Grid,
   Heading,
@@ -73,16 +74,41 @@ export function QuickFollowSettingsView() {
     [prompts, settings.orderedIds]
   )
 
+  // Track newly added prompt ID for highlight animation
+  const [highlightId, setHighlightId] = useState<string | null>(null)
+  const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   useEffect(() => {
     if (!isHydrated && !isHydrating) {
       void hydrate()
     }
   }, [hydrate, isHydrated, isHydrating])
 
+  // Clear highlight timer on unmount
+  useEffect(() => {
+    return () => {
+      if (highlightTimerRef.current) {
+        clearTimeout(highlightTimerRef.current)
+      }
+    }
+  }, [])
+
   const handleAddPrompt = async () => {
     try {
+      const currentCount = prompts.length
       const iconIndex = Math.floor(Math.random() * ICON_CATALOG.length)
-      await addPrompt({ iconKey: ICON_CATALOG[iconIndex].key })
+      const newPrompt = await addPrompt({ iconKey: ICON_CATALOG[iconIndex].key })
+      
+      // Only highlight when there were existing prompts (count > 0 before adding)
+      if (currentCount > 0) {
+        setHighlightId(newPrompt.id)
+        if (highlightTimerRef.current) {
+          clearTimeout(highlightTimerRef.current)
+        }
+        highlightTimerRef.current = setTimeout(() => {
+          setHighlightId(null)
+        }, 2000)
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to create prompt'
       toaster.create({ type: 'error', title: message })
@@ -192,16 +218,26 @@ export function QuickFollowSettingsView() {
                 
                 {/* grid */}
                 {orderedPrompts.length === 0 ? (
-                  <Box
+                  <Stack
                     border="1px dashed"
                     borderColor="tocHoverBg"
                     borderRadius="lg"
                     p={6}
-                    textAlign="center"
+                    align="center"
+                    justify="center"
+                    gap={3}
                     color="muted"
                   >
-                    {t('settings.quickFollow.customPrompts.empty')}
-                  </Box>
+                    <Text>{t('settings.quickFollow.customPrompts.empty')}</Text>
+                    <Button
+                      onClick={handleAddPrompt}
+                      variant="outline"
+                      size="sm"
+                    >
+                      <FiPlus />
+                      {t('settings.quickFollow.customPrompts.add')}
+                    </Button>
+                  </Stack>
                 ) : (
                   <DndContext
                     sensors={sensors}
@@ -219,6 +255,7 @@ export function QuickFollowSettingsView() {
                             prompt={prompt}
                             onUpdate={handleUpdatePrompt}
                             onDelete={handleDeletePrompt}
+                            isNew={prompt.id === highlightId}
                           />
                         ))}
                       </Grid>
