@@ -38,6 +38,10 @@
         "templateMissingPlaceholder": "Vorlage muss $1 enthalten",
         "templateHelper": "Muss $1 enthalten",
         "deleteLabel": "Prompt löschen"
+      },
+      "chip": {
+        "label": "Ausgewählter Text",
+        "tooltip": "Dies ist der Text, den Sie in Gemini ausgewählt haben"
       }
     },
     "chatOutline": {

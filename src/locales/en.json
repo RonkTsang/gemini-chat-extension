@@ -38,6 +38,10 @@
         "templateMissingPlaceholder": "Template must contain $1",
         "templateHelper": "Must include $1",
         "deleteLabel": "Delete prompt"
+      },
+      "chip": {
+        "label": "Selected Text",
+        "tooltip": "This is the text you selected in Gemini"
       }
     },
     "chatOutline": {

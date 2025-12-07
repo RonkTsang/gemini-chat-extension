@@ -561,9 +561,9 @@ export const ChainPromptEditorView: SettingViewComponent = ({ openView }) => {
                   <Box
                     data-card
                     // bg={draggedIndex === index ? 'blue.subtle' : 'bg.panel'}
-                    bg="gemSurfaceContainer"
+                    bg="chainPromptCardBg"
                     border="1px solid"
-                    borderColor="gemSurfaceContainer"
+                    borderColor="border"
                     borderRadius="lg"
                     overflow="hidden"
                     shadow={draggedIndex === index ? 'sm' : 'none'}

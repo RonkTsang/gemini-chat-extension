@@ -38,6 +38,10 @@
         "templateMissingPlaceholder": "模板必须包含 {{placeholder}}",
         "templateHelper": "必须包含 {{placeholder}}",
         "deleteLabel": "删除 Prompt"
+      },
+      "chip": {
+        "label": "选中的文本",
+        "tooltip": "此处是你在 Gemini 中所选中的内容"
       }
     },
     "chatOutline": {

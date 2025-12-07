@@ -38,6 +38,10 @@
         "templateMissingPlaceholder": "템플릿에는 $1이 포함되어야 합니다",
         "templateHelper": "$1을 포함해야 합니다",
         "deleteLabel": "프롬프트 삭제"
+      },
+      "chip": {
+        "label": "선택한 텍스트",
+        "tooltip": "Gemini에서 선택한 텍스트입니다"
       }
     },
     "chatOutline": {

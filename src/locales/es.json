@@ -38,6 +38,10 @@
         "templateMissingPlaceholder": "La plantilla debe contener $1",
         "templateHelper": "Debe incluir $1",
         "deleteLabel": "Eliminar prompt"
+      },
+      "chip": {
+        "label": "Texto seleccionado",
+        "tooltip": "Este es el texto que seleccionaste en Gemini"
       }
     },
     "chatOutline": {

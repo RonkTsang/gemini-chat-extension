@@ -1,6 +1,5 @@
-import { Box, Input, Stack, Text, Textarea, IconButton, CloseButton } from '@chakra-ui/react'
-import { Fragment, type JSX, useEffect, useMemo, useState } from 'react'
-import { FiX } from 'react-icons/fi'
+import { Box, Input, Stack, Text, CloseButton } from '@chakra-ui/react'
+import { useEffect, useState } from 'react'
 
 import type {
   QuickFollowPrompt,
@@ -8,8 +7,8 @@ import type {
 } from '@/domain/quick-follow/types'
 import { QUICK_FOLLOW_PLACEHOLDER } from '@/domain/quick-follow/types'
 import { IconPicker } from './IconPicker'
+import { PlaceholderChipEditor } from './PlaceholderChipEditor'
 import { t } from '@/utils/i18n'
-import { useColorModeValue } from '@/components/ui/color-mode'
 
 export interface PromptCardProps {
   prompt: QuickFollowPrompt
@@ -34,13 +33,6 @@ export function PromptCard({
   const [templateValue, setTemplateValue] = useState(prompt.template)
   const [templateError, setTemplateError] = useState<string | null>(null)
 
-  const borderColor = useColorModeValue('gray.100', 'gray.700')
-  const templateHelperMessage = t('settings.quickFollow.card.templateHelper', [QUICK_FOLLOW_PLACEHOLDER]) ?? `Must include ${QUICK_FOLLOW_PLACEHOLDER}`
-  const helperParts = useMemo(
-    () => templateHelperMessage.split(QUICK_FOLLOW_PLACEHOLDER),
-    [templateHelperMessage]
-  )
-
   useEffect(() => {
     setNameValue(prompt.name ?? '')
   }, [prompt.name])
@@ -48,21 +40,6 @@ export function PromptCard({
   useEffect(() => {
     setTemplateValue(prompt.template)
   }, [prompt.template])
-
-  const placeholderHighlightedTemplate = useMemo(() => {
-    const parts = templateValue.split(QUICK_FOLLOW_PLACEHOLDER)
-    return parts.reduce<JSX.Element[]>((acc, part, index) => {
-      acc.push(<span key={`text-${index}`}>{part}</span>)
-      if (index < parts.length - 1) {
-        acc.push(
-          <Text as="span" key={`placeholder-${index}`} color="primary.500" fontWeight="semibold">
-            {QUICK_FOLLOW_PLACEHOLDER}
-          </Text>
-        )
-      }
-      return acc
-    }, [])
-  }, [templateValue])
 
   const handleNameBlur = async () => {
     if ((prompt.name ?? '') === nameValue.trim()) {
@@ -157,15 +134,11 @@ export function PromptCard({
       </Stack>
 
       <Box mt={3}>
-        <Textarea
+        <PlaceholderChipEditor
           value={templateValue}
-          onChange={event => setTemplateValue(event.target.value)}
+          onChange={setTemplateValue}
           onBlur={handleTemplateBlur}
-          rows={2}
-          autoresize
-          borderColor={templateError ? 'red.400' : undefined}
-          _focus={{ borderColor: templateError ? 'red.500' : 'primary.500' }}
-          aria-invalid={templateError ? true : undefined}
+          error={!!templateError}
         />
         {templateError ? (
           <Text fontSize="sm" color="red.500" mt={1}>

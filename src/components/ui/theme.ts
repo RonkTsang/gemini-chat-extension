@@ -41,6 +41,9 @@ const config = defineConfig({
         separatorColor: {
           value: { _light: "{colors.gray.200}", _dark: "{colors.gray.600}" },
         },
+        chainPromptCardBg: {
+          value: { _light: "{colors.bg}", _dark: "{colors.gemSurfaceContainer}" },
+        }
       },
       shadows: {
         tocShadow: {

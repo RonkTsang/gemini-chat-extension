@@ -211,7 +211,7 @@ export const ChainPromptListView: SettingViewComponent = ({ openView }) => {
           pb={4}
         >
           {prompts.map((prompt) => (
-            <Card.Root backgroundColor="gemSurfaceContainer" key={prompt.id} size="sm">
+            <Card.Root backgroundColor="chainPromptCardBg" key={prompt.id} size="sm">
               <Card.Header>
                 <Flex justify="space-between" align="start">
                   <VStack align="start" gap={1} flex={1} minW={0}>

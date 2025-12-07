@@ -38,6 +38,10 @@
         "templateMissingPlaceholder": "Le modèle doit contenir $1",
         "templateHelper": "Doit inclure $1",
         "deleteLabel": "Supprimer le prompt"
+      },
+      "chip": {
+        "label": "Texte sélectionné",
+        "tooltip": "Ceci est le texte que vous avez sélectionné dans Gemini"
       }
     },
     "chatOutline": {

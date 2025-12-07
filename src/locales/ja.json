@@ -38,6 +38,10 @@
         "templateMissingPlaceholder": "テンプレートには $1 を含める必要があります",
         "templateHelper": "$1 を含める必要があります",
         "deleteLabel": "プロンプトを削除"
+      },
+      "chip": {
+        "label": "選択されたテキスト",
+        "tooltip": "これは Gemini で選択したテキストです"
       }
     },
     "chatOutline": {
