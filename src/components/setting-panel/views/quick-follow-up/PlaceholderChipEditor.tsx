@@ -456,6 +456,7 @@ export function PlaceholderChipEditor({
             pointerEvents: 'none'
           }
         }}
+        cursor={'text'}
       />
       {/* Tooltip for chips - rendered via CSS hover on the chip elements */}
       <style>{`
