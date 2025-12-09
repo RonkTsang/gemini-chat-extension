@@ -24,7 +24,9 @@
       "customPrompts": {
         "title": "Prompts personalizados",
         "add": "Adicionar Prompt",
-        "empty": "Ainda não há prompts personalizados. Clique em \"Adicionar Prompt\" para criar o primeiro.",
+        "addTemplates": "Adicionar modelos iniciais",
+        "empty": "Ainda não há prompts personalizados. Adicione um ou use modelos iniciais.",
+        "defaultTemplate": "ex.: Explique {{SELECT_TEXT}} em termos simples",
         "placeholderTip": "Use {{SELECT_TEXT}} em seu modelo para inserir o texto selecionado. Exemplo: \"Traduzir {{SELECT_TEXT}} para chinês\""
       },
       "preview": {

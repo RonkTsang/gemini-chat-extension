@@ -1,4 +1,8 @@
 export const QUICK_FOLLOW_PLACEHOLDER = '{{SELECT_TEXT}}' as const
+export const DEFAULT_QUICK_FOLLOW_TEMPLATE_FALLBACK =
+  `e.g. Explain ${QUICK_FOLLOW_PLACEHOLDER} in simple terms` as const
+export const DEFAULT_QUICK_FOLLOW_TEMPLATE_KEY =
+  'settings.quickFollow.customPrompts.defaultTemplate' as const
 
 import type { QuickFollowIconKey } from './iconKeys'
 

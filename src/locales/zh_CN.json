@@ -24,7 +24,9 @@
       "customPrompts": {
         "title": "自定义 Prompt",
         "add": "添加 Prompt",
-        "empty": "暂无自定义 Prompt，点击\"添加 Prompt\"开始创建。",
+        "addTemplates": "一键添加常用模板",
+        "empty": "暂无自定义 Prompt，可添加一个或一键添加常用模板。",
+        "defaultTemplate": "例如：用简单的话解释 {{SELECT_TEXT}}",
         "placeholderTip": "在模板中使用 {{SELECT_TEXT}} 来插入选中的文本。例如：\"将 {{SELECT_TEXT}} 翻译成中文\""
       },
       "preview": {

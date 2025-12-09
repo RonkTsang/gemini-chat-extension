@@ -24,7 +24,9 @@
       "customPrompts": {
         "title": "Benutzerdefinierte Prompts",
         "add": "Prompt hinzufügen",
-        "empty": "Noch keine benutzerdefinierten Prompts. Klicken Sie auf \"Prompt hinzufügen\", um Ihren ersten zu erstellen.",
+        "addTemplates": "Startvorlagen hinzufügen",
+        "empty": "Noch keine benutzerdefinierten Prompts. Fügen Sie einen hinzu oder nutzen Sie Startvorlagen.",
+        "defaultTemplate": "z. B. Erkläre {{SELECT_TEXT}} in einfachen Worten",
         "placeholderTip": "Verwenden Sie {{SELECT_TEXT}} in Ihrer Vorlage, um den ausgewählten Text einzufügen. Beispiel: \"{{SELECT_TEXT}} ins Chinesische übersetzen\""
       },
       "preview": {

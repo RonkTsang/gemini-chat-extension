@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 
 import {
+  DEFAULT_QUICK_FOLLOW_TEMPLATE_FALLBACK,
+  DEFAULT_QUICK_FOLLOW_TEMPLATE_KEY,
   QUICK_FOLLOW_PLACEHOLDER,
   type QuickFollowPrompt,
   type QuickFollowPromptCreateInput,
@@ -9,6 +11,7 @@ import {
 } from '@/domain/quick-follow/types'
 import { DEFAULT_QUICK_FOLLOW_ICON_KEY } from '@/domain/quick-follow/iconKeys'
 import { quickFollowRepository } from '@/data/repositories'
+import { t } from '@/utils/i18n'
 import { browser } from 'wxt/browser'
 
 interface QuickFollowState {
@@ -88,8 +91,15 @@ export const useQuickFollowStore = create<QuickFollowStore>((set, get) => ({
   },
 
   async addPrompt(data) {
+    const translatedTemplate = t(DEFAULT_QUICK_FOLLOW_TEMPLATE_KEY)
+    const template =
+      typeof translatedTemplate === 'string' &&
+      translatedTemplate.includes(QUICK_FOLLOW_PLACEHOLDER)
+        ? translatedTemplate
+        : DEFAULT_QUICK_FOLLOW_TEMPLATE_FALLBACK
+
     const payload: QuickFollowPromptCreateInput = {
-      template: QUICK_FOLLOW_PLACEHOLDER,
+      template,
       iconKey: DEFAULT_ICON_KEY,
       enabled: true,
       ...data

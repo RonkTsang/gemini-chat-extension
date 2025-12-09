@@ -24,7 +24,9 @@
       "customPrompts": {
         "title": "사용자 정의 프롬프트",
         "add": "프롬프트 추가",
-        "empty": "아직 사용자 정의 프롬프트가 없습니다. \"프롬프트 추가\"를 클릭하여 첫 번째 프롬프트를 만드세요.",
+        "addTemplates": "시작 템플릿 추가",
+        "empty": "사용자 지정 프롬프트가 없습니다. 직접 추가하거나 시작 템플릿을 사용하세요.",
+        "defaultTemplate": "예: {{SELECT_TEXT}}을(를) 쉽게 설명해줘",
         "placeholderTip": "템플릿에서 {{SELECT_TEXT}}를 사용하여 선택한 텍스트를 삽입합니다. 예: \"{{SELECT_TEXT}}를 중국어로 번역\""
       },
       "preview": {

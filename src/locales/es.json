@@ -24,7 +24,9 @@
       "customPrompts": {
         "title": "Prompts personalizados",
         "add": "Agregar Prompt",
-        "empty": "Aún no hay prompts personalizados. Haz clic en \"Agregar Prompt\" para crear el primero.",
+        "addTemplates": "Agregar plantillas iniciales",
+        "empty": "Aún no hay prompts personalizados. Agrega uno o usa plantillas iniciales.",
+        "defaultTemplate": "p. ej. Explica {{SELECT_TEXT}} en términos simples",
         "placeholderTip": "Usa {{SELECT_TEXT}} en tu plantilla para insertar el texto seleccionado. Ejemplo: \"Traducir {{SELECT_TEXT}} al chino\""
       },
       "preview": {

@@ -30,6 +30,7 @@ import { LivePreview } from './LivePreview'
 import { PromptCard } from './PromptCard'
 import { useQuickFollowStore } from '@/stores/quickFollowStore'
 import type { QuickFollowPrompt } from '@/domain/quick-follow/types'
+import { QUICK_FOLLOW_STARTER_TEMPLATES } from '@/data/templates/quickFollow'
 import { t } from '@/utils/i18n'
 import { toaster } from '@/components/ui/toaster'
 import { Tooltip } from '@/components/ui/tooltip'
@@ -111,6 +112,26 @@ export function QuickFollowSettingsView() {
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to create prompt'
+      toaster.create({ type: 'error', title: message })
+    }
+  }
+
+  const handleAddTemplates = async () => {
+    try {
+      const templates = [...QUICK_FOLLOW_STARTER_TEMPLATES].reverse()
+
+      for (const [index, template] of templates.entries()) {
+        const iconKey =
+          template.iconKey ??
+          ICON_CATALOG[(index + templates.length) % ICON_CATALOG.length].key
+        await addPrompt({
+          name: template.name,
+          template: template.template,
+          iconKey
+        })
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to add templates'
       toaster.create({ type: 'error', title: message })
     }
   }
@@ -225,18 +246,36 @@ export function QuickFollowSettingsView() {
                     p={6}
                     align="center"
                     justify="center"
-                    gap={3}
                     color="muted"
+                    gap={4}
                   >
                     <Text>{t('settings.quickFollow.customPrompts.empty')}</Text>
-                    <Button
-                      onClick={handleAddPrompt}
-                      variant="subtle"
-                      size="sm"
+                    <Stack
+                      direction={{ base: 'column', sm: 'row' }}
+                      gap={2}
+                      width="100%"
+                      justify="center"
+                      align="center"
                     >
-                      <FiPlus />
-                      {t('settings.quickFollow.customPrompts.add')}
-                    </Button>
+                      <Button
+                        onClick={handleAddPrompt}
+                        variant="outline"
+                        size="sm"
+                        width={{ base: '100%', sm: 'auto' }}
+                      >
+                        <FiPlus />
+                        {t('settings.quickFollow.customPrompts.add')}
+                      </Button>
+                      <Button
+                        onClick={handleAddTemplates}
+                        variant="subtle"
+                        size="sm"
+                        width={{ base: '100%', sm: 'auto' }}
+                      >
+                        <FiPlus />
+                        {t('settings.quickFollow.customPrompts.addTemplates')}
+                      </Button>
+                    </Stack>
                   </Stack>
                 ) : (
                   <DndContext

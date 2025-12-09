@@ -24,7 +24,9 @@
       "customPrompts": {
         "title": "Custom Prompts",
         "add": "Add Prompt",
-        "empty": "No custom prompts yet. Click \"Add Prompt\" to create your first one.",
+        "addTemplates": "Add Starter Templates",
+        "empty": "No custom prompts yet. Add one or use starter templates.",
+        "defaultTemplate": "e.g. Explain {{SELECT_TEXT}} in simple terms",
         "placeholderTip": "Use {{SELECT_TEXT}} in your template to insert the selected text. Example: \"Translate {{SELECT_TEXT}} to Chinese\""
       },
       "preview": {
