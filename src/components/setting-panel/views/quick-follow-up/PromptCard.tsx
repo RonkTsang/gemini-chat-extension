@@ -111,7 +111,7 @@ export function PromptCard({
       data-state={isNew ? 'open' : undefined}
       // animationIterationCount={2}
       _open={{
-        animation: 'pulse .8s ease-in-out 2 alternate'
+        animation: 'pulse .6s ease-in-out 2 alternate'
       }}
     >
       <DragExcluded

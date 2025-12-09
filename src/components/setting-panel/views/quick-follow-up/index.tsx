@@ -107,7 +107,7 @@ export function QuickFollowSettingsView() {
         }
         highlightTimerRef.current = setTimeout(() => {
           setHighlightId(null)
-        }, 2000)
+        }, 1500)
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to create prompt'
@@ -231,7 +231,7 @@ export function QuickFollowSettingsView() {
                     <Text>{t('settings.quickFollow.customPrompts.empty')}</Text>
                     <Button
                       onClick={handleAddPrompt}
-                      variant="outline"
+                      variant="subtle"
                       size="sm"
                     >
                       <FiPlus />
