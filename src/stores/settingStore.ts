@@ -17,7 +17,7 @@ export type SettingStore = SettingState & SettingActions
 
 const useSettingStore = create<SettingStore>((set, get) => ({
   // Initial state
-  route: { sectionId: 'chainPrompt', viewId: 'index' },
+  route: { sectionId: 'quickFollowup', viewId: 'index' },
 
   // Actions
   setRoute: (route: SettingRoute<NavigationSection>) => {

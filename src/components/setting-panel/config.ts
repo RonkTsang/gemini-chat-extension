@@ -25,28 +25,6 @@ export type NavigationSection =
 
 export const settingSectionDefinitions: SettingSectionDefinition<NavigationSection>[] = [
   {
-    id: 'chainPrompt',
-    label: t('settingPanel.config.chainPrompt.label'),
-    group: 'prompt',
-    icon: HiOutlineLink,
-    title: t('settingPanel.config.chainPrompt.title'),
-    description: t('settingPanel.config.chainPrompt.description'),
-    views: [
-      {
-        id: 'index',
-        title: t('settingPanel.config.chainPrompt.views.index.title'),
-        description: t('settingPanel.config.chainPrompt.views.index.description'),
-        componentId: 'chain-prompt/index'
-      },
-      {
-        id: 'editor',
-        title: t('settingPanel.config.chainPrompt.views.editor.title'),
-        description: '',
-        componentId: 'chain-prompt/editor'
-      }
-    ]
-  },
-  {
     id: 'quickFollowup',
     label: t('settingPanel.config.quickFollowup.label'),
     group: 'prompt',
@@ -65,6 +43,28 @@ export const settingSectionDefinitions: SettingSectionDefinition<NavigationSecti
         title: t('settingPanel.config.quickFollowup.views.detail.title'),
         description: t('settingPanel.config.quickFollowup.views.detail.description'),
         componentId: 'default/detail'
+      }
+    ]
+  },
+  {
+    id: 'chainPrompt',
+    label: t('settingPanel.config.chainPrompt.label'),
+    group: 'prompt',
+    icon: HiOutlineLink,
+    title: t('settingPanel.config.chainPrompt.title'),
+    description: t('settingPanel.config.chainPrompt.description'),
+    views: [
+      {
+        id: 'index',
+        title: t('settingPanel.config.chainPrompt.views.index.title'),
+        description: t('settingPanel.config.chainPrompt.views.index.description'),
+        componentId: 'chain-prompt/index'
+      },
+      {
+        id: 'editor',
+        title: t('settingPanel.config.chainPrompt.views.editor.title'),
+        description: '',
+        componentId: 'chain-prompt/editor'
       }
     ]
   },

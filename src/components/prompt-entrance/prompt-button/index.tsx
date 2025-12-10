@@ -12,8 +12,7 @@ export const PromptButton: React.FC<PromptButtonProps> = ({ onClick }) => {
   const handleClick = () => {
     emit('settings:open', {
       from: 'prompt-entrance',
-      open: true,
-      module: 'chainPrompt'
+      open: true
     })
     onClick?.()
   }
