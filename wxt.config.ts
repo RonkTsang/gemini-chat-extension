@@ -10,7 +10,7 @@ export default defineConfig({
   }),
   manifest: () => {
     return {
-      name: "Chat Outline for Gemini: Reclaim Your Focus",
+      name: "Gemini Power Kit: Your Essential Companion",
       default_locale: "en",
       permissions: [
         "storage"

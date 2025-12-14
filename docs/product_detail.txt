@@ -1,29 +1,58 @@
-✨ WHAT'S NEW IN VERSION V0.0.3 ✨
+✨ WHAT'S NEW IN VERSION V0.1.0 ✨
 
-Introducing the "Quick Follow-up" feature!
-You can now easily quote a section of a message for clarification or follow-up, which streamlines your workflow
+Introducing Gemini Power Kit - Your Essential Companion for Gemini!
+We've evolved from a simple chat navigator to a comprehensive productivity toolkit with three powerful features.
 
 ---
 
-Ever get lost scrolling through a long Gemini conversation, trying to find that one specific prompt? Chat Outline for Gemini is a simple, elegant solution designed to bring effortless navigation to your chats.
+Transform your Gemini experience with Gemini Power Kit, a powerful Chrome extension that brings essential productivity tools right to your fingertips. Whether you're navigating complex conversations, automating repetitive tasks, or streamlining your workflow, Gemini Power Kit has you covered.
 
-It adds a minimal, unobtrusive icon to the Gemini page. Hover over it, and a clickable outline of your entire conversation history appears, allowing you to instantly jump to any point in the discussion.
+🎯 Three Powerful Features:
 
-Key Features:
-  👀 Instant Overview: Get a bird's-eye view of all your prompts in the current chat.
-  ☝️ One-Click Navigation: Simply click on any prompt in the outline to navigate directly to it. No more endless scrolling.
-  📌 Pinned Mode: Keep your chat outline always visible for instant access.
-  ✨ (NEW!) Quick Follow-up: Quickly quote a specific part of a message to ask a follow-up question. It's incredibly efficient.
-  🍃 Lightweight & Clean: Designed to be minimal and out of the way, keeping your workspace clean and focused. 
+  🗂️ Chat Outline - Never Get Lost Again
+    • Instant Overview: Get a bird's-eye view of all your prompts in the current chat.
+    • One-Click Navigation: Simply click on any prompt to jump directly to it.
+    • Pinned Mode: Keep your outline always visible for instant access.
+    • Smart Organization: Perfect for long conversations and research sessions.
 
-A Fun Fact: 
-This extension was a passion project, co-created with Gemini itself! I used Gemini to help write and refine the code, making this a tool for Gemini, by Gemini (and a developer).
+  ⚡ Quick Follow-up - Work Faster, Think Smarter
+    • Text Selection Magic: Select any text and instantly see custom action prompts.
+    • Fully Customizable: Create your own templates (translate, explain, summarize, etc.).
+    • One-Click Actions: Transform selected text into follow-up questions instantly.
+    • Template Library: Pre-built templates to get you started right away.
 
-Stop scrolling, start navigating. Add Chat Outline to your browser and streamline your workflow today!
+  🔗 Chain Prompt - Automate Complex Workflows
+    • Multi-Step Automation: Execute complex conversation sequences automatically.
+    • Variable Support: Define reusable variables for dynamic workflows.
+    • Visual Builder: Create and manage chains with an intuitive drag-and-drop editor.
+    • Real-time Monitoring: Track execution progress with live status updates.
+    • Template Gallery: Browse and import professionally designed workflow templates.
+
+🎨 Design Philosophy:
+  • Lightweight & Clean: Minimal, unobtrusive design that stays out of your way.
+  • Native Feel: Seamlessly integrates with Gemini's interface using Shadow DOM.
+  • Theme Aware: Automatically adapts to light and dark themes.
+  • Privacy First: All processing happens locally—your data never leaves your device.
+
+🌍 Multilingual Support:
+  • English, 简体中文, 繁體中文, Deutsch, Español, Français, 日本語, 한국어, Português (Brasil)
+
+💡 A Fun Fact: 
+Gemini Power Kit is a passion project co-created with Gemini itself! We used AI to help design, write, and refine every feature, making this a tool for Gemini users, by Gemini users.
+
+Supercharge your Gemini experience today. Install Gemini Power Kit and unlock your productivity potential!
 
 ---
 
 📅 Version History
+
+v0.1.0 - Gemini Power Kit Launch 🎉
+  - Rebranded as Gemini Power Kit to reflect expanded capabilities
+  - Introduced Chain Prompt feature for workflow automation
+  - Enhanced Quick Follow-up with template library
+  - Complete UI/UX overhaul with Shadow DOM and Chakra UI
+  - Added comprehensive settings panel
+  - Multilingual support for 9 languages
 v0.0.3 - Quick Follow-up
   - Introduced the "Quick Follow-up" feature.
 

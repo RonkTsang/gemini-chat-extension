@@ -1,8 +1,8 @@
-# Privacy Policy for Chat Outline for Gemini
+# Privacy Policy for Gemini Power Kit
 
 **Last Updated:** August 31, 2025
 
-Thank you for using Chat Outline for Gemini ("the Extension"). Your privacy is important to us. This Privacy Policy explains what information the Extension does and does not collect from you.
+Thank you for using Gemini Power Kit ("the Extension"). Your privacy is important to us. This Privacy Policy explains what information the Extension does and does not collect from you.
 
 ## 1. No Data Collection
 
@@ -17,13 +17,13 @@ This includes:
 
 ## 2. How the Extension Works
 
-The Extension operates by reading the content of the active Gemini webpage in your browser to generate the chat outline. This process happens locally on your machine and the data is never sent to any external server or service.
+The Extension operates by reading the content of the active Gemini webpage in your browser to provide its features. This process happens locally on your machine and the data is never sent to any external server or service.
 
 ## 3. Permissions
 
 The Extension requires minimal permissions to function:
 
--   **Access to `gemini.google.com`**: This permission is necessary for the Extension to read the content of the active Gemini webpage and generate the chat outline. It is used for no other purpose.
+-   **Access to `gemini.google.com`**: This permission is necessary for the Extension to read the content of the active Gemini webpage and provide its features. It is used for no other purpose.
 -   **Storage**: This permission is used to save your preferences, such as the state of feature switches. All data is stored locally on your device and is never transmitted to any external server.
 
 ## 4. Changes to This Policy

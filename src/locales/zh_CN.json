@@ -8,8 +8,8 @@
   "enableQuickQuoteLabel": "启用快速引用",
   "reportIssueLabel": "报告问题",
   "enableChatOutlineLabel": "启用聊天大纲",
-  "settingsTitle": "Gemini 设置",
-  "settingsDescription": "自定义您的 Gemini 聊天体验",
+  "settingsTitle": "Gemini Power Kit 设置",
+  "settingsDescription": "自定义您的 Gemini Power Kit 体验",
   "chatOutlineDescription": "生成可点击大纲，便于导航",
   "quickQuoteDescription": "选择文本快速引用并提问",
   "quickFollow": {

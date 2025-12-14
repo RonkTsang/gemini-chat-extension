@@ -5,11 +5,13 @@
 
 import Dexie, { type Table } from 'dexie'
 
+import type { QuickFollowIconKey } from '@/domain/quick-follow/iconKeys'
+
 export interface QuickFollowPromptRow {
   id: string
   name?: string
   template: string
-  iconKey: string
+  iconKey: QuickFollowIconKey
   enabled: boolean
   createdAt: string
   updatedAt: string

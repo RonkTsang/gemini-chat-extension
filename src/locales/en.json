@@ -8,8 +8,8 @@
   "enableQuickQuoteLabel": "Enable Quick Follow-up",
   "reportIssueLabel": "Report an Issue",
   "enableChatOutlineLabel": "Enable Chat Outline",
-  "settingsTitle":  "Gemini Settings",
-  "settingsDescription": "Customize your Gemini chat experience",
+  "settingsTitle":  "Gemini Power Kit Settings",
+  "settingsDescription": "Customize your Gemini Power Kit experience",
   "chatOutlineDescription": "Generate clickable outline for easy navigation",
   "quickQuoteDescription": "Select text to quickly quote and ask questions",
   "quickFollow": {

@@ -1,8 +1,8 @@
 {
   "name": "gemini-extension",
-  "description": "Quickly navigate your Gemini chats with a clickable outline. Never get lost in long conversations again.",
+  "description": "Unlock a smarter, more personal Gemini. Your essential companion for mastering conversations and accelerating your creative flow.",
   "private": true,
-  "version": "0.0.4",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "wxt",

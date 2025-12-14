@@ -8,8 +8,8 @@
   "enableQuickQuoteLabel": "クイック引用を有効にする",
   "reportIssueLabel": "問題を報告",
   "enableChatOutlineLabel": "チャットアウトラインを有効にする",
-  "settingsTitle": "Gemini設定",
-  "settingsDescription": "Geminiチャット体験をカスタマイズ",
+  "settingsTitle": "Gemini Power Kit設定",
+  "settingsDescription": "Gemini Power Kit体験をカスタマイズ",
   "chatOutlineDescription": "簡単なナビゲーションのためのクリック可能なアウトラインを生成",
   "quickQuoteDescription": "テキストを選択して素早く引用し質問する",
   "quickFollow": {

@@ -8,8 +8,8 @@
   "enableQuickQuoteLabel": "빠른 인용 사용",
   "reportIssueLabel": "문제 보고",
   "enableChatOutlineLabel": "채팅 개요 활성화",
-  "settingsTitle": "Gemini 설정",
-  "settingsDescription": "Gemini 채팅 경험을 사용자 정의",
+  "settingsTitle": "Gemini Power Kit 설정",
+  "settingsDescription": "Gemini Power Kit 경험을 사용자 정의",
   "chatOutlineDescription": "쉬운 탐색을 위한 클릭 가능한 개요 생성",
   "quickQuoteDescription": "텍스트를 선택하여 빠르게 인용하고 질문하기",
   "quickFollow": {

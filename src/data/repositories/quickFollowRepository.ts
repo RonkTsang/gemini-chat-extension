@@ -21,7 +21,7 @@ import {
 } from '../db'
 import { localDexieDataSource } from '../sources'
 
-const IconKeySchema = z.enum(QUICK_FOLLOW_ICON_KEYS as [QuickFollowIconKey, ...QuickFollowIconKey[]])
+const IconKeySchema = z.enum([...QUICK_FOLLOW_ICON_KEYS] as [QuickFollowIconKey, ...QuickFollowIconKey[]])
 
 const PromptTemplateSchema = z
   .string()
