@@ -5,6 +5,7 @@ import { TimelineRoot, TimelineItem, TimelineConnector, TimelineContent, Timelin
 import { keyframes } from '@emotion/react'
 import { FiCheck, FiZap } from 'react-icons/fi'
 import type { SettingViewComponent } from '../../types'
+import { call } from '@/utils/bridge'
 
 // Pulse animation for the active step
 const pulse = keyframes`
@@ -63,6 +64,13 @@ export const DefaultIndexView: SettingViewComponent = ({ section }) => {
     setTimeout(() => {
       setBoosts((prev) => prev.filter((b) => !newBoosts.find((nb) => nb.id === b.id)))
     }, 1000)
+
+    void call('analytics.fireEvent', {
+      name: 'boost_clicked',
+      params: {
+        feature: section.title,
+      },
+    });
   }
 
   return (

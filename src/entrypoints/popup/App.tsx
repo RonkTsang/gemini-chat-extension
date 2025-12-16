@@ -40,6 +40,7 @@ function App() {
 
   useEffect(() => {
     setTheme('system');
+    console.log('import.meta.env', import.meta.env, import.meta.env.VITE_GA_MEASUREMENT_ID);
   }, [])
 
   // Load initial settings from storage

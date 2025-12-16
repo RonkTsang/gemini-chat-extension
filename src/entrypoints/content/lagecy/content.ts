@@ -595,6 +595,7 @@ function safeParseBoolean(value: any): boolean {
   return Boolean(value);
 }
 
+console.log('running in', location.origin)
 // 1. Load settings and then initialize
 chrome.storage.sync.get({
   enableChatOutline: true
