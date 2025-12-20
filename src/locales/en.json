@@ -21,9 +21,11 @@
       "title": "Quick Follow-up",
       "description": "Create and manage custom follow-up prompts with Quick Follow-up capsules.",
       "enable": "Enable Quick Follow-up",
+      "defaultTemplate": "{{SELECT_TEXT}}",
       "customPrompts": {
-        "title": "Custom Prompts",
-        "add": "Add Prompt",
+        "title": "Skill Management",
+        "description": "The first $1 skills are pinned, scroll horizontally to view more",
+        "add": "Add Skill",
         "addTemplates": "Add Starter Templates",
         "empty": "No custom prompts yet. Add one or use starter templates.",
         "defaultTemplate": "e.g. Explain {{SELECT_TEXT}} in simple terms",
@@ -36,10 +38,25 @@
       },
       "card": {
         "namePlaceholder": "Custom Prompt Name (Optional)",
+        "nameEmpty": "Name cannot be empty",
         "templateEmpty": "Template cannot be empty",
         "templateMissingPlaceholder": "Template must contain $1",
         "templateHelper": "Must include $1",
-        "deleteLabel": "Delete prompt"
+        "editLabel": "Edit",
+        "deleteLabel": "Delete prompt",
+        "deleteConfirmTitle": "Delete Skill",
+        "deleteConfirmDescription": "Are you sure you want to delete this skill? This action cannot be undone."
+      },
+      "createModal": {
+        "title": "Create Skill"
+      },
+      "editModal": {
+        "title": "Edit Skill",
+        "iconAndNameLabel": "Icon and Name",
+        "namePlaceholder": "Enter skill name",
+        "templateLabel": "Prompt Content",
+        "save": "Save",
+        "cancel": "Cancel"
       },
       "chip": {
         "label": "Selected Text",
@@ -304,6 +321,14 @@
         "title": "Chain Prompt Interrupted",
         "description": "Execution was aborted due to chat switching"
       }
+    }
+  },
+  "common": {
+    "confirmDialog": {
+      "title": "Confirm Action",
+      "description": "This action cannot be undone. Do you want to continue?",
+      "confirm": "Confirm",
+      "cancel": "Cancel"
     }
   }
 }

@@ -21,9 +21,11 @@
       "title": "快速追问",
       "description": "在快速追问胶囊中管理并配置你的自定义 Prompt。",
       "enable": "启用 Quick Follow-up",
+      "defaultTemplate": "{{SELECT_TEXT}}",
       "customPrompts": {
-        "title": "自定义 Prompt",
-        "add": "添加 Prompt",
+        "title": "技能管理",
+        "description": "前 $1 个技能固定显示，其余技能可横向滚动查看",
+        "add": "添加技能",
         "addTemplates": "一键添加常用模板",
         "empty": "暂无自定义 Prompt，可添加一个或一键添加常用模板。",
         "defaultTemplate": "例如：用简单的话解释 {{SELECT_TEXT}}",
@@ -36,10 +38,25 @@
       },
       "card": {
         "namePlaceholder": "自定义 Prompt 名称（可选）",
+        "nameEmpty": "名称不能为空",
         "templateEmpty": "模板不能为空",
         "templateMissingPlaceholder": "模板必须包含 {{placeholder}}",
         "templateHelper": "必须包含 {{placeholder}}",
-        "deleteLabel": "删除 Prompt"
+        "editLabel": "编辑",
+        "deleteLabel": "删除 Prompt",
+        "deleteConfirmTitle": "删除技能",
+        "deleteConfirmDescription": "确定要删除这个技能吗？此操作无法撤销。"
+      },
+      "createModal": {
+        "title": "新建技能"
+      },
+      "editModal": {
+        "title": "编辑技能",
+        "iconAndNameLabel": "图标和名称",
+        "namePlaceholder": "输入技能名称",
+        "templateLabel": "提示词内容",
+        "save": "保存",
+        "cancel": "取消"
       },
       "chip": {
         "label": "选中的文本",
@@ -304,6 +321,14 @@
         "title": "Chain Prompt 已中断",
         "description": "由于聊天切换，执行已中止"
       }
+    }
+  },
+  "common": {
+    "confirmDialog": {
+      "title": "确认操作",
+      "description": "此操作无法撤销，是否继续？",
+      "confirm": "确认",
+      "cancel": "取消"
     }
   }
 }

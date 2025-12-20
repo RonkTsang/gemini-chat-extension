@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useState, useRef } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Box,
   Button,
   Container,
-  Grid,
   Heading,
   IconButton,
   Stack,
@@ -21,15 +20,17 @@ import {
 } from '@dnd-kit/core'
 import {
   SortableContext,
-  rectSortingStrategy
+  verticalListSortingStrategy
 } from '@dnd-kit/sortable'
 
 import { InfoTip } from '@/components/ui/toggle-tip'
 import { ICON_CATALOG } from '@/components/quick-follow/icons'
-import { LivePreview } from './LivePreview'
-import { PromptCard } from './PromptCard'
+import { PreviewSection } from './PreviewSection'
+import { PromptListItem } from './PromptListItem'
+import { PromptEditModal } from './PromptEditModal'
 import { useQuickFollowStore } from '@/stores/quickFollowStore'
 import type { QuickFollowPrompt } from '@/domain/quick-follow/types'
+import { MAX_QUICK_FOLLOW_UP_SHOW_ITEMS } from '@/common/config'
 import { QUICK_FOLLOW_STARTER_TEMPLATES } from '@/data/templates/quickFollow'
 import { t } from '@/utils/i18n'
 import { toaster } from '@/components/ui/toaster'
@@ -75,9 +76,9 @@ export function QuickFollowSettingsView() {
     [prompts, settings.orderedIds]
   )
 
-  // Track newly added prompt ID for highlight animation
-  const [highlightId, setHighlightId] = useState<string | null>(null)
-  const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Modal state for editing/creating
+  const [editingPrompt, setEditingPrompt] = useState<QuickFollowPrompt | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   useEffect(() => {
     if (!isHydrated && !isHydrating) {
@@ -85,35 +86,11 @@ export function QuickFollowSettingsView() {
     }
   }, [hydrate, isHydrated, isHydrating])
 
-  // Clear highlight timer on unmount
-  useEffect(() => {
-    return () => {
-      if (highlightTimerRef.current) {
-        clearTimeout(highlightTimerRef.current)
-      }
-    }
-  }, [])
-
-  const handleAddPrompt = async () => {
-    try {
-      const currentCount = prompts.length
-      const iconIndex = Math.floor(Math.random() * ICON_CATALOG.length)
-      const newPrompt = await addPrompt({ iconKey: ICON_CATALOG[iconIndex].key })
-      
-      // Only highlight when there were existing prompts (count > 0 before adding)
-      if (currentCount > 0) {
-        setHighlightId(newPrompt.id)
-        if (highlightTimerRef.current) {
-          clearTimeout(highlightTimerRef.current)
-        }
-        highlightTimerRef.current = setTimeout(() => {
-          setHighlightId(null)
-        }, 1500)
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to create prompt'
-      toaster.create({ type: 'error', title: message })
-    }
+  const handleAddPrompt = () => {
+    // Open modal in create mode (editingPrompt = null)
+    // Default values (icon, template) will be handled inside the modal
+    setEditingPrompt(null)
+    setIsModalOpen(true)
   }
 
   const handleAddTemplates = async () => {
@@ -136,13 +113,37 @@ export function QuickFollowSettingsView() {
     }
   }
 
+  const handleCreatePrompt = async (input: Parameters<typeof addPrompt>[0]) => {
+    try {
+      await addPrompt(input)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to create prompt'
+      toaster.create({ type: 'error', title: message })
+      throw error
+    }
+  }
+
   const handleUpdatePrompt = async (id: string, patch: Parameters<typeof updatePrompt>[1]) => {
     try {
       await updatePrompt(id, patch)
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to update prompt'
       toaster.create({ type: 'error', title: message })
+      throw error
     }
+  }
+
+  const handleEditPrompt = (id: string) => {
+    const prompt = orderedPrompts.find(p => p.id === id)
+    if (prompt) {
+      setEditingPrompt(prompt)
+      setIsModalOpen(true)
+    }
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setEditingPrompt(null)
   }
 
   const handleDeletePrompt = async (id: string) => {
@@ -198,11 +199,14 @@ export function QuickFollowSettingsView() {
       {/* Scrollable content area */}
       <Box 
         flex="1" 
-        overflow="auto" 
-        pb="80px"
+        overflow="auto"
       >
         <Container display={'flex'} justifyContent={'center'}>
           <Stack direction="column" maxWidth={'740px'} width={'100%'} align="stretch" gap={6}>
+            {/* Preview Section */}
+            <PreviewSection prompts={prompts} settings={settings} />
+
+            {/* Enable Toggle */}
             <Container backgroundColor="gemSurfaceContainer" p={4} borderRadius="2xl">
               <Stack direction="row" align="center" justify="space-between" gap={3}>
                 <Text>{t('settings.quickFollow.enable')}</Text>
@@ -219,25 +223,28 @@ export function QuickFollowSettingsView() {
               </Stack>
             </Container>
 
+            {/* Custom Prompts Section */}
             <Container p={2} borderRadius="2xl">
               <Box>
                 <Stack direction="row" justify="space-between" align="center" mb={3}>
-                  <Stack direction="row" align="center" gap={2}>
+                  <Stack direction="column" gap={1}>
                     <Heading size="sm">{t('settings.quickFollow.customPrompts.title')}</Heading>
-                    <InfoTip content={t('settings.quickFollow.customPrompts.placeholderTip')} />
+                    <Text fontSize="xs" color="fg.muted">
+                      {t('settings.quickFollow.customPrompts.description', MAX_QUICK_FOLLOW_UP_SHOW_ITEMS)}
+                    </Text>
                   </Stack>
                   <Tooltip content={t('settings.quickFollow.customPrompts.add')}>
                     <IconButton
                       onClick={handleAddPrompt}
                       variant="subtle"
-                      size="xs"
+                      size="sm"
                     >
                       <FiPlus />
                     </IconButton>
                   </Tooltip>
                 </Stack>
                 
-                {/* grid */}
+                {/* List */}
                 {orderedPrompts.length === 0 ? (
                   <Stack
                     border="1px dashed"
@@ -285,19 +292,18 @@ export function QuickFollowSettingsView() {
                   >
                     <SortableContext
                       items={orderedPrompts.map(p => p.id)}
-                      strategy={rectSortingStrategy}
+                      strategy={verticalListSortingStrategy}
                     >
-                      <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
+                      <Stack gap={2}>
                         {orderedPrompts.map(prompt => (
-                          <PromptCard
+                          <PromptListItem
                             key={prompt.id}
                             prompt={prompt}
-                            onUpdate={handleUpdatePrompt}
+                            onEdit={handleEditPrompt}
                             onDelete={handleDeletePrompt}
-                            isNew={prompt.id === highlightId}
                           />
                         ))}
-                      </Grid>
+                      </Stack>
                     </SortableContext>
                   </DndContext>
                 )}
@@ -307,18 +313,14 @@ export function QuickFollowSettingsView() {
         </Container>
       </Box>
 
-      {/* Fixed Live Preview at bottom */}
-      <Box
-        position="absolute"
-        bottom={2}
-        left={0}
-        right={0}
-        zIndex={10}
-        display="flex"
-        justifyContent="center"
-      >
-        <LivePreview prompts={prompts} settings={settings} />
-      </Box>
+      {/* Edit/Create Modal */}
+      <PromptEditModal
+        prompt={editingPrompt}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onCreate={handleCreatePrompt}
+        onUpdate={handleUpdatePrompt}
+      />
     </Box>
   )
 }

@@ -34,17 +34,12 @@ export function PlaceholderChipEditor({
   const [isFocused, setIsFocused] = useState(false)
   const isInternalUpdate = useRef(false)
 
-  const chipBg = useColorModeValue('blue.500', 'blue.400')
-  const chipColor = useColorModeValue('white', 'white')
   const borderColor = useColorModeValue('gray.200', 'gray.600')
   const focusBorderColor = error ? 'red.500' : 'blue.500'
   const errorBorderColor = 'red.400'
-  const placeholderColor = useColorModeValue('gray.400', 'gray.500')
 
-  const chipLabel = t('settings.quickFollow.chip.label') ?? 'Selected Text'
-  const chipTooltip =
-    t('settings.quickFollow.chip.tooltip') ??
-    'This is the text you selected in Gemini'
+  const chipLabel = t('settings.quickFollow.chip.label')
+  const chipTooltip = t('settings.quickFollow.chip.tooltip')
 
   // Convert template string to HTML with chip elements
   const templateToHtml = useCallback(
@@ -60,7 +55,7 @@ export function PlaceholderChipEditor({
 
         if (index < parts.length - 1) {
           // Add chip after this part (except for the last part)
-          return `${escaped}<span ${CHIP_DATA_ATTR}="true" contenteditable="false" style="display: inline-block; background: var(--chakra-colors-bg-emphasized); color: var(--chakra-colors-fg); padding: 2px 10px; border-radius: 9999px; font-size: 0.75rem; user-select: none; cursor: default; margin: 0 2px; vertical-align: baseline;">${chipLabel}</span>`
+          return `${escaped}<span ${CHIP_DATA_ATTR}="true" contenteditable="false" style="display: inline-block; background: var(--chakra-colors-blue-emphasized); color: var(--chakra-colors-fg); padding: 2px 10px; border-radius: 9999px; font-size: 0.75rem; user-select: none; cursor: default; margin: 0 2px; vertical-align: baseline;">${chipLabel}</span>`
         }
         return escaped
       })

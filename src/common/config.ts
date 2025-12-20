@@ -1,0 +1,1 @@
+export const MAX_QUICK_FOLLOW_UP_SHOW_ITEMS = 2;

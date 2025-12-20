@@ -8,6 +8,7 @@ import { useMemo } from 'react'
 import type { QuickFollowPrompt } from '@/domain/quick-follow/types'
 import { getIconDefinition } from './icons'
 import { ActionButton } from './action-button'
+import { MAX_QUICK_FOLLOW_UP_SHOW_ITEMS } from '@/common/config'
 
 export interface CapsuleBarProps {
   askLabel: React.ReactNode
@@ -38,7 +39,7 @@ function sortPrompts(prompts: QuickFollowPrompt[], orderedIds: string[]) {
 }
 
 const PROMPT_ITEM_WIDTH = 40 // 16px icon + 24px padding
-const VISIBLE_ITEMS = 2.5
+const VISIBLE_ITEMS = MAX_QUICK_FOLLOW_UP_SHOW_ITEMS + 0.5
 const MAX_WIDTH = PROMPT_ITEM_WIDTH * VISIBLE_ITEMS
 
 export function CapsuleBar({
