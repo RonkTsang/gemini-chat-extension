@@ -19,10 +19,12 @@
   "settings": {
     "quickFollow": {
       "title": "Relance rapide",
-      "description": "Créez et gérez des prompts de relance personnalisés avec des capsules de Relance rapide.",
+      "description": "Créez et gérez des prompts de relance personalizados avec des capsules de Relance rapide.",
       "enable": "Activer la Relance rapide",
+      "defaultTemplate": "{{SELECT_TEXT}}",
       "customPrompts": {
-        "title": "Prompts personnalisés",
+        "title": "Gestion des compétences",
+        "description": "Les $1 premières compétences sont épinglées, faites défiler horizontalement pour en voir plus",
         "add": "Ajouter un Prompt",
         "addTemplates": "Ajouter des modèles de départ",
         "empty": "Aucun prompt personnalisé. Ajoutez-en un ou utilisez des modèles de départ.",
@@ -36,10 +38,25 @@
       },
       "card": {
         "namePlaceholder": "Nom du Prompt personnalisé (Optionnel)",
+        "nameEmpty": "Le nom ne peut pas être vide",
         "templateEmpty": "Le modèle ne peut pas être vide",
         "templateMissingPlaceholder": "Le modèle doit contenir $1",
         "templateHelper": "Doit inclure $1",
-        "deleteLabel": "Supprimer le prompt"
+        "editLabel": "Modifier",
+        "deleteLabel": "Supprimer le prompt",
+        "deleteConfirmTitle": "Supprimer la compétence",
+        "deleteConfirmDescription": "Voulez-vous vraiment supprimer cette compétence ? Cette action est irréversible."
+      },
+      "createModal": {
+        "title": "Créer une compétence"
+      },
+      "editModal": {
+        "title": "Modifier la compétence",
+        "iconAndNameLabel": "Icône et nom",
+        "namePlaceholder": "Entrez le nom de la compétence",
+        "templateLabel": "Contenu du prompt",
+        "save": "Enregistrer",
+        "cancel": "Annuler"
       },
       "chip": {
         "label": "Texte sélectionné",
@@ -304,6 +321,14 @@
         "title": "Chain Prompt interrompu",
         "description": "L'exécution a été annulée en raison du changement de chat"
       }
+    }
+  },
+  "common": {
+    "confirmDialog": {
+      "title": "Confirmer l'action",
+      "description": "Cette action est irréversible. Voulez-vous continuer ?",
+      "confirm": "Confirmer",
+      "cancel": "Annuler"
     }
   }
 }

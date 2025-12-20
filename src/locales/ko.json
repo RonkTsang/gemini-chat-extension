@@ -21,8 +21,10 @@
       "title": "빠른 후속 질문",
       "description": "빠른 후속 질문 캡슐로 사용자 정의 후속 프롬프트를 만들고 관리합니다.",
       "enable": "빠른 후속 질문 활성화",
+      "defaultTemplate": "{{SELECT_TEXT}}",
       "customPrompts": {
-        "title": "사용자 정의 프롬프트",
+        "title": "스킬 관리",
+        "description": "처음 $1개의 스킬이 고정되어 있습니다. 가로로 스크롤하여 더 많이 볼 수 있습니다",
         "add": "프롬프트 추가",
         "addTemplates": "시작 템플릿 추가",
         "empty": "사용자 지정 프롬프트가 없습니다. 직접 추가하거나 시작 템플릿을 사용하세요.",
@@ -36,10 +38,25 @@
       },
       "card": {
         "namePlaceholder": "사용자 정의 프롬프트 이름(선택사항)",
+        "nameEmpty": "이름은 비워둘 수 없습니다",
         "templateEmpty": "템플릿은 비어 있을 수 없습니다",
         "templateMissingPlaceholder": "템플릿에는 $1이 포함되어야 합니다",
         "templateHelper": "$1을 포함해야 합니다",
-        "deleteLabel": "프롬프트 삭제"
+        "editLabel": "편집",
+        "deleteLabel": "프롬프트 삭제",
+        "deleteConfirmTitle": "스킬 삭제",
+        "deleteConfirmDescription": "이 스킬을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+      },
+      "createModal": {
+        "title": "스킬 만들기"
+      },
+      "editModal": {
+        "title": "스킬 편집",
+        "iconAndNameLabel": "아이콘 및 이름",
+        "namePlaceholder": "스킬 이름 입력",
+        "templateLabel": "프롬프트 내용",
+        "save": "저장",
+        "cancel": "취소"
       },
       "chip": {
         "label": "선택한 텍스트",
@@ -304,6 +321,14 @@
         "title": "Chain Prompt가 중단되었습니다",
         "description": "채팅 전환으로 인해 실행이 중단되었습니다"
       }
+    }
+  },
+  "common": {
+    "confirmDialog": {
+      "title": "작업 확인",
+      "description": "이 작업은 되돌릴 수 없습니다. 계속하시겠습니까?",
+      "confirm": "확인",
+      "cancel": "취소"
     }
   }
 }

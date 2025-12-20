@@ -21,8 +21,10 @@
       "title": "Seguimento rápido",
       "description": "Crie e gerencie prompts de seguimento personalizados com cápsulas de Seguimento rápido.",
       "enable": "Ativar Seguimento rápido",
+      "defaultTemplate": "{{SELECT_TEXT}}",
       "customPrompts": {
-        "title": "Prompts personalizados",
+        "title": "Gestão de habilidades",
+        "description": "As primeiras $1 habilidades estão fixadas, role horizontalmente para ver mais",
         "add": "Adicionar Prompt",
         "addTemplates": "Adicionar modelos iniciais",
         "empty": "Ainda não há prompts personalizados. Adicione um ou use modelos iniciais.",
@@ -36,13 +38,28 @@
       },
       "card": {
         "namePlaceholder": "Nome do Prompt personalizado (Opcional)",
+        "nameEmpty": "O nome não pode estar vazio",
         "templateEmpty": "O modelo não pode estar vazio",
         "templateMissingPlaceholder": "O modelo deve conter $1",
         "templateHelper": "Deve incluir $1",
-        "deleteLabel": "Excluir prompt"
+        "editLabel": "Editar",
+        "deleteLabel": "Excluir prompt",
+        "deleteConfirmTitle": "Excluir habilidade",
+        "deleteConfirmDescription": "Tem certeza de que deseja excluir esta habilidade? Esta ação não pode ser desfeita."
+      },
+      "createModal": {
+        "title": "Criar habilidade"
+      },
+      "editModal": {
+        "title": "Editar habilidade",
+        "iconAndNameLabel": "Ícone e nome",
+        "namePlaceholder": "Insira o nome da habilidade",
+        "templateLabel": "Conteúdo do prompt",
+        "save": "Salvar",
+        "cancel": "Cancelar"
       },
       "chip": {
-        "label": "Texto selecionado",
+        "label": "Texto seleccionado",
         "tooltip": "Este é o texto que você selecionou no Gemini"
       }
     },
@@ -304,6 +321,14 @@
         "title": "Chain Prompt interrompido",
         "description": "A execução foi abortada devido à troca de chat"
       }
+    }
+  },
+  "common": {
+    "confirmDialog": {
+      "title": "Confirmar ação",
+      "description": "Esta action não pode ser desfeita. Deseja continuar?",
+      "confirm": "Confirmar",
+      "cancel": "Cancelar"
     }
   }
 }

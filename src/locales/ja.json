@@ -21,8 +21,10 @@
       "title": "クイック追問",
       "description": "クイック追問カプセルでカスタム追問プロンプトを作成・管理します。",
       "enable": "クイック追問を有効にする",
+      "defaultTemplate": "{{SELECT_TEXT}}",
       "customPrompts": {
-        "title": "カスタムプロンプト",
+        "title": "スキル管理",
+        "description": "最初の $1 つのスキルが固定されています。横にスクロールしてさらに表示できます",
         "add": "プロンプトを追加",
         "addTemplates": "スターターテンプレートを追加",
         "empty": "カスタムプロンプトはまだありません。追加するかスターターテンプレートを使ってください。",
@@ -36,10 +38,25 @@
       },
       "card": {
         "namePlaceholder": "カスタムプロンプト名（オプション）",
+        "nameEmpty": "名前を入力してください",
         "templateEmpty": "テンプレートは空にできません",
         "templateMissingPlaceholder": "テンプレートには $1 を含める必要があります",
         "templateHelper": "$1 を含める必要があります",
-        "deleteLabel": "プロンプトを削除"
+        "editLabel": "編集",
+        "deleteLabel": "プロンプトを削除",
+        "deleteConfirmTitle": "スキルを削除",
+        "deleteConfirmDescription": "このスキルを削除してもよろしいですか？この操作は取り消せません。"
+      },
+      "createModal": {
+        "title": "スキルを作成"
+      },
+      "editModal": {
+        "title": "スキルを編集",
+        "iconAndNameLabel": "アイコンと名前",
+        "namePlaceholder": "スキル名を入力",
+        "templateLabel": "プロンプトの内容",
+        "save": "保存",
+        "cancel": "キャンセル"
       },
       "chip": {
         "label": "選択されたテキスト",
@@ -304,6 +321,14 @@
         "title": "Chain Prompt が中断されました",
         "description": "チャットの切り替えにより実行が中止されました"
       }
+    }
+  },
+  "common": {
+    "confirmDialog": {
+      "title": "操作の確認",
+      "description": "この操作は取り消せません。続行しますか？",
+      "confirm": "確認",
+      "cancel": "キャンセル"
     }
   }
 }

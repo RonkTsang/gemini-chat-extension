@@ -21,8 +21,10 @@
       "title": "Schnelle Rückfrage",
       "description": "Erstellen und verwalten Sie benutzerdefinierte Folgeprompts mit Schnelle-Rückfrage-Kapseln.",
       "enable": "Schnelle Rückfrage aktivieren",
+      "defaultTemplate": "{{SELECT_TEXT}}",
       "customPrompts": {
-        "title": "Benutzerdefinierte Prompts",
+        "title": "Skill-Management",
+        "description": "Die ersten $1 Skills sind angeheftet, scrollen Sie horizontal für weitere",
         "add": "Prompt hinzufügen",
         "addTemplates": "Startvorlagen hinzufügen",
         "empty": "Noch keine benutzerdefinierten Prompts. Fügen Sie einen hinzu oder nutzen Sie Startvorlagen.",
@@ -36,10 +38,25 @@
       },
       "card": {
         "namePlaceholder": "Benutzerdefinierter Prompt-Name (Optional)",
+        "nameEmpty": "Name darf nicht leer sein",
         "templateEmpty": "Vorlage darf nicht leer sein",
         "templateMissingPlaceholder": "Vorlage muss $1 enthalten",
         "templateHelper": "Muss $1 enthalten",
-        "deleteLabel": "Prompt löschen"
+        "editLabel": "Bearbeiten",
+        "deleteLabel": "Prompt löschen",
+        "deleteConfirmTitle": "Skill löschen",
+        "deleteConfirmDescription": "Sind Sie sicher, dass Sie diesen Skill löschen möchten? Dieser Vorgang kann nicht rückgängig gemacht werden."
+      },
+      "createModal": {
+        "title": "Skill erstellen"
+      },
+      "editModal": {
+        "title": "Skill bearbeiten",
+        "iconAndNameLabel": "Icon und Name",
+        "namePlaceholder": "Skill-Namen eingeben",
+        "templateLabel": "Prompt-Inhalt",
+        "save": "Speichern",
+        "cancel": "Abbrechen"
       },
       "chip": {
         "label": "Ausgewählter Text",
@@ -304,6 +321,14 @@
         "title": "Chain Prompt unterbrochen",
         "description": "Ausführung wurde aufgrund von Chat-Wechsel abgebrochen"
       }
+    }
+  },
+  "common": {
+    "confirmDialog": {
+      "title": "Aktion bestätigen",
+      "description": "Diese Aktion kann nicht rückgängig gemacht werden. Möchten Sie fortfahren?",
+      "confirm": "Bestätigen",
+      "cancel": "Abbrechen"
     }
   }
 }

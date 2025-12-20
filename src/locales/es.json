@@ -21,8 +21,10 @@
       "title": "Seguimiento rápido",
       "description": "Crea y gestiona prompts de seguimiento personalizados con cápsulas de Seguimiento rápido.",
       "enable": "Activar Seguimiento rápido",
+      "defaultTemplate": "{{SELECT_TEXT}}",
       "customPrompts": {
-        "title": "Prompts personalizados",
+        "title": "Gestión de habilidades",
+        "description": "Las primeras $1 habilidades están fijadas, deslice horizontalmente para ver más",
         "add": "Agregar Prompt",
         "addTemplates": "Agregar plantillas iniciales",
         "empty": "Aún no hay prompts personalizados. Agrega uno o usa plantillas iniciales.",
@@ -36,10 +38,25 @@
       },
       "card": {
         "namePlaceholder": "Nombre del Prompt personalizado (Opcional)",
+        "nameEmpty": "El nombre no puede estar vacío",
         "templateEmpty": "La plantilla no puede estar vacía",
         "templateMissingPlaceholder": "La plantilla debe contener $1",
         "templateHelper": "Debe incluir $1",
-        "deleteLabel": "Eliminar prompt"
+        "editLabel": "Editar",
+        "deleteLabel": "Eliminar prompt",
+        "deleteConfirmTitle": "Eliminar habilidad",
+        "deleteConfirmDescription": "¿Está seguro de que desea eliminar esta habilidad? Esta acción no se puede deshacer."
+      },
+      "createModal": {
+        "title": "Crear habilidad"
+      },
+      "editModal": {
+        "title": "Editar habilidad",
+        "iconAndNameLabel": "Icono y nombre",
+        "namePlaceholder": "Introduzca el nombre de la habilidad",
+        "templateLabel": "Contenido del prompt",
+        "save": "Guardar",
+        "cancel": "Cancelar"
       },
       "chip": {
         "label": "Texto seleccionado",
@@ -304,6 +321,14 @@
         "title": "Chain Prompt interrumpido",
         "description": "La ejecución fue abortada debido al cambio de chat"
       }
+    }
+  },
+  "common": {
+    "confirmDialog": {
+      "title": "Confirmar acción",
+      "description": "Esta acción no se puede deshacer. ¿Desea continuar?",
+      "confirm": "Confirmar",
+      "cancel": "Cancelar"
     }
   }
 }
