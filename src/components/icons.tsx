@@ -1,5 +1,6 @@
 import React from "react"
 import PromptIcon from '~/assets/prompt.svg?react'
+import ImagePromptIcon from '~/assets/image-prompt.svg?react'
 
 export function ChatOutlineIcon() {
   return (
@@ -49,4 +50,4 @@ export function ExternalLinkIcon() {
   )
 }
 
-export { PromptIcon }
+export { PromptIcon, ImagePromptIcon }

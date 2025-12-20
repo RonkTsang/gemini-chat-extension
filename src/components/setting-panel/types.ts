@@ -22,7 +22,7 @@ export interface SettingSectionDefinition<TSection extends string = string> {
   id: TSection
   label: string
   group: NavigationGroup
-  icon: ComponentType<{ size?: number | string }>
+  icon: ComponentType<{ size?: number | string, width?: number, height?: number }>
   title: string
   description: string
   views: SettingViewDefinition<TSection>[]

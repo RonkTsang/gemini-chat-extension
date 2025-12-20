@@ -253,6 +253,17 @@
           }
         }
       },
+      "imagePrompt": {
+        "label": "Bild-Prompt",
+        "title": "Bild-Prompt",
+        "description": "Konfigurieren Sie bildbezogene Prompts und Einstellungen.",
+        "views": {
+          "index": {
+            "title": "Bild-Prompt",
+            "description": "Hauptübersicht für Bild-Prompt-Einstellungen."
+          }
+        }
+      },
       "chatOutline": {
         "label": "Chat-Gliederung",
         "title": "Chat-Gliederung",

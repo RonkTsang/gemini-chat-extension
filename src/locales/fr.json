@@ -253,6 +253,17 @@
           }
         }
       },
+      "imagePrompt": {
+        "label": "Prompt d'image",
+        "title": "Prompt d'image",
+        "description": "Configurez les prompts et paramètres liés aux images.",
+        "views": {
+          "index": {
+            "title": "Prompt d'image",
+            "description": "Aperçu principal des paramètres de prompt d'image."
+          }
+        }
+      },
       "chatOutline": {
         "label": "Plan de chat",
         "title": "Plan de chat",

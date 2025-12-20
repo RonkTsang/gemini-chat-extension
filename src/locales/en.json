@@ -253,6 +253,17 @@
           }
         }
       },
+      "imagePrompt": {
+        "label": "Image Prompt",
+        "title": "Image Prompt",
+        "description": "Configure image-related prompts and settings.",
+        "views": {
+          "index": {
+            "title": "Image Prompt",
+            "description": "Main overview for image prompt settings."
+          }
+        }
+      },
       "chatOutline": {
         "label": "Chat Outline",
         "title": "Chat Outline",

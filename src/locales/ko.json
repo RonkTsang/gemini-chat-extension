@@ -253,6 +253,17 @@
           }
         }
       },
+      "imagePrompt": {
+        "label": "이미지 프롬프트",
+        "title": "이미지 프롬프트",
+        "description": "이미지 관련 프롬프트 및 설정을 구성합니다.",
+        "views": {
+          "index": {
+            "title": "이미지 프롬프트",
+            "description": "이미지 프롬프트 설정의 주요 개요."
+          }
+        }
+      },
       "chatOutline": {
         "label": "채팅 개요",
         "title": "채팅 개요",

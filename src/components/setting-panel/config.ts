@@ -6,6 +6,7 @@ import {
   HiOutlineLightningBolt,
   HiOutlineLink
 } from 'react-icons/hi'
+import { ImagePromptIcon } from '@/components/icons'
 import type {
   NavigationGroup,
   ResolvedSettingView,
@@ -18,6 +19,7 @@ import { t } from '@/utils/i18n'
 export type NavigationSection =
   | 'chainPrompt'
   | 'quickFollowup'
+  | 'imagePrompt'
   | 'chatOutline'
   | 'theme'
   | 'support'
@@ -65,6 +67,22 @@ export const settingSectionDefinitions: SettingSectionDefinition<NavigationSecti
         title: t('settingPanel.config.chainPrompt.views.editor.title'),
         description: '',
         componentId: 'chain-prompt/editor'
+      }
+    ]
+  },
+  {
+    id: 'imagePrompt',
+    label: t('settingPanel.config.imagePrompt.label'),
+    group: 'prompt',
+    icon: ImagePromptIcon as any,
+    title: t('settingPanel.config.imagePrompt.title'),
+    description: t('settingPanel.config.imagePrompt.description'),
+    views: [
+      {
+        id: 'index',
+        title: t('settingPanel.config.imagePrompt.views.index.title'),
+        description: t('settingPanel.config.imagePrompt.views.index.description'),
+        componentId: 'default/index'
       }
     ]
   },

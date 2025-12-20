@@ -43,7 +43,7 @@ const NavigationButton: React.FC<NavigationButtonProps> = ({ item, isActive, onS
     >
       <HStack gap={3}>
         <Box color={iconColor}>
-          <IconComponent size={20} />
+          <IconComponent size={20} width={20} height={20} />
         </Box>
         <Text fontSize="sm" fontWeight={isActive ? 'medium' : 'normal'}>
           {item.label}

@@ -253,6 +253,17 @@
           }
         }
       },
+      "imagePrompt": {
+        "label": "图片提示",
+        "title": "图片提示",
+        "description": "配置图片相关的提示和设置。",
+        "views": {
+          "index": {
+            "title": "图片提示",
+            "description": "图片提示设置总览。"
+          }
+        }
+      },
       "chatOutline": {
         "label": "聊天大纲",
         "title": "聊天大纲",

@@ -253,6 +253,17 @@
           }
         }
       },
+      "imagePrompt": {
+        "label": "画像プロンプト",
+        "title": "画像プロンプト",
+        "description": "画像関連のプロンプトと設定を構成します。",
+        "views": {
+          "index": {
+            "title": "画像プロンプト",
+            "description": "画像プロンプト設定のメイン概要。"
+          }
+        }
+      },
       "chatOutline": {
         "label": "チャットアウトライン",
         "title": "チャットアウトライン",

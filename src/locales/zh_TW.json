@@ -254,6 +254,17 @@
           }
         }
       },
+      "imagePrompt": {
+        "label": "圖片提示",
+        "title": "圖片提示",
+        "description": "配置與圖片相關的提示和設定。",
+        "views": {
+          "index": {
+            "title": "圖片提示",
+            "description": "圖片提示設定總覽。"
+          }
+        }
+      },
       "chatOutline": {
         "label": "聊天大綱",
         "title": "聊天大綱",
