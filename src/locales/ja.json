@@ -19,9 +19,7 @@
   "settings": {
     "quickFollow": {
       "title": "クイック追問",
-      "description": "クイック追問カプセルでカスタム追問プロンプトを作成・管理します。",
       "enable": "クイック追問を有効にする",
-      "defaultTemplate": "{{SELECT_TEXT}}",
       "customPrompts": {
         "title": "スキル管理",
         "description": "最初の $1 つのスキルが固定されています。横にスクロールしてさらに表示できます",
@@ -30,11 +28,6 @@
         "empty": "カスタムプロンプトはまだありません。追加するかスターターテンプレートを使ってください。",
         "defaultTemplate": "例: {{SELECT_TEXT}} をやさしく説明して",
         "placeholderTip": "テンプレートで {{SELECT_TEXT}} を使用して、選択したテキストを挿入します。例：「{{SELECT_TEXT}} を中国語に翻訳」"
-      },
-      "preview": {
-        "title": "ライブプレビュー",
-        "subtitle": "クイック追問カプセルがGeminiページでどのように表示されるかを確認します。",
-        "more": "さらにプロンプト"
       },
       "card": {
         "namePlaceholder": "カスタムプロンプト名（オプション）",
@@ -59,7 +52,7 @@
         "cancel": "キャンセル"
       },
       "chip": {
-        "label": "選択されたテキスト",
+        "label": "選択したテキスト",
         "tooltip": "これは Gemini で選択したテキストです"
       }
     },
@@ -118,7 +111,7 @@
       },
       "templateModal": {
         "title": "テンプレートライブラリ",
-        "description": "厳選されたテンプレートから選択して、すぐに始めましょう",
+        "description": "厳選されたテンプレートから選択して、すぐに始められます",
         "searchPlaceholder": "テンプレートを検索...",
         "emptyTitle": "テンプレートが見つかりません",
         "emptyDesc": "検索条件やカテゴリフィルターを調整してみてください",
@@ -225,9 +218,7 @@
     },
     "config": {
       "chainPrompt": {
-        "label": "Chain Prompt",
         "title": "Chain Prompt",
-        "description": "複雑な会話のための Chain Prompt を作成・管理します。",
         "views": {
           "index": {
             "title": "Chain Prompt",
@@ -239,9 +230,7 @@
         }
       },
       "quickFollowup": {
-        "label": "クイック追問",
         "title": "クイック追問",
-        "description": "効率的なコミュニケーションのためにクイックフォローアップのプロンプトを設定します。",
         "views": {
           "index": {
             "title": "クイック追問",
@@ -254,20 +243,16 @@
         }
       },
       "imagePrompt": {
-        "label": "画像プロンプト",
-        "title": "画像プロンプト",
-        "description": "画像関連のプロンプトと設定を構成します。",
+        "title": "画像 prompt",
         "views": {
           "index": {
-            "title": "画像プロンプト",
-            "description": "画像プロンプト設定のメイン概要。"
+            "title": "画像 prompt",
+            "description": "画像 prompt 設定のメイン概要。"
           }
         }
       },
       "chatOutline": {
-        "label": "チャットアウトライン",
         "title": "チャットアウトライン",
-        "description": "チャット会話を整理・構造化します。",
         "views": {
           "index": {
             "title": "チャットアウトライン",
@@ -280,9 +265,7 @@
         }
       },
       "theme": {
-        "label": "テーマ",
         "title": "テーマ",
-        "description": "外観とテーマ設定をカスタマイズします。",
         "views": {
           "index": {
             "title": "テーマ",
@@ -294,40 +277,8 @@
           }
         }
       },
-      "support": {
-        "label": "サポート",
-        "title": "サポート",
-        "description": "アプリの使用に関するヘルプとサポートを取得します。",
-        "views": {
-          "index": {
-            "title": "サポート",
-            "description": "サポートオプションの概要。"
-          },
-          "detail": {
-            "title": "サポートの詳細",
-            "description": "サポートオプションと連絡先の詳細。"
-          }
-        }
-      },
-      "feedback": {
-        "label": "フィードバック",
-        "title": "フィードバック",
-        "description": "フィードバックや提案をお寄せください。",
-        "views": {
-          "index": {
-            "title": "フィードバック",
-            "description": "フィードバックの概要。"
-          },
-          "detail": {
-            "title": "フィードバックの詳細",
-            "description": "フィードバック送信の詳細オプション。"
-          }
-        }
-      },
       "about": {
-        "label": "について",
         "title": "について",
-        "description": "Gemini Power Kitについて",
         "views": {
           "index": {
             "title": "について",
@@ -377,5 +328,3 @@
     }
   }
 }
-
-

@@ -19,9 +19,7 @@
   "settings": {
     "quickFollow": {
       "title": "Quick Follow-up",
-      "description": "Create and manage custom follow-up prompts with Quick Follow-up capsules.",
       "enable": "Enable Quick Follow-up",
-      "defaultTemplate": "{{SELECT_TEXT}}",
       "customPrompts": {
         "title": "Skill Management",
         "description": "The first $1 skills are pinned, scroll horizontally to view more",
@@ -30,11 +28,6 @@
         "empty": "No custom prompts yet. Add one or use starter templates.",
         "defaultTemplate": "e.g. Explain {{SELECT_TEXT}} in simple terms",
         "placeholderTip": "Use {{SELECT_TEXT}} in your template to insert the selected text. Example: \"Translate {{SELECT_TEXT}} to Chinese\""
-      },
-      "preview": {
-        "title": "Live Preview",
-        "subtitle": "See how your Quick Follow-up capsule will look on the Gemini page.",
-        "more": "More prompts"
       },
       "card": {
         "namePlaceholder": "Custom Prompt Name (Optional)",
@@ -225,9 +218,7 @@
     },
     "config": {
       "chainPrompt": {
-        "label": "Chain Prompt",
         "title": "Chain Prompt",
-        "description": "Create and manage chain prompts for complex conversations.",
         "views": {
           "index": {
             "title": "Chain Prompt",
@@ -239,9 +230,7 @@
         }
       },
       "quickFollowup": {
-        "label": "Quick Follow-up",
         "title": "Quick Follow-up",
-        "description": "Set up quick follow-up prompts for efficient communication.",
         "views": {
           "index": {
             "title": "Quick Follow-up",
@@ -254,9 +243,7 @@
         }
       },
       "imagePrompt": {
-        "label": "Image Prompt",
         "title": "Image Prompt",
-        "description": "Configure image-related prompts and settings.",
         "views": {
           "index": {
             "title": "Image Prompt",
@@ -265,9 +252,7 @@
         }
       },
       "chatOutline": {
-        "label": "Chat Outline",
         "title": "Chat Outline",
-        "description": "Organize and structure your chat conversations.",
         "views": {
           "index": {
             "title": "Chat Outline",
@@ -280,9 +265,7 @@
         }
       },
       "theme": {
-        "label": "Theme",
         "title": "Theme",
-        "description": "Customize the appearance and theme settings.",
         "views": {
           "index": {
             "title": "Theme",
@@ -294,40 +277,8 @@
           }
         }
       },
-      "support": {
-        "label": "Support",
-        "title": "Support",
-        "description": "Get help and support for using the application.",
-        "views": {
-          "index": {
-            "title": "Support",
-            "description": "Main overview for support options."
-          },
-          "detail": {
-            "title": "Support Detail",
-            "description": "Detailed support options and contact info."
-          }
-        }
-      },
-      "feedback": {
-        "label": "Feedback",
-        "title": "Feedback",
-        "description": "Share your feedback and suggestions with us.",
-        "views": {
-          "index": {
-            "title": "Feedback",
-            "description": "Main overview for feedback."
-          },
-          "detail": {
-            "title": "Feedback Detail",
-            "description": "Detailed feedback submission options."
-          }
-        }
-      },
       "about": {
-        "label": "About",
         "title": "About",
-        "description": "About Gemini Power Kit",
         "views": {
           "index": {
             "title": "About",

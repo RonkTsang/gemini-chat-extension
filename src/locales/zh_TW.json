@@ -19,9 +19,7 @@
   "settings": {
     "quickFollow": {
       "title": "快速追問",
-      "description": "管理並設定快速追問膠囊中的自訂 Prompt。",
       "enable": "啟用 Quick Follow-up",
-      "defaultTemplate": "{{SELECT_TEXT}}",
       "customPrompts": {
         "title": "技能管理",
         "description": "前 $1 個技能固定顯示，其餘技能可橫向捲動查看",
@@ -30,11 +28,6 @@
         "empty": "尚無自訂 Prompt，可新增一個或一鍵加入常用模板。",
         "defaultTemplate": "例如：用簡單的話解釋 {{SELECT_TEXT}}",
         "placeholderTip": "在模板中使用 {{SELECT_TEXT}} 來插入選中的文本。例如：「將 {{SELECT_TEXT}} 翻譯成中文」"
-      },
-      "preview": {
-        "title": "即時預覽",
-        "subtitle": "預覽快速追問膠囊在 Gemini 頁面的呈現效果。",
-        "more": "更多 Prompt"
       },
       "card": {
         "namePlaceholder": "自訂 Prompt 名稱（可選）",
@@ -226,9 +219,7 @@
     },
     "config": {
       "chainPrompt": {
-        "label": "Chain Prompt",
         "title": "Chain Prompt",
-        "description": "建立與管理用於複雜對話的鏈式提示。",
         "views": {
           "index": {
             "title": "Chain Prompt",
@@ -240,9 +231,7 @@
         }
       },
       "quickFollowup": {
-        "label": "快速追問",
         "title": "快速追問",
-        "description": "設定快速追問提示以提升溝通效率。",
         "views": {
           "index": {
             "title": "快速追問",
@@ -255,20 +244,16 @@
         }
       },
       "imagePrompt": {
-        "label": "圖片提示",
-        "title": "圖片提示",
-        "description": "配置與圖片相關的提示和設定。",
+        "title": "圖片 prompt",
         "views": {
           "index": {
-            "title": "圖片提示",
-            "description": "圖片提示設定總覽。"
+            "title": "圖片 prompt",
+            "description": "圖片 prompt 設定總覽。"
           }
         }
       },
       "chatOutline": {
-        "label": "聊天大綱",
         "title": "聊天大綱",
-        "description": "組織與結構化您的聊天會話。",
         "views": {
           "index": {
             "title": "聊天大綱",
@@ -281,9 +266,7 @@
         }
       },
       "theme": {
-        "label": "主題",
         "title": "主題",
-        "description": "自訂外觀與主題設定。",
         "views": {
           "index": {
             "title": "主題",
@@ -295,40 +278,8 @@
           }
         }
       },
-      "support": {
-        "label": "支援",
-        "title": "支援",
-        "description": "取得使用支援與協助。",
-        "views": {
-          "index": {
-            "title": "支援",
-            "description": "支援選項總覽。"
-          },
-          "detail": {
-            "title": "支援詳情",
-            "description": "詳細的支援選項與聯絡資訊。"
-          }
-        }
-      },
-      "feedback": {
-        "label": "回饋",
-        "title": "回饋",
-        "description": "與我們分享您的建議與回饋。",
-        "views": {
-          "index": {
-            "title": "回饋",
-            "description": "回饋總覽。"
-          },
-          "detail": {
-            "title": "回饋詳情",
-            "description": "詳細的回饋提交選項。"
-          }
-        }
-      },
       "about": {
-        "label": "關於",
         "title": "關於",
-        "description": "關於 Gemini Power Kit",
         "views": {
           "index": {
             "title": "關於",
@@ -378,5 +329,3 @@
     }
   }
 }
-
-

@@ -19,9 +19,7 @@
   "settings": {
     "quickFollow": {
       "title": "Seguimento rápido",
-      "description": "Crie e gerencie prompts de seguimento personalizados com cápsulas de Seguimento rápido.",
       "enable": "Ativar Seguimento rápido",
-      "defaultTemplate": "{{SELECT_TEXT}}",
       "customPrompts": {
         "title": "Gestão de habilidades",
         "description": "As primeiras $1 habilidades estão fixadas, role horizontalmente para ver mais",
@@ -30,11 +28,6 @@
         "empty": "Ainda não há prompts personalizados. Adicione um ou use modelos iniciais.",
         "defaultTemplate": "ex.: Explique {{SELECT_TEXT}} em termos simples",
         "placeholderTip": "Use {{SELECT_TEXT}} em seu modelo para inserir o texto selecionado. Exemplo: \"Traduzir {{SELECT_TEXT}} para chinês\""
-      },
-      "preview": {
-        "title": "Pré-visualização ao vivo",
-        "subtitle": "Veja como sua cápsula de Seguimento rápido aparecerá na página do Gemini.",
-        "more": "Mais prompts"
       },
       "card": {
         "namePlaceholder": "Nome do Prompt personalizado (Opcional)",
@@ -59,7 +52,7 @@
         "cancel": "Cancelar"
       },
       "chip": {
-        "label": "Texto seleccionado",
+        "label": "Texto selecionado",
         "tooltip": "Este é o texto que você selecionou no Gemini"
       }
     },
@@ -225,9 +218,7 @@
     },
     "config": {
       "chainPrompt": {
-        "label": "Chain Prompt",
         "title": "Chain Prompt",
-        "description": "Crie e gerencie Chain Prompts para conversas complexas.",
         "views": {
           "index": {
             "title": "Chain Prompt",
@@ -239,9 +230,7 @@
         }
       },
       "quickFollowup": {
-        "label": "Seguimento rápido",
         "title": "Seguimento rápido",
-        "description": "Configure prompts de seguimento rápido para comunicação eficiente.",
         "views": {
           "index": {
             "title": "Seguimento rápido",
@@ -254,20 +243,16 @@
         }
       },
       "imagePrompt": {
-        "label": "Prompt de imagem",
-        "title": "Prompt de imagem",
-        "description": "Configure prompts e configurações relacionados a imagens.",
+        "title": "imagem prompt",
         "views": {
           "index": {
-            "title": "Prompt de imagem",
-            "description": "Visão geral principal das configurações de prompt de imagem."
+            "title": "imagem prompt",
+            "description": "Visão geral principal das configurações de imagem prompt."
           }
         }
       },
       "chatOutline": {
-        "label": "Esboço de chat",
         "title": "Esboço de chat",
-        "description": "Organize e estruture suas conversas.",
         "views": {
           "index": {
             "title": "Esboço de chat",
@@ -280,9 +265,7 @@
         }
       },
       "theme": {
-        "label": "Tema",
         "title": "Tema",
-        "description": "Personalize a aparência e as configurações do tema.",
         "views": {
           "index": {
             "title": "Tema",
@@ -294,40 +277,8 @@
           }
         }
       },
-      "support": {
-        "label": "Suporte",
-        "title": "Suporte",
-        "description": "Obtenha ajuda e suporte para usar o aplicativo.",
-        "views": {
-          "index": {
-            "title": "Suporte",
-            "description": "Visão geral das opções de suporte."
-          },
-          "detail": {
-            "title": "Detalhe do suporte",
-            "description": "Opções detalhadas de suporte e informações de contato."
-          }
-        }
-      },
-      "feedback": {
-        "label": "Feedback",
-        "title": "Feedback",
-        "description": "Compartilhe seus comentários e sugestões conosco.",
-        "views": {
-          "index": {
-            "title": "Feedback",
-            "description": "Visão geral do feedback."
-          },
-          "detail": {
-            "title": "Detalhe do feedback",
-            "description": "Opções detalhadas para envio de feedback."
-          }
-        }
-      },
       "about": {
-        "label": "Sobre",
         "title": "Sobre",
-        "description": "Sobre o Gemini Power Kit",
         "views": {
           "index": {
             "title": "Sobre",
@@ -371,11 +322,9 @@
   "common": {
     "confirmDialog": {
       "title": "Confirmar ação",
-      "description": "Esta action não pode ser desfeita. Deseja continuar?",
+      "description": "Esta ação não pode ser desfeita. Deseja continuar?",
       "confirm": "Confirmar",
       "cancel": "Cancelar"
     }
   }
 }
-
-

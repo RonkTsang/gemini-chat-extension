@@ -19,9 +19,7 @@
   "settings": {
     "quickFollow": {
       "title": "Relance rapide",
-      "description": "Créez et gérez des prompts de relance personalizados avec des capsules de Relance rapide.",
       "enable": "Activer la Relance rapide",
-      "defaultTemplate": "{{SELECT_TEXT}}",
       "customPrompts": {
         "title": "Gestion des compétences",
         "description": "Les $1 premières compétences sont épinglées, faites défiler horizontalement pour en voir plus",
@@ -30,11 +28,6 @@
         "empty": "Aucun prompt personnalisé. Ajoutez-en un ou utilisez des modèles de départ.",
         "defaultTemplate": "p. ex. Expliquer {{SELECT_TEXT}} en termes simples",
         "placeholderTip": "Utilisez {{SELECT_TEXT}} dans votre modèle pour insérer le texte sélectionné. Exemple : \"Traduire {{SELECT_TEXT}} en chinois\""
-      },
-      "preview": {
-        "title": "Aperçu en direct",
-        "subtitle": "Voyez à quoi ressemblera votre capsule de Relance rapide sur la page Gemini.",
-        "more": "Plus de prompts"
       },
       "card": {
         "namePlaceholder": "Nom du Prompt personnalisé (Optionnel)",
@@ -225,9 +218,7 @@
     },
     "config": {
       "chainPrompt": {
-        "label": "Chain Prompt",
         "title": "Chain Prompt",
-        "description": "Créer et gérer des Chain Prompts pour des conversations complexes.",
         "views": {
           "index": {
             "title": "Chain Prompt",
@@ -239,9 +230,7 @@
         }
       },
       "quickFollowup": {
-        "label": "Relance rapide",
         "title": "Relance rapide",
-        "description": "Configurer des prompts de relance pour une communication efficace.",
         "views": {
           "index": {
             "title": "Relance rapide",
@@ -254,20 +243,16 @@
         }
       },
       "imagePrompt": {
-        "label": "Prompt d'image",
-        "title": "Prompt d'image",
-        "description": "Configurez les prompts et paramètres liés aux images.",
+        "title": "image prompt",
         "views": {
           "index": {
-            "title": "Prompt d'image",
-            "description": "Aperçu principal des paramètres de prompt d'image."
+            "title": "image prompt",
+            "description": "Aperçu principal des paramètres d'image prompt."
           }
         }
       },
       "chatOutline": {
-        "label": "Plan de chat",
         "title": "Plan de chat",
-        "description": "Organisez et structurez vos conversations.",
         "views": {
           "index": {
             "title": "Plan de chat",
@@ -280,9 +265,7 @@
         }
       },
       "theme": {
-        "label": "Thème",
         "title": "Thème",
-        "description": "Personnaliser l'apparence et les paramètres du thème.",
         "views": {
           "index": {
             "title": "Thème",
@@ -294,40 +277,8 @@
           }
         }
       },
-      "support": {
-        "label": "Support",
-        "title": "Support",
-        "description": "Obtenir de l'aide et du support pour l'application.",
-        "views": {
-          "index": {
-            "title": "Support",
-            "description": "Vue d'ensemble des options de support."
-          },
-          "detail": {
-            "title": "Détail du support",
-            "description": "Options de support détaillées et coordonnées."
-          }
-        }
-      },
-      "feedback": {
-        "label": "Retour",
-        "title": "Retour",
-        "description": "Partagez vos retours et suggestions.",
-        "views": {
-          "index": {
-            "title": "Retour",
-            "description": "Vue d'ensemble des retours."
-          },
-          "detail": {
-            "title": "Détail du retour",
-            "description": "Options détaillées pour envoyer des retours."
-          }
-        }
-      },
       "about": {
-        "label": "À propos",
         "title": "À propos",
-        "description": "À propos de Gemini Power Kit",
         "views": {
           "index": {
             "title": "À propos",
@@ -377,5 +328,3 @@
     }
   }
 }
-
-

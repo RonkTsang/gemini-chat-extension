@@ -19,9 +19,7 @@
   "settings": {
     "quickFollow": {
       "title": "Seguimiento rápido",
-      "description": "Crea y gestiona prompts de seguimiento personalizados con cápsulas de Seguimiento rápido.",
       "enable": "Activar Seguimiento rápido",
-      "defaultTemplate": "{{SELECT_TEXT}}",
       "customPrompts": {
         "title": "Gestión de habilidades",
         "description": "Las primeras $1 habilidades están fijadas, deslice horizontalmente para ver más",
@@ -30,11 +28,6 @@
         "empty": "Aún no hay prompts personalizados. Agrega uno o usa plantillas iniciales.",
         "defaultTemplate": "p. ej. Explica {{SELECT_TEXT}} en términos simples",
         "placeholderTip": "Usa {{SELECT_TEXT}} en tu plantilla para insertar el texto seleccionado. Ejemplo: \"Traducir {{SELECT_TEXT}} al chino\""
-      },
-      "preview": {
-        "title": "Vista previa en vivo",
-        "subtitle": "Ve cómo se verá tu cápsula de Seguimiento rápido en la página de Gemini.",
-        "more": "Más prompts"
       },
       "card": {
         "namePlaceholder": "Nombre del Prompt personalizado (Opcional)",
@@ -118,7 +111,7 @@
       },
       "templateModal": {
         "title": "Biblioteca de plantillas",
-        "description": "Elige de nuestras plantillas curadas para comenzar rápidamente",
+        "description": "Elige entre nuestras plantillas seleccionadas para comenzar rápidamente",
         "searchPlaceholder": "Buscar plantillas...",
         "emptyTitle": "No se encontraron plantillas",
         "emptyDesc": "Intenta ajustar tu búsqueda o filtro de categoría",
@@ -225,9 +218,7 @@
     },
     "config": {
       "chainPrompt": {
-        "label": "Chain Prompt",
         "title": "Chain Prompt",
-        "description": "Crea y gestiona Chain Prompts para conversaciones complejas.",
         "views": {
           "index": {
             "title": "Chain Prompt",
@@ -239,9 +230,7 @@
         }
       },
       "quickFollowup": {
-        "label": "Seguimiento rápido",
         "title": "Seguimiento rápido",
-        "description": "Configura prompts de seguimiento rápido para una comunicación eficiente.",
         "views": {
           "index": {
             "title": "Seguimiento rápido",
@@ -254,20 +243,16 @@
         }
       },
       "imagePrompt": {
-        "label": "Prompt de imagen",
-        "title": "Prompt de imagen",
-        "description": "Configura prompts y ajustes relacionados con imágenes.",
+        "title": "imagen prompt",
         "views": {
           "index": {
-            "title": "Prompt de imagen",
-            "description": "Resumen principal de la configuración de prompt de imagen."
+            "title": "imagen prompt",
+            "description": "Resumen principal de la configuración de imagen prompt."
           }
         }
       },
       "chatOutline": {
-        "label": "Esquema de chat",
         "title": "Esquema de chat",
-        "description": "Organiza y estructura tus conversaciones de chat.",
         "views": {
           "index": {
             "title": "Esquema de chat",
@@ -280,9 +265,7 @@
         }
       },
       "theme": {
-        "label": "Tema",
         "title": "Tema",
-        "description": "Personaliza la apariencia y los ajustes del tema.",
         "views": {
           "index": {
             "title": "Tema",
@@ -294,40 +277,8 @@
           }
         }
       },
-      "support": {
-        "label": "Soporte",
-        "title": "Soporte",
-        "description": "Obtén ayuda y soporte para el uso de la aplicación.",
-        "views": {
-          "index": {
-            "title": "Soporte",
-            "description": "Resumen principal de las opciones de soporte."
-          },
-          "detail": {
-            "title": "Detalle de soporte",
-            "description": "Opciones de soporte detalladas e información de contacto."
-          }
-        }
-      },
-      "feedback": {
-        "label": "Comentarios",
-        "title": "Comentarios",
-        "description": "Comparte tus comentarios y sugerencias con nosotros.",
-        "views": {
-          "index": {
-            "title": "Comentarios",
-            "description": "Resumen principal de comentarios."
-          },
-          "detail": {
-            "title": "Detalle de comentarios",
-            "description": "Opciones detalladas para enviar comentarios."
-          }
-        }
-      },
       "about": {
-        "label": "Acerca de",
         "title": "Acerca de",
-        "description": "Acerca de Gemini Power Kit",
         "views": {
           "index": {
             "title": "Acerca de",
@@ -371,11 +322,9 @@
   "common": {
     "confirmDialog": {
       "title": "Confirmar acción",
-      "description": "Esta acción no se puede deshacer. ¿Desea continuar?",
+      "description": "Esta acción no se puede deshacer. ¿Deseas continuar?",
       "confirm": "Confirmar",
       "cancel": "Cancelar"
     }
   }
 }
-
-

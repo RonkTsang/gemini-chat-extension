@@ -19,9 +19,7 @@
   "settings": {
     "quickFollow": {
       "title": "Schnelle Rückfrage",
-      "description": "Erstellen und verwalten Sie benutzerdefinierte Folgeprompts mit Schnelle-Rückfrage-Kapseln.",
       "enable": "Schnelle Rückfrage aktivieren",
-      "defaultTemplate": "{{SELECT_TEXT}}",
       "customPrompts": {
         "title": "Skill-Management",
         "description": "Die ersten $1 Skills sind angeheftet, scrollen Sie horizontal für weitere",
@@ -30,11 +28,6 @@
         "empty": "Noch keine benutzerdefinierten Prompts. Fügen Sie einen hinzu oder nutzen Sie Startvorlagen.",
         "defaultTemplate": "z. B. Erkläre {{SELECT_TEXT}} in einfachen Worten",
         "placeholderTip": "Verwenden Sie {{SELECT_TEXT}} in Ihrer Vorlage, um den ausgewählten Text einzufügen. Beispiel: \"{{SELECT_TEXT}} ins Chinesische übersetzen\""
-      },
-      "preview": {
-        "title": "Live-Vorschau",
-        "subtitle": "Sehen Sie, wie Ihre Schnelle-Rückfrage-Kapsel auf der Gemini-Seite aussehen wird.",
-        "more": "Weitere Prompts"
       },
       "card": {
         "namePlaceholder": "Benutzerdefinierter Prompt-Name (Optional)",
@@ -225,9 +218,7 @@
     },
     "config": {
       "chainPrompt": {
-        "label": "Chain Prompt",
         "title": "Chain Prompt",
-        "description": "Erstellen und verwalten Sie Chain Prompts für komplexe Gespräche.",
         "views": {
           "index": {
             "title": "Chain Prompt",
@@ -239,9 +230,7 @@
         }
       },
       "quickFollowup": {
-        "label": "Schnelle Rückfrage",
         "title": "Schnelle Rückfrage",
-        "description": "Richten Sie schnelle Folgeprompts für effiziente Kommunikation ein.",
         "views": {
           "index": {
             "title": "Schnelle Rückfrage",
@@ -254,20 +243,16 @@
         }
       },
       "imagePrompt": {
-        "label": "Bild-Prompt",
-        "title": "Bild-Prompt",
-        "description": "Konfigurieren Sie bildbezogene Prompts und Einstellungen.",
+        "title": "Bild prompt",
         "views": {
           "index": {
-            "title": "Bild-Prompt",
-            "description": "Hauptübersicht für Bild-Prompt-Einstellungen."
+            "title": "Bild prompt",
+            "description": "Hauptübersicht für Bild prompt-Einstellungen."
           }
         }
       },
       "chatOutline": {
-        "label": "Chat-Gliederung",
         "title": "Chat-Gliederung",
-        "description": "Organisieren und strukturieren Sie Ihre Chat-Konversationen.",
         "views": {
           "index": {
             "title": "Chat-Gliederung",
@@ -280,9 +265,7 @@
         }
       },
       "theme": {
-        "label": "Thema",
         "title": "Thema",
-        "description": "Aussehen und Thema anpassen.",
         "views": {
           "index": {
             "title": "Thema",
@@ -294,40 +277,8 @@
           }
         }
       },
-      "support": {
-        "label": "Support",
-        "title": "Support",
-        "description": "Hilfe und Support für die Nutzung der Anwendung.",
-        "views": {
-          "index": {
-            "title": "Support",
-            "description": "Hauptübersicht für Support-Optionen."
-          },
-          "detail": {
-            "title": "Support-Details",
-            "description": "Detaillierte Support-Optionen und Kontaktinformationen."
-          }
-        }
-      },
-      "feedback": {
-        "label": "Feedback",
-        "title": "Feedback",
-        "description": "Teilen Sie uns Ihr Feedback und Ihre Vorschläge mit.",
-        "views": {
-          "index": {
-            "title": "Feedback",
-            "description": "Hauptübersicht für Feedback."
-          },
-          "detail": {
-            "title": "Feedback-Details",
-            "description": "Detaillierte Optionen zur Übermittlung von Feedback."
-          }
-        }
-      },
       "about": {
-        "label": "Über",
         "title": "Über",
-        "description": "Über Gemini Power Kit",
         "views": {
           "index": {
             "title": "Über",
@@ -377,5 +328,3 @@
     }
   }
 }
-
-

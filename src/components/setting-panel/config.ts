@@ -26,7 +26,7 @@ export type NavigationSection =
 export const settingSectionDefinitions: SettingSectionDefinition<NavigationSection>[] = [
   {
     id: 'quickFollowup',
-    label: t('settingPanel.config.quickFollowup.label'),
+    label: t('settingPanel.config.quickFollowup.title'),
     group: 'prompt',
     icon: HiOutlineLightningBolt,
     title: t('settingPanel.config.quickFollowup.title'),
@@ -41,7 +41,7 @@ export const settingSectionDefinitions: SettingSectionDefinition<NavigationSecti
   },
   {
     id: 'chainPrompt',
-    label: t('settingPanel.config.chainPrompt.label'),
+    label: t('settingPanel.config.chainPrompt.title'),
     group: 'prompt',
     icon: HiOutlineLink,
     title: t('settingPanel.config.chainPrompt.title'),
@@ -62,7 +62,7 @@ export const settingSectionDefinitions: SettingSectionDefinition<NavigationSecti
   },
   {
     id: 'imagePrompt',
-    label: t('settingPanel.config.imagePrompt.label'),
+    label: t('settingPanel.config.imagePrompt.title'),
     group: 'prompt',
     icon: ImagePromptIcon as any,
     title: t('settingPanel.config.imagePrompt.title'),
@@ -76,7 +76,7 @@ export const settingSectionDefinitions: SettingSectionDefinition<NavigationSecti
   },
   {
     id: 'chatOutline',
-    label: t('settingPanel.config.chatOutline.label'),
+    label: t('settingPanel.config.chatOutline.title'),
     group: 'tools',
     icon: HiOutlineDocumentText,
     title: t('settingPanel.config.chatOutline.title'),
@@ -91,7 +91,7 @@ export const settingSectionDefinitions: SettingSectionDefinition<NavigationSecti
   },
   {
     id: 'theme',
-    label: t('settingPanel.config.theme.label'),
+    label: t('settingPanel.config.theme.title'),
     group: 'tools',
     icon: HiOutlineColorSwatch,
     title: t('settingPanel.config.theme.title'),
@@ -105,7 +105,7 @@ export const settingSectionDefinitions: SettingSectionDefinition<NavigationSecti
   },
   {
     id: 'about',
-    label: t('settingPanel.config.about.label'),
+    label: t('settingPanel.config.about.title'),
     group: 'support',
     icon: HiOutlineInformationCircle,
     title: t('settingPanel.config.about.title'),

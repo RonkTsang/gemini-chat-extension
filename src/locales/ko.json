@@ -19,9 +19,7 @@
   "settings": {
     "quickFollow": {
       "title": "빠른 후속 질문",
-      "description": "빠른 후속 질문 캡슐로 사용자 정의 후속 프롬프트를 만들고 관리합니다.",
       "enable": "빠른 후속 질문 활성화",
-      "defaultTemplate": "{{SELECT_TEXT}}",
       "customPrompts": {
         "title": "스킬 관리",
         "description": "처음 $1개의 스킬이 고정되어 있습니다. 가로로 스크롤하여 더 많이 볼 수 있습니다",
@@ -30,11 +28,6 @@
         "empty": "사용자 지정 프롬프트가 없습니다. 직접 추가하거나 시작 템플릿을 사용하세요.",
         "defaultTemplate": "예: {{SELECT_TEXT}}을(를) 쉽게 설명해줘",
         "placeholderTip": "템플릿에서 {{SELECT_TEXT}}를 사용하여 선택한 텍스트를 삽입합니다. 예: \"{{SELECT_TEXT}}를 중국어로 번역\""
-      },
-      "preview": {
-        "title": "라이브 미리보기",
-        "subtitle": "빠른 후속 질문 캡슐이 Gemini 페이지에서 어떻게 보일지 확인하세요.",
-        "more": "더 많은 프롬프트"
       },
       "card": {
         "namePlaceholder": "사용자 정의 프롬프트 이름(선택사항)",
@@ -118,7 +111,7 @@
       },
       "templateModal": {
         "title": "템플릿 라이브러리",
-        "description": "선별된 템플릿에서 선택하여 빠르게 시작하세요",
+        "description": "엄선된 템플릿 중에서 선택하여 빠르게 시작하세요",
         "searchPlaceholder": "템플릿 검색...",
         "emptyTitle": "템플릿을 찾을 수 없습니다",
         "emptyDesc": "검색어나 카테고리 필터를 조정해 보세요",
@@ -225,9 +218,7 @@
     },
     "config": {
       "chainPrompt": {
-        "label": "Chain Prompt",
         "title": "Chain Prompt",
-        "description": "복잡한 대화를 위한 Chain Prompt를 생성하고 관리합니다.",
         "views": {
           "index": {
             "title": "Chain Prompt",
@@ -239,9 +230,7 @@
         }
       },
       "quickFollowup": {
-        "label": "빠른 후속 질문",
         "title": "빠른 후속 질문",
-        "description": "효율적인 커뮤니케이션을 위한 빠른 후속 프롬프트를 설정합니다.",
         "views": {
           "index": {
             "title": "빠른 후속 질문",
@@ -254,20 +243,16 @@
         }
       },
       "imagePrompt": {
-        "label": "이미지 프롬프트",
-        "title": "이미지 프롬프트",
-        "description": "이미지 관련 프롬프트 및 설정을 구성합니다.",
+        "title": "이미지 prompt",
         "views": {
           "index": {
-            "title": "이미지 프롬프트",
-            "description": "이미지 프롬프트 설정의 주요 개요."
+            "title": "이미지 prompt",
+            "description": "이미지 prompt 설정의 주요 개요."
           }
         }
       },
       "chatOutline": {
-        "label": "채팅 개요",
         "title": "채팅 개요",
-        "description": "채팅 대화를 구성하고 구조화합니다.",
         "views": {
           "index": {
             "title": "채팅 개요",
@@ -280,9 +265,7 @@
         }
       },
       "theme": {
-        "label": "테마",
         "title": "테마",
-        "description": "모양과 테마 설정을 사용자 지정합니다.",
         "views": {
           "index": {
             "title": "테마",
@@ -294,40 +277,8 @@
           }
         }
       },
-      "support": {
-        "label": "지원",
-        "title": "지원",
-        "description": "애플리케이션 사용에 대한 도움말 및 지원을 받으세요.",
-        "views": {
-          "index": {
-            "title": "지원",
-            "description": "지원 옵션의 기본 개요."
-          },
-          "detail": {
-            "title": "지원 상세",
-            "description": "상세 지원 옵션 및 연락처 정보."
-          }
-        }
-      },
-      "feedback": {
-        "label": "피드백",
-        "title": "피드백",
-        "description": "피드백과 제안을 공유해주세요.",
-        "views": {
-          "index": {
-            "title": "피드백",
-            "description": "피드백의 기본 개요."
-          },
-          "detail": {
-            "title": "피드백 상세",
-            "description": "피드백 제출을 위한 상세 옵션."
-          }
-        }
-      },
       "about": {
-        "label": "정보",
         "title": "정보",
-        "description": "Gemini Power Kit 정보",
         "views": {
           "index": {
             "title": "정보",
@@ -377,5 +328,3 @@
     }
   }
 }
-
-
