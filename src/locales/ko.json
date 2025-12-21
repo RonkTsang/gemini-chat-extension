@@ -323,7 +323,41 @@
             "description": "피드백 제출을 위한 상세 옵션."
           }
         }
+      },
+      "about": {
+        "label": "정보",
+        "title": "정보",
+        "description": "Gemini Power Kit 정보",
+        "views": {
+          "index": {
+            "title": "정보",
+            "description": "Gemini Power Kit에 대해 자세히 알아보기"
+          }
+        }
       }
+    }
+  },
+  "aboutPage": {
+    "productName": "Gemini Power Kit",
+    "tagline": "Gemini를 위한 필수 동반자",
+    "motivation": {
+      "title": "동기",
+      "content": "열정적인 Gemini 사용자가 사용자를 위해 ❤️로 만들었습니다. 이 키트는 우리가 모두 직면하는 작은 마찰을 제거하도록 설계되어 있어 정말 중요한 것에 집중할 수 있습니다: 당신의 다음 훌륭한 아이디어."
+    },
+    "feedback": {
+      "title": "피드백",
+      "featureRequest": "기능 요청",
+      "bugSupport": "버그 / 지원",
+      "leaveReview": "리뷰 남기기"
+    },
+    "openSource": {
+      "title": "오픈 소스"
+    },
+    "donate": {
+      "title": "프로젝트 지원",
+      "description": "Gemini Power Kit가 시간을 절약하거나 기쁨을 주는 경우, 그 미래를 지원하는 것을 고려해 주세요",
+      "buyMeCoffee": "커피 사주기",
+      "share": "친구와 공유"
     }
   },
   "executionCoordinator": {

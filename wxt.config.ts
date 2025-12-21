@@ -17,7 +17,7 @@ export default defineConfig({
       ],
       web_accessible_resources: [
         {
-          resources: ["url-monitor-main-world.js"],
+          resources: ["url-monitor-main-world.js", "icon/512.png"],
           matches: ["*://gemini.google.com/*"]
         }
       ]

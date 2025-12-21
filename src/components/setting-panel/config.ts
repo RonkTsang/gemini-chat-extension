@@ -1,8 +1,7 @@
 import {
-  HiOutlineChatAlt,
   HiOutlineColorSwatch,
   HiOutlineDocumentText,
-  HiOutlineHeart,
+  HiOutlineInformationCircle,
   HiOutlineLightningBolt,
   HiOutlineLink
 } from 'react-icons/hi'
@@ -22,8 +21,7 @@ export type NavigationSection =
   | 'imagePrompt'
   | 'chatOutline'
   | 'theme'
-  | 'support'
-  | 'feedback'
+  | 'about'
 
 export const settingSectionDefinitions: SettingSectionDefinition<NavigationSection>[] = [
   {
@@ -32,19 +30,12 @@ export const settingSectionDefinitions: SettingSectionDefinition<NavigationSecti
     group: 'prompt',
     icon: HiOutlineLightningBolt,
     title: t('settingPanel.config.quickFollowup.title'),
-    description: t('settingPanel.config.quickFollowup.description'),
     views: [
       {
         id: 'index',
         title: t('settingPanel.config.quickFollowup.views.index.title'),
         description: t('settingPanel.config.quickFollowup.views.index.description'),
         componentId: 'quick-follow-up/index'
-      },
-      {
-        id: 'detail',
-        title: t('settingPanel.config.quickFollowup.views.detail.title'),
-        description: t('settingPanel.config.quickFollowup.views.detail.description'),
-        componentId: 'default/detail'
       }
     ]
   },
@@ -54,7 +45,6 @@ export const settingSectionDefinitions: SettingSectionDefinition<NavigationSecti
     group: 'prompt',
     icon: HiOutlineLink,
     title: t('settingPanel.config.chainPrompt.title'),
-    description: t('settingPanel.config.chainPrompt.description'),
     views: [
       {
         id: 'index',
@@ -76,12 +66,10 @@ export const settingSectionDefinitions: SettingSectionDefinition<NavigationSecti
     group: 'prompt',
     icon: ImagePromptIcon as any,
     title: t('settingPanel.config.imagePrompt.title'),
-    description: t('settingPanel.config.imagePrompt.description'),
     views: [
       {
         id: 'index',
         title: t('settingPanel.config.imagePrompt.views.index.title'),
-        description: t('settingPanel.config.imagePrompt.views.index.description'),
         componentId: 'default/index'
       }
     ]
@@ -92,19 +80,12 @@ export const settingSectionDefinitions: SettingSectionDefinition<NavigationSecti
     group: 'tools',
     icon: HiOutlineDocumentText,
     title: t('settingPanel.config.chatOutline.title'),
-    description: t('settingPanel.config.chatOutline.description'),
     views: [
       {
         id: 'index',
         title: t('settingPanel.config.chatOutline.views.index.title'),
         description: t('settingPanel.config.chatOutline.views.index.description'),
         componentId: 'chat-outline/index'
-      },
-      {
-        id: 'detail',
-        title: t('settingPanel.config.chatOutline.views.detail.title'),
-        description: t('settingPanel.config.chatOutline.views.detail.description'),
-        componentId: 'default/detail'
       }
     ]
   },
@@ -114,63 +95,27 @@ export const settingSectionDefinitions: SettingSectionDefinition<NavigationSecti
     group: 'tools',
     icon: HiOutlineColorSwatch,
     title: t('settingPanel.config.theme.title'),
-    description: t('settingPanel.config.theme.description'),
     views: [
       {
         id: 'index',
         title: t('settingPanel.config.theme.views.index.title'),
-        description: t('settingPanel.config.theme.views.index.description'),
         componentId: 'default/index'
-      },
-      {
-        id: 'detail',
-        title: t('settingPanel.config.theme.views.detail.title'),
-        description: t('settingPanel.config.theme.views.detail.description'),
-        componentId: 'default/detail'
       }
     ]
   },
   {
-    id: 'support',
-    label: t('settingPanel.config.support.label'),
+    id: 'about',
+    label: t('settingPanel.config.about.label'),
     group: 'support',
-    icon: HiOutlineHeart,
-    title: t('settingPanel.config.support.title'),
-    description: t('settingPanel.config.support.description'),
+    icon: HiOutlineInformationCircle,
+    title: t('settingPanel.config.about.title'),
+    description: '',
     views: [
       {
         id: 'index',
-        title: t('settingPanel.config.support.views.index.title'),
-        description: t('settingPanel.config.support.views.index.description'),
-        componentId: 'default/index'
-      },
-      {
-        id: 'detail',
-        title: t('settingPanel.config.support.views.detail.title'),
-        description: t('settingPanel.config.support.views.detail.description'),
-        componentId: 'default/detail'
-      }
-    ]
-  },
-  {
-    id: 'feedback',
-    label: t('settingPanel.config.feedback.label'),
-    group: 'support',
-    icon: HiOutlineChatAlt,
-    title: t('settingPanel.config.feedback.title'),
-    description: t('settingPanel.config.feedback.description'),
-    views: [
-      {
-        id: 'index',
-        title: t('settingPanel.config.feedback.views.index.title'),
-        description: t('settingPanel.config.feedback.views.index.description'),
-        componentId: 'default/index'
-      },
-      {
-        id: 'detail',
-        title: t('settingPanel.config.feedback.views.detail.title'),
-        description: t('settingPanel.config.feedback.views.detail.description'),
-        componentId: 'default/detail'
+        title: t('settingPanel.config.about.views.index.title'),
+        description: '',
+        componentId: 'about/index'
       }
     ]
   }

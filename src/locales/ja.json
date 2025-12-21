@@ -323,7 +323,41 @@
             "description": "フィードバック送信の詳細オプション。"
           }
         }
+      },
+      "about": {
+        "label": "について",
+        "title": "について",
+        "description": "Gemini Power Kitについて",
+        "views": {
+          "index": {
+            "title": "について",
+            "description": "Gemini Power Kitについて詳しく知る"
+          }
+        }
       }
+    }
+  },
+  "aboutPage": {
+    "productName": "Gemini Power Kit",
+    "tagline": "Geminiの必須コンパニオン",
+    "motivation": {
+      "title": "動機",
+      "content": "Geminiの熱心なユーザーが、ユーザーのために❤️を込めて作成しました。このキットは、私たちが直面する小さな摩擦を排除するように設計されており、本当に重要なことに集中できるようにします：あなたの次の素晴らしいアイデア。"
+    },
+    "feedback": {
+      "title": "フィードバック",
+      "featureRequest": "機能リクエスト",
+      "bugSupport": "バグ / サポート",
+      "leaveReview": "レビューを残す"
+    },
+    "openSource": {
+      "title": "オープンソース"
+    },
+    "donate": {
+      "title": "プロジェクトをサポート",
+      "description": "Gemini Power Kitが時間を節約したり、喜びをもたらしたりする場合は、その将来をサポートすることを検討してください",
+      "buyMeCoffee": "コーヒーを奢る",
+      "share": "友達と共有"
     }
   },
   "executionCoordinator": {

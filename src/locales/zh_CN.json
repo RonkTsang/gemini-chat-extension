@@ -323,7 +323,41 @@
             "description": "详细的反馈提交选项。"
           }
         }
+      },
+      "about": {
+        "label": "关于",
+        "title": "关于",
+        "description": "关于 Gemini Power Kit",
+        "views": {
+          "index": {
+            "title": "关于",
+            "description": "了解更多关于 Gemini Power Kit 的信息"
+          }
+        }
       }
+    }
+  },
+  "aboutPage": {
+    "productName": "Gemini Power Kit",
+    "tagline": "Gemini 的必备伴侣",
+    "motivation": {
+      "title": "开发动机",
+      "content": "由一位热情的 Gemini 用户用 ❤️ 打造，为用户服务。这个工具包旨在消除我们都会遇到的小摩擦，让你专注于真正重要的事情：你的下一个好想法。"
+    },
+    "feedback": {
+      "title": "反馈",
+      "featureRequest": "功能建议",
+      "bugSupport": "问题反馈 / 支持",
+      "leaveReview": "留下评价"
+    },
+    "openSource": {
+      "title": "开源项目"
+    },
+    "donate": {
+      "title": "支持项目",
+      "description": "如果 Gemini Power Kit 为你节省了时间或带来了快乐，请考虑支持它的未来发展",
+      "buyMeCoffee": "请我喝咖啡",
+      "share": "分享给朋友"
     }
   },
   "executionCoordinator": {

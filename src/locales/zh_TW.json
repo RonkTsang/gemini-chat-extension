@@ -324,7 +324,41 @@
             "description": "詳細的回饋提交選項。"
           }
         }
+      },
+      "about": {
+        "label": "關於",
+        "title": "關於",
+        "description": "關於 Gemini Power Kit",
+        "views": {
+          "index": {
+            "title": "關於",
+            "description": "了解更多關於 Gemini Power Kit 的資訊"
+          }
+        }
       }
+    }
+  },
+  "aboutPage": {
+    "productName": "Gemini Power Kit",
+    "tagline": "Gemini 的必備伴侶",
+    "motivation": {
+      "title": "開發動機",
+      "content": "由一位熱情的 Gemini 使用者用 ❤️ 打造，為使用者服務。這個工具包旨在消除我們都會遇到的小摩擦，讓您專注於真正重要的事情：您的下一個好想法。"
+    },
+    "feedback": {
+      "title": "回饋",
+      "featureRequest": "功能建議",
+      "bugSupport": "問題回報 / 支援",
+      "leaveReview": "留下評價"
+    },
+    "openSource": {
+      "title": "開源專案"
+    },
+    "donate": {
+      "title": "支援專案",
+      "description": "如果 Gemini Power Kit 為您節省了時間或帶來了快樂，請考慮支援它的未來發展",
+      "buyMeCoffee": "請我喝咖啡",
+      "share": "分享給朋友"
     }
   },
   "executionCoordinator": {

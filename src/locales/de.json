@@ -323,7 +323,41 @@
             "description": "Detaillierte Optionen zur Übermittlung von Feedback."
           }
         }
+      },
+      "about": {
+        "label": "Über",
+        "title": "Über",
+        "description": "Über Gemini Power Kit",
+        "views": {
+          "index": {
+            "title": "Über",
+            "description": "Erfahren Sie mehr über Gemini Power Kit"
+          }
+        }
       }
+    }
+  },
+  "aboutPage": {
+    "productName": "Gemini Power Kit",
+    "tagline": "Ihr unverzichtbarer Begleiter für Gemini",
+    "motivation": {
+      "title": "Motivation",
+      "content": "Mit ❤️ von einem leidenschaftlichen Gemini-Nutzer für Nutzer entwickelt. Dieses Kit wurde entwickelt, um die kleinen Reibungen zu beseitigen, denen wir alle begegnen, damit Sie sich auf das konzentrieren können, was wirklich zählt: Ihre nächste großartige Idee."
+    },
+    "feedback": {
+      "title": "Feedback",
+      "featureRequest": "Funktionswunsch",
+      "bugSupport": "Fehler / Support",
+      "leaveReview": "Bewertung abgeben"
+    },
+    "openSource": {
+      "title": "Open Source"
+    },
+    "donate": {
+      "title": "Projekt unterstützen",
+      "description": "Wenn Gemini Power Kit Ihnen Zeit spart oder Freude bereitet, erwägen Sie bitte, seine Zukunft zu unterstützen",
+      "buyMeCoffee": "Kaffee spenden",
+      "share": "Mit Freunden teilen"
     }
   },
   "executionCoordinator": {

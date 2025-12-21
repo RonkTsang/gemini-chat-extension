@@ -6,6 +6,7 @@ import { ChainPromptListView } from './chain-prompt/index'
 import { ChainPromptEditorView } from './chain-prompt/editor'
 import { QuickFollowSettingsView } from './quick-follow-up/index'
 import { ChatOutlineSettingsView } from './chat-outline/index'
+import { AboutView } from './about/index'
 
 const defaultIndexView = DefaultIndexView as SettingViewComponent<NavigationSection>
 const defaultDetailView = DefaultDetailView as SettingViewComponent<NavigationSection>
@@ -13,6 +14,7 @@ const chainPromptListView = ChainPromptListView as SettingViewComponent<Navigati
 const chainPromptEditorView = ChainPromptEditorView as SettingViewComponent<NavigationSection>
 const quickFollowSettingsView = QuickFollowSettingsView as SettingViewComponent<NavigationSection>
 const chatOutlineSettingsView = ChatOutlineSettingsView as SettingViewComponent<NavigationSection>
+const aboutView = AboutView as SettingViewComponent<NavigationSection>
 
 export function registerDefaultViews() {
   registerView('default/index', defaultIndexView)
@@ -21,4 +23,5 @@ export function registerDefaultViews() {
   registerView('chain-prompt/editor', chainPromptEditorView)
   registerView('quick-follow-up/index', quickFollowSettingsView)
   registerView('chat-outline/index', chatOutlineSettingsView)
+  registerView('about/index', aboutView)
 }
