@@ -7,6 +7,9 @@ export default defineConfig({
   srcDir: 'src',
   vite: () => ({
     plugins: [svgr()],
+    esbuild: {
+      charset: 'ascii',
+    },
   }),
   manifest: () => {
     return {
