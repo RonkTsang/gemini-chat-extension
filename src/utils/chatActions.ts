@@ -28,8 +28,6 @@ export const createNewChatByClick = async (): Promise<boolean> => {
       
       // Generic fallbacks
       'button[aria-label*="New"]',
-      'button[aria-label*="新建"]', // Chinese interface
-      'button[aria-label*="新しい"]', // Japanese interface
     ]
     
     let button: HTMLButtonElement | null = null

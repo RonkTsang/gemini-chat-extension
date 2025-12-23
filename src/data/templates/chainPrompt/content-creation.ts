@@ -1,6 +1,6 @@
 /**
  * Content Creation Templates
- * 内容创作类默认模板
+ * Default templates for content creation
  */
 
 import type { DefaultTemplate } from './index'

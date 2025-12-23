@@ -1,6 +1,6 @@
 /**
  * Chain Prompt Editor View
- * 创建或编辑 Chain Prompt
+ * Create or edit Chain Prompt
  */
 
 import React, { useEffect, useState, useRef } from 'react'
@@ -161,7 +161,7 @@ export const ChainPromptEditorView: SettingViewComponent = ({ openView }) => {
   }
 
   const handleSave = async () => {
-    // 验证
+    // Validation
     if (!editing.name.trim()) {
       toaster.create({
         title: t('settingPanel.editor.validation.title'),
@@ -180,7 +180,7 @@ export const ChainPromptEditorView: SettingViewComponent = ({ openView }) => {
       return
     }
 
-    // 检查步骤是否都有内容
+    // Check if all steps have content
     const emptySteps = editing.steps.filter(s => !s.prompt.trim())
     if (emptySteps.length > 0) {
       toaster.create({
@@ -191,11 +191,11 @@ export const ChainPromptEditorView: SettingViewComponent = ({ openView }) => {
       return
     }
 
-    // 智能处理变量：过滤空变量
+    // Smart variable handling: filter out empty variables
     const validVariables = editing.variables.filter(v => v.key.trim())
     const ignoredCount = editing.variables.length - validVariables.length
 
-    // 检查有效变量的 key 是否重复
+    // Check if valid variable keys are duplicated
     const variableKeys = validVariables.map(v => v.key)
     const duplicates = variableKeys.filter((key, index) => variableKeys.indexOf(key) !== index)
     if (duplicates.length > 0) {
@@ -213,7 +213,7 @@ export const ChainPromptEditorView: SettingViewComponent = ({ openView }) => {
         await chainPromptRepository.create({
           name: editing.name,
           description: editing.description || undefined,
-          variables: validVariables, // 只保存有效变量
+          variables: validVariables, // Only save valid variables
           steps: editing.steps
         })
         toaster.create({
@@ -227,7 +227,7 @@ export const ChainPromptEditorView: SettingViewComponent = ({ openView }) => {
         await chainPromptRepository.update(editing.promptId!, {
           name: editing.name,
           description: editing.description || undefined,
-          variables: validVariables, // 只保存有效变量
+          variables: validVariables, // Only save valid variables
           steps: editing.steps
         })
         toaster.create({
@@ -283,8 +283,8 @@ export const ChainPromptEditorView: SettingViewComponent = ({ openView }) => {
   }
 
   /**
-   * 防抖的 Toast 通知函数
-   * 在用户停止输入1秒后显示更新通知
+   * Debounced Toast notification function
+   * Display update notification after 1 second of inactivity
    */
   const { run: showDebouncedToast } = useDebounceFn(
     () => {
@@ -298,8 +298,8 @@ export const ChainPromptEditorView: SettingViewComponent = ({ openView }) => {
   )
 
   /**
-   * 防抖的文本选择处理函数
-   * 在用户停止选择文本200ms后处理选择逻辑
+   * Debounced text selection handler
+   * Handle selection logic after 200ms of inactivity
    */
   const { run: debouncedHandleTextSelection } = useDebounceFn(
     (textarea: HTMLTextAreaElement, stepIndex: number) => {
@@ -329,7 +329,7 @@ export const ChainPromptEditorView: SettingViewComponent = ({ openView }) => {
         return
       }
       
-      // 边缘情况1: 检查选中文本是否包含变量语法特殊字符
+      // Edge case 1: Check if selected text contains variable syntax special characters
       if (finalSelectedText.includes('{{') || finalSelectedText.includes('}}')) {
         setSelectedText(null)
         setButtonPosition(null)
@@ -381,16 +381,16 @@ export const ChainPromptEditorView: SettingViewComponent = ({ openView }) => {
         const stepUpdates = updateVariableReferences(oldKey, newKey, editing.steps)
         
         if (stepUpdates.length > 0) {
-          // 立即批量更新所有受影响的步骤
+          // Immediately batch update all affected steps
           updateSteps(stepUpdates)
           
-          // 触发防抖的 Toast 通知
+          // Trigger debounced Toast notification
           showDebouncedToast()
         }
       } catch (error) {
         console.error('Failed to update variable references:', error)
         
-        // 错误通知立即显示，不需要防抖
+        // Error notifications are displayed immediately, no debouncing needed
         toaster.create({
           title: t('settingPanel.editor.variableUpdateError'),
           description: t('settingPanel.editor.variableUpdateErrorDesc'),
@@ -430,14 +430,14 @@ export const ChainPromptEditorView: SettingViewComponent = ({ openView }) => {
   }
 
   /**
-   * 文本选择事件处理函数
-   * 使用防抖优化，避免频繁触发
+   * Text selection event handler
+   * Optimized with debouncing to avoid frequent triggers
    */
   const handleTextSelection = (e: React.SyntheticEvent<HTMLTextAreaElement>, stepIndex: number) => {
     // Store the textarea reference immediately to avoid async issues
     const textarea = e.currentTarget
     
-    // 触发防抖的文本选择处理
+    // Trigger debounced text selection handling
     debouncedHandleTextSelection(textarea, stepIndex)
   }
 
@@ -447,11 +447,11 @@ export const ChainPromptEditorView: SettingViewComponent = ({ openView }) => {
     const { stepIndex, text, textarea } = selectedText
     const step = editing.steps[stepIndex]
     
-    // 边缘情况2: 检查选中的文本是否已经是现有的变量名
+    // Edge case 2: Check if selected text is already an existing variable name
     const existingVariable = editing.variables.find(variable => variable.key === text)
     
     if (existingVariable) {
-      // 如果变量已存在，只替换文本为插值语法，不创建新变量
+      // If variable exists, only replace text with interpolation syntax, do not create a new variable
       if (textarea && textarea.selectionStart !== null && textarea.selectionEnd !== null) {
         const start = textarea.selectionStart
         const end = textarea.selectionEnd
@@ -474,7 +474,7 @@ export const ChainPromptEditorView: SettingViewComponent = ({ openView }) => {
         updateStep(stepIndex, { prompt: newPrompt })
       }
     } else {
-      // 如果变量不存在，创建新变量并替换文本
+      // If variable does not exist, create a new variable and replace text
       addVariableFromText(text, text)
       
       // Replace selected text with variable syntax (with null check)
@@ -915,7 +915,7 @@ export const ChainPromptEditorView: SettingViewComponent = ({ openView }) => {
                             placeholder={t('settingPanel.editor.placeholders.variableKey')}
                             size="xs"
                             flex={1}
-                            // 修复：只在非激活状态下显示橙色边框
+                            // Fix: Only show orange border when not active
                             _focus={{
                               borderColor: 'blue.500',
                               boxShadow: '0 0 0 1px var(--chakra-colors-blue-500)'

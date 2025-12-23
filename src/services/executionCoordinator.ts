@@ -1,6 +1,6 @@
 /**
  * Execution Coordinator
- * 负责协调 Chain Prompt 执行与外部状态管理
+ * Responsible for coordinating Chain Prompt execution and external state management
  */
 
 import { chainPromptExecutor } from './chainPromptExecutor'
@@ -20,7 +20,7 @@ class ExecutionCoordinator {
   private isExecuting = false
 
   /**
-   * 开始执行 Chain Prompt
+   * Start executing Chain Prompt
    */
   async executeChainPrompt(
     prompt: ChainPrompt,
@@ -32,17 +32,17 @@ class ExecutionCoordinator {
       onExecutionAborted
     } = options
 
-    // 生成执行 ID
+    // Generate execution ID
     this.currentRunId = `${prompt.id}-${Date.now()}`
     this.isExecuting = true
 
-    // 设置聊天切换监听
+    // Setup chat switch monitoring
     if (enableUrlMonitoring) {
       this.setupChatChangeMonitoring(onExecutionAborted)
     }
 
     try {
-      // 执行 Chain Prompt
+      // Execute Chain Prompt
       await chainPromptExecutor.run(
         { prompt, variables },
         {
@@ -61,13 +61,13 @@ class ExecutionCoordinator {
         }
       )
     } finally {
-      // 清理资源
+      // Cleanup resources
       this.cleanup()
     }
   }
 
   /**
-   * 中止执行
+   * Abort execution
    */
   abortExecution(): void {
     if (this.currentRunId) {
@@ -77,10 +77,10 @@ class ExecutionCoordinator {
   }
 
   /**
-   * 设置聊天切换监听
+   * Setup chat switch monitoring
    */
   private setupChatChangeMonitoring(onExecutionAborted?: (reason: string) => void): void {
-    // 监听聊天切换事件
+    // Listen for chat switch events
     const handleChatChange = (eventData: ChatChangeEvent) => {
       if (this.isExecuting) {
         if (eventData.isFromNewChat) {
@@ -88,10 +88,10 @@ class ExecutionCoordinator {
         }
         console.warn('[ExecutionCoordinator] Chat switched during execution, aborting...', eventData)
         
-        // 中止执行
+        // Abort execution
         this.abortExecution()
         
-        // 发出聊天切换中止事件，让 UI 层处理
+        // Emit chat switch abort event for UI layer processing
         eventBus.emit('execution:aborted-by-chat-switch', {
           reason: 'chat_switched',
           originalUrl: eventData.originalUrl,
@@ -99,22 +99,20 @@ class ExecutionCoordinator {
           timestamp: eventData.timestamp
         })
 
-        // 通知外部
+        // Notify external callers
         onExecutionAborted?.(`Chat switched: ${eventData.originalUrl} -> ${eventData.currentUrl}`)
       }
     }
 
-    // 监听事件总线
+    // Listen to event bus
     eventBus.on('chatchange', handleChatChange)
   }
 
-
-
   /**
-   * 清理资源
+   * Cleanup resources
    */
   private cleanup(): void {
-    // 停止聊天切换监听
+    // Stop chat switch monitoring
     if (this.unsubscribeChatChange) {
       this.unsubscribeChatChange()
       this.unsubscribeChatChange = null
@@ -125,7 +123,7 @@ class ExecutionCoordinator {
   }
 }
 
-// 全局实例
+// Global instance
 export const executionCoordinator = new ExecutionCoordinator()
 
 

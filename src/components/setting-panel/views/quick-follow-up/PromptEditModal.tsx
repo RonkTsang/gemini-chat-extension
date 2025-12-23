@@ -128,8 +128,8 @@ export function PromptEditModal({
       onOpenChange={(e) => !e.open && handleCancel()} 
       placement="center"
       size="lg"
-      closeOnInteractOutside={false}  // 防止意外关闭
-      closeOnEscape={true}            // 保留 ESC 键关闭
+      closeOnInteractOutside={false}  // Prevent accidental closing
+      closeOnEscape={true}            // Keep ESC key to close
     >
       <Dialog.Backdrop />
       <Dialog.Positioner>

@@ -1,6 +1,6 @@
 /**
  * SimpleRunStatus Component
- * 简要状态指示器 - 显示在 Gemini 输入框上方
+ * Brief status indicator - displayed above the Gemini input box
  */
 
 import React from 'react'
@@ -13,14 +13,14 @@ import { t } from '@/utils/i18n'
 export const SimpleRunStatus: React.FC = React.memo(() => {
   const { running, clearRunStatus, abortRun } = useChainPromptStore()
   
-  // 不渲染如果状态为 pending
+  // Do not render if status is pending
   if (running.status === 'pending') {
     return null
   }
   
   const { promptName, status, currentStepIndex, totalSteps, steps } = running
   
-  // 计算已完成的步骤数
+  // Calculate number of completed steps
   const completedSteps = steps.filter(s => s.status === 'succeeded').length
   const progress = totalSteps > 0 ? (completedSteps / totalSteps) * 100 : 0
   

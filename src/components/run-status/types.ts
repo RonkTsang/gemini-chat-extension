@@ -1,6 +1,6 @@
 /**
  * Run Status Component Types
- * 运行状态组件的类型定义
+ * Type definitions for run status components
  */
 
 export type RunStatusType = 'running' | 'succeeded' | 'failed' | 'aborted' | 'pending'

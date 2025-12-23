@@ -1,6 +1,5 @@
 import { NavigationSection } from "@/components/setting-panel/config";
 
-// 事件常量
 export const GEM_EXT_EVENTS = {
   URL_CHANGE: 'gem-ext:urlchange',
 } as const

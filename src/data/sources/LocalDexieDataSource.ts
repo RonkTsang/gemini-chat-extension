@@ -1,6 +1,6 @@
 /**
  * Local Dexie Data Source
- * 封装对 IndexedDB 的 CRUD 操作
+ * Encapsulates CRUD operations for IndexedDB
  */
 
 import {

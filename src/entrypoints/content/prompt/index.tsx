@@ -3,7 +3,7 @@ import { Container, createRoot, Root } from "react-dom/client"
 import { StrictMode, useEffect, useState } from "react"
 import { PromptEntrance } from "@/components/prompt-entrance"
 
-// 纯原生JS实现 - 支持重新挂载
+// Pure native JS implementation - supports remounting
 let root: Root | null = null
 let container: HTMLDivElement | null = null
 let observer: MutationObserver | null = null
@@ -13,25 +13,25 @@ const insertPromptButton = (forceRemount = false) => {
   const toolboxDrawer = document.querySelector('toolbox-drawer')
   if (!toolboxDrawer) return false
 
-  // 检查现有按钮状态
+  // Check existing button status
   const existingContainer = document.getElementById('gemini-prompt-button-container') as HTMLDivElement
   if (existingContainer && !forceRemount) {
-    // 检查按钮是否仍然有效（在正确的父容器中）
+    // Check if button is still valid (in correct parent container)
     if (existingContainer.isConnected && toolboxDrawer.parentNode?.contains(existingContainer)) {
       return true
     }
-    // 按钮存在但位置不正确，需要重新挂载
+    // Button exists but in wrong position, needs remounting
     cleanup()
   }
 
-  // 创建容器
+  // Create container
   container = document.createElement('div')
   container.id = 'gemini-prompt-button-container'
   
-  // 插入到toolbox-drawer之后
+  // Insert after toolbox-drawer
   toolboxDrawer.parentNode?.insertBefore(container, toolboxDrawer.nextSibling)
 
-  // React渲染
+  // React rendering
   root = createRoot(container)
   root.render(
     <StrictMode>
@@ -58,13 +58,13 @@ const ensurePromptButton = () => {
   const toolboxDrawer = document.querySelector('toolbox-drawer')
   if (!toolboxDrawer) return false
 
-  // 检查是否需要重新挂载
+  // Check if remounting is needed
   const existingContainer = document.getElementById('gemini-prompt-button-container')
   if (!existingContainer || !existingContainer.isConnected) {
     return insertPromptButton(true)
   }
 
-  // 检查按钮是否在正确的位置
+  // Check if button is in the correct position
   if (!toolboxDrawer.parentNode?.contains(existingContainer)) {
     cleanup()
     return insertPromptButton(true)
@@ -73,7 +73,7 @@ const ensurePromptButton = () => {
   return true
 }
 
-// MutationObserver监听DOM变化
+// MutationObserver to listen for DOM changes
 const startObserver = () => {
   if (observer) return
 
@@ -83,26 +83,26 @@ const startObserver = () => {
         const addedNodes = Array.from(mutation.addedNodes)
         const removedNodes = Array.from(mutation.removedNodes)
         
-        // 检查是否有新的 toolbox-drawer 添加
+        // Check if a new toolbox-drawer was added
         const hasNewToolboxDrawer = addedNodes.some(node => 
           node.nodeType === Node.ELEMENT_NODE && 
           (node as Element).tagName?.toLowerCase() === 'toolbox-drawer'
         )
         
-        // 检查是否有 toolbox-drawer 被移除
+        // Check if toolbox-drawer was removed
         const hasRemovedToolboxDrawer = removedNodes.some(node => 
           node.nodeType === Node.ELEMENT_NODE && 
           (node as Element).tagName?.toLowerCase() === 'toolbox-drawer'
         )
 
-        // 检查现有按钮是否被移除
+        // Check if existing button was removed
         const hasRemovedPromptButton = removedNodes.some(node => 
           node.nodeType === Node.ELEMENT_NODE && 
           (node as Element).id === 'gemini-prompt-button-container'
         )
         
         if (hasNewToolboxDrawer || hasRemovedToolboxDrawer || hasRemovedPromptButton) {
-          // 防抖：避免频繁重新挂载
+          // Debounce: avoid frequent remounting
           if (remountTimeout) clearTimeout(remountTimeout)
           remountTimeout = setTimeout(() => {
             ensurePromptButton()
@@ -113,21 +113,21 @@ const startObserver = () => {
     })
   })
 
-  // 启动监听
+  // Start monitoring
   observer.observe(document.body, {
     childList: true,
     subtree: true
   })
 }
 
-// 立即尝试插入
+// Try inserting immediately
 if (insertPromptButton()) {
   startObserver()
 } else {
   startObserver()
 }
 
-// 页面卸载时清理
+// Cleanup on page unload
 const globalCleanup = () => {
   if (observer) {
     observer.disconnect()

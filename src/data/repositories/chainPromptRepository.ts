@@ -1,6 +1,6 @@
 /**
  * Chain Prompt Repository
- * 业务层数据访问接口，负责领域模型转换、ID生成、时间戳维护
+ * Business layer data access interface, responsible for domain model transformation, ID generation, and timestamp maintenance
  */
 
 import { nanoid } from 'nanoid'
@@ -9,7 +9,7 @@ import type { ChainPrompt, ChainVariable, ChainStep } from '@/domain/chain-promp
 import { localDexieDataSource } from '../sources'
 import type { ChainPromptRow } from '../db'
 
-// Zod 校验 Schema
+// Zod validation schemas
 const ChainVariableSchema = z.object({
   key: z.string().min(1),
   defaultValue: z.string().optional()
@@ -28,7 +28,7 @@ const ChainPromptSchema = z.object({
   steps: z.array(ChainStepSchema).min(1)
 })
 
-// Row ↔ Domain 转换
+// Row ↔ Domain transformation
 function rowToDomain(row: ChainPromptRow): ChainPrompt {
   return {
     id: row.id,
@@ -73,7 +73,7 @@ class ChainPromptRepository implements IChainPromptRepository {
         rows = await localDexieDataSource.getAllChainPrompts()
       }
       
-      // 按更新时间倒序排列
+      // Sort by update time in descending order
       return rows
         .map(rowToDomain)
         .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
@@ -95,7 +95,7 @@ class ChainPromptRepository implements IChainPromptRepository {
 
   async create(data: Omit<ChainPrompt, 'id' | 'createdAt' | 'updatedAt'>): Promise<ChainPrompt> {
     try {
-      // 校验
+      // Validation
       ChainPromptSchema.parse(data)
       
       const now = new Date().toISOString()
@@ -133,7 +133,7 @@ class ChainPromptRepository implements IChainPromptRepository {
         updatedAt: new Date().toISOString()
       }
       
-      // 校验更新后的数据
+      // Validate updated data
       ChainPromptSchema.parse({
         name: updated.name,
         description: updated.description,
@@ -168,7 +168,7 @@ class ChainPromptRepository implements IChainPromptRepository {
         variables: [...original.variables],
         steps: original.steps.map(step => ({
           ...step,
-          id: nanoid() // 生成新的 step ID
+          id: nanoid() // Generate new step ID
         }))
       })
       

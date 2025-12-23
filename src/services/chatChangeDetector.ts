@@ -1,6 +1,6 @@
 /**
  * Chat Change Detector Service
- * 负责检测聊天切换并发出事件
+ * Responsible for detecting chat switches and emitting events
  */
 
 import { ChatChangeEvent, URLChangeEvent } from '@/common/event'
@@ -20,7 +20,7 @@ class ChatChangeDetector {
   }
 
   /**
-   * 开始检测聊天切换
+   * Start detecting chat switches
    */
   start(): void {
     if (this.isActive) return
@@ -28,17 +28,17 @@ class ChatChangeDetector {
     this.isActive = true
     console.log('[ChatChangeDetector] Starting chat change detection...')
     
-    // 确保 URL 监听器已启动
+    // Ensure URL monitor is started
     if (!urlMonitor.isMonitoring()) {
       urlMonitor.start()
     }
     
-    // 监听事件总线
+    // Listen to event bus
     eventBus.on('urlchange', this.handleURLChange)
   }
 
   /**
-   * 停止检测聊天切换
+   * Stop detecting chat switches
    */
   stop(): void {
     if (!this.isActive) return
@@ -46,25 +46,25 @@ class ChatChangeDetector {
     this.isActive = false
     console.log('[ChatChangeDetector] Stopping chat change detection...')
     
-    // 清理定时器
+    // Cleanup timers
     this.clearHistoryCheckTimer()
     
-    // 移除事件总线监听
+    // Remove event bus listener
     eventBus.off('urlchange', this.handleURLChange)
   }
 
   /**
-   * 处理 URL 变化
+   * Handle URL change
    */
   private handleURLChange = (eventData: URLChangeEvent): void => {
     const currentUrl = eventData.url
     
-    // 检查是否切换了聊天
+    // Check if chat has switched
     const originalBase = this.originalUrl.split('/app')[0] + '/app'
     const currentBase = currentUrl.split('/app')[0] + '/app'
     
     if (originalBase !== currentBase || this.originalUrl !== currentUrl) {
-      // 保存当前的新聊天状态
+      // Save current new chat status
       const wasFromNewChat = this.isNewChat
       
       const chatChangeEvent: ChatChangeEvent = {
@@ -76,25 +76,25 @@ class ChatChangeDetector {
       
       console.log('[ChatChangeDetector] Chat switched:', chatChangeEvent)
       
-      // 发出聊天切换事件
+      // Emit chat switch event
       this.emitChatChange(chatChangeEvent)
       
-      // 更新原始 URL 和新聊天状态
+      // Update original URL and new chat status
       this.originalUrl = currentUrl
       this.updateNewChatStatus()
     }
   }
 
   /**
-   * 发出聊天切换事件
+   * Emit chat switch event
    */
   private emitChatChange(eventData: ChatChangeEvent): void {
-    // 发出事件总线事件
+    // Emit event bus event
     eventBus.emit('chatchange', eventData)
   }
 
   /**
-   * 获取当前聊天 ID
+   * Get current chat ID
    */
   getCurrentChatId(): string | null {
     const url = window.location.href
@@ -103,15 +103,15 @@ class ChatChangeDetector {
   }
 
   /**
-   * 检查是否正在检测
+   * Check if monitoring is active
    */
   isDetecting(): boolean {
     return this.isActive
   }
 
   /**
-   * 检查是否为空白的新聊天
-   * 条件：URL 为 "gemini.google.com/app" 且当前聊天历史为空
+   * Check if it is a blank new chat
+   * Condition: URL is "gemini.google.com/app" and current chat history is empty
    */
   private isBlankNewChat() {
     const url = window.location.href
@@ -121,7 +121,7 @@ class ChatChangeDetector {
   }
 
   /**
-   * 更新新聊天状态
+   * Update new chat status
    */
   private updateNewChatStatus() {
     this.isNewChat = this.isBlankNewChat()
@@ -129,7 +129,7 @@ class ChatChangeDetector {
   }
 
   /**
-   * 清理历史检查定时器
+   * Cleanup history check timer
    */
   private clearHistoryCheckTimer(): void {
     if (this.historyCheckTimer) {
@@ -139,12 +139,12 @@ class ChatChangeDetector {
   }
 
   /**
-   * 获取当前是否为新聊天状态
+   * Get current new chat status
    */
   getIsNewChat(): boolean {
     return this.isNewChat
   }
 }
 
-// 全局实例
+// Global instance
 export const chatChangeDetector = new ChatChangeDetector()

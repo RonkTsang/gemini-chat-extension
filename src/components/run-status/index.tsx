@@ -1,6 +1,6 @@
 /**
  * RunStatusContainer Component
- * 运行状态容器组件 - 整合简要状态和详细面板
+ * Run status container component - integrates brief status and detailed panel
  */
 
 import React, { useEffect, useState, useRef } from 'react'
@@ -20,34 +20,34 @@ export const RunStatusContainer: React.FC = () => {
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   
-  // Hover 控制函数
+  // Hover control functions
   const handleMouseEnter = () => {
-    // 清除离开延迟
+    // Clear leave delay
     if (leaveTimeoutRef.current) {
       clearTimeout(leaveTimeoutRef.current)
       leaveTimeoutRef.current = null
     }
     
-    // 添加进入延迟（200ms），避免误触发
+    // Add entry delay (200ms) to avoid accidental triggers
     hoverTimeoutRef.current = setTimeout(() => {
       setShowPanel(true)
     }, 200)
   }
   
   const handleMouseLeave = () => {
-    // 清除进入延迟
+    // Clear entry delay
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current)
       hoverTimeoutRef.current = null
     }
     
-    // 添加离开延迟（300ms），避免快速移出时面板闪烁
+    // Add leave delay (300ms) to avoid panel flickering when moving out quickly
     leaveTimeoutRef.current = setTimeout(() => {
       setShowPanel(false)
     }, 300)
   }
   
-  // 鼠标进入面板时保持显示
+  // Keep visible when mouse enters the panel
   const handlePanelMouseEnter = () => {
     if (leaveTimeoutRef.current) {
       clearTimeout(leaveTimeoutRef.current)
@@ -55,7 +55,7 @@ export const RunStatusContainer: React.FC = () => {
     }
   }
   
-  // 清理定时器
+  // Cleanup timers
   useEffect(() => {
     return () => {
       if (hoverTimeoutRef.current) {
@@ -79,13 +79,13 @@ export const RunStatusContainer: React.FC = () => {
     clearRunStatus()
   })
   
-  // 聊天切换监听 - 切换聊天时自动关闭 run-status
+  // Chat switch listener - automatically close run-status when switching chats
   useEffect(() => {
-    // 监听执行中止事件（显示 Toast 提醒）
+    // Listen for execution abort events (show Toast reminder)
     const handleExecutionAborted = (eventData: AppEvents['execution:aborted-by-chat-switch']) => {
       console.log('[RunStatusContainer] Execution aborted by chat switch:', eventData)
       
-      // 只显示 Toast 提醒，UI 清理由 chatchange 事件处理
+      // Only show Toast reminder; UI cleanup is handled by chatchange event
       toaster.create({
         title: t('executionCoordinator.toast.chatSwitched.title'),
         description: t('executionCoordinator.toast.chatSwitched.description'),
@@ -101,7 +101,7 @@ export const RunStatusContainer: React.FC = () => {
     }
   }, [running.isRunning, clearRunStatus])
 
-  // 页面卸载清理
+  // Cleanup on page unload
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (running.isRunning) {
@@ -125,7 +125,7 @@ export const RunStatusContainer: React.FC = () => {
     }
   }, [running.isRunning, clearRunStatus])
   
-  // 不渲染任何内容如果状态为 pending
+  // Do not render anything if status is pending
   if (running.status === 'pending') {
     return null
   }

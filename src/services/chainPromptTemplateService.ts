@@ -1,6 +1,6 @@
 /**
  * Default Template Service
- * 默认模板服务层，处理模板的获取、搜索和导入
+ * Default template service layer, handling template retrieval, searching, and importing
  */
 
 import type { ChainPrompt } from '@/domain/chain-prompt/types'
@@ -16,35 +16,35 @@ import {
 
 export class DefaultTemplateService {
   /**
-   * 获取所有默认模板
+   * Get all default templates
    */
   async getAllTemplates(): Promise<DefaultTemplate[]> {
     return defaultTemplates
   }
 
   /**
-   * 按分类获取模板
+   * Get templates by category
    */
   async getTemplatesByCategory(category: TemplateCategory): Promise<DefaultTemplate[]> {
     return getTemplatesByCategory(category)
   }
 
   /**
-   * 搜索模板
+   * Search templates
    */
   async searchTemplates(query: string): Promise<DefaultTemplate[]> {
     return searchTemplates(query)
   }
 
   /**
-   * 根据ID获取模板
+   * Get template by ID
    */
   async getTemplateById(id: string): Promise<DefaultTemplate | undefined> {
     return getTemplateById(id)
   }
 
   /**
-   * 导入模板到用户库
+   * Import template to user library
    */
   async importTemplate(
     templateId: string, 
@@ -55,7 +55,7 @@ export class DefaultTemplateService {
       throw new Error('Template not found')
     }
 
-    // 构建用户 Chain Prompt 数据
+    // Construct user Chain Prompt data
     const userPromptData = {
       name: customName || template.name,
       description: template.description,
@@ -63,7 +63,7 @@ export class DefaultTemplateService {
       steps: template.steps
     }
 
-    // 创建用户 Chain Prompt
+    // Create user Chain Prompt
     const userPrompt = await chainPromptRepository.create(userPromptData)
     
     return userPrompt

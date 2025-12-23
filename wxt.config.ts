@@ -1,12 +1,16 @@
 import { defineConfig } from 'wxt';
 import svgr from 'vite-plugin-svgr';
+import removeConsole from 'vite-plugin-remove-console';
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
   modules: ['@wxt-dev/module-react', '@wxt-dev/i18n/module'],
   srcDir: 'src',
-  vite: () => ({
-    plugins: [svgr()],
+  vite: (configEnv) => ({
+    plugins: [
+      svgr(),
+      configEnv.mode === 'production' ? removeConsole({ includes: ['log'] }) : undefined,
+    ].filter(Boolean),
     esbuild: {
       charset: 'ascii',
     },

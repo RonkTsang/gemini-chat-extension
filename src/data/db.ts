@@ -1,6 +1,6 @@
 /**
  * IndexedDB Database Setup using Dexie
- * 统一的扩展数据库，支持多业务表
+ * Unified extension database, supports multiple business tables
  */
 
 import Dexie, { type Table } from 'dexie'

@@ -1,6 +1,6 @@
 /**
  * Default Template Index
- * 默认模板的索引和导出
+ * Index and export of default templates
  */
 
 import type { ChainPrompt } from '@/domain/chain-prompt/types'
@@ -25,7 +25,7 @@ export type TemplateCategory =
   | 'content-creation'
   | 'business-office'
 
-// 导入所有模板数据
+// Import all template data
 import { contentCreationTemplates } from './content-creation.js'
 import { businessOfficeTemplates } from './business-office.js'
 

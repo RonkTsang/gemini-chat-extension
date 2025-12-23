@@ -1,6 +1,6 @@
 /**
  * Confirm New Chat Dialog
- * 当检测到聊天历史时，询问用户是继续当前聊天还是创建新聊天
+ * When chat history is detected, ask the user whether to continue in the current chat or create a new one
  */
 
 import React from 'react'

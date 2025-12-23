@@ -1,6 +1,6 @@
 /**
  * Run Status UI Mount Manager
- * 负责在 Gemini 输入框上方挂载运行状态 UI
+ * Responsible for mounting the run status UI above the Gemini input box
  */
 
 import { createRoot, type Root } from 'react-dom/client'
@@ -11,7 +11,7 @@ import { useChainPromptStore } from '@/stores/chainPromptStore'
 
 type MountResult = { mountEl: HTMLDivElement; root: Root } | null
 
-// 语义优先的选择器链（基于 docs/dom/input.html）
+// Semantic-first selector chain (based on docs/dom/input.html)
 const INPUT_SELECTORS = [
   'input-container input-area-v2 [data-node-type="input-area"]',
   'input-container [data-node-type="input-area"]',
@@ -19,16 +19,16 @@ const INPUT_SELECTORS = [
 ]
 
 /**
- * 查找输入区域根元素
+ * Find input area root element
  */
 function findInputAreaRoot(scope: ParentNode): HTMLElement | null {
-  // 1) 语义化选择器优先
+  // 1) Semantic selector priority
   for (const s of INPUT_SELECTORS) {
     const el = scope.querySelector(s) as HTMLElement | null
     if (el) return el
   }
   
-  // 2) 回退：基于 rich-textarea 向上找最近输入区容器
+  // 2) Fallback: find nearest input area container based on rich-textarea
   const rta = scope.querySelector('rich-textarea') as HTMLElement | null
   if (rta) {
     const byAttr = rta.closest<HTMLElement>('[data-node-type="input-area"]')
@@ -37,7 +37,7 @@ function findInputAreaRoot(scope: ParentNode): HTMLElement | null {
     if (byClass) return byClass
   }
   
-  // 3) 最末回退：基于发送/停止按钮的 aria-label
+  // 3) Final fallback: based on aria-label of send/stop buttons
   const sendBtn = scope.querySelector(
     'button[aria-label="Send message"], button[aria-label="Stop response"]'
   ) as HTMLElement | null
@@ -56,7 +56,7 @@ let statusObserver: MutationObserver | null = null
 let remountTimeout: NodeJS.Timeout | null = null
 
 /**
- * DOM 查找重试辅助函数
+ * DOM lookup retry helper function
  */
 async function findInputAreaRootWithRetry(
   scope: ParentNode,
@@ -75,12 +75,12 @@ async function findInputAreaRootWithRetry(
 }
 
 /**
- * 挂载运行状态 UI
+ * Mount run status UI
  */
 export async function mountRunStatusUI(remount = false): Promise<MountResult> {
   const chatScope = getDefaultChatWindow() ?? document
   
-  // 使用重试机制查找输入区（适应 SPA 导航延迟）
+  // Use retry mechanism to find input area (adapts to SPA navigation delay)
   const inputRoot = await findInputAreaRootWithRetry(chatScope)
   if (!inputRoot) {
     console.warn('[RunStatus] Input area not found after retries')
@@ -95,19 +95,19 @@ export async function mountRunStatusUI(remount = false): Promise<MountResult> {
     unmountRunStatusUI()
   }
 
-  // 为了将 SimpleRunStatus 放在输入框外部的右上角（参照交互稿），
-  // 将挂载点设置为绝对定位，锚定到输入区域容器的右上方。
-  // 如果输入区域容器是 static 定位，则临时设置为 relative 以作为定位参照。
+  // To place SimpleRunStatus at the top-right outside the input box (referencing design),
+  // set the mount point to absolute positioning, anchored to the top-right of the input area container.
+  // If the input area container is 'static', temporarily set it to 'relative' as a positioning reference.
   const originalPosition = getComputedStyle(inputRoot).position
   if (originalPosition === 'static') {
-    // 标记，卸载时还原
+    // Mark, restore on unmount
     ;(inputRoot as any)._geminiWxtOriginalPosition = 'static'
     inputRoot.style.position = 'relative'
   }
 
   statusMountEl = document.createElement('div')
   statusMountEl.id = 'gemini-wxt-run-status'
-  // 绝对定位到输入区域的右上角（在输入框外部）
+  // Absolute position to the top-right of the input area (outside the input box)
   statusMountEl.style.cssText = [
     'position:absolute',
     'right:0',
@@ -129,28 +129,28 @@ export async function mountRunStatusUI(remount = false): Promise<MountResult> {
 }
 
 /**
- * 卸载运行状态 UI
+ * Unmount run status UI
  */
 export function unmountRunStatusUI() {
-  // 清理防抖定时器
+  // Cleanup debounce timer
   if (remountTimeout) {
     clearTimeout(remountTimeout)
     remountTimeout = null
   }
   
-  // 卸载 React 组件
+  // Unmount React component
   statusRoot?.unmount()
   statusRoot = null
   
-  // 移除 DOM 元素
+  // Remove DOM element
   statusMountEl?.remove()
   statusMountEl = null
   
-  // 断开观察器
+  // Disconnect observer
   statusObserver?.disconnect()
   statusObserver = null
 
-  // 还原输入区域容器的定位样式（如果是我们设置的）
+  // Restore input area container positioning style (if set by us)
   const chatScope = getDefaultChatWindow() ?? document
   const inputRoot = findInputAreaRoot(chatScope)
   if (inputRoot && (inputRoot as any)._geminiWxtOriginalPosition === 'static') {
@@ -160,7 +160,7 @@ export function unmountRunStatusUI() {
 }
 
 /**
- * 确保 DOM Observer 运行
+ * Ensure DOM Observer is running
  */
 function ensureStatusObserver() {
   if (statusObserver) return
@@ -169,21 +169,21 @@ function ensureStatusObserver() {
     const chatScope = getDefaultChatWindow() ?? document
     const currentRoot = findInputAreaRoot(chatScope)
     
-    // 输入区被替换或挂载点脱离了当前输入区 → 重挂载
+    // Input area replaced or mount point detached from current input area → remount
     if (!currentRoot || !statusMountEl || !statusMountEl.isConnected || !currentRoot.contains(statusMountEl)) {
-      // 防抖：避免频繁重挂载
+      // Debounce: avoid frequent remounting
       if (remountTimeout) clearTimeout(remountTimeout)
       remountTimeout = setTimeout(() => {
-        // 检查是否有正在运行的 Chain Prompt
+        // Check if there is a running Chain Prompt
         const { running } = useChainPromptStore.getState()
         if (running.isRunning) {
-          // 如果有正在运行的 Chain Prompt，清理状态并卸载 UI
+          // If there is a running Chain Prompt, cleanup state and unmount UI
           console.log('[RunStatus] Chat switched during execution, cleaning up...')
           const { clearRunStatus } = useChainPromptStore.getState()
           clearRunStatus()
           unmountRunStatusUI()
         } else {
-          // 没有正在运行的 Chain Prompt，尝试重新挂载
+          // No running Chain Prompt, try remounting
           mountRunStatusUI(true)
         }
         remountTimeout = null
@@ -191,7 +191,7 @@ function ensureStatusObserver() {
     }
   })
   
-  // 优化：只观察聊天窗口范围，而非整个 document.body
+  // Optimization: only observe the chat window scope instead of the entire document.body
   const chatScope = getDefaultChatWindow()
   const observeTarget = chatScope ?? document.body
   statusObserver.observe(observeTarget, { 
@@ -200,7 +200,7 @@ function ensureStatusObserver() {
   })
 }
 
-// 扩展生命周期：监听扩展卸载/禁用
+// Extension lifecycle: listen for extension uninstall/disable
 if (typeof browser !== 'undefined' && browser.runtime?.onSuspend) {
   browser.runtime.onSuspend.addListener(() => {
     unmountRunStatusUI()

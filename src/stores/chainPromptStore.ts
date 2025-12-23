@@ -1,6 +1,6 @@
 /**
  * Chain Prompt Store
- * UI 状态管理（编辑态、运行态）
+ * UI state management (editing and running states)
  */
 
 import { create } from 'zustand'
@@ -16,7 +16,7 @@ interface EditingState {
 }
 
 /**
- * 单个步骤的运行状态
+ * Running state of a single step
  */
 export interface RunningStepState {
   stepIndex: number
@@ -27,7 +27,7 @@ export interface RunningStepState {
 }
 
 /**
- * 整体运行状态
+ * Overall running state
  */
 interface RunningState {
   isRunning: boolean
@@ -42,19 +42,19 @@ interface RunningState {
 }
 
 interface ChainPromptStore {
-  // 编辑态
+  // Editing state
   editing: EditingState | null
   
-  // 运行态
+  // Running state
   running: RunningState
   
-  // UI 控制
+  // UI control
   showRunStatusPanel: boolean
   
-  // 搜索
+  // Search
   searchQuery: string
   
-  // 编辑操作
+  // Editing operations
   startCreate: () => void
   startEdit: (prompt: ChainPrompt) => void
   updateName: (name: string) => void
@@ -70,7 +70,7 @@ interface ChainPromptStore {
   reorderSteps: (startIndex: number, endIndex: number) => void
   cancelEdit: () => void
   
-  // 运行操作
+  // Running operations
   startRun: (prompt: ChainPrompt) => void
   updateStepStatus: (stepIndex: number, status: RunningStepState['status'], error?: string) => void
   updateStepPrompt: (stepIndex: number, promptText: string) => void
@@ -78,10 +78,10 @@ interface ChainPromptStore {
   abortRun: () => void
   clearRunStatus: () => void
   
-  // UI 控制
+  // UI control
   toggleRunStatusPanel: () => void
   
-  // 搜索
+  // Search
   setSearchQuery: (query: string) => void
 }
 
@@ -275,7 +275,7 @@ export const useChainPromptStore = create<ChainPromptStore>((set) => ({
   }),
   
   updateStepStatus: (stepIndex, status, error) => set((state) => {
-    // 验证步骤索引
+    // Validate step index
     if (stepIndex < 0 || stepIndex >= state.running.steps.length) {
       console.warn(`[ChainPromptStore] Invalid step index: ${stepIndex}`)
       return state
@@ -319,7 +319,7 @@ export const useChainPromptStore = create<ChainPromptStore>((set) => ({
   })),
   
   abortRun: () => set((state) => {
-    // 触发中止信号
+    // Trigger abort signal
     state.running.abortController?.abort()
     
     return {
@@ -344,7 +344,7 @@ export const useChainPromptStore = create<ChainPromptStore>((set) => ({
   }),
   
   clearRunStatus: () => set((state) => {
-    // 清理中止控制器（如果还在运行）
+    // Cleanup abort controller if still running
     state.running.abortController?.abort()
     
     return {
@@ -367,7 +367,7 @@ export const useChainPromptStore = create<ChainPromptStore>((set) => ({
   setSearchQuery: (query: string) => set({ searchQuery: query })
 }))
 
-// 导出非 React 使用的 actions
+// Export actions for non-React usage
 export const startRun = (prompt: ChainPrompt) => 
   useChainPromptStore.getState().startRun(prompt)
 export const updateStepStatus = (stepIndex: number, status: RunningStepState['status'], error?: string) => 

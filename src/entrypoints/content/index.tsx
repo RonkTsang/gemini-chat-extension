@@ -8,25 +8,25 @@ import { urlMonitor } from '@/services/urlMonitor'
 export default defineContentScript({
   matches: ['*://gemini.google.com/*'],
   async main(ctx) {
-    // 手动启动服务模块，确保正确的启动顺序
+    // Manually start service modules to ensure correct boot sequence
     console.log('[ContentScript] Starting services...')
     
-    // 1. 首先注入 main world 脚本
+    // 1. First inject the main world script
     console.log('[ContentScript] Injecting main world script...')
     await injectScript('/url-monitor-main-world.js', {
       keepInDom: true,
     })
     console.log('[ContentScript] Main world script injected')
     
-    // 2. 启动 URL 监听器（现在监听来自 main world 的事件）
+    // 2. Start URL monitor (now listening to events from main world)
     urlMonitor.start()
     console.log('[ContentScript] URL Monitor started')
     
-    // 3. 然后启动聊天切换检测器（依赖 urlMonitor）
+    // 3. Then start chat change detector (depends on urlMonitor)
     chatChangeDetector.start()
     console.log('[ContentScript] Chat Change Detector started')
     
-    // 4. 最后创建 UI
+    // 4. Finally create the UI
     const ui = createIntegratedUi(ctx, {
       position: 'modal',
       anchor: 'body',

@@ -1,6 +1,6 @@
 /**
  * Template Modal
- * 显示默认模板列表，支持搜索、分类筛选和导入
+ * Displays a list of default templates with support for search, category filtering, and importing
  */
 
 import React, { useEffect, useState } from 'react'

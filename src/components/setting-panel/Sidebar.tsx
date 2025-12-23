@@ -108,12 +108,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ width = '240px' }) => {
       width={width}
       height="100%"
       bg="gemSurfaceContainer"
-      px={3}  // 减少水平内边距，让内容更接近边缘
-      py={6}  // 保持垂直内边距
+      px={3}
+      py={6}
       display="flex"
       flexDirection="column"
     >
-      <VStack align="stretch" gap={4} flex={1}>  {/* 减少组间距 */}
+      <VStack align="stretch" gap={4} flex={1}>
         {/* Prompt Group */}
         <NavigationGroup
           label="Prompt"

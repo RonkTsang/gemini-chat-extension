@@ -1,6 +1,6 @@
 /**
  * Chain Prompt Executor Service
- * 按步骤驱动执行（插入 → 发送 → 等待 → 产出 → 继续）
+ * Drives execution step-by-step (Insert → Send → Wait → Output → Continue)
  */
 
 import type { ChainPrompt, RunResult, RunResultStep, RunStatus } from '@/domain/chain-prompt/types'
@@ -26,7 +26,7 @@ class ChainPromptExecutor {
   private activeExecutions = new Map<string, AbortController>()
 
   /**
-   * 执行 Chain Prompt
+   * Execute Chain Prompt
    */
   async run(
     params: { prompt: ChainPrompt; variables: Record<string, string> },
@@ -36,7 +36,7 @@ class ChainPromptExecutor {
     const { chatWindow, abortSignal, onStepStart, onStepComplete, onStepError } = options
     
     const runId = `${prompt.id}-${Date.now()}`
-    // 使用外部提供的 abortSignal，或创建新的
+    // Use externally provided abortSignal or create a new one
     const internalController = new AbortController()
     const effectiveSignal = abortSignal || internalController.signal
     this.activeExecutions.set(runId, internalController)
@@ -53,9 +53,9 @@ class ChainPromptExecutor {
     }
     
     try {
-      // 按顺序执行每个步骤
+      // Execute each step in order
       for (let i = 0; i < prompt.steps.length; i++) {
-        // 检查是否已中止
+        // Check if aborted
         if (effectiveSignal.aborted) {
           result.status = 'aborted'
           result.finishedAt = new Date().toISOString()
@@ -71,17 +71,17 @@ class ChainPromptExecutor {
         }
         
         try {
-          // 渲染模板
+          // Render template
           const { prompt: renderedPrompt } = templateEngine.renderWithValidation(step.prompt, context, i)
           stepResult.inputPrompt = renderedPrompt
-          // 将渲染后的 prompt 同步到 UI（用以替换 {{variable}} 展示）
+          // Sync rendered prompt to UI (to replace {{variable}} display)
           try {
             useChainPromptStore.getState().updateStepPrompt?.(i, renderedPrompt)
           } catch {}
           
           onStepStart?.(i, stepName, renderedPrompt)
           
-          // 执行步骤：插入 → 发送 → 等待
+          // Execute step: Insert → Send → Wait
           const output = await this.executeStep(renderedPrompt, chatWindow, effectiveSignal)
           
           stepResult.outputText = output
@@ -89,7 +89,7 @@ class ChainPromptExecutor {
           
           onStepComplete?.(i, output)
         } catch (error) {
-          // 检查是否为中止错误
+          // Check if it is an abort error
           if (error instanceof Error && (error.name === 'AbortError' || effectiveSignal.aborted)) {
             const abortMessage = 'Execution aborted by user'
             stepResult.error = abortMessage
@@ -123,14 +123,14 @@ class ChainPromptExecutor {
   }
 
   /**
-   * 执行单个步骤
+   * Execute a single step
    */
   private async executeStep(
     prompt: string, 
     chatWindow: Element | undefined, 
     signal: AbortSignal
   ): Promise<string> {
-    // 1. 插入 prompt 到编辑器
+    // 1. Insert prompt into editor
     const inserted = insertTextToEditor(prompt, chatWindow)
     if (!inserted) {
       throw new Error('Failed to insert prompt into editor')
@@ -151,20 +151,20 @@ class ChainPromptExecutor {
       return sent;
     }
     
-    // 2. 发送消息
+    // 2. Send message
     const sent = await tryToSendMessage();
     if (!sent.success) {
       throw new Error(`Failed to send message, reason: ${sent.reason}`)
     }
     
-    // 3. 等待模型完成响应
+    // 3. Wait for model to complete response
     const output = await this.waitForModelCompletion(chatWindow, signal)
     
     return output
   }
 
   /**
-   * 等待模型完成响应
+   * Wait for model to complete response
    */
   private async waitForModelCompletion(
     chatWindow: Element | undefined, 
@@ -174,7 +174,7 @@ class ChainPromptExecutor {
       let cleanup: (() => void) | null = null
       let isResponding = false
       
-      // 处理中止
+      // Handle abort
       const handleAbort = () => {
         cleanup?.()
         stopModelResponse(chatWindow)
@@ -188,17 +188,17 @@ class ChainPromptExecutor {
       
       signal.addEventListener('abort', handleAbort)
       
-      // 监听模型状态变化
+      // Listen for model status changes
       cleanup = createModelStatusListener((status) => {
         if (status.isResponding) {
-          // 模型开始响应
+          // Model starts responding
           isResponding = true
         } else if (isResponding && !status.isResponding) {
-          // 模型完成响应
+          // Model finishes responding
           cleanup?.()
           signal.removeEventListener('abort', handleAbort)
           
-          // 获取最后一条消息（模型的回复）
+          // Get the last message (model's reply)
           const output = this.getLatestModelResponse(chatWindow)
           if (output) {
             resolve(output)
@@ -208,7 +208,7 @@ class ChainPromptExecutor {
         }
       }, chatWindow)
       
-      // 设置超时（5分钟）
+      // Set timeout (5 minutes)
       setTimeout(() => {
         if (isResponding) {
           cleanup?.()
@@ -220,22 +220,22 @@ class ChainPromptExecutor {
   }
 
   /**
-   * 获取最新的模型响应
+   * Get the latest model response
    */
   private getLatestModelResponse(chatWindow?: Element): string | null {
     const container = chatWindow || document
     
-    // 查找所有模型消息容器
+    // Find all model response containers
     const modelMessages = container.querySelectorAll('model-response')
     
     if (modelMessages.length === 0) {
       return null
     }
     
-    // 获取最后一条消息
+    // Get the last message
     const latestMessage = modelMessages[modelMessages.length - 1]
     
-    // 提取文本内容
+    // Extract text content
     const textContent = latestMessage.textContent?.trim() || null
     
     return textContent
@@ -243,7 +243,7 @@ class ChainPromptExecutor {
 
 
   /**
-   * 中止执行
+   * Abort execution
    */
   abort(runId: string): void {
     const controller = this.activeExecutions.get(runId)
@@ -253,7 +253,7 @@ class ChainPromptExecutor {
   }
 
   /**
-   * 工具函数：sleep
+   * Utility function: sleep
    */
   private sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms))

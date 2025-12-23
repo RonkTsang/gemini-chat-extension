@@ -1,6 +1,6 @@
 /**
  * RunStatusPanel Component
- * 详细状态面板 - 显示所有步骤的执行状态
+ * Detailed status panel - displays execution status of all steps
  */
 
 import React from 'react'

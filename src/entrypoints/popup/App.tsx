@@ -29,13 +29,13 @@ function App() {
     enableChatOutline: true,
     enableQuickQuote: true,
   });
-  // 主题响应式颜色
+  // Theme responsive colors
   const textColor = useColorModeValue('gray.900', 'gray.100');
   const secondaryTextColor = useColorModeValue('gray.600', 'gray.400');
   const mutedTextColor = useColorModeValue('gray.500', 'gray.500');
   const hoverBg = useColorModeValue('gray.100', 'gray.700');
 
-  // 获取主题信息
+  // Get theme information
   const { colorMode, setTheme } = useColorMode();
 
   useEffect(() => {

@@ -1,6 +1,6 @@
 /**
  * Business Office Templates
- * 商务办公类默认模板
+ * Default templates for business and office use
  */
 
 import type { DefaultTemplate } from './index'

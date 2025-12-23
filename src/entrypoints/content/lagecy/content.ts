@@ -578,7 +578,7 @@ function transformQuoteInHistory(userQueryElement) {
 
 // --- Main Execution ---
 function safeParseBoolean(value: any): boolean {
-  // 如果已经是布尔值，直接返回
+  // If already a boolean, return directly
   if (typeof value === 'boolean') {
     return value;
   }

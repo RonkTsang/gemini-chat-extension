@@ -1,10 +1,10 @@
-/* 最小化样式 - 只保留 Chakra UI 无法提供的必要样式 */
+/* Minimal styles - only essential styles that Chakra UI doesn't provide */
 
 :root {
-  /* 告诉浏览器支持主题切换 - 这对 Chakra UI 主题系统很重要 */
+  /* Tell the browser to support theme switching - important for Chakra UI's theme system */
   color-scheme: light dark;
   
-  /* 字体渲染优化 - Chakra UI 不会自动提供这些性能优化 */
+  /* Font rendering optimization - Chakra UI doesn't automatically provide these performance optimizations */
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -13,7 +13,7 @@
 }
 
 body {
-  /* Popup 布局样式 - Chakra UI 不会自动提供这种特定布局 */
+  /* Popup layout styles - Chakra UI doesn't automatically provide this specific layout */
   margin: 0;
   display: flex;
   place-items: center;

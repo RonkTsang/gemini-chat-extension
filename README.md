@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="images/logo_512.png" alt="Gemini Power Kit Logo" width="128"/>
+  <img src="public/icon/512.png" alt="Gemini Power Kit Logo" width="128"/>
   <br/>
   <a href="https://github.com/google-gemini/gemini-cli">
     <img src="https://img.shields.io/badge/Made%20with-Gemini%20Cli-4285F4?style=for-the-badge&logo=google-gemini&logoColor=white" alt="Made with Gemini-Cli"/>

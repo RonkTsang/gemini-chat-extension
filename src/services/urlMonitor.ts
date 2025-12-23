@@ -1,6 +1,6 @@
 /**
  * URL Monitor Service
- * 负责监听 URL 变化并发出事件
+ * Responsible for monitoring URL changes and emitting events
  */
 
 import { eventBus } from '@/utils/eventbus'
@@ -9,7 +9,7 @@ import { GEM_EXT_EVENTS, URLChangeEvent } from '@/common/event'
 class URLMonitor {
   private isActive = false
   /**
-   * 开始监听 URL 变化
+   * Start monitoring URL changes
    */
   start(): void {
     if (this.isActive) return
@@ -17,12 +17,12 @@ class URLMonitor {
     this.isActive = true
     console.log('[URLMonitor] Starting URL monitoring...')
     
-    // 监听来自 main world 的 CustomEvent
+    // Listen to CustomEvent from main world
     window.addEventListener(GEM_EXT_EVENTS.URL_CHANGE, this.handleURLChange)
   }
 
   /**
-   * 停止监听 URL 变化
+   * Stop monitoring URL changes
    */
   stop(): void {
     if (!this.isActive) return
@@ -30,12 +30,12 @@ class URLMonitor {
     this.isActive = false
     console.log('[URLMonitor] Stopping URL monitoring...')
     
-    // 移除事件监听
+    // Remove event listener
     window.removeEventListener(GEM_EXT_EVENTS.URL_CHANGE, this.handleURLChange)
   }
 
   /**
-   * 处理来自 main world 的 URL 变化事件
+   * Handle URL change event from main world
    */
   private handleURLChange = (event: Event): void => {
     const customEvent = event as CustomEvent<URLChangeEvent>
@@ -43,17 +43,17 @@ class URLMonitor {
     
     console.log('[URLMonitor] URL changed from main world:', eventData.url)
     
-    // 发出事件总线事件
+    // Emit event bus event
     eventBus.emit('urlchange', eventData)
   }
 
   /**
-   * 检查是否正在监听
+   * Check if monitoring is active
    */
   isMonitoring(): boolean {
     return this.isActive
   }
 }
 
-// 全局实例
+// Global instance
 export const urlMonitor = new URLMonitor()

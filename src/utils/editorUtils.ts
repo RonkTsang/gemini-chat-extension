@@ -34,7 +34,7 @@ export interface DetailedButtonStatus {
 export function getContentEditor(chatWindow?: Element): HTMLElement | null {
   const container = chatWindow || document;
   
-  // 查找富文本编辑器：rich-textarea 下的可编辑 div
+  // Find rich text editor: editable div under rich-textarea
   const editor = container.querySelector('rich-textarea .ql-editor.textarea.new-input-ui[contenteditable="true"]') as HTMLElement;
   
   return editor;
@@ -48,7 +48,7 @@ export function getContentEditor(chatWindow?: Element): HTMLElement | null {
 export function getSendButton(chatWindow?: Element): HTMLElement | null {
   const container = chatWindow || document;
   
-  // 查找发送按钮（可能是发送状态或停止状态）
+  // Find send button (could be in send or stop state)
   const sendButton = container.querySelector('.send-button') as HTMLElement;
   
   return sendButton;
@@ -90,29 +90,29 @@ export function insertTextToEditor(text: string, chatWindow?: Element): boolean 
   }
 
   try {
-    // 清空现有内容
+    // Clear existing content
     editor.innerHTML = '';
     
-    // 分割文本为行，每行用 <p> 标签包裹
+    // Split text into lines, wrap each in a <p> tag
     const lines = text.split('\n');
     
     lines.forEach((line, index) => {
       const p = document.createElement('p');
-      p.textContent = line || ''; // 空行也需要保留
+      p.textContent = line || ''; // Preserve empty lines
       editor.appendChild(p);
     });
 
-    // 如果没有内容，添加一个空的 p 标签
+    // If no content, add an empty <p> tag
     if (lines.length === 0 || (lines.length === 1 && lines[0] === '')) {
       const p = document.createElement('p');
-      p.innerHTML = '<br>'; // 使用 <br> 保持空行
+      p.innerHTML = '<br>'; // Use <br> to keep empty line
       editor.appendChild(p);
     }
 
-    // 设置焦点到编辑器
+    // Focus on editor
     editor.focus();
     
-    // 将光标移动到最后
+    // Move cursor to the end
     const range = document.createRange();
     const selection = window.getSelection();
     range.selectNodeContents(editor);
@@ -120,7 +120,7 @@ export function insertTextToEditor(text: string, chatWindow?: Element): boolean 
     selection?.removeAllRanges();
     selection?.addRange(range);
 
-    // 触发输入事件以通知系统内容已更改
+    // Trigger input event to notify system that content has changed
     const inputEvent = new Event('input', { bubbles: true });
     editor.dispatchEvent(inputEvent);
 
@@ -145,7 +145,7 @@ export function appendTextToEditor(text: string, chatWindow?: Element): boolean 
   }
 
   try {
-    // 获取现有内容
+    // Get existing content
     const existingContent = getEditorContent(chatWindow);
     const newContent = existingContent ? `${existingContent}\n${text}` : text;
     
@@ -169,12 +169,12 @@ export function getEditorContent(chatWindow?: Element): string {
   }
 
   try {
-    // 提取所有 p 标签的文本内容
+    // Extract text content of all <p> tags
     const paragraphs = editor.querySelectorAll('p');
     const lines: string[] = [];
     
     paragraphs.forEach(p => {
-      // 处理空行（包含 <br> 的情况）
+      // Handle empty lines (including cases with <br>)
       if (p.innerHTML === '<br>' || p.innerHTML === '') {
         lines.push('');
       } else {
@@ -219,7 +219,7 @@ export function sendMessage(chatWindow?: Element): SendMessageResult {
   }
 
   try {
-    // 检查是否正在响应中
+    // Check if model is responding
     if (isResponding(sendButton)) {
       console.warn('Model is currently responding, cannot send new message');
       return {
@@ -228,7 +228,7 @@ export function sendMessage(chatWindow?: Element): SendMessageResult {
       };
     }
     
-    // 检查是否处于可发送状态
+    // Check if in ready-to-send state
     if (!isReadyToSend(sendButton)) {
       console.warn('Send button is not in ready state');
       return {
@@ -237,7 +237,7 @@ export function sendMessage(chatWindow?: Element): SendMessageResult {
       };
     }
 
-    // 模拟点击发送按钮
+    // Simulate click on send button
     sendButton.click();
     return {
       success: true,
@@ -265,13 +265,13 @@ export function stopModelResponse(chatWindow?: Element): boolean {
   }
 
   try {
-    // 只有在确认响应中状态时才能停止
+    // Only stop when in responding state
     if (!isResponding(sendButton)) {
       console.warn('Model is not currently responding');
       return false;
     }
 
-    // 模拟点击停止按钮
+    // Simulate click on stop button
     sendButton.click();
     return true;
   } catch (error) {
@@ -328,11 +328,11 @@ export function getDetailedButtonStatus(chatWindow?: Element): DetailedButtonSta
   const hasSendLabel = ariaLabel === 'Send message';
   const hasStopLabel = ariaLabel === 'Stop response';
   
-  // 验证状态一致性 (使用工具函数)
+  // Validate state consistency (using utility functions)
   const isValidSendState = isReadyToSend(sendButton);
   const isValidStopState = isResponding(sendButton);
   
-  // 确定当前状态
+  // Determine current state
   let currentState: 'ready' | 'responding' | 'unknown';
   if (isValidSendState) {
     currentState = 'ready';
@@ -371,7 +371,7 @@ export function createModelStatusListener(
     return () => {};
   }
 
-  // 创建 MutationObserver 来监听按钮状态变化
+  // Create MutationObserver to listen for button state changes
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
       if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
@@ -381,17 +381,17 @@ export function createModelStatusListener(
     });
   });
 
-  // 开始监听按钮的类名变化
+  // Start listening for button class changes
   observer.observe(sendButton, {
     attributes: true,
     attributeFilter: ['class']
   });
 
-  // 立即调用一次回调，返回当前状态
+  // Call callback immediately once, return current status
   const initialStatus = getModelStatus(chatWindow);
   callback(initialStatus);
 
-  // 返回清理函数
+  // Return cleanup function
   return () => {
     observer.disconnect();
   };
@@ -414,24 +414,24 @@ export function createInputChangeListener(
     return () => {};
   }
 
-  // 输入事件处理函数
+  // Input event handler
   const handleInput = () => {
     const content = getEditorContent(chatWindow);
     callback(content);
   };
 
-  // 监听多种输入事件
+  // Listen for multiple input events
   const events = ['input', 'keyup', 'paste'];
   
   events.forEach(eventType => {
     editor.addEventListener(eventType, handleInput);
   });
 
-  // 立即调用一次回调，返回当前内容
+  // Call callback immediately once, return current content
   const initialContent = getEditorContent(chatWindow);
   callback(initialContent);
 
-  // 返回清理函数
+  // Return cleanup function
   return () => {
     events.forEach(eventType => {
       editor.removeEventListener(eventType, handleInput);
@@ -477,22 +477,22 @@ export async function sendMessageAndWait(
   timeout = 30000
 ): Promise<boolean> {
   try {
-    // 插入消息内容
+    // Insert message content
     const insertSuccess = insertTextToEditor(message, chatWindow);
     if (!insertSuccess) {
       throw new Error('Failed to insert message to editor');
     }
 
-    // 等待一小段时间确保内容已经更新
+    // Wait for a short time to ensure content update
     await new Promise(resolve => setTimeout(resolve, 100));
 
-    // 发送消息
+    // Send message
     const sendSuccess = sendMessage(chatWindow);
     if (!sendSuccess) {
       throw new Error('Failed to send message');
     }
 
-    // 等待模型响应完成
+    // Wait for model response to complete
     await waitForModelResponse(chatWindow, timeout);
     
     return true;

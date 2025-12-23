@@ -1,38 +1,38 @@
 # Setting Panel Component
 
-基于设计稿和需求文档实现的设置面板功能，提供完整的两级导航结构。
+Setting panel functionality implemented based on design drafts and requirements documents, providing a complete two-level navigation structure.
 
-## 功能特点
+## Features
 
-- **侧边栏导航**: 固定在左侧的主导航，包含所有功能模块
-- **两级页面结构**: 支持列表视图(L1)和详情视图(L2)的导航
-- **状态管理**: 使用 Zustand 进行全局状态管理
-- **响应式设计**: 基于 Chakra UI 的设计系统
+- **Sidebar Navigation**: Main navigation fixed on the left, containing all functional modules.
+- **Two-level Page Structure**: Supports navigation between list views (L1) and detail views (L2).
+- **State Management**: Global state management using Zustand.
+- **Responsive Design**: Design system based on Chakra UI.
 
-## 组件结构
+## Component Structure
 
 ```
 setting-panel/
-├── index.tsx          # 主设置面板组件
-├── Sidebar.tsx        # 侧边栏导航组件
-├── ContentArea.tsx    # 内容区域组件
+├── index.tsx          # Main setting panel component
+├── Sidebar.tsx        # Sidebar navigation component
+├── ContentArea.tsx    # Content area component
 └── README.md
 ```
 
-## 使用方法
+## Usage
 
-### 基本使用
+### Basic Usage
 
 ```tsx
 import { SettingPanel } from './components/setting-panel'
 
-// 组件会自动监听 'settings:open' 事件
+// The component automatically listens for the 'settings:open' event
 function App() {
   return <SettingPanel />
 }
 ```
 
-### 打开设置面板
+### Opening the Setting Panel
 
 ```tsx
 import { useEventEmitter } from './hooks/useEventBus'
@@ -44,61 +44,61 @@ function SomeComponent() {
     emit('settings:open', { open: true })
   }
   
-  return <button onClick={openSettings}>打开设置</button>
+  return <button onClick={openSettings}>Open Settings</button>
 }
 ```
 
-## 状态管理
+## State Management
 
-使用 Zustand store 管理导航状态：
+Use Zustand store to manage navigation state:
 
 ```tsx
 import useSettingStore from './stores/settingStore'
 
-// 在 React 组件中使用
+// Usage in React components
 const { activeSection, currentView, setActiveSection } = useSettingStore()
 
-// 在非 React 环境中使用
+// Usage in non-React environments
 import { getSettingState, setActiveSection } from './stores/settingStore'
 ```
 
-## 导航结构
+## Navigation Structure
 
-### 一级导航 (侧边栏)
+### Level 1 Navigation (Sidebar)
 
-- **Prompt 分组**
+- **Prompt Group**
   - Chain Prompt
   - Quick Follow-up
-- **Tools 分组**
+- **Tools Group**
   - Chat outline
   - Theme
-- **其他**
+- **Others**
   - Support
   - Feedback
 
-### 二级页面
+### Level 2 Pages
 
-每个一级导航项都支持进入二级详情页面，二级页面包含：
-- 返回按钮 (左上角)
-- 页面标题
-- 占位符内容区域
+Each level 1 navigation item supports entering a level 2 detail page, which includes:
+- Back button (top left corner)
+- Page title
+- Placeholder content area
 
-## 扩展指南
+## Extension Guide
 
-### 添加新的导航项
+### Adding a new navigation item
 
-1. 在 `src/stores/settingStore.ts` 中添加新的 `NavigationSection` 类型
-2. 在 `Sidebar.tsx` 的 `navigationItems` 数组中添加新项
-3. 在 `ContentArea.tsx` 的 `sectionConfigs` 中添加配置
+1. Add a new `NavigationSection` type in `src/stores/settingStore.ts`.
+2. Add a new item to the `navigationItems` array in `Sidebar.tsx`.
+3. Add configuration to `sectionConfigs` in `ContentArea.tsx`.
 
-### 自定义内容页面
+### Customizing Content Pages
 
-修改 `ContentArea.tsx` 中的 `LevelOnePage` 和 `LevelTwoPage` 组件，替换占位符内容为实际功能组件。
+Modify the `LevelOnePage` and `LevelTwoPage` components in `ContentArea.tsx` to replace placeholder content with actual functional components.
 
-## 技术栈
+## Tech Stack
 
-- **React**: UI 框架
-- **Chakra UI v3**: UI 组件库
-- **Zustand**: 状态管理
-- **React Icons**: 图标库
-- **TypeScript**: 类型支持
+- **React**: UI Framework
+- **Chakra UI v3**: UI Component Library
+- **Zustand**: State Management
+- **React Icons**: Icon Library
+- **TypeScript**: Type Support

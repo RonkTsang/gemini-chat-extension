@@ -1,6 +1,6 @@
 /**
  * Template Engine
- * 处理 {{VAR}} 与 {{StepN.output}} 的变量替换、上下文绑定与校验
+ * Handles variable replacement for {{VAR}} and {{StepN.output}}, context binding, and validation
  */
 
 export interface TemplateContext {
@@ -15,12 +15,12 @@ export interface ValidationResult {
 }
 
 export class TemplateEngine {
-  // 匹配 {{VAR}} 或 {{StepN.output}} 的正则
+  // Regex pattern for matching {{VAR}} or {{StepN.output}}
   private readonly VARIABLE_PATTERN = /\{\{([^}]+)\}\}/g
   private readonly STEP_OUTPUT_PATTERN = /^Step(\d+)\.output$/
 
   /**
-   * 从模板中提取所有占位符
+   * Extract all placeholders from the template
    */
   extractPlaceholders(template: string): string[] {
     const matches = template.matchAll(this.VARIABLE_PATTERN)
@@ -37,10 +37,10 @@ export class TemplateEngine {
   }
 
   /**
-   * 校验模板在给定上下文中是否有效
-   * @param template 模板字符串
-   * @param context 上下文（变量 + 步骤输出）
-   * @param currentStepIndex 当前步骤索引（从 0 开始），用于检查是否引用了未来步骤
+   * Validate if the template is valid in the given context
+   * @param template Template string
+   * @param context Context (variables + step outputs)
+   * @param currentStepIndex Current step index (0-based), used to check if future steps are referenced
    */
   validate(template: string, context: TemplateContext, currentStepIndex?: number): ValidationResult {
     const placeholders = this.extractPlaceholders(template)
@@ -51,21 +51,21 @@ export class TemplateEngine {
       const stepMatch = placeholder.match(this.STEP_OUTPUT_PATTERN)
       
       if (stepMatch) {
-        // 步骤输出引用
-        const stepIndex = parseInt(stepMatch[1]) - 1 // 转为 0-based
+        // Step output reference
+        const stepIndex = parseInt(stepMatch[1]) - 1 // Convert to 0-based
         
-        // 检查是否引用了未来步骤
+        // Check if referencing future steps
         if (currentStepIndex !== undefined && stepIndex >= currentStepIndex) {
           invalidReferences.push(`${placeholder} (cannot reference current or future steps)`)
           continue
         }
         
-        // 检查步骤输出是否存在
+        // Check if step output exists
         if (!context.stepOutputs.has(stepIndex)) {
           missingVariables.push(placeholder)
         }
       } else {
-        // 普通变量引用
+        // Regular variable reference
         if (!(placeholder in context.variables)) {
           missingVariables.push(placeholder)
         }
@@ -80,8 +80,8 @@ export class TemplateEngine {
   }
 
   /**
-   * 渲染模板，将占位符替换为实际值
-   * @throws Error 如果模板无效或缺少变量
+   * Render template, replace placeholders with actual values
+   * @throws Error if template is invalid or variables are missing
    */
   render(template: string, context: TemplateContext, currentStepIndex?: number): string {
     const validation = this.validate(template, context, currentStepIndex)
@@ -111,7 +111,7 @@ export class TemplateEngine {
   }
 
   /**
-   * 渲染模板，将占位符替换为实际值
+   * Render template, replace placeholders with actual values
    * @returns { rendered: string, validation: ValidationResult }
    */
   renderWithValidation(template: string, context: TemplateContext, currentStepIndex?: number): { prompt: string, validation: ValidationResult } {
@@ -136,12 +136,12 @@ export class TemplateEngine {
   }
 
   /**
-   * 获取当前步骤可用的变量列表（用于 UI 提示）
-   * @param variables 输入变量
-   * @param currentStepIndex 当前步骤索引（从 0 开始）
+   * Get list of available variables for the current step (for UI hints)
+   * @param variables Input variables
+   * @param currentStepIndex Current step index (0-based)
    */
   getAvailableVariables(variables: Record<string, string>, currentStepIndex: number): string[] {
-    // 屏蔽“前 n 步”输出变量，仅返回用户定义的输入变量
+    // Mask "Step N output" variables, return only user-defined input variables
     return Object.keys(variables)
   }
 }

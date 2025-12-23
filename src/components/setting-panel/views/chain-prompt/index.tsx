@@ -1,6 +1,6 @@
 /**
  * Chain Prompt List View
- * 显示所有已保存的 Chain Prompts，支持搜索、运行、编辑、复制、删除
+ * Displays all saved Chain Prompts, with support for search, run, edit, duplicate, and delete
  */
 
 import React, { useEffect, useState } from 'react'

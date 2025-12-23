@@ -1,129 +1,127 @@
 # Chain Prompt Feature
 
-Chain Prompt 功能允许用户创建和管理由多个步骤组成的链式提示词，实现复杂任务的自动化执行。
+The Chain Prompt feature allows users to create and manage chained prompts consisting of multiple steps, enabling the automated execution of complex tasks.
 
-## 功能概览
+## Feature Overview
 
-### 核心功能
-- ✅ 创建、编辑、复制、删除 Chain Prompts
-- ✅ 定义输入变量（支持默认值）
-- ✅ 多步骤编排（支持拖拽排序）
-- ✅ 模板变量系统（`{{VAR}}` 和 `{{StepN.output}}`）
-- ✅ 运行前预览（实时渲染）
-- ✅ 自动执行（插入 → 发送 → 等待 → 继续）
-- ✅ 搜索和筛选
+### Core Features
+- ✅ Create, edit, duplicate, and delete Chain Prompts
+- ✅ Define input variables (with support for default values)
+- ✅ Multi-step orchestration (with drag-and-drop sorting)
+- ✅ Template variable system (`{{VAR}}` and `{{StepN.output}}`)
+- ✅ Pre-run preview (real-time rendering)
+- ✅ Automatic execution (Insert → Send → Wait → Continue)
+- ✅ Search and filtering
 
-## 架构说明
+## Architecture
 
-### 数据层
-- **数据库**: IndexedDB (`gemini_extension`) via Dexie
-- **表**: `chain_prompts` (模板持久化)
-- **仓储**: `chainPromptRepository` (统一数据访问接口)
-- **数据源**: `LocalDexieDataSource` (本地存储实现)
+### Data Layer
+- **Database**: IndexedDB (`gemini_extension`) via Dexie
+- **Tables**: `chain_prompts` (Template persistence)
+- **Repository**: `chainPromptRepository` (Unified data access interface)
+- **Data Source**: `LocalDexieDataSource` (Local storage implementation)
 
-### 业务层
-- **模板引擎**: `templateEngine` - 处理变量解析和校验
-- **执行服务**: `chainPromptExecutor` - 驱动步骤执行流程
-- **状态管理**: `chainPromptStore` (Zustand) - UI 状态
+### Business Layer
+- **Template Engine**: `templateEngine` - Handles variable parsing and validation
+- **Execution Service**: `chainPromptExecutor` - Drives the step execution flow
+- **State Management**: `chainPromptStore` (Zustand) - Manages UI state
 
-### UI 层
-- **列表页**: `index.tsx` - 展示所有 Chain Prompts
-- **编辑页**: `editor.tsx` - 创建/编辑界面
-- **运行弹窗**: `RunModal.tsx` - 变量输入与预览
+### UI Layer
+- **List Page**: `index.tsx` - Displays all Chain Prompts
+- **Edit Page**: `editor.tsx` - Create/Edit interface
+- **Run Modal**: `RunModal.tsx` - Variable input and preview
 
-## 文件结构
+## File Structure
 
 ```
 src/
 ├── domain/chain-prompt/
-│   └── types.ts                    # 领域类型定义
+│   └── types.ts                    # Domain type definitions
 ├── data/
-│   ├── db.ts                       # Dexie 数据库配置
+│   ├── db.ts                       # Dexie database configuration
 │   ├── sources/
-│   │   └── LocalDexieDataSource.ts # 本地数据源
+│   │   └── LocalDexieDataSource.ts # Local data source implementation
 │   └── repositories/
-│       └── chainPromptRepository.ts # 仓储实现
+│       └── chainPromptRepository.ts # Repository implementation
 ├── services/
-│   ├── templateEngine.ts           # 模板解析引擎
-│   └── chainPromptExecutor.ts      # 执行服务
+│   ├── templateEngine.ts           # Template parsing engine
+│   └── chainPromptExecutor.ts      # Execution service
 ├── stores/
-│   └── chainPromptStore.ts         # UI 状态管理
+│   └── chainPromptStore.ts         # UI state management
 └── components/setting-panel/views/chain-prompt/
-    ├── index.tsx                   # 列表视图
-    ├── editor.tsx                  # 编辑视图
-    ├── RunModal.tsx                # 运行弹窗
-    └── README.md                   # 本文档
+    ├── index.tsx                   # List view
+    ├── editor.tsx                  # Edit view
+    ├── RunModal.tsx                # Run modal
+    └── README.md                   # This document
 ```
 
-## 使用示例
+## Usage Examples
 
-### 创建 Chain Prompt
+### Creating a Chain Prompt
 
-1. 打开 Setting Panel → Chain Prompt
-2. 点击 "New Chain Prompt"
-3. 填写名称和描述
-4. （可选）定义输入变量
-5. 添加步骤并编写 Prompt
-6. 使用 `{{VAR}}` 引用变量，`{{StepN.output}}` 引用前序步骤输出
-7. 保存
+1. Open Setting Panel → Chain Prompt
+2. Click "New Chain Prompt"
+3. Fill in the name and description
+4. (Optional) Define input variables
+5. Add steps and write your prompts
+6. Use `{{VAR}}` to reference variables, and `{{StepN.output}}` to reference output from previous steps
+7. Save
 
-### 运行 Chain Prompt
+### Running a Chain Prompt
 
-1. 在列表中找到目标 Chain Prompt
-2. 点击 "Run" 按钮
-3. 在弹窗中填写变量值
-4. 查看右侧预览
-5. 点击 "Execute" 开始执行
+1. Find the target Chain Prompt in the list
+2. Click the "Run" button
+3. Fill in the variable values in the modal
+4. Review the preview on the right
+5. Click "Execute" to start the process
 
-### 变量系统
+### Variable System
 
-**输入变量**:
-- 格式: `{{VARIABLE_KEY}}`
-- 示例: `{{TOPIC}}`, `{{TONE}}`
+**Input Variables**:
+- Format: `{{VARIABLE_KEY}}`
+- Examples: `{{TOPIC}}`, `{{TONE}}`
 
-**步骤输出引用**:
-- 格式: `{{StepN.output}}` (N 为 1-based)
-- 示例: `{{Step1.output}}`, `{{Step2.output}}`
-- 限制: 仅可引用之前步骤的输出
+**Step Output References**:
+- Format: `{{StepN.output}}` (N is 1-based)
+- Examples: `{{Step1.output}}`, `{{Step2.output}}`
+- Restriction: Can only reference output from preceding steps
 
-## 技术细节
+## Technical Details
 
-### 执行流程
+### Execution Flow
 
-1. 用户点击 Run → 打开 RunModal
-2. 填写变量 → 实时预览渲染后的 Prompts
-3. 点击 Execute → 开始执行
-4. 对于每个步骤:
-   - 渲染模板（替换变量）
-   - 插入到 Gemini 输入框
-   - 发送消息
-   - 监听模型状态变化
-   - 等待响应完成
-   - 提取输出并保存到上下文
-5. 全部完成 → 显示结果
+1. User clicks Run → Opens RunModal
+2. User fills variables → Real-time preview of rendered prompts
+3. User clicks Execute → Process starts
+4. For each step:
+   - Render template (replace variables)
+   - Insert into Gemini input box
+   - Send message
+   - Monitor model status changes
+   - Wait for response completion
+   - Extract output and save to context
+5. All steps complete → Show result
 
-### 数据存储
+### Data Storage
 
-- **本地优先**: V1 仅使用 IndexedDB 本地存储
-- **云端预留**: 架构已为云端迁移做准备（DataSource 抽象）
-- **运行记录**: V1 不持久化运行记录（仅页面级内存状态）
+- **Local First**: V1 uses IndexedDB for local storage only
+- **Cloud Ready**: Architecture is prepared for cloud migration (DataSource abstraction)
+- **Execution Logs**: V1 does not persist execution history (page-level memory state only)
 
-### 校验规则
+### Validation Rules
 
-- Chain Prompt 必须有名称
-- 至少包含一个步骤
-- 所有步骤必须有 Prompt 内容
-- 变量 key 不能重复
-- 步骤中只能引用已定义的变量和之前步骤的输出
+- Chain Prompt must have a name
+- Must contain at least one step
+- All steps must have prompt content
+- Variable keys cannot be duplicated
+- Steps can only reference defined variables and output from previous steps
 
-## 未来扩展
+## Future Extensions
 
-- [ ] 运行历史记录持久化
-- [ ] 导入/导出 JSON
-- [ ] 标签和分类
-- [ ] 云端同步
-- [ ] 模板市场/分享
-- [ ] 条件分支和循环
-- [ ] 重试和错误处理增强
-
-
+- [ ] Persistence of execution history
+- [ ] Import/Export as JSON
+- [ ] Tags and categories
+- [ ] Cloud synchronization
+- [ ] Template marketplace/sharing
+- [ ] Conditional branching and loops
+- [ ] Enhanced retry and error handling

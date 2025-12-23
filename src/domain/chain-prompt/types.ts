@@ -1,6 +1,6 @@
 /**
  * Chain Prompt Domain Types
- * 定义链式提示词的核心领域模型
+ * Define core domain model for chained prompts
  */
 
 export interface ChainVariable {
@@ -24,7 +24,7 @@ export interface ChainPrompt {
   steps: ChainStep[]
 }
 
-// 运行时状态（页面级内存态，不持久化）
+// Runtime state (page-level in-memory state, not persisted)
 export type RunStatus = 'pending' | 'running' | 'succeeded' | 'failed' | 'aborted'
 
 export interface RunResultStep {

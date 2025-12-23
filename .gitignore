@@ -13,6 +13,7 @@ stats.html
 stats-*.json
 .wxt
 .wxt/*
+.pnpm-store
 
 # Editor directories and files
 .vscode/*

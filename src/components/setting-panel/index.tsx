@@ -16,7 +16,7 @@ export const SettingPanel = () => {
   useEvent('settings:open', (data: AppEvents['settings:open']) => {
     setOpen(data.open)
     
-    // 如果 data.module 有值，则设置 settingPanel 到对应的 NavigationSection
+    // If data.module has a value, set settingPanel to the corresponding NavigationSection
     if (data.module) {
       setActiveSection(data.module)
     }
@@ -30,8 +30,8 @@ export const SettingPanel = () => {
     <Dialog.Root 
       open={open} 
       onOpenChange={(e) => setOpen(e.open)}
-      closeOnInteractOutside={false}  // 防止意外关闭
-      closeOnEscape={true}            // 保留 ESC 键关闭
+      closeOnInteractOutside={false}  // Prevent accidental closing
+      closeOnEscape={true}            // Keep ESC key to close
       size={{
         mdDown: "cover",
         md: "cover"

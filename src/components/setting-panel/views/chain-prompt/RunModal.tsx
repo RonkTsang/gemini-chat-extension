@@ -1,6 +1,6 @@
 /**
  * Run Modal Component
- * 左侧输入变量，右侧预览渲染后的 prompts
+ * Left: variable inputs, Right: preview of rendered prompts
  */
 
 import React, { useEffect, useMemo, useState } from 'react'
@@ -46,7 +46,7 @@ export function RunModal({ prompt, open, onClose, onEdit }: RunModalProps) {
   const running = useChainPromptStore(state => state.running)
   const { emit } = useEventEmitter()
 
-  // 初始化变量默认值
+  // Initialize variable default values
   useEffect(() => {
     if (open) {
       const initialValues: Record<string, string> = {}
@@ -55,13 +55,13 @@ export function RunModal({ prompt, open, onClose, onEdit }: RunModalProps) {
       })
       setVariableValues(initialValues)
       
-      // 检测聊天历史
+      // Detect chat history
       const summary = getChatSummary()
       setChatMessageCount(summary.messageCount)
     }
   }, [open, prompt])
 
-  // 预览：渲染所有步骤
+  // Preview: render all steps
   const previewSteps = useMemo(() => {
     const context = {
       variables: variableValues,
@@ -71,7 +71,7 @@ export function RunModal({ prompt, open, onClose, onEdit }: RunModalProps) {
     return prompt.steps.map((step, index) => {
       try {
         const { prompt: rendered } = templateEngine.renderWithValidation(step.prompt, context, index)
-        // 模拟输出以便后续步骤预览（使用占位符）
+        // Simulate output for subsequent step preview (using placeholder)
         context.stepOutputs.set(index, `[Output of Step ${index + 1}]`)
         return {
           stepIndex: index,
@@ -91,13 +91,13 @@ export function RunModal({ prompt, open, onClose, onEdit }: RunModalProps) {
   }, [prompt, variableValues])
 
   const handleExecute = async () => {
-    // 检测聊天历史
+    // Detect chat history
     if (hasChatHistory()) {
       setShowConfirmDialog(true)
       return
     }
 
-    // 无历史记录，直接执行
+    // No history found, execute directly
     await executeChainPrompt()
   }
 
@@ -109,7 +109,7 @@ export function RunModal({ prompt, open, onClose, onEdit }: RunModalProps) {
   const handleCreateNewAndContinue = async () => {
     setShowConfirmDialog(false)
 
-    // 创建新聊天
+    // Create new chat
     const success = await createNewChatByClick()
 
     if (!success) {
@@ -122,7 +122,7 @@ export function RunModal({ prompt, open, onClose, onEdit }: RunModalProps) {
       return
     }
 
-    // 新聊天创建成功，执行 chain prompt
+    // New chat created successfully, execute chain prompt
     await executeChainPrompt()
   }
 
@@ -135,18 +135,18 @@ export function RunModal({ prompt, open, onClose, onEdit }: RunModalProps) {
   const executeChainPrompt = async () => {
     setIsExecuting(true)
     
-    // 1. 初始化运行状态
+    // 1. Initialize run status
     startRun(prompt)
     
-    // 2. 关闭所有设置面板与弹窗（等待动画完成以避免闪烁）
+    // 2. Close all setting panels and modals (wait for animation to avoid flicker)
     onClose()
     
-    // 通过事件总线关闭设置面板
+    // Close setting panel via event bus
     emit('settings:close', { from: 'run-modal', reason: 'execution-started' })
     
     await new Promise(resolve => setTimeout(resolve, 150))
     
-    // 3. 挂载运行状态 UI（动态导入以避免在非 content script 环境中报错）
+    // 3. Mount run status UI (dynamic import to avoid errors in non-content script environments)
     try {
       const { mountRunStatusUI } = await import('@/entrypoints/content/status')
       await mountRunStatusUI()
@@ -155,7 +155,7 @@ export function RunModal({ prompt, open, onClose, onEdit }: RunModalProps) {
     }
 
     try {
-      // 获取聊天窗口和中止信号
+      // Get chat window and abort signal
       const chatWindow = getDefaultChatWindow() || undefined
       const abortSignal = running.abortController?.signal
       
@@ -170,13 +170,13 @@ export function RunModal({ prompt, open, onClose, onEdit }: RunModalProps) {
         }
       )
 
-      // 执行完成，更新状态
+      // Execution complete, update status
       const { running: currentRunning } = useChainPromptStore.getState()
       if (currentRunning.status === 'running') {
         completeRun({ status: 'succeeded', steps: [], startedAt: new Date().toISOString() })
       }
 
-      // 显示完成提示
+      // Show completion notification
       const { running: finalRunning } = useChainPromptStore.getState()
       if (finalRunning.status === 'succeeded') {
         toaster.create({
@@ -377,7 +377,7 @@ export function RunModal({ prompt, open, onClose, onEdit }: RunModalProps) {
         </Dialog.Positioner>
       </Portal>
 
-      {/* 确认对话框 */}
+      {/* Confirmation dialog */}
       <ConfirmNewChatDialog
         open={showConfirmDialog}
         onClose={() => setShowConfirmDialog(false)}
