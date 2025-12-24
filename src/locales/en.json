@@ -1,0 +1,332 @@
+{
+  "emptyTocMessage": "No user prompts found in this chat yet.",
+  "attachmentLabel": "[Attachment]",
+  "clickToPin": "Click to pin",
+  "unpin": "Unpin",
+  "askGemini": "Ask Gemini",
+  "regardingThis": "Referring to this in particular",
+  "enableQuickQuoteLabel": "Enable Quick Follow-up",
+  "reportIssueLabel": "Report an Issue",
+  "enableChatOutlineLabel": "Enable Chat Outline",
+  "settingsTitle":  "Gemini Power Kit Settings",
+  "settingsDescription": "Customize your Gemini Power Kit experience",
+  "chatOutlineDescription": "Generate clickable outline for easy navigation",
+  "quickQuoteDescription": "Select text to quickly quote and ask questions",
+  "quickFollow": {
+    "more": "More",
+    "moreAriaLabel": "Show more prompts"
+  },
+  "settings": {
+    "quickFollow": {
+      "title": "Quick Follow-up",
+      "enable": "Enable Quick Follow-up",
+      "customPrompts": {
+        "title": "Skill Management",
+        "description": "The first $1 skills are pinned, scroll horizontally to view more",
+        "add": "Add Skill",
+        "addTemplates": "Add Starter Templates",
+        "empty": "No custom prompts yet. Add one or use starter templates.",
+        "defaultTemplate": "e.g. Explain {{SELECT_TEXT}} in simple terms",
+        "placeholderTip": "Use {{SELECT_TEXT}} in your template to insert the selected text. Example: \"Translate {{SELECT_TEXT}} to Chinese\""
+      },
+      "card": {
+        "namePlaceholder": "Custom Prompt Name (Optional)",
+        "nameEmpty": "Name cannot be empty",
+        "templateEmpty": "Template cannot be empty",
+        "templateMissingPlaceholder": "Template must contain $1",
+        "templateHelper": "Must include $1",
+        "editLabel": "Edit",
+        "deleteLabel": "Delete prompt",
+        "deleteConfirmTitle": "Delete Skill",
+        "deleteConfirmDescription": "Are you sure you want to delete this skill? This action cannot be undone."
+      },
+      "createModal": {
+        "title": "Create Skill"
+      },
+      "editModal": {
+        "title": "Edit Skill",
+        "iconAndNameLabel": "Icon and Name",
+        "namePlaceholder": "Enter skill name",
+        "templateLabel": "Prompt Content",
+        "save": "Save",
+        "cancel": "Cancel"
+      },
+      "chip": {
+        "label": "Selected Text",
+        "tooltip": "This is the text you selected in Gemini"
+      }
+    },
+    "chatOutline": {
+      "enable": "Enable Chat Outline"
+    }
+  },
+  "settingPanel": {
+    "chainPrompt": {
+      "new": "New Chain Prompt",
+      "searchPlaceholder": "Search by name or description...",
+      "emptyTitle": "No chain prompts yet",
+      "emptyTitleSearch": "No matching chain prompts found",
+      "emptyDesc": "Create your first chain prompt to automate complex conversations",
+      "emptyDescSearch": "Try adjusting your search query",
+      "create": "Create Chain Prompt",
+      "menu": {
+        "edit": "Edit",
+        "copy": "Copy",
+        "delete": "Delete",
+        "moreOptions": "More options"
+      },
+      "stats": {
+        "steps": {
+          "1": "$1 step",
+          "n": "$1 steps"
+        },
+        "variables": {
+          "1": "$1 variable",
+          "n": "$1 variables"
+        }
+      },
+      "run": "Run",
+      "toast": {
+        "loadFailed": "Failed to load chain prompts",
+        "unknownError": "Unknown error",
+        "copied": "Chain prompt copied",
+        "copiedDesc": "\"$1\" has been created",
+        "copyFailed": "Failed to copy",
+        "deleted": "Chain prompt deleted",
+        "deleteFailed": "Failed to delete",
+        "templateImported": "Template imported",
+        "templateImportedDesc": "\"$1\" has been added to your prompts",
+        "importFailed": "Failed to import template"
+      },
+      "confirmDelete": "Are you sure you want to delete \"$1\"? This action cannot be undone.",
+      "templates": "Templates",
+      "browseTemplates": "Browse Templates",
+      "import": "Import",
+      "categories": {
+        "all": "All",
+        "contentCreation": "Content Creation",
+        "codeDevelopment": "Code Development",
+        "learningResearch": "Learning & Research",
+        "businessOffice": "Business & Office"
+      },
+      "templateModal": {
+        "title": "Template Library",
+        "description": "Choose from our curated templates to get started quickly",
+        "searchPlaceholder": "Search templates...",
+        "emptyTitle": "No templates found",
+        "emptyDesc": "Try adjusting your search or category filter",
+        "close": "Close"
+      }
+    },
+    "editor": {
+      "stepsTitle": "Steps",
+      "addStep": "Add Step",
+      "addAsVariable": "Add as Variable",
+      "variableKeyUpdated": "Variable Key Updated",
+      "variableReferencesUpdated": "Variable references have been updated",
+      "variableUpdateError": "Variable Update Error",
+      "variableUpdateErrorDesc": "Failed to update variable references in steps",
+      "startTitle": "Start building your chain",
+      "startDesc": "Add steps to define what your chain prompt will do",
+      "addFirstStep": "Add First Step",
+      "placeholders": {
+        "stepName": "Step $1",
+        "prompt": "Enter your prompt here. Use {{VARIABLE}} for variables.",
+        "name": "e.g., Blog Article Generator",
+        "desc": "Describe what this chain does...",
+        "variableKey": "Key (required)",
+        "variableDefault": "Default (optional)"
+      },
+      "insert": "Insert:",
+      "variables": "variables",
+      "addVariable": "Add Variable",
+      "aria": {
+        "removeStep": "Remove step",
+        "addStep": "Add step",
+        "addVariable": "Add variable",
+        "removeVariable": "Remove variable"
+      },
+      "sidebar": {
+        "name": "Name *",
+        "description": "Description",
+        "inputVariables": "Input Variables",
+        "noVariables": "No variables defined"
+      },
+      "footer": {
+        "cancel": "Cancel",
+        "save": "Save"
+      },
+      "validation": {
+        "title": "Validation Error",
+        "enterName": "Please enter a name",
+        "addOneStep": "Please add at least one step",
+        "allStepsHaveContent": "All steps must have prompt content",
+        "duplicateKeys": "Duplicate variable keys: $1"
+      },
+      "saveToast": {
+        "created": "Chain prompt created",
+        "updated": "Chain prompt updated",
+        "ignoredVars": "$1 empty variable(s) were not saved",
+        "failed": "Failed to save"
+      },
+      "confirmDiscard": "Discard changes?"
+    },
+    "runModal": {
+      "title": "Run Chain Prompt: $1",
+      "edit": "Edit",
+      "close": "Close",
+      "inputVariables": "Input Variables",
+      "noVariables": "No variables defined",
+      "preview": "Preview",
+      "errorPrefix": "Error: $1",
+      "footer": {
+        "cancel": "Cancel",
+        "execute": "Execute",
+        "executing": "Executing..."
+      },
+      "placeholders": {
+        "enterVariable": "Enter $1"
+      },
+      "toaster": {
+        "completed": "Chain prompt completed successfully",
+        "failed": "Chain prompt failed",
+        "aborted": "Chain prompt aborted",
+        "executionFailed": "Execution failed",
+        "unknownError": "Unknown error"
+      },
+      "log": {
+        "stepStart": "Step $1 started:",
+        "stepCompleted": "Step $1 completed:",
+        "stepFailed": "Step $1 failed:"
+      }
+    },
+    "runStatus": {
+      "running": "$1 is running ($2/$3)",
+      "succeeded": "$1 is success",
+      "failed": "$1 failed",
+      "aborted": "$1 aborted",
+      "stepPending": "Pending",
+      "stepRunning": "Running...",
+      "stepSucceeded": "Completed",
+      "stepFailed": "Failed",
+      "stopExecution": "Stop execution",
+      "close": "Close",
+      "tooltip": {
+        "abortRun": "Abort execution",
+        "closeStatus": "Close status reminder"
+      }
+    },
+    "config": {
+      "chainPrompt": {
+        "title": "Chain Prompt",
+        "views": {
+          "index": {
+            "title": "Chain Prompt",
+            "description": "Automate complex multi-step conversations. Create reusable workflows that run multiple steps automatically with one click."
+          },
+          "editor": {
+            "title": "Chain Prompt Editor"
+          }
+        }
+      },
+      "quickFollowup": {
+        "title": "Quick Follow-up",
+        "views": {
+          "index": {
+            "title": "Quick Follow-up",
+            "description": "Quick Follow-up appears when you select text, helping you quickly perform common actions like translation, explanation, and summarization."
+          },
+          "detail": {
+            "title": "Quick Follow-up Detail",
+            "description": "Detailed configuration for quick follow-ups."
+          }
+        }
+      },
+      "imagePrompt": {
+        "title": "Image Prompt",
+        "views": {
+          "index": {
+            "title": "Image Prompt",
+            "description": "Main overview for image prompt settings."
+          }
+        }
+      },
+      "chatOutline": {
+        "title": "Chat Outline",
+        "views": {
+          "index": {
+            "title": "Chat Outline",
+            "description": "Generate a quick index of conversation history on the left side. Click and jump to the corresponding message in long conversations."
+          },
+          "detail": {
+            "title": "Chat Outline Detail",
+            "description": "Detailed configuration for chat outlines."
+          }
+        }
+      },
+      "theme": {
+        "title": "Theme",
+        "views": {
+          "index": {
+            "title": "Theme",
+            "description": "Main overview for theme settings."
+          },
+          "detail": {
+            "title": "Theme Detail",
+            "description": "Detailed configuration for theme settings."
+          }
+        }
+      },
+      "about": {
+        "title": "About",
+        "views": {
+          "index": {
+            "title": "About",
+            "description": "Learn more about Gemini Power Kit"
+          }
+        }
+      }
+    }
+  },
+  "aboutPage": {
+    "productName": "Gemini Power Kit",
+    "tagline": "Your Essential Companion for Gemini",
+    "motivation": {
+      "title": "Motivation",
+      "content": "Built with ❤️ by a passionate Gemini user, for users. This kit is designed to eliminate the small frictions we all face, so you can focus on what truly matters: your next great idea."
+    },
+    "feedback": {
+      "title": "Feedback",
+      "featureRequest": "Feature Request",
+      "bugSupport": "Bug / Support",
+      "leaveReview": "Leave a review"
+    },
+    "openSource": {
+      "title": "Open Source"
+    },
+    "donate": {
+      "title": "Support the Project",
+      "description": "If Gemini Power Kit saves you time or sparks joy, please consider supporting its future",
+      "buyMeCoffee": "Buy me a coffee",
+      "share": "Share with friends"
+    }
+  },
+  "executionCoordinator": {
+    "toast": {
+      "chatSwitched": {
+        "title": "Chain Prompt Interrupted",
+        "description": "Execution was aborted due to chat switching"
+      }
+    }
+  },
+  "common": {
+    "confirmDialog": {
+      "title": "Confirm Action",
+      "description": "This action cannot be undone. Do you want to continue?",
+      "confirm": "Confirm",
+      "cancel": "Cancel"
+    }
+  }
+}
+
+

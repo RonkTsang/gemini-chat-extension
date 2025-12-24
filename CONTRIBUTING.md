@@ -1,4 +1,4 @@
-# Contributing to Chat Outline for Gemini
+# Contributing to Gemini Power Kit
 
 First off, thank you for considering contributing! It's people like you that make open source such a great community.
 

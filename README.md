@@ -1,23 +1,39 @@
 <div align="center">
-  <img src="images/logo_512.png" alt="Chat Outline for Gemini Logo" width="128"/>
+  <img src="public/icon/512.png" alt="Gemini Power Kit Logo" width="128"/>
   <br/>
   <a href="https://github.com/google-gemini/gemini-cli">
     <img src="https://img.shields.io/badge/Made%20with-Gemini%20Cli-4285F4?style=for-the-badge&logo=google-gemini&logoColor=white" alt="Made with Gemini-Cli"/>
   </a>
 </div>
 
-# Chat Outline - A Chrome Extension for Gemini
+# Gemini Power Kit - A Chrome Extension for Gemini
 
-This is a simple Chrome extension that adds a clickable outline to your [Gemini](https://gemini.google.com) chat history, making it easier to navigate long conversations.
+Transform your [Gemini](https://gemini.google.com) experience with powerful tools designed to boost your productivity and streamline your workflow. Gemini Power Kit is your essential companion, bringing together three powerful features: **Chat Outline**, **Quick Follow-up**, and **Chain Prompt**.
 
 ## Features
 
--   **Clickable Outline**: Generates a list of all your prompts in a conversation.
--   **Easy Navigation**: Click any prompt in the outline to instantly scroll to that point in the chat.
--   **Pin the Outline**: Keep the outline popover open and visible while you scroll and interact with the chat.
--   **Quick-Quote**: Quickly quote a specific part of a message to ask a follow-up question.
--   **Minimalist UI**: The outline is accessible via a simple icon and can be opened or closed.
+### 🗂️ Chat Outline
+-   **Clickable Outline**: Generates a navigable list of all your prompts in a conversation.
+-   **Easy Navigation**: Click any prompt to instantly scroll to that point in the chat.
+-   **Pin Mode**: Keep the outline popover open and visible while you scroll and interact.
+-   **Smart Organization**: Never get lost in long conversations again.
+
+### ⚡ Quick Follow-up
+-   **Text Selection Actions**: Select any text and instantly access custom prompts.
+-   **Customizable Prompts**: Create your own quick-action templates (translate, explain, summarize, etc.).
+-   **One-Click Execution**: Turn selected text into a follow-up question with a single click.
+-   **Template Library**: Pre-built templates to get you started immediately.
+
+### 🔗 Chain Prompt
+-   **Multi-Step Automation**: Execute complex conversation workflows automatically.
+-   **Variable Support**: Define reusable variables for dynamic prompt chains.
+-   **Visual Editor**: Build and manage chain prompts with an intuitive interface.
+-   **Real-time Monitoring**: Track execution progress with live status updates.
+
+### 🎨 Design
+-   **Minimalist UI**: Clean, unobtrusive interface that stays out of your way.
 -   **Light & Dark Theme**: Automatically adapts to the Gemini website's theme.
+-   **Shadow DOM Isolation**: Styles never conflict with Gemini's native interface.
 
 ## Install from Chrome Web Store
 

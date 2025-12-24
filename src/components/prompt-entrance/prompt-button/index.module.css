@@ -1,0 +1,38 @@
+.container {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  height: 40px;
+  border-radius: 40px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--gem-sys-color--on-surface-variant, #575b5f);
+  font-family: var(--mat-button-text-label-text-font, var(--mat-sys-label-large-font));
+  font-size: var(--mat-button-text-label-text-size, var(--mat-sys-label-large-size));
+  letter-spacing: var(--mat-button-text-label-text-tracking, var(--mat-sys-label-large-tracking));
+  text-transform: var(--mat-button-text-label-text-transform);
+  font-weight: var(--mat-button-text-label-text-weight, var(--mat-sys-label-large-weight));
+}
+
+.button:hover {
+  background-color: color(from var(--gem-sys-color--on-surface-variant) srgb r g b/.08);
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+}
+
+.text {
+  /* Inherits styles from button */
+}

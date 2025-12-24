@@ -1,0 +1,330 @@
+{
+  "emptyTocMessage": "此聊天中尚未发现用户查询。",
+  "attachmentLabel": "[附件]",
+  "clickToPin": "点击固定",
+  "unpin": "取消固定",
+  "askGemini": "询问 Gemini",
+  "regardingThis": "特指这段内容",
+  "enableQuickQuoteLabel": "启用快速引用",
+  "reportIssueLabel": "报告问题",
+  "enableChatOutlineLabel": "启用聊天大纲",
+  "settingsTitle": "Gemini Power Kit 设置",
+  "settingsDescription": "自定义您的 Gemini Power Kit 体验",
+  "chatOutlineDescription": "生成可点击大纲，便于导航",
+  "quickQuoteDescription": "选择文本快速引用并提问",
+  "quickFollow": {
+    "more": "更多",
+    "moreAriaLabel": "显示更多提示"
+  },
+  "settings": {
+    "quickFollow": {
+      "title": "快速追问",
+      "enable": "启用 Quick Follow-up",
+      "customPrompts": {
+        "title": "技能管理",
+        "description": "前 $1 个技能固定显示，其余技能可横向滚动查看",
+        "add": "添加技能",
+        "addTemplates": "一键添加常用模板",
+        "empty": "暂无自定义 Prompt，可添加一个或一键添加常用模板。",
+        "defaultTemplate": "例如：用简单的话解释 {{SELECT_TEXT}}",
+        "placeholderTip": "在模板中使用 {{SELECT_TEXT}} 来插入选中的文本。例如：\"将 {{SELECT_TEXT}} 翻译成中文\""
+      },
+      "card": {
+        "namePlaceholder": "自定义 Prompt 名称（可选）",
+        "nameEmpty": "名称不能为空",
+        "templateEmpty": "模板不能为空",
+        "templateMissingPlaceholder": "模板必须包含 {{placeholder}}",
+        "templateHelper": "必须包含 {{placeholder}}",
+        "editLabel": "编辑",
+        "deleteLabel": "删除 Prompt",
+        "deleteConfirmTitle": "删除技能",
+        "deleteConfirmDescription": "确定要删除这个技能吗？此操作无法撤销。"
+      },
+      "createModal": {
+        "title": "新建技能"
+      },
+      "editModal": {
+        "title": "编辑技能",
+        "iconAndNameLabel": "图标和名称",
+        "namePlaceholder": "输入技能名称",
+        "templateLabel": "提示词内容",
+        "save": "保存",
+        "cancel": "取消"
+      },
+      "chip": {
+        "label": "选中的文本",
+        "tooltip": "此处是你在 Gemini 中所选中的内容"
+      }
+    },
+    "chatOutline": {
+      "enable": "启用对话大纲"
+    }
+  },
+  "settingPanel": {
+    "chainPrompt": {
+      "new": "新建 Chain Prompt",
+      "searchPlaceholder": "按名称或描述搜索...",
+      "emptyTitle": "尚无 Chain Prompt",
+      "emptyTitleSearch": "未找到匹配的 Chain Prompt",
+      "emptyDesc": "创建你的第一个 Chain Prompt 来自动化复杂对话",
+      "emptyDescSearch": "尝试调整搜索条件",
+      "create": "创建 Chain Prompt",
+      "menu": {
+        "edit": "编辑",
+        "copy": "复制",
+        "delete": "删除",
+        "moreOptions": "更多操作"
+      },
+      "stats": {
+        "steps": {
+          "1": "$1 个步骤",
+          "n": "$1 个步骤"
+        },
+        "variables": {
+          "1": "$1 个变量",
+          "n": "$1 个变量"
+        }
+      },
+      "run": "运行",
+      "toast": {
+        "loadFailed": "加载 Chain Prompt 失败",
+        "unknownError": "未知错误",
+        "copied": "已复制 Chain Prompt",
+        "copiedDesc": "已创建 \"$1\"",
+        "copyFailed": "复制失败",
+        "deleted": "已删除 Chain Prompt",
+        "deleteFailed": "删除失败",
+        "templateImported": "模板已导入",
+        "templateImportedDesc": "\"$1\" 已添加到你的提示中",
+        "importFailed": "导入模板失败"
+      },
+      "confirmDelete": "确定删除 \"$1\" 吗？此操作不可撤销。",
+      "templates": "模板",
+      "browseTemplates": "浏览模板",
+      "import": "导入",
+      "categories": {
+        "all": "全部",
+        "contentCreation": "内容创作",
+        "codeDevelopment": "代码开发",
+        "learningResearch": "学习研究",
+        "businessOffice": "商务办公"
+      },
+      "templateModal": {
+        "title": "模板库",
+        "description": "从我们精选的模板中选择，快速开始使用",
+        "searchPlaceholder": "搜索模板...",
+        "emptyTitle": "未找到模板",
+        "emptyDesc": "尝试调整搜索条件或分类筛选",
+        "close": "关闭"
+      }
+    },
+    "editor": {
+      "stepsTitle": "步骤",
+      "addStep": "添加步骤",
+      "addAsVariable": "添加为变量",
+      "variableKeyUpdated": "变量键已更新",
+      "variableReferencesUpdated": "变量引用已更新",
+      "variableUpdateError": "变量更新错误",
+      "variableUpdateErrorDesc": "更新步骤中的变量引用失败",
+      "startTitle": "开始构建你的链",
+      "startDesc": "添加步骤以定义该 Chain Prompt 做什么",
+      "addFirstStep": "添加第一个步骤",
+      "placeholders": {
+        "stepName": "步骤 $1",
+        "prompt": "在此输入你的提示，使用 {{VARIABLE}} 表示变量",
+        "name": "例如：博客文章生成器",
+        "desc": "描述此链的作用...",
+        "variableKey": "键（必填）",
+        "variableDefault": "默认值（可选）"
+      },
+      "insert": "插入：",
+      "variables": "变量",
+      "addVariable": "添加变量",
+      "aria": {
+        "removeStep": "移除步骤",
+        "addStep": "添加步骤",
+        "addVariable": "添加变量",
+        "removeVariable": "移除变量"
+      },
+      "sidebar": {
+        "name": "名称 *",
+        "description": "描述",
+        "inputVariables": "输入变量",
+        "noVariables": "尚未定义变量"
+      },
+      "footer": {
+        "cancel": "取消",
+        "save": "保存"
+      },
+      "validation": {
+        "title": "校验错误",
+        "enterName": "请输入名称",
+        "addOneStep": "请至少添加一个步骤",
+        "allStepsHaveContent": "所有步骤必须包含提示内容",
+        "duplicateKeys": "重复的变量键：$1"
+      },
+      "saveToast": {
+        "created": "已创建 Chain Prompt",
+        "updated": "已更新 Chain Prompt",
+        "ignoredVars": "已忽略 $1 个空变量",
+        "failed": "保存失败"
+      },
+      "confirmDiscard": "放弃更改？"
+    },
+    "runModal": {
+      "title": "运行 Chain Prompt：$1",
+      "edit": "编辑",
+      "close": "关闭",
+      "inputVariables": "输入变量",
+      "noVariables": "尚未定义变量",
+      "preview": "预览",
+      "errorPrefix": "错误：$1",
+      "footer": {
+        "cancel": "取消",
+        "execute": "执行",
+        "executing": "正在执行..."
+      },
+      "placeholders": {
+        "enterVariable": "输入 $1"
+      },
+      "toaster": {
+        "completed": "Chain Prompt 执行成功",
+        "failed": "Chain Prompt 执行失败",
+        "aborted": "已中止 Chain Prompt",
+        "executionFailed": "执行失败",
+        "unknownError": "未知错误"
+      },
+      "log": {
+        "stepStart": "步骤 $1 开始：",
+        "stepCompleted": "步骤 $1 完成：",
+        "stepFailed": "步骤 $1 失败："
+      }
+    },
+    "runStatus": {
+      "running": "$1 正在运行（$2/$3）",
+      "succeeded": "$1 执行成功",
+      "failed": "$1 执行失败",
+      "aborted": "$1 已中止",
+      "stepPending": "等待中",
+      "stepRunning": "运行中...",
+      "stepSucceeded": "已完成",
+      "stepFailed": "失败",
+      "stopExecution": "停止执行",
+      "close": "关闭",
+      "tooltip": {
+        "abortRun": "终止运行",
+        "closeStatus": "关闭状态提醒"
+      }
+    },
+    "config": {
+      "chainPrompt": {
+        "title": "Chain Prompt",
+        "views": {
+          "index": {
+            "title": "Chain Prompt",
+            "description": "自动化复杂的多步骤对话。创建可复用的工作流，一键自动执行多个步骤。"
+          },
+          "editor": {
+            "title": "Chain Prompt 编辑器"
+          }
+        }
+      },
+      "quickFollowup": {
+        "title": "快速追问",
+        "views": {
+          "index": {
+            "title": "快速追问",
+            "description": "快速追问会在你选中文本时出现，帮助你快速执行常用操作，如翻译、解释、总结等。"
+          },
+          "detail": {
+            "title": "快速追问详情",
+            "description": "快速追问的详细配置。"
+          }
+        }
+      },
+      "imagePrompt": {
+        "title": "图片 prompt",
+        "views": {
+          "index": {
+            "title": "图片 prompt",
+            "description": "图片 prompt 设置总览。"
+          }
+        }
+      },
+      "chatOutline": {
+        "title": "聊天大纲",
+        "views": {
+          "index": {
+            "title": "聊天大纲",
+            "description": "在页面左侧生成历史对话的快速索引。点击即可跳转到长对话中对应的消息。"
+          },
+          "detail": {
+            "title": "聊天大纲详情",
+            "description": "聊天大纲的详细配置。"
+          }
+        }
+      },
+      "theme": {
+        "title": "主题",
+        "views": {
+          "index": {
+            "title": "主题",
+            "description": "主题设置总览。"
+          },
+          "detail": {
+            "title": "主题详情",
+            "description": "主题设置的详细配置。"
+          }
+        }
+      },
+      "about": {
+        "title": "关于",
+        "views": {
+          "index": {
+            "title": "关于",
+            "description": "了解更多关于 Gemini Power Kit 的信息"
+          }
+        }
+      }
+    }
+  },
+  "aboutPage": {
+    "productName": "Gemini Power Kit",
+    "tagline": "Gemini 的必备伴侣",
+    "motivation": {
+      "title": "开发动机",
+      "content": "由一位热情的 Gemini 用户用 ❤️ 打造，为用户服务。这个工具包旨在消除我们都会遇到的小摩擦，让你专注于真正重要的事情：你的下一个好想法。"
+    },
+    "feedback": {
+      "title": "反馈",
+      "featureRequest": "功能建议",
+      "bugSupport": "问题反馈 / 支持",
+      "leaveReview": "留下评价"
+    },
+    "openSource": {
+      "title": "开源项目"
+    },
+    "donate": {
+      "title": "支持项目",
+      "description": "如果 Gemini Power Kit 为你节省了时间或带来了快乐，请考虑支持它的未来发展",
+      "buyMeCoffee": "请我喝咖啡",
+      "share": "分享给朋友"
+    }
+  },
+  "executionCoordinator": {
+    "toast": {
+      "chatSwitched": {
+        "title": "Chain Prompt 已中断",
+        "description": "由于聊天切换，执行已中止"
+      }
+    }
+  },
+  "common": {
+    "confirmDialog": {
+      "title": "确认操作",
+      "description": "此操作无法撤销，是否继续？",
+      "confirm": "确认",
+      "cancel": "取消"
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "extends": "./.wxt/tsconfig.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "jsx": "react-jsx",
+    "types": ["vite-plugin-svgr/client"]
+  },
+  "include": [
+    ".wxt/wxt.d.ts",
+    "src",
+    "wxt.config.ts"
+  ]
+}

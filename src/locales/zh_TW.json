@@ -1,0 +1,331 @@
+{
+  "emptyTocMessage": "對話開始後，目錄將記錄在此處。",
+  "attachmentLabel": "[附件]",
+  "clickToPin": "點擊固定",
+  "unpin": "取消固定",
+  "askGemini": "詢問 Gemini",
+  "regardingThis": "特指這段內容",
+  "enableQuickQuoteLabel": "啟用快速引用",
+  "reportIssueLabel": "回報問題",
+  "enableChatOutlineLabel": "啟用聊天大綱",
+  "settingsTitle": "Gemini Power Kit 設定",
+  "settingsDescription": "自訂您的 Gemini Power Kit 體驗",
+  "chatOutlineDescription": "生成可點擊大綱，便於導航",
+  "quickQuoteDescription": "選擇文字快速引用並提問",
+  "quickFollow": {
+    "more": "更多",
+    "moreAriaLabel": "顯示更多提示"
+  },
+  "settings": {
+    "quickFollow": {
+      "title": "快速追問",
+      "enable": "啟用 Quick Follow-up",
+      "customPrompts": {
+        "title": "技能管理",
+        "description": "前 $1 個技能固定顯示，其餘技能可橫向捲動查看",
+        "add": "新增技能",
+        "addTemplates": "一鍵加入常用模板",
+        "empty": "尚無自訂 Prompt，可新增一個或一鍵加入常用模板。",
+        "defaultTemplate": "例如：用簡單的話解釋 {{SELECT_TEXT}}",
+        "placeholderTip": "在模板中使用 {{SELECT_TEXT}} 來插入選中的文本。例如：「將 {{SELECT_TEXT}} 翻譯成中文」"
+      },
+      "card": {
+        "namePlaceholder": "自訂 Prompt 名稱（可選）",
+        "nameEmpty": "名稱不可為空",
+        "templateEmpty": "模板不可為空",
+        "templateMissingPlaceholder": "模板必須包含 {{placeholder}}",
+        "templateHelper": "必須包含 {{placeholder}}",
+        "editLabel": "編輯",
+        "deleteLabel": "刪除 Prompt",
+        "deleteConfirmTitle": "刪除技能",
+        "deleteConfirmDescription": "確定要刪除這個技能嗎？此操作無法復原。"
+      },
+      "createModal": {
+        "title": "新建技能"
+      },
+      "editModal": {
+        "title": "編輯技能",
+        "iconAndNameLabel": "圖示和名稱",
+        "namePlaceholder": "輸入技能名稱",
+        "templateLabel": "提示詞內容",
+        "save": "儲存",
+        "cancel": "取消"
+      },
+      "chip": {
+        "label": "選中的文字",
+        "tooltip": "此處是你在 Gemini 中所選取的內容"
+      }
+    },
+    "chatOutline": {
+      "enable": "啟用對話大綱"
+    }
+  },
+
+  "settingPanel": {
+    "chainPrompt": {
+      "new": "新建 Chain Prompt",
+      "searchPlaceholder": "按名稱或描述搜尋...",
+      "emptyTitle": "尚無 Chain Prompt",
+      "emptyTitleSearch": "未找到符合的 Chain Prompt",
+      "emptyDesc": "建立您的第一個 Chain Prompt 以自動化複雜對話",
+      "emptyDescSearch": "嘗試調整搜尋條件",
+      "create": "建立 Chain Prompt",
+      "menu": {
+        "edit": "編輯",
+        "copy": "複製",
+        "delete": "刪除",
+        "moreOptions": "更多操作"
+      },
+      "stats": {
+        "steps": {
+          "1": "$1 個步驟",
+          "n": "$1 個步驟"
+        },
+        "variables": {
+          "1": "$1 個變數",
+          "n": "$1 個變數"
+        }
+      },
+      "run": "執行",
+      "toast": {
+        "loadFailed": "載入 Chain Prompt 失敗",
+        "unknownError": "未知錯誤",
+        "copied": "已複製 Chain Prompt",
+        "copiedDesc": "已建立 \"$1\"",
+        "copyFailed": "複製失敗",
+        "deleted": "已刪除 Chain Prompt",
+        "deleteFailed": "刪除失敗",
+        "templateImported": "模板已匯入",
+        "templateImportedDesc": "\"$1\" 已新增至您的提示中",
+        "importFailed": "匯入模板失敗"
+      },
+      "confirmDelete": "確定刪除 \"$1\" 嗎？此操作無法復原。",
+      "templates": "模板",
+      "browseTemplates": "瀏覽模板",
+      "import": "匯入",
+      "categories": {
+        "all": "全部",
+        "contentCreation": "內容創作",
+        "codeDevelopment": "程式開發",
+        "learningResearch": "學習研究",
+        "businessOffice": "商務辦公"
+      },
+      "templateModal": {
+        "title": "模板庫",
+        "description": "從我們精選的模板中選擇，快速開始使用",
+        "searchPlaceholder": "搜尋模板...",
+        "emptyTitle": "未找到模板",
+        "emptyDesc": "嘗試調整搜尋條件或分類篩選",
+        "close": "關閉"
+      }
+    },
+    "editor": {
+      "stepsTitle": "步驟",
+      "addStep": "新增步驟",
+      "addAsVariable": "新增為變數",
+      "variableKeyUpdated": "變數鍵已更新",
+      "variableReferencesUpdated": "變數引用已更新",
+      "variableUpdateError": "變數更新錯誤",
+      "variableUpdateErrorDesc": "更新步驟中的變數引用失敗",
+      "startTitle": "開始建立您的鏈",
+      "startDesc": "新增步驟以定義此 Chain Prompt 的行為",
+      "addFirstStep": "新增第一個步驟",
+      "placeholders": {
+        "stepName": "步驟 $1",
+        "prompt": "在此輸入您的提示。使用 {{VARIABLE}} 表示變數。",
+        "name": "例如：部落格文章產生器",
+        "desc": "描述此鏈的作用...",
+        "variableKey": "鍵（必填）",
+        "variableDefault": "預設值（可選）"
+      },
+      "insert": "插入：",
+      "variables": "變數",
+      "addVariable": "新增變數",
+      "aria": {
+        "removeStep": "移除步驟",
+        "addStep": "新增步驟",
+        "addVariable": "新增變數",
+        "removeVariable": "移除變數"
+      },
+      "sidebar": {
+        "name": "名稱 *",
+        "description": "描述",
+        "inputVariables": "輸入變數",
+        "noVariables": "尚未定義變數"
+      },
+      "footer": {
+        "cancel": "取消",
+        "save": "儲存"
+      },
+      "validation": {
+        "title": "驗證錯誤",
+        "enterName": "請輸入名稱",
+        "addOneStep": "請至少新增一個步驟",
+        "allStepsHaveContent": "所有步驟必須有提示內容",
+        "duplicateKeys": "重複的變數鍵：$1"
+      },
+      "saveToast": {
+        "created": "已建立 Chain Prompt",
+        "updated": "已更新 Chain Prompt",
+        "ignoredVars": "已忽略 $1 個空變數",
+        "failed": "儲存失敗"
+      },
+      "confirmDiscard": "放棄變更？"
+    },
+    "runModal": {
+      "title": "執行 Chain Prompt：$1",
+      "edit": "編輯",
+      "close": "關閉",
+      "inputVariables": "輸入變數",
+      "noVariables": "尚未定義變數",
+      "preview": "預覽",
+      "errorPrefix": "錯誤：$1",
+      "footer": {
+        "cancel": "取消",
+        "execute": "執行",
+        "executing": "正在執行..."
+      },
+      "placeholders": {
+        "enterVariable": "輸入 $1"
+      },
+      "toaster": {
+        "completed": "Chain Prompt 執行成功",
+        "failed": "Chain Prompt 執行失敗",
+        "aborted": "已中止 Chain Prompt",
+        "executionFailed": "執行失敗",
+        "unknownError": "未知錯誤"
+      },
+      "log": {
+        "stepStart": "步驟 $1 開始：",
+        "stepCompleted": "步驟 $1 完成：",
+        "stepFailed": "步驟 $1 失敗："
+      }
+    },
+    "runStatus": {
+      "running": "$1 正在執行（$2/$3）",
+      "succeeded": "$1 執行成功",
+      "failed": "$1 執行失敗",
+      "aborted": "$1 已中止",
+      "stepPending": "等待中",
+      "stepRunning": "執行中...",
+      "stepSucceeded": "已完成",
+      "stepFailed": "失敗",
+      "stopExecution": "停止執行",
+      "close": "關閉",
+      "tooltip": {
+        "abortRun": "終止執行",
+        "closeStatus": "關閉狀態提醒"
+      }
+    },
+    "config": {
+      "chainPrompt": {
+        "title": "Chain Prompt",
+        "views": {
+          "index": {
+            "title": "Chain Prompt",
+            "description": "自動化複雜的多步驟對話。建立可複用的工作流程，一鍵自動執行多個步驟。"
+          },
+          "editor": {
+            "title": "Chain Prompt 編輯器"
+          }
+        }
+      },
+      "quickFollowup": {
+        "title": "快速追問",
+        "views": {
+          "index": {
+            "title": "快速追問",
+            "description": "快速追問會在你選中文字時出現，幫助你快速執行常用操作，如翻譯、解釋、總結等。"
+          },
+          "detail": {
+            "title": "快速追問詳情",
+            "description": "快速追問的詳細設定。"
+          }
+        }
+      },
+      "imagePrompt": {
+        "title": "圖片 prompt",
+        "views": {
+          "index": {
+            "title": "圖片 prompt",
+            "description": "圖片 prompt 設定總覽。"
+          }
+        }
+      },
+      "chatOutline": {
+        "title": "聊天大綱",
+        "views": {
+          "index": {
+            "title": "聊天大綱",
+            "description": "在頁面左側生成歷史對話的快速索引。點擊即可跳轉到長對話中對應的消息。"
+          },
+          "detail": {
+            "title": "聊天大綱詳情",
+            "description": "聊天大綱的詳細設定。"
+          }
+        }
+      },
+      "theme": {
+        "title": "主題",
+        "views": {
+          "index": {
+            "title": "主題",
+            "description": "主題設定總覽。"
+          },
+          "detail": {
+            "title": "主題詳情",
+            "description": "主題設定的詳細配置。"
+          }
+        }
+      },
+      "about": {
+        "title": "關於",
+        "views": {
+          "index": {
+            "title": "關於",
+            "description": "了解更多關於 Gemini Power Kit 的資訊"
+          }
+        }
+      }
+    }
+  },
+  "aboutPage": {
+    "productName": "Gemini Power Kit",
+    "tagline": "Gemini 的必備伴侶",
+    "motivation": {
+      "title": "開發動機",
+      "content": "由一位熱情的 Gemini 使用者用 ❤️ 打造，為使用者服務。這個工具包旨在消除我們都會遇到的小摩擦，讓您專注於真正重要的事情：您的下一個好想法。"
+    },
+    "feedback": {
+      "title": "回饋",
+      "featureRequest": "功能建議",
+      "bugSupport": "問題回報 / 支援",
+      "leaveReview": "留下評價"
+    },
+    "openSource": {
+      "title": "開源專案"
+    },
+    "donate": {
+      "title": "支援專案",
+      "description": "如果 Gemini Power Kit 為您節省了時間或帶來了快樂，請考慮支援它的未來發展",
+      "buyMeCoffee": "請我喝咖啡",
+      "share": "分享給朋友"
+    }
+  },
+  "executionCoordinator": {
+    "toast": {
+      "chatSwitched": {
+        "title": "Chain Prompt 已中斷",
+        "description": "由於聊天切換，執行已中止"
+      }
+    }
+  },
+  "common": {
+    "confirmDialog": {
+      "title": "確認操作",
+      "description": "此操作無法復原，是否繼續？",
+      "confirm": "確認",
+      "cancel": "取消"
+    }
+  }
+}

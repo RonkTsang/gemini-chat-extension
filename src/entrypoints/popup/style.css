@@ -1,0 +1,22 @@
+/* Minimal styles - only essential styles that Chakra UI doesn't provide */
+
+:root {
+  /* Tell the browser to support theme switching - important for Chakra UI's theme system */
+  color-scheme: light dark;
+  
+  /* Font rendering optimization - Chakra UI doesn't automatically provide these performance optimizations */
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  /* Popup layout styles - Chakra UI doesn't automatically provide this specific layout */
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}

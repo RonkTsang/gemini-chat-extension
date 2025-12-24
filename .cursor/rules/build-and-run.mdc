@@ -1,0 +1,43 @@
+---
+alwaysApply: true
+---
+# Build and Run
+
+Use PNPM (pinned via `packageManager` in [`package.json`](mdc:package.json)).
+
+## Install
+```bash
+pnpm install
+```
+
+## Develop
+```bash
+pnpm dev            # Chromium-based browser
+pnpm dev:firefox    # Firefox
+```
+- Starts WXT in watch mode, loads the extension, and enables live reload.
+- Source lives in [`src/`](mdc:src) and entry points under [`src/entrypoints`](mdc:src/entrypoints).
+
+## Build & Zip
+```bash
+pnpm build          # Build for Chromium
+pnpm build:firefox  # Build for Firefox
+pnpm zip            # Zip Chromium build
+pnpm zip:firefox    # Zip Firefox build
+```
+- Manifest is generated from [`wxt.config.ts`](mdc:wxt.config.ts). Do not edit the legacy root `manifest.json` for WXT builds.
+
+## Type Check & Lint
+```bash
+pnpm compile  # tsc --noEmit
+pnpm lint     # alias to compile
+```
+
+## i18n Consistency
+```bash
+pnpm run check:i18n
+```
+- Verifies all locale files against English base using [`scripts/check-i18n.js`](mdc:scripts/check-i18n.js).
+
+## Post-Install
+- `postinstall` runs `wxt prepare` automatically to set up the project for WXT.

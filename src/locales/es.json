@@ -1,0 +1,330 @@
+{
+  "emptyTocMessage": "Aún no se han encontrado consultas de usuario en este chat.",
+  "attachmentLabel": "[Archivo adjunto]",
+  "clickToPin": "Hacer clic para fijar",
+  "unpin": "Quitar",
+  "askGemini": "Preguntar a Gemini",
+  "regardingThis": "Refiriéndose a esto en particular",
+  "enableQuickQuoteLabel": "Activar Cita Rápida",
+  "reportIssueLabel": "Reportar un problema",
+  "enableChatOutlineLabel": "Activar Esquema de Chat",
+  "settingsTitle": "Configuración de Gemini Power Kit",
+  "settingsDescription": "Personaliza tu experiencia con Gemini Power Kit",
+  "chatOutlineDescription": "Generar esquema clicable para navegación fácil",
+  "quickQuoteDescription": "Seleccionar texto para citar rápidamente y hacer preguntas",
+  "quickFollow": {
+    "more": "Más",
+    "moreAriaLabel": "Mostrar más prompts"
+  },
+  "settings": {
+    "quickFollow": {
+      "title": "Seguimiento rápido",
+      "enable": "Activar Seguimiento rápido",
+      "customPrompts": {
+        "title": "Gestión de habilidades",
+        "description": "Las primeras $1 habilidades están fijadas, deslice horizontalmente para ver más",
+        "add": "Agregar Prompt",
+        "addTemplates": "Agregar plantillas iniciales",
+        "empty": "Aún no hay prompts personalizados. Agrega uno o usa plantillas iniciales.",
+        "defaultTemplate": "p. ej. Explica {{SELECT_TEXT}} en términos simples",
+        "placeholderTip": "Usa {{SELECT_TEXT}} en tu plantilla para insertar el texto seleccionado. Ejemplo: \"Traducir {{SELECT_TEXT}} al chino\""
+      },
+      "card": {
+        "namePlaceholder": "Nombre del Prompt personalizado (Opcional)",
+        "nameEmpty": "El nombre no puede estar vacío",
+        "templateEmpty": "La plantilla no puede estar vacía",
+        "templateMissingPlaceholder": "La plantilla debe contener $1",
+        "templateHelper": "Debe incluir $1",
+        "editLabel": "Editar",
+        "deleteLabel": "Eliminar prompt",
+        "deleteConfirmTitle": "Eliminar habilidad",
+        "deleteConfirmDescription": "¿Está seguro de que desea eliminar esta habilidad? Esta acción no se puede deshacer."
+      },
+      "createModal": {
+        "title": "Crear habilidad"
+      },
+      "editModal": {
+        "title": "Editar habilidad",
+        "iconAndNameLabel": "Icono y nombre",
+        "namePlaceholder": "Introduzca el nombre de la habilidad",
+        "templateLabel": "Contenido del prompt",
+        "save": "Guardar",
+        "cancel": "Cancelar"
+      },
+      "chip": {
+        "label": "Texto seleccionado",
+        "tooltip": "Este es el texto que seleccionaste en Gemini"
+      }
+    },
+    "chatOutline": {
+      "enable": "Habilitar esquema de chat"
+    }
+  },
+  "settingPanel": {
+    "chainPrompt": {
+      "new": "Nuevo Chain Prompt",
+      "searchPlaceholder": "Buscar por nombre o descripción...",
+      "emptyTitle": "Aún no hay Chain Prompts",
+      "emptyTitleSearch": "No se encontraron Chain Prompts coincidentes",
+      "emptyDesc": "Crea tu primer Chain Prompt para automatizar conversaciones complejas",
+      "emptyDescSearch": "Intenta ajustar tu búsqueda",
+      "create": "Crear Chain Prompt",
+      "menu": {
+        "edit": "Editar",
+        "copy": "Copiar",
+        "delete": "Eliminar",
+        "moreOptions": "Más opciones"
+      },
+      "stats": {
+        "steps": {
+          "1": "$1 paso",
+          "n": "$1 pasos"
+        },
+        "variables": {
+          "1": "$1 variable",
+          "n": "$1 variables"
+        }
+      },
+      "run": "Ejecutar",
+      "toast": {
+        "loadFailed": "No se pudieron cargar los Chain Prompts",
+        "unknownError": "Error desconocido",
+        "copied": "Chain Prompt copiado",
+        "copiedDesc": "Se ha creado \"$1\"",
+        "copyFailed": "Error al copiar",
+        "deleted": "Chain Prompt eliminado",
+        "deleteFailed": "Error al eliminar",
+        "templateImported": "Plantilla importada",
+        "templateImportedDesc": "\"$1\" ha sido agregado a tus prompts",
+        "importFailed": "Error al importar plantilla"
+      },
+      "confirmDelete": "¿Seguro que quieres eliminar \"$1\"? Esta acción no se puede deshacer.",
+      "templates": "Plantillas",
+      "browseTemplates": "Explorar plantillas",
+      "import": "Importar",
+      "categories": {
+        "all": "Todas",
+        "contentCreation": "Creación de contenido",
+        "codeDevelopment": "Desarrollo de código",
+        "learningResearch": "Aprendizaje e investigación",
+        "businessOffice": "Negocios y oficina"
+      },
+      "templateModal": {
+        "title": "Biblioteca de plantillas",
+        "description": "Elige entre nuestras plantillas seleccionadas para comenzar rápidamente",
+        "searchPlaceholder": "Buscar plantillas...",
+        "emptyTitle": "No se encontraron plantillas",
+        "emptyDesc": "Intenta ajustar tu búsqueda o filtro de categoría",
+        "close": "Cerrar"
+      }
+    },
+    "editor": {
+      "stepsTitle": "Pasos",
+      "addStep": "Agregar paso",
+      "addAsVariable": "Agregar como variable",
+      "variableKeyUpdated": "Clave de variable actualizada",
+      "variableReferencesUpdated": "Las referencias de variables han sido actualizadas",
+      "variableUpdateError": "Error de actualización de variable",
+      "variableUpdateErrorDesc": "Error al actualizar las referencias de variables en los pasos",
+      "startTitle": "Comienza a construir tu cadena",
+      "startDesc": "Agrega pasos para definir qué hará tu Chain Prompt",
+      "addFirstStep": "Agregar primer paso",
+      "placeholders": {
+        "stepName": "Paso $1",
+        "prompt": "Ingresa tu prompt aquí. Usa {{VARIABLE}} para variables.",
+        "name": "p. ej., Generador de artículos de blog",
+        "desc": "Describe lo que hace esta cadena...",
+        "variableKey": "Clave (requerida)",
+        "variableDefault": "Predeterminado (opcional)"
+      },
+      "insert": "Insertar:",
+      "variables": "variables",
+      "addVariable": "Agregar variable",
+      "aria": {
+        "removeStep": "Eliminar paso",
+        "addStep": "Agregar paso",
+        "addVariable": "Agregar variable",
+        "removeVariable": "Eliminar variable"
+      },
+      "sidebar": {
+        "name": "Nombre *",
+        "description": "Descripción",
+        "inputVariables": "Variables de entrada",
+        "noVariables": "No se han definido variables"
+      },
+      "footer": {
+        "cancel": "Cancelar",
+        "save": "Guardar"
+      },
+      "validation": {
+        "title": "Error de validación",
+        "enterName": "Por favor ingresa un nombre",
+        "addOneStep": "Agrega al menos un paso",
+        "allStepsHaveContent": "Todos los pasos deben tener contenido",
+        "duplicateKeys": "Claves de variables duplicadas: $1"
+      },
+      "saveToast": {
+        "created": "Chain Prompt creado",
+        "updated": "Chain Prompt actualizado",
+        "ignoredVars": "$1 variable(s) vacías no fueron guardadas",
+        "failed": "Error al guardar"
+      },
+      "confirmDiscard": "¿Descartar cambios?"
+    },
+    "runModal": {
+      "title": "Ejecutar Chain Prompt: $1",
+      "edit": "Editar",
+      "close": "Cerrar",
+      "inputVariables": "Variables de entrada",
+      "noVariables": "No se han definido variables",
+      "preview": "Vista previa",
+      "errorPrefix": "Error: $1",
+      "footer": {
+        "cancel": "Cancelar",
+        "execute": "Ejecutar",
+        "executing": "Ejecutando..."
+      },
+      "placeholders": {
+        "enterVariable": "Ingresar $1"
+      },
+      "toaster": {
+        "completed": "Chain Prompt completado con éxito",
+        "failed": "Chain Prompt fallido",
+        "aborted": "Chain Prompt abortado",
+        "executionFailed": "Ejecución fallida",
+        "unknownError": "Error desconocido"
+      },
+      "log": {
+        "stepStart": "Paso $1 iniciado:",
+        "stepCompleted": "Paso $1 completado:",
+        "stepFailed": "Paso $1 fallido:"
+      }
+    },
+    "runStatus": {
+      "running": "$1 está ejecutándose ($2/$3)",
+      "succeeded": "$1 exitoso",
+      "failed": "$1 falló",
+      "aborted": "$1 abortado",
+      "stepPending": "Pendiente",
+      "stepRunning": "Ejecutándose...",
+      "stepSucceeded": "Completado",
+      "stepFailed": "Falló",
+      "stopExecution": "Detener ejecución",
+      "close": "Cerrar",
+      "tooltip": {
+        "abortRun": "Abortar ejecución",
+        "closeStatus": "Cerrar recordatorio de estado"
+      }
+    },
+    "config": {
+      "chainPrompt": {
+        "title": "Chain Prompt",
+        "views": {
+          "index": {
+            "title": "Chain Prompt",
+            "description": "Automatiza conversaciones complejas de varios pasos. Crea flujos de trabajo reutilizables que ejecutan múltiples pasos automáticamente con un clic."
+          },
+          "editor": {
+            "title": "Editor de Chain Prompt"
+          }
+        }
+      },
+      "quickFollowup": {
+        "title": "Seguimiento rápido",
+        "views": {
+          "index": {
+            "title": "Seguimiento rápido",
+            "description": "Seguimiento rápido aparece cuando seleccionas texto, ayudándote a realizar rápidamente acciones comunes como traducción, explicación y resumen."
+          },
+          "detail": {
+            "title": "Detalle de seguimiento rápido",
+            "description": "Configuración detallada de seguimientos rápidos."
+          }
+        }
+      },
+      "imagePrompt": {
+        "title": "imagen prompt",
+        "views": {
+          "index": {
+            "title": "imagen prompt",
+            "description": "Resumen principal de la configuración de imagen prompt."
+          }
+        }
+      },
+      "chatOutline": {
+        "title": "Esquema de chat",
+        "views": {
+          "index": {
+            "title": "Esquema de chat",
+            "description": "Genera un índice rápido del historial de conversación en el lado izquierdo. Haz clic para saltar al mensaje correspondiente en conversaciones largas."
+          },
+          "detail": {
+            "title": "Detalle del esquema de chat",
+            "description": "Configuración detallada del esquema de chat."
+          }
+        }
+      },
+      "theme": {
+        "title": "Tema",
+        "views": {
+          "index": {
+            "title": "Tema",
+            "description": "Resumen principal de los ajustes de tema."
+          },
+          "detail": {
+            "title": "Detalle del tema",
+            "description": "Configuración detallada de los ajustes de tema."
+          }
+        }
+      },
+      "about": {
+        "title": "Acerca de",
+        "views": {
+          "index": {
+            "title": "Acerca de",
+            "description": "Conoce más sobre Gemini Power Kit"
+          }
+        }
+      }
+    }
+  },
+  "aboutPage": {
+    "productName": "Gemini Power Kit",
+    "tagline": "Tu compañero esencial para Gemini",
+    "motivation": {
+      "title": "Motivación",
+      "content": "Creado con ❤️ por un usuario apasionado de Gemini, para usuarios. Este kit está diseñado para eliminar las pequeñas fricciones que todos enfrentamos, para que puedas concentrarte en lo que realmente importa: tu próxima gran idea."
+    },
+    "feedback": {
+      "title": "Comentarios",
+      "featureRequest": "Solicitud de función",
+      "bugSupport": "Error / Soporte",
+      "leaveReview": "Dejar una reseña"
+    },
+    "openSource": {
+      "title": "Código abierto"
+    },
+    "donate": {
+      "title": "Apoyar el proyecto",
+      "description": "Si Gemini Power Kit te ahorra tiempo o te genera alegría, por favor considera apoyar su futuro",
+      "buyMeCoffee": "Invítame un café",
+      "share": "Compartir con amigos"
+    }
+  },
+  "executionCoordinator": {
+    "toast": {
+      "chatSwitched": {
+        "title": "Chain Prompt interrumpido",
+        "description": "La ejecución fue abortada debido al cambio de chat"
+      }
+    }
+  },
+  "common": {
+    "confirmDialog": {
+      "title": "Confirmar acción",
+      "description": "Esta acción no se puede deshacer. ¿Deseas continuar?",
+      "confirm": "Confirmar",
+      "cancel": "Cancelar"
+    }
+  }
+}

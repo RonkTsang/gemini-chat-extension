@@ -1,0 +1,31 @@
+import React from 'react'
+import PromptIcon from '~/assets/prompt.svg?react'
+import styles from './index.module.css'
+
+interface PromptButtonProps {
+  onClick?: () => void
+}
+
+export const PromptButton: React.FC<PromptButtonProps> = ({ onClick }) => {
+  const { emit } = useEventEmitter();
+
+  const handleClick = () => {
+    emit('settings:open', {
+      from: 'prompt-entrance',
+      open: true
+    })
+    onClick?.()
+  }
+
+  return (
+    <div className={styles.container}>
+      <button
+        className={styles.button}
+        onClick={handleClick}
+      >
+        <PromptIcon className={styles.icon} />
+        <span className={styles.text}>Prompts</span>
+      </button>
+    </div>
+  )
+}
