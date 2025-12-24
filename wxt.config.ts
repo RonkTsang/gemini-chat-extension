@@ -1,6 +1,7 @@
 import { defineConfig } from 'wxt';
 import svgr from 'vite-plugin-svgr';
 import removeConsole from 'vite-plugin-remove-console';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
@@ -10,6 +11,12 @@ export default defineConfig({
     plugins: [
       svgr(),
       configEnv.mode === 'production' ? removeConsole({ includes: ['log'] }) : undefined,
+      process.env.ANALYZE === 'true' ? visualizer({
+        open: true,
+        filename: '.output/stats.html',
+        gzipSize: true,
+        brotliSize: true,
+      }) : undefined,
     ].filter(Boolean),
     esbuild: {
       charset: 'ascii',
