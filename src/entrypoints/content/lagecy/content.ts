@@ -523,56 +523,76 @@ function transformQuoteInHistory(userQueryElement) {
   if (lines.length < 2) return;
 
   const regardingThisText = chrome.i18n.getMessage('regardingThis');
+
+  // 1. Find the separator line index dynamically
+  const separatorLineIndex = lines.findIndex(line => line.textContent.trim() === SEPARATOR);
+
+  // 2. Validation:
+  // - Separator must exist and not be the first line (need quote) or last line (need question)
+  if (separatorLineIndex <= 0 || separatorLineIndex >= lines.length - 1) return;
+
+  // - First line must start with the prefix
   const firstLineText = lines[0].textContent.trim();
-  const secondLineText = lines[1].textContent.trim();
+  if (!firstLineText.startsWith(regardingThisText + ':')) return;
 
-  if (firstLineText.startsWith(regardingThisText + ':') && secondLineText === SEPARATOR) {
-    const fullText = lines.map(p => p.textContent).join('\n');
-    const separatorIndex = fullText.indexOf(SEPARATOR);
-    
-    const quotePart = firstLineText.substring(regardingThisText.length + 1).trim();
-    const questionPart = fullText.substring(separatorIndex + SEPARATOR.length).trim();
+  // 3. Extract content
+  // Quote part: All lines before separator, minus the prefix
+  // Filter out empty lines to avoid awkward gaps in multiline quotes
+  const fullQuoteTextWithPrefix = lines
+    .slice(0, separatorLineIndex)
+    .map(l => (l.textContent || '').trim())
+    .filter(text => text.length > 0)
+    .join('\n');
+  const prefix = regardingThisText + ':';
+  // Use indexOf to be safe about leading whitespace
+  const prefixStart = fullQuoteTextWithPrefix.indexOf(prefix);
+  // Fallback if not found (shouldn't happen given check above)
+  const quotePart = prefixStart !== -1 
+    ? fullQuoteTextWithPrefix.substring(prefixStart + prefix.length).trim()
+    : fullQuoteTextWithPrefix.replace(prefix, '').trim();
 
-    // --- Write to dataset for other functions to use ---
-    userQueryElement.dataset.isQuote = 'true';
-    userQueryElement.dataset.quoteText = quotePart;
-    userQueryElement.dataset.questionText = questionPart;
-    
-    // --- Create new UI ---
-    const quoteDisplay = document.createElement('div');
-    quoteDisplay.className = 'gemini-quote-display';
+  // Question part: All lines after separator
+  const questionPart = lines.slice(separatorLineIndex + 1).map(l => l.textContent).join('\n').trim();
 
-    // Create and add the icon to align with gemini-quote-ui
-    const iconSpan = document.createElement('span');
-    iconSpan.className = 'quote-icon';
-    quoteDisplay.appendChild(iconSpan);
+  // --- Write to dataset for other functions to use ---
+  userQueryElement.dataset.isQuote = 'true';
+  userQueryElement.dataset.quoteText = quotePart;
+  userQueryElement.dataset.questionText = questionPart;
+  
+  // --- Create new UI ---
+  const quoteDisplay = document.createElement('div');
+  quoteDisplay.className = 'gemini-quote-display';
 
-    const quoteDisplayText = document.createElement('span');
-    quoteDisplayText.className = 'gemini-quote-display-text';
-    
-    const MAX_HISTORY_DISPLAY_LENGTH = 120;
-    if (quotePart.length > MAX_HISTORY_DISPLAY_LENGTH) {
-      quoteDisplayText.textContent = quotePart.substring(0, MAX_HISTORY_DISPLAY_LENGTH).trim() + '...';
-    } else {
-      quoteDisplayText.textContent = quotePart;
-    }
-    quoteDisplay.title = quotePart; // Full quote on hover
-    
-    quoteDisplay.appendChild(quoteDisplayText);
+  // Create and add the icon to align with gemini-quote-ui
+  const iconSpan = document.createElement('span');
+  iconSpan.className = 'quote-icon';
+  quoteDisplay.appendChild(iconSpan);
 
-    // --- Modify existing DOM ---
-    queryTextEl.prepend(quoteDisplay);
-    
-    const originalLines = queryTextEl.querySelectorAll('p.query-text-line');
-    originalLines.forEach(line => line.style.display = 'none');
-    
-    const newQuestionLine = document.createElement('p');
-    newQuestionLine.className = 'query-text-line';
-    newQuestionLine.textContent = questionPart;
-    queryTextEl.appendChild(newQuestionLine);
-
-    queryTextEl.dataset.transformed = 'true';
+  const quoteDisplayText = document.createElement('span');
+  quoteDisplayText.className = 'gemini-quote-display-text';
+  
+  const MAX_HISTORY_DISPLAY_LENGTH = 120;
+  if (quotePart.length > MAX_HISTORY_DISPLAY_LENGTH) {
+    quoteDisplayText.textContent = quotePart.substring(0, MAX_HISTORY_DISPLAY_LENGTH).trim() + '...';
+  } else {
+    quoteDisplayText.textContent = quotePart;
   }
+  quoteDisplay.title = quotePart; // Full quote on hover
+  
+  quoteDisplay.appendChild(quoteDisplayText);
+
+  // --- Modify existing DOM ---
+  queryTextEl.prepend(quoteDisplay);
+  
+  // Hide all original lines
+  lines.forEach(line => line.style.display = 'none');
+  
+  const newQuestionLine = document.createElement('p');
+  newQuestionLine.className = 'query-text-line';
+  newQuestionLine.textContent = questionPart;
+  queryTextEl.appendChild(newQuestionLine);
+
+  queryTextEl.dataset.transformed = 'true';
 }
 
 
