@@ -26,9 +26,9 @@ import { executionCoordinator } from '@/services/executionCoordinator'
 import { useChainPromptStore, startRun, updateStepStatus, completeRun } from '@/stores/chainPromptStore'
 import { toaster } from '@/components/ui/toaster'
 import { t } from '@/utils/i18n'
-import { hasChatHistory, getChatSummary, createNewChatByClick } from '@/utils/chatActions'
+import { createNewChatByClick } from '@/utils/chatActions'
+import { hasChatHistory, getChatSummary, getDefaultChatWindow } from '@/utils/messageUtils'
 import { ConfirmNewChatDialog } from './ConfirmNewChatDialog'
-import { getDefaultChatWindow } from '@/utils/messageUtils'
 import { useEventEmitter } from '@/hooks/useEventBus'
 
 interface RunModalProps {

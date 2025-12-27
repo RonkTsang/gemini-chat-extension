@@ -22,8 +22,9 @@ export default defineConfig({
       charset: 'ascii',
     },
   }),
-  manifest: () => {
-    return {
+  manifest: (env) => {
+    const isProduction = env.mode === 'production';
+    const manifest = {
       name: "Gemini Power Kit: Your Essential Companion",
       default_locale: "en",
       permissions: [
@@ -36,5 +37,11 @@ export default defineConfig({
         }
       ]
     };
+
+    if (!isProduction) {
+      manifest.name = `🔴 ${manifest.name}`
+    }
+
+    return manifest
   },
 });

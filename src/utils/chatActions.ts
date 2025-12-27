@@ -149,9 +149,3 @@ export const isInputReady = (): boolean => {
   const inputBox = document.querySelector('rich-textarea')
   return !!inputBox && !inputBox.hasAttribute('disabled')
 }
-
-/**
- * Re-export utility functions from messageUtils for convenience
- */
-export { hasChatHistory, getChatSummary, getDefaultChatWindow } from './messageUtils'
-
