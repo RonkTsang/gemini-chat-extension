@@ -114,6 +114,86 @@ export function getAllModelMessages(chatWindow?: Element): ModelMessage[] {
 }
 
 /**
+ * Get the last model response from the page or a specific chat window
+ * @param chatWindow Optional chat window element to search within
+ * @returns The last model message or null if not found
+ */
+export function getLastModelMessage(chatWindow?: Element): ModelMessage | null {
+  const container = chatWindow || document;
+  const modelResponses = container.querySelectorAll('model-response');
+  
+  if (modelResponses.length === 0) {
+    return null;
+  }
+
+  // Get the last model-response element
+  const lastElement = modelResponses[modelResponses.length - 1];
+  const modelMessage: ModelMessage = {
+    element: lastElement,
+    index: modelResponses.length - 1,
+    type: 'model',
+    content: '',
+    timestamp: new Date()
+  };
+
+  // Extract content from message-content element
+  const messageContent = lastElement.querySelector('message-content');
+  if (messageContent) {
+    // Get text content, excluding any UI elements
+    const markdownContent = messageContent.querySelector('.markdown');
+    if (markdownContent) {
+      modelMessage.content = markdownContent.textContent?.trim() || '';
+    } else {
+      modelMessage.content = messageContent.textContent?.trim() || '';
+    }
+  }
+
+  // Check if the response has thoughts (thinking process)
+  const modelThoughts = lastElement.querySelector('model-thoughts');
+  modelMessage.hasThoughts = !!modelThoughts;
+
+  return modelMessage;
+}
+
+/**
+ * Check if a model message is currently in responding state by checking bard-avatar spinner
+ * @param modelMessageOrElement The ModelMessage object or model-response element to check
+ * @returns True if the model is currently responding (bard-avatar spinner is visible), false otherwise
+ */
+export function isModelRespondingByAvatar(modelMessageOrElement: ModelMessage | Element): boolean {
+  const element = 'element' in modelMessageOrElement 
+    ? modelMessageOrElement.element 
+    : modelMessageOrElement;
+
+  // Find bard-avatar element
+  const bardAvatar = element.querySelector('bard-avatar');
+  if (!bardAvatar) {
+    return false;
+  }
+
+  // Find avatar_spinner_animation element
+  const spinnerAnimation = bardAvatar.querySelector('.avatar_spinner_animation');
+  if (!spinnerAnimation) {
+    return false;
+  }
+
+  // Check if the spinner is visible (not hidden)
+  const style = (spinnerAnimation as HTMLElement).style;
+  const computedStyle = window.getComputedStyle(spinnerAnimation);
+  
+  // Check visibility, display, and opacity
+  const isHidden = 
+    style.visibility === 'hidden' ||
+    computedStyle.visibility === 'hidden' ||
+    style.display === 'none' ||
+    computedStyle.display === 'none' ||
+    style.opacity === '0' ||
+    computedStyle.opacity === '0';
+
+  return !isHidden;
+}
+
+/**
  * Get all messages (both user and model) from the page or a specific chat window
  * Returns messages in chronological order based on DOM order
  * @param chatWindow Optional chat window element to search within

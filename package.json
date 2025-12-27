@@ -2,7 +2,7 @@
   "name": "gemini-extension",
   "description": "Unlock a smarter, more personal Gemini. Your essential companion for mastering conversations and accelerating your creative flow.",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "RonkTsang",
   "type": "module",
   "scripts": {

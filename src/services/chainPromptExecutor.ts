@@ -3,17 +3,19 @@
  * Drives execution step-by-step (Insert → Send → Wait → Output → Continue)
  */
 
-import type { ChainPrompt, RunResult, RunResultStep, RunStatus } from '@/domain/chain-prompt/types'
+import type { ChainPrompt, RunResult, RunResultStep } from '@/domain/chain-prompt/types'
 import { templateEngine, type TemplateContext } from './templateEngine'
-import { updateStepStatus as storeUpdateStepStatus } from '@/stores/chainPromptStore'
 import { useChainPromptStore } from '@/stores/chainPromptStore'
 import { 
   insertTextToEditor, 
-  sendMessage, 
-  getModelStatus, 
+  sendMessage,
   createModelStatusListener,
-  stopModelResponse 
+  stopModelResponse,
+  getSendButton,
+  isReadyToSend
 } from '@/utils/editorUtils'
+import { getLastModelMessage, isModelRespondingByAvatar, type ModelMessage } from '@/utils/messageUtils'
+
 export interface ExecutionOptions {
   chatWindow?: Element
   abortSignal?: AbortSignal
@@ -24,6 +26,13 @@ export interface ExecutionOptions {
 
 class ChainPromptExecutor {
   private activeExecutions = new Map<string, AbortController>()
+
+  // Configuration for retrying message sending
+  private retryCount = 10;
+  private retryDelay = 300;
+  
+  // Configuration for waiting for last model message to finish
+  private waitForLastMsgFinishOptions = { ms: 500, maxCount: 20 };
 
   /**
    * Execute Chain Prompt
@@ -135,14 +144,36 @@ class ChainPromptExecutor {
     if (!inserted) {
       throw new Error('Failed to insert prompt into editor')
     }
+    console.log('executeStep:try to send message', prompt)
+    let retryCount = this.retryCount;
+    const retryDelay = this.retryDelay;
 
-    let retryCount = 3;
-    const retryDelay = 300;
+    const checkIsSendSuccess = async () => {
+      console.log('executeStep: try again to check if already send')
+      const sendButton = getSendButton(chatWindow)
+      if (!sendButton) {
+        return false
+      }
+      const isReady = isReadyToSend(sendButton) 
+      // if is ready to send, it means the message did not send successfully
+      console.log('executeStep: is send successfully', !isReady)
+      return !isReady;
+    }
+
     const tryToSendMessage = async () => {
       await this.sleep(retryDelay)
       const sent = sendMessage(chatWindow)
-      if (!sent.success) {
-        console.warn(`Failed to send message, reason: ${sent.reason}, retrying ${retryCount} times...`)
+      console.log('executeStep: send message result', sent)
+      let success = sent.success;
+      if (success) {
+        await this.sleep(500);
+        if (!(await checkIsSendSuccess())) {
+          success = false;
+          sent.reason = 'unknown: send_message_failed' as any;
+        }
+      }
+      if (!success) {
+        console.warn(`executeStep: Failed to send message, reason: ${sent.reason}, retrying ${retryCount} times...`)
         if (retryCount > 0) {
           retryCount--;
           return tryToSendMessage()
@@ -150,17 +181,64 @@ class ChainPromptExecutor {
       }
       return sent;
     }
+
+    const lastModelMessage = getLastModelMessage(chatWindow)
+    if (lastModelMessage) {
+      const finishSuccessfully = await this.waitForLastModelMsgFinish(lastModelMessage, this.waitForLastMsgFinishOptions)
+      if (!finishSuccessfully) {
+        console.log('executeStep: waitForLastModelMsgFinish failed');
+      }
+    }
     
     // 2. Send message
     const sent = await tryToSendMessage();
     if (!sent.success) {
       throw new Error(`Failed to send message, reason: ${sent.reason}`)
     }
+
+    console.log('executeStep: send message success')
     
     // 3. Wait for model to complete response
     const output = await this.waitForModelCompletion(chatWindow, signal)
+
+    console.log('executeStep: wait for model completion success')
     
     return output
+  }
+
+  /**
+   * Wait for the last model message to finish responding
+   * It used before sending message to ensure the last model message has finished responding
+   */
+  private async waitForLastModelMsgFinish(lastModelMessage: ModelMessage, interval: { ms: number, maxCount: number }) {
+    return new Promise<boolean>((res) => {
+      const isResponding = isModelRespondingByAvatar(lastModelMessage)
+      if (!isResponding) {
+        // if not responding, it means the model has finished responding
+        return res(true)
+      } else {
+        // if responding, poll to check if the model has finished responding
+        let count = 0;
+        const startAt = Date.now();
+        console.log('waitForLastModelMsgFinish: model is responding, start polling')
+        const intervalId = setInterval(() => {
+          const isResponding = isModelRespondingByAvatar(lastModelMessage)
+          if (!isResponding) {
+            console.log('waitForLastModelMsgFinish: model has finished responding, had waited for', (count + 1) * interval.ms / 1000)
+            clearInterval(intervalId)
+            res(true)
+          }
+
+          // check if the polling has reached the max count
+          count++;
+          if (count >= interval.maxCount) {
+            clearInterval(intervalId)
+            console.log('waitForLastModelMsgFinish: polling has reached the max count, had waited for', (Date.now() - startAt) / 1000)
+            res(false)
+          }
+        }, interval.ms)
+      }
+    })
   }
 
   /**
@@ -187,7 +265,6 @@ class ChainPromptExecutor {
       }
       
       signal.addEventListener('abort', handleAbort)
-      
       // Listen for model status changes
       cleanup = createModelStatusListener((status) => {
         if (status.isResponding) {
@@ -261,5 +338,3 @@ class ChainPromptExecutor {
 }
 
 export const chainPromptExecutor = new ChainPromptExecutor()
-
-

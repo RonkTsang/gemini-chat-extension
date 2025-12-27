@@ -729,17 +729,8 @@ function setupQuickFollowUpEvent() {
   });
 }
 
-function setupRunningStateListener() {
-  useChainPromptStore.subscribe((state, prevState) => {
-    if (state.running.isRunning) {
-      openChatoutline()
-    }
-  })
-}
-
 function setupEventListeners() {
   setupChatoutlineOpenEvent()
-  setupRunningStateListener()
   setupQuickFollowUpEvent()
 }
 
