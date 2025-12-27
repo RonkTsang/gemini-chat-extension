@@ -1,5 +1,7 @@
+// max count of visible items in the capsule bar
 export const MAX_QUICK_FOLLOW_UP_SHOW_ITEMS = 2;
 
+// links
 export const EXTERNAL_LINKS = {
   FEATURE_REQUEST: 'https://forms.gle/DiHqtVFnxQr4Epvy6',
   BUG_REPORT: 'https://github.com/RonkTsang/gemini-chat-extension/issues/new',

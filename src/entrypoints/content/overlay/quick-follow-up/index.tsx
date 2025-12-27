@@ -6,7 +6,7 @@ import { useEvent } from '@/hooks/useEventBus'
 import { eventBus } from '@/utils/eventbus'
 import { t } from '@/utils/i18n'
 import QuoteIcon from '~/assets/quote.svg?react'
-import { CapsuleBar } from '@/components/quick-follow/capsule-bar'
+import { CAPSULE_BAR_ACTION_BUTTON_WIDTH, CapsuleBar, PROMPT_CONTAINER_MAX_WIDTH } from '@/components/quick-follow/capsule-bar'
 import { useQuickFollowStore, quickFollowStore } from '@/stores/quickFollowStore'
 import type { QuickFollowPrompt } from '@/domain/quick-follow/types'
 import { QUICK_FOLLOW_PLACEHOLDER } from '@/domain/quick-follow/types'
@@ -31,7 +31,7 @@ function QuickFollowUp() {
     const { clientX, clientY } = positionData
 
     // Estimate dimensions for boundary checks
-    const WIDTH = 220
+    const WIDTH = CAPSULE_BAR_ACTION_BUTTON_WIDTH + PROMPT_CONTAINER_MAX_WIDTH;
     const HEIGHT = 60
     const MARGIN = 10
 

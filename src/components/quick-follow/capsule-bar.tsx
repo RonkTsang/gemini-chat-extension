@@ -38,9 +38,10 @@ function sortPrompts(prompts: QuickFollowPrompt[], orderedIds: string[]) {
     })
 }
 
-const PROMPT_ITEM_WIDTH = 40 // 16px icon + 24px padding
-const VISIBLE_ITEMS = MAX_QUICK_FOLLOW_UP_SHOW_ITEMS + 0.5
-const MAX_WIDTH = PROMPT_ITEM_WIDTH * VISIBLE_ITEMS
+export const PROMPT_ITEM_WIDTH = 40 // 16px icon + 24px padding
+export const VISIBLE_ITEMS = MAX_QUICK_FOLLOW_UP_SHOW_ITEMS + 0.5
+export const PROMPT_CONTAINER_MAX_WIDTH = PROMPT_ITEM_WIDTH * VISIBLE_ITEMS
+export const CAPSULE_BAR_ACTION_BUTTON_WIDTH = 130 ;
 
 export function CapsuleBar({
   askLabel,
@@ -86,7 +87,7 @@ export function CapsuleBar({
           alignItems="center"
           height="100%"
           overflowX="auto"
-          maxWidth={`${MAX_WIDTH}px`}
+          maxWidth={`${PROMPT_CONTAINER_MAX_WIDTH}px`}
           css={{
             scrollbarWidth: 'none',
             '&::-webkit-scrollbar': { display: 'none' },
