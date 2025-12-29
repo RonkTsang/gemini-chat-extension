@@ -234,7 +234,7 @@
         "views": {
           "index": {
             "title": "Relance rapide",
-            "description": "Relance rapide apparaît lorsque vous sélectionnez du texte, vous aidant à effectuer rapidement des actions courantes comme la traduction, l'explication et le résumé."
+            "description": "Sélectionnez du texte dans n'importe quelle réponse pour afficher la Relance rapide. Posez instantanément des questions sur votre sélection, ou utilisez vos propres Prompts Personnalisés pour des actions en un clic comme la traduction ou le résumé."
           },
           "detail": {
             "title": "Détail de la relance rapide",

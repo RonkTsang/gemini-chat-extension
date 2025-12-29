@@ -234,7 +234,7 @@
         "views": {
           "index": {
             "title": "Quick Follow-up",
-            "description": "Quick Follow-up appears when you select text, helping you quickly perform common actions like translation, explanation, and summarization."
+            "description": "Select text in any response to bring up Quick Follow-up. Instantly ask about your selection, or use your own Custom Prompts for one-click actions like translation or summarization."
           },
           "detail": {
             "title": "Quick Follow-up Detail",

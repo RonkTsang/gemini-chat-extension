@@ -234,7 +234,7 @@
         "views": {
           "index": {
             "title": "Seguimiento rápido",
-            "description": "Seguimiento rápido aparece cuando seleccionas texto, ayudándote a realizar rápidamente acciones comunes como traducción, explicación y resumen."
+            "description": "Seleccione texto en cualquier respuesta para abrir el Seguimiento rápido. Pregunte instantáneamente sobre su selección o use sus propios Prompts Personalizados para acciones de un solo clic como traducción o resumen."
           },
           "detail": {
             "title": "Detalle de seguimiento rápido",

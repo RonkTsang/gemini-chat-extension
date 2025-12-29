@@ -234,7 +234,7 @@
         "views": {
           "index": {
             "title": "Schnelle Rückfrage",
-            "description": "Schnelle Rückfrage erscheint, wenn Sie Text auswählen, und hilft Ihnen, häufige Aktionen wie Übersetzung, Erklärung und Zusammenfassung schnell auszuführen."
+            "description": "Markieren Sie Text in einer beliebigen Antwort, um die Schnelle Rückfrage aufzurufen. Fragen Sie sofort nach Ihrer Auswahl oder verwenden Sie Ihre eigenen benutzerdefinierten Prompts für One-Click-Aktionen wie Übersetzung oder Zusammenfassung."
           },
           "detail": {
             "title": "Details zur schnellen Rückfrage",
