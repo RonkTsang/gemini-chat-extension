@@ -3,7 +3,7 @@ import {
   Container,
   Stack
 } from '@chakra-ui/react'
-import { useMemo } from 'react'
+import { useMemo, useRef, useEffect } from 'react'
 
 import type { QuickFollowPrompt } from '@/domain/quick-follow/types'
 import { getIconDefinition } from './icons'
@@ -53,8 +53,38 @@ export function CapsuleBar({
   tooltipPlacement = 'top'
 }: CapsuleBarProps) {
   const orderedPrompts = useMemo(() => sortPrompts(prompts, orderedIds), [prompts, orderedIds])
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   const shouldShowDivider = orderedPrompts.length > 0
+
+  // Enable horizontal scrolling with mouse wheel while preserving trackpad horizontal swipe
+  useEffect(() => {
+    const container = scrollContainerRef.current
+    if (!container) return
+
+    const handleWheel = (e: WheelEvent) => {
+      // Skip if no horizontal overflow
+      if (container.scrollWidth <= container.clientWidth) return
+
+      const absX = Math.abs(e.deltaX)
+      const absY = Math.abs(e.deltaY)
+
+      // If horizontal scroll dominates, let browser handle it natively (trackpad horizontal swipe)
+      if (absX > absY) return
+
+      // Only intercept vertical scrolling and convert to horizontal
+      if (absY > 0) {
+        e.preventDefault()
+        container.scrollLeft += e.deltaY
+      }
+    }
+
+    container.addEventListener('wheel', handleWheel, { passive: false })
+
+    return () => {
+      container.removeEventListener('wheel', handleWheel)
+    }
+  }, [orderedPrompts.length])
 
   return (
     <Container
@@ -83,6 +113,7 @@ export function CapsuleBar({
         {shouldShowDivider && <Box height="60%" width="1px" bg="separatorColor" flexShrink={0} />}
 
         <Box
+          ref={scrollContainerRef}
           display="flex"
           alignItems="center"
           height="100%"
