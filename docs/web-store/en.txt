@@ -1,0 +1,50 @@
+GEMINI POWER KIT: SUPERCHARGE YOUR AI PRODUCTIVITY 🚀
+
+Are you tired of getting lost in long AI conversations? Do you find yourself manually repeating the same complex prompts over and over?
+
+Gemini Power Kit is the ultimate productivity companion for Google Gemini. We've transformed the Gemini experience from a simple chat into a powerful, structured workspace. Whether you're a developer, researcher, writer, or student, our toolkit helps you work smarter, not harder.
+
+--------------------------------------------------
+🎯 KEY FEATURES
+--------------------------------------------------
+
+🗂️ CHAT OUTLINE — NEVER GET LOST AGAIN
+Stop scrolling endlessly! Get an instant, interactive table of contents for your current chat.
+  ● Instant Overview: See every prompt in your conversation at a glance.
+  ● One-Click Navigation: Jump directly to any part of the chat.
+  ● Pinned Mode: Keep your outline always visible for heavy research sessions.
+
+⚡ QUICK FOLLOW-UP — SELECT & ASK INSTANTLY
+Turn any text you read into a conversation with Gemini.
+  ● Instant Follow-up: Select any text and ask Gemini immediately. No more tedious copy-pasting—just select, click, and get your answer.
+  ● Custom Shortcuts: Create your own actions like "Explain this", "Summarize", or "Rewrite" to trigger directly from your selection.
+  ● Pro Templates: Start immediately with our built-in library of professional prompts.
+
+🔗 CHAIN PROMPT — AUTOMATE COMPLEX WORKFLOWS
+Turn multi-step tasks into one-click automations.
+  ● Workflow Automation: Execute a sequence of prompts automatically.
+  ● Dynamic Variables: Define reusable placeholders for flexible workflows.
+  ● Visual Builder: Manage your chains with an intuitive drag-and-drop editor.
+  ● Real-time Tracking: Watch your automation progress step-by-step.
+
+--------------------------------------------------
+🎨 WHY CHOOSE GEMINI POWER KIT?
+--------------------------------------------------
+⭐ Lightweight & Clean: Minimalist design that integrates seamlessly with Gemini's UI.
+⭐ Theme Aware: Beautifully supports both Light and Dark modes.
+⭐ Privacy First: All processing happens locally on your machine. Your data never leaves your device. 🔒
+⭐ Multilingual: Supports English, Chinese, German, Spanish, French, Japanese, Korean, and Portuguese.
+
+
+Click "Add to Chrome" now and unlock the full potential of Gemini!
+
+--------------------------------------------------
+📅 WHAT'S NEW (v0.1.0)
+--------------------------------------------------
+  ● Rebranded to Gemini Power Kit with expanded capabilities. 🎉
+  ● New Chain Prompt feature for workflow automation. 🔗
+  ● Enhanced Quick Follow-up with a comprehensive template library. ⚡
+  ● Full UI/UX Overhaul using Shadow DOM for maximum compatibility. 🎨
+
+Keywords: Gemini AI, Prompt Engineering, Chat History, AI Productivity, Chrome Extension, Workflow Automation, Google Gemini Assistant, Prompt Management.
+
