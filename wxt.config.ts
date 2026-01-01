@@ -24,8 +24,14 @@ export default defineConfig({
   }),
   manifest: (env) => {
     const isProduction = env.mode === 'production';
+
+    // Support dynamic version from CI/CD pipeline (dry-run)
+    // Falls back to package.json version for local development
+    const version = process.env.RELEASE_VERSION || require('./package.json').version;
+
     const manifest = {
       name: "Gemini Power Kit: Your Essential Companion",
+      version: version,
       default_locale: "en",
       permissions: [
         "storage"

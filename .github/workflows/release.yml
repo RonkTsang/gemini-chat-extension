@@ -1,0 +1,78 @@
+name: Release
+
+on:
+  workflow_dispatch:  # Manual trigger only - run when ready to release
+    inputs:
+      dry-run:
+        description: 'Run in dry-run mode (preview only, no actual release)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22.14.0'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Step 1: Predict next version using semantic-release dry-run
+      # This allows us to build with the correct version before actual release
+      - name: Get next release version
+        id: version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Run semantic-release in dry-run mode to predict the next version
+          DRY_RUN_OUTPUT=$(pnpm exec semantic-release --dry-run 2>&1 || true)
+          echo "$DRY_RUN_OUTPUT"
+          
+          # Extract version from dry-run output
+          NEXT_VERSION=$(echo "$DRY_RUN_OUTPUT" | grep -oP 'The next release version is \K[0-9.]+' || echo "")
+          
+          if [ -z "$NEXT_VERSION" ]; then
+            echo "No release will be created (no relevant commits)"
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "Next release version: $NEXT_VERSION"
+            echo "version=$NEXT_VERSION" >> $GITHUB_OUTPUT
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      # Step 2: Build and Package extension with the predicted version
+      # 'pnpm run zip' (wxt zip) automatically runs build before packaging.
+      # The RELEASE_VERSION env var is read by wxt.config.ts for both build and zip.
+      - name: Build and Package
+        if: steps.version.outputs.skip == 'false'
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: pnpm run zip
+
+      # Step 3: Execute actual release
+      # semantic-release will update version, create changelog, commit, tag, and publish
+      - name: Release
+        if: steps.version.outputs.skip == 'false' && github.event.inputs.dry-run == 'false'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm exec semantic-release
