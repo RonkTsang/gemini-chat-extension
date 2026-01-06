@@ -1,0 +1,55 @@
+import { useEffect, useState } from 'react'
+import { chatChangeDetector } from '@/services/chatChangeDetector'
+import { urlMonitor } from '@/services/urlMonitor'
+import { monitorExtensionContext } from '@/utils/contextMonitor'
+import { ReloadDialog } from './ReloadDialog'
+
+/**
+ * Extension Context Monitor Module
+ * 
+ * Responsibilities:
+ * 1. Monitor extension context invalidation via polling
+ * 2. Display reload dialog when context becomes invalid
+ * 3. Stop services gracefully when context becomes invalid
+ * 
+ * Note: Extension update detection (onUpdateAvailable) has been removed
+ * to avoid requiring additional permissions that would trigger user re-authorization.
+ */
+function ExtensionUpdate() {
+  const [showReload, setShowReload] = useState(false)
+
+  // Listen for context invalidation via polling
+  useEffect(() => {
+    const stopMonitoring = monitorExtensionContext(() => {
+      console.info('[ExtensionUpdate] Context invalidated, stopping services...')
+      
+      // Stop all services gracefully
+      try {
+        chatChangeDetector.stop()
+        urlMonitor.stop()
+        console.info('[ExtensionUpdate] Services stopped successfully')
+      } catch (error) {
+        console.error('[ExtensionUpdate] Error stopping services:', error)
+      }
+      
+      // Show reload dialog
+      setShowReload(true)
+    })
+    
+    // Clean up monitoring on unmount
+    return stopMonitoring
+  }, [])
+
+  return (
+    <>
+      {showReload && (
+        <ReloadDialog
+          isOpen={true}
+          onClose={() => setShowReload(false)}
+        />
+      )}
+    </>
+  )
+}
+
+export default ExtensionUpdate

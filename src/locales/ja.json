@@ -8,8 +8,8 @@
   "enableQuickQuoteLabel": "クイック引用を有効にする",
   "reportIssueLabel": "問題を報告",
   "enableChatOutlineLabel": "チャットアウトラインを有効にする",
-  "settingsTitle": "Gemini Power Kit設定",
-  "settingsDescription": "Gemini Power Kit体験をカスタマイズ",
+  "settingsTitle": "$1設定",
+  "settingsDescription": "$1体験をカスタマイズ",
   "chatOutlineDescription": "簡単なナビゲーションのためのクリック可能なアウトラインを生成",
   "quickQuoteDescription": "テキストを選択して素早く引用し質問する",
   "quickFollow": {
@@ -281,15 +281,13 @@
         "title": "について",
         "views": {
           "index": {
-            "title": "について",
-            "description": "Gemini Power Kitについて詳しく知る"
+            "title": "について"
           }
         }
       }
     }
   },
   "aboutPage": {
-    "productName": "Gemini Power Kit",
     "tagline": "Geminiの必須コンパニオン",
     "motivation": {
       "title": "動機",
@@ -306,7 +304,7 @@
     },
     "donate": {
       "title": "プロジェクトをサポート",
-      "description": "Gemini Power Kitが時間を節約したり、喜びをもたらしたりする場合は、その将来をサポートすることを検討してください",
+      "description": "$1が時間を節約したり、喜びをもたらしたりする場合は、その将来をサポートすることを検討してください",
       "buyMeCoffee": "コーヒーを奢る",
       "share": "友達と共有"
     }
@@ -325,6 +323,15 @@
       "description": "この操作は取り消せません。続行しますか？",
       "confirm": "確認",
       "cancel": "キャンセル"
-    }
+    },
+    "later": "後で",
+    "cancel": "キャンセル"
+  },
+  "extension": {
+    "updated": {
+      "title": "拡張機能が更新されました",
+      "body": "$1 が更新されました。拡張機能を引き続き使用するには、このページを再読み込みしてください。"
+    },
+    "reload_page": "ページを再読み込み"
   }
 }

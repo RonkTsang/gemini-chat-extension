@@ -4,10 +4,18 @@ import './prompt';
 import { renderOverlay } from "./overlay"
 import { chatChangeDetector } from '@/services/chatChangeDetector'
 import { urlMonitor } from '@/services/urlMonitor'
+import { i18nCache } from '@/utils/i18nCache'
 
 export default defineContentScript({
   matches: ['*://gemini.google.com/*'],
+  runAt: 'document_idle',
   async main(ctx) {
+    // Log context creation
+    console.log('[ContentScript] Context created, isValid:', ctx.isValid)
+    
+    // Initialize i18n cache ASAP (before context might be invalidated)
+    i18nCache.initialize()
+    
     // Manually start service modules to ensure correct boot sequence
     console.log('[ContentScript] Starting services...')
     
@@ -45,6 +53,6 @@ export default defineContentScript({
     });
 
     ui.mount();
-    console.log('[ContentScript] UI mounted')
+    console.log('[ContentScript] UI mounted, context still valid:', ctx.isValid)
   },
 });

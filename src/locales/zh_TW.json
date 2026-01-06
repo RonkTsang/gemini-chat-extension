@@ -8,8 +8,8 @@
   "enableQuickQuoteLabel": "啟用快速引用",
   "reportIssueLabel": "回報問題",
   "enableChatOutlineLabel": "啟用聊天大綱",
-  "settingsTitle": "Gemini Power Kit 設定",
-  "settingsDescription": "自訂您的 Gemini Power Kit 體驗",
+  "settingsTitle": "$1 設定",
+  "settingsDescription": "自訂您的 $1 體驗",
   "chatOutlineDescription": "生成可點擊大綱，便於導航",
   "quickQuoteDescription": "選擇文字快速引用並提問",
   "quickFollow": {
@@ -282,15 +282,13 @@
         "title": "關於",
         "views": {
           "index": {
-            "title": "關於",
-            "description": "了解更多關於 Gemini Power Kit 的資訊"
+            "title": "關於"
           }
         }
       }
     }
   },
   "aboutPage": {
-    "productName": "Gemini Power Kit",
     "tagline": "Gemini 的必備伴侶",
     "motivation": {
       "title": "開發動機",
@@ -307,7 +305,7 @@
     },
     "donate": {
       "title": "支援專案",
-      "description": "如果 Gemini Power Kit 為您節省了時間或帶來了快樂，請考慮支援它的未來發展",
+      "description": "如果 $1 為您節省了時間或帶來了快樂，請考慮支援它的未來發展",
       "buyMeCoffee": "請我喝咖啡",
       "share": "分享給朋友"
     }
@@ -326,6 +324,15 @@
       "description": "此操作無法復原，是否繼續？",
       "confirm": "確認",
       "cancel": "取消"
-    }
+    },
+    "later": "稍後",
+    "cancel": "取消"
+  },
+  "extension": {
+    "updated": {
+      "title": "插件已更新",
+      "body": "$1 已更新。請重新載入此頁面以繼續使用插件。"
+    },
+    "reload_page": "重新載入頁面"
   }
 }

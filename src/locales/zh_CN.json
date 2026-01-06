@@ -8,8 +8,8 @@
   "enableQuickQuoteLabel": "启用快速引用",
   "reportIssueLabel": "报告问题",
   "enableChatOutlineLabel": "启用聊天大纲",
-  "settingsTitle": "Gemini Power Kit 设置",
-  "settingsDescription": "自定义您的 Gemini Power Kit 体验",
+  "settingsTitle": "$1 设置",
+  "settingsDescription": "自定义您的 $1 体验",
   "chatOutlineDescription": "生成可点击大纲，便于导航",
   "quickQuoteDescription": "选择文本快速引用并提问",
   "quickFollow": {
@@ -281,15 +281,13 @@
         "title": "关于",
         "views": {
           "index": {
-            "title": "关于",
-            "description": "了解更多关于 Gemini Power Kit 的信息"
+            "title": "关于"
           }
         }
       }
     }
   },
   "aboutPage": {
-    "productName": "Gemini Power Kit",
     "tagline": "Gemini 的必备伴侣",
     "motivation": {
       "title": "开发动机",
@@ -306,7 +304,7 @@
     },
     "donate": {
       "title": "支持项目",
-      "description": "如果 Gemini Power Kit 为你节省了时间或带来了快乐，请考虑支持它的未来发展",
+      "description": "如果 $1 为你节省了时间或带来了快乐，请考虑支持它的未来发展",
       "buyMeCoffee": "请我喝咖啡",
       "share": "分享给朋友"
     }
@@ -325,6 +323,15 @@
       "description": "此操作无法撤销，是否继续？",
       "confirm": "确认",
       "cancel": "取消"
-    }
+    },
+    "later": "稍后",
+    "cancel": "取消"
+  },
+  "extension": {
+    "updated": {
+      "title": "插件已更新",
+      "body": "$1 已更新。请刷新此页面以继续使用插件。"
+    },
+    "reload_page": "刷新页面"
   }
 }

@@ -9,7 +9,7 @@ import { FaGithub } from 'react-icons/fa'
 import { LuPuzzle, LuCoffee } from 'react-icons/lu'
 import { TbMoodShare } from "react-icons/tb";
 import type { SettingViewComponent } from '../../types'
-import { EXTERNAL_LINKS } from '@/common/config'
+import { EXTERNAL_LINKS, PRODUCT_NAME } from '@/common/config'
 import { t } from '@/utils/i18n'
 import packageJson from '../../../../../package.json'
 import iconPath from '/icon/512.png'
@@ -95,7 +95,7 @@ export const AboutView: SettingViewComponent = () => {
             <VStack align="flex-start" gap={3} flex={1}>
               <HStack gap={2} align="center">
                 <Text fontSize="2xl" fontWeight="bold" color={textColor}>
-                  {t('aboutPage.productName')}
+                  {PRODUCT_NAME}
                 </Text>
                 <Badge colorPalette="blue" size="sm">
                   v{packageJson.version}
@@ -183,7 +183,7 @@ export const AboutView: SettingViewComponent = () => {
             {t('aboutPage.donate.title')}
           </Text>
           <Text fontSize="sm" color={secondaryTextColor} lineHeight="1.6">
-            {t('aboutPage.donate.description')} 🤗
+            {t('aboutPage.donate.description', PRODUCT_NAME)} 🤗
           </Text>
           <HStack gap={3} w="100%" wrap="wrap">
             <Button

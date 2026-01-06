@@ -4,15 +4,23 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { EVENTS, type AppEvents } from '@/common/event'
 import { useEvent } from '@/hooks/useEventBus'
 import { eventBus } from '@/utils/eventbus'
-import { t } from '@/utils/i18n'
+import { i18nCache } from '@/utils/i18nCache'
 import QuoteIcon from '~/assets/quote.svg?react'
 import { CAPSULE_BAR_ACTION_BUTTON_WIDTH, CapsuleBar, PROMPT_CONTAINER_MAX_WIDTH } from '@/components/quick-follow/capsule-bar'
-import { useQuickFollowStore, quickFollowStore } from '@/stores/quickFollowStore'
+import { useQuickFollowStore } from '@/stores/quickFollowStore'
 import type { QuickFollowPrompt } from '@/domain/quick-follow/types'
 import { QUICK_FOLLOW_PLACEHOLDER } from '@/domain/quick-follow/types'
 import { insertTextToEditor, sendMessage } from '@/utils/editorUtils'
-import { useMemoizedFn, useMount } from 'ahooks'
+import { useMemoizedFn } from 'ahooks'
 import { sleep } from '@/utils/async'
+
+/**
+ * i18n keys used by quick-follow-up overlay
+ * These keys are cached on component initialization to ensure availability after extension context invalidation
+ */
+const QUICK_FOLLOW_I18N_KEYS = {
+  ASK_GEMINI: 'askGemini'
+} as const
 
 function QuickFollowUp() {
   const { open, onOpen, onClose } = useDisclosure()
@@ -23,6 +31,22 @@ function QuickFollowUp() {
     prompts,
     settings,
   } = useQuickFollowStore()
+
+  // Pre-cache i18n strings on component mount
+  // This ensures strings are available even if extension context becomes invalid
+  useEffect(() => {
+    const idleCallbackId = requestIdleCallback(() => {
+      i18nCache.preCache([
+        { key: QUICK_FOLLOW_I18N_KEYS.ASK_GEMINI }
+      ])
+    })
+
+    return () => {
+      if (typeof cancelIdleCallback !== 'undefined') {
+        cancelIdleCallback(idleCallbackId)
+      }
+    }
+  }, [])
 
   const displayPosition = useMemo(() => {
     if (!positionData) return null
@@ -152,7 +176,7 @@ function QuickFollowUp() {
         id="gemini-quote-button"
       >
         <CapsuleBar
-          askLabel={t('askGemini')}
+          askLabel={i18nCache.get(QUICK_FOLLOW_I18N_KEYS.ASK_GEMINI)}
           askIcon={<QuoteIcon />}
           onAsk={handleAddQuote}
           prompts={prompts}

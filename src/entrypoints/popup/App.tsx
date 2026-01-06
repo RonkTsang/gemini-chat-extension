@@ -16,6 +16,7 @@ import {
   useColorMode,
 } from '@/components/ui/color-mode';
 import { t } from '@/utils/i18n';
+import { PRODUCT_NAME } from '@/common/config';
 import { 
   getAllSettings,
   setChatOutlineEnabled,
@@ -113,11 +114,11 @@ function App() {
         <Card.Header pb={2} px={4} pt={4}>
           <Flex justify="space-between" align="center" mb={1}>
             <Heading size="lg" fontWeight="semibold">
-              {t('settingsTitle') || "Gemini Settings"}
+              {t('settingsTitle', PRODUCT_NAME) || "Gemini Settings"}
             </Heading>
           </Flex>
           <Text fontSize="sm" color={secondaryTextColor}>
-            {t('settingsDescription') || "Customize your Gemini chat experience"}
+            {t('settingsDescription', PRODUCT_NAME) || "Customize your Gemini chat experience"}
           </Text>
         </Card.Header>
         
