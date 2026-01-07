@@ -11,15 +11,26 @@ import { TbMoodShare } from "react-icons/tb";
 import type { SettingViewComponent } from '../../types'
 import { EXTERNAL_LINKS, PRODUCT_NAME } from '@/common/config'
 import { t } from '@/utils/i18n'
-import packageJson from '../../../../../package.json'
 import iconPath from '/icon/512.png'
 
 export const AboutView: SettingViewComponent = () => {
-  // Get extension resource URL when component mounts
   const [logoUrl, setLogoUrl] = useState<string>('')
+  const [version, setVersion] = useState('')
+  const [author, setAuthor] = useState('')
 
   useEffect(() => {
     setLogoUrl(browser.runtime.getURL(iconPath as any))
+    const manifest = browser.runtime.getManifest()
+    setVersion(manifest.version)
+    if (manifest.author) {
+      const authorInfo = manifest.author
+      if (typeof authorInfo === 'string') {
+        setAuthor(authorInfo)
+      } else {
+        const authorObj = authorInfo as { name?: string };
+        setAuthor(authorObj.name || '');
+      }
+    }
   }, [])
 
   // Color mode values
@@ -97,9 +108,11 @@ export const AboutView: SettingViewComponent = () => {
                 <Text fontSize="2xl" fontWeight="bold" color={textColor}>
                   {PRODUCT_NAME}
                 </Text>
-                <Badge colorPalette="blue" size="sm">
-                  v{packageJson.version}
-                </Badge>
+                {version && (
+                  <Badge colorPalette="blue" size="sm">
+                    v{version}
+                  </Badge>
+                )}
               </HStack>
               <Text fontSize="md" color={secondaryTextColor}>
                 Your <Text as="span" color={accentColor} fontWeight="medium">Essential Companion</Text> for Gemini
@@ -221,10 +234,9 @@ export const AboutView: SettingViewComponent = () => {
         flexShrink={0}
       >
         <Text fontSize="xs" color={mutedTextColor} textAlign="center">
-          {`Copyright © ${typeof packageJson.author === 'string' ? packageJson.author : (packageJson.author as { name?: string })?.name || ''}`}
+          {`Copyright © ${author}`}
         </Text>
       </Box>
     </Box>
   )
 }
-
