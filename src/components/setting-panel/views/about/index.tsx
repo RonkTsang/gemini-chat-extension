@@ -15,8 +15,14 @@ import packageJson from '../../../../../package.json'
 import iconPath from '/icon/512.png'
 
 export const AboutView: SettingViewComponent = () => {
-  // Get extension resource URL when component mounts
   const [logoUrl, setLogoUrl] = useState<string>('')
+  const [version] = useState(() => {
+    try {
+      return (typeof browser !== 'undefined' && browser.runtime?.getManifest()?.version) || packageJson.version
+    } catch {
+      return packageJson.version
+    }
+  })
 
   useEffect(() => {
     setLogoUrl(browser.runtime.getURL(iconPath as any))
@@ -97,9 +103,11 @@ export const AboutView: SettingViewComponent = () => {
                 <Text fontSize="2xl" fontWeight="bold" color={textColor}>
                   {PRODUCT_NAME}
                 </Text>
-                <Badge colorPalette="blue" size="sm">
-                  v{packageJson.version}
-                </Badge>
+                {version && (
+                  <Badge colorPalette="blue" size="sm">
+                    v{version}
+                  </Badge>
+                )}
               </HStack>
               <Text fontSize="md" color={secondaryTextColor}>
                 Your <Text as="span" color={accentColor} fontWeight="medium">Essential Companion</Text> for Gemini
@@ -227,4 +235,3 @@ export const AboutView: SettingViewComponent = () => {
     </Box>
   )
 }
-
