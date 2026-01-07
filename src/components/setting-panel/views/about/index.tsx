@@ -11,26 +11,15 @@ import { TbMoodShare } from "react-icons/tb";
 import type { SettingViewComponent } from '../../types'
 import { EXTERNAL_LINKS, PRODUCT_NAME } from '@/common/config'
 import { t } from '@/utils/i18n'
+import packageJson from '../../../../../package.json'
 import iconPath from '/icon/512.png'
 
 export const AboutView: SettingViewComponent = () => {
   const [logoUrl, setLogoUrl] = useState<string>('')
-  const [version, setVersion] = useState('')
-  const [author, setAuthor] = useState('')
+  const version = browser.runtime.getManifest().version
 
   useEffect(() => {
     setLogoUrl(browser.runtime.getURL(iconPath as any))
-    const manifest = browser.runtime.getManifest()
-    setVersion(manifest.version)
-    if (manifest.author) {
-      const authorInfo = manifest.author
-      if (typeof authorInfo === 'string') {
-        setAuthor(authorInfo)
-      } else {
-        const authorObj = authorInfo as { name?: string };
-        setAuthor(authorObj.name || '');
-      }
-    }
   }, [])
 
   // Color mode values
@@ -234,7 +223,7 @@ export const AboutView: SettingViewComponent = () => {
         flexShrink={0}
       >
         <Text fontSize="xs" color={mutedTextColor} textAlign="center">
-          {`Copyright © ${author}`}
+          {`Copyright © ${typeof packageJson.author === 'string' ? packageJson.author : (packageJson.author as { name?: string })?.name || ''}`}
         </Text>
       </Box>
     </Box>
