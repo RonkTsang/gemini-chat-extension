@@ -52,6 +52,8 @@ export function AlertDialog({
       placement="center"
       role="alertdialog"
       size="sm"
+      closeOnInteractOutside={false}  // Alert dialogs require explicit user action
+      closeOnEscape={true}
     >
       <Dialog.Backdrop />
       <Dialog.Positioner>

@@ -9,17 +9,27 @@ import { FaGithub } from 'react-icons/fa'
 import { LuPuzzle, LuCoffee } from 'react-icons/lu'
 import { TbMoodShare } from "react-icons/tb";
 import type { SettingViewComponent } from '../../types'
-import { EXTERNAL_LINKS } from '@/common/config'
+import { EXTERNAL_LINKS, PRODUCT_NAME } from '@/common/config'
 import { t } from '@/utils/i18n'
+import { isExtensionContextValid } from '@/utils/contextMonitor'
 import packageJson from '../../../../../package.json'
 import iconPath from '/icon/512.png'
 
 export const AboutView: SettingViewComponent = () => {
-  // Get extension resource URL when component mounts
   const [logoUrl, setLogoUrl] = useState<string>('')
+  const [version] = useState(() => {
+    try {
+      return (typeof browser !== 'undefined' && browser.runtime?.getManifest()?.version) || packageJson.version
+    } catch {
+      return packageJson.version
+    }
+  })
 
   useEffect(() => {
-    setLogoUrl(browser.runtime.getURL(iconPath as any))
+    // Check if extension context is valid before calling getURL
+    if (isExtensionContextValid()) {
+      setLogoUrl(browser.runtime.getURL(iconPath as any))
+    }
   }, [])
 
   // Color mode values
@@ -95,11 +105,13 @@ export const AboutView: SettingViewComponent = () => {
             <VStack align="flex-start" gap={3} flex={1}>
               <HStack gap={2} align="center">
                 <Text fontSize="2xl" fontWeight="bold" color={textColor}>
-                  {t('aboutPage.productName')}
+                  {PRODUCT_NAME}
                 </Text>
-                <Badge colorPalette="blue" size="sm">
-                  v{packageJson.version}
-                </Badge>
+                {version && (
+                  <Badge colorPalette="blue" size="sm">
+                    v{version}
+                  </Badge>
+                )}
               </HStack>
               <Text fontSize="md" color={secondaryTextColor}>
                 Your <Text as="span" color={accentColor} fontWeight="medium">Essential Companion</Text> for Gemini
@@ -183,7 +195,7 @@ export const AboutView: SettingViewComponent = () => {
             {t('aboutPage.donate.title')}
           </Text>
           <Text fontSize="sm" color={secondaryTextColor} lineHeight="1.6">
-            {t('aboutPage.donate.description')} 🤗
+            {t('aboutPage.donate.description', PRODUCT_NAME)} 🤗
           </Text>
           <HStack gap={3} w="100%" wrap="wrap">
             <Button
@@ -227,4 +239,3 @@ export const AboutView: SettingViewComponent = () => {
     </Box>
   )
 }
-

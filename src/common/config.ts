@@ -1,3 +1,6 @@
+// Product information
+export const PRODUCT_NAME = 'Gemini Power Kit' as const;
+
 // max count of visible items in the capsule bar
 export const MAX_QUICK_FOLLOW_UP_SHOW_ITEMS = 2;
 

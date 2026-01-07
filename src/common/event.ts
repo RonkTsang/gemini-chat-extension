@@ -52,6 +52,13 @@ export interface AppEvents {
     from: 'run-modal' | 'manual',
     reason?: string
   };
+  /**
+   * Emitted when the settings panel state changes
+   * @param data.open - Whether the settings panel is open
+   */
+  'settings:state-changed': {
+    open: boolean
+  };
 
   // Chain Prompt
   'execution:aborted-by-chat-switch': {

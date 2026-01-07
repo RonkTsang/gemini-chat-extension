@@ -9,6 +9,34 @@ import { type AppEvents, EVENTS } from '@/common/event';
 import { useChainPromptStore } from '@/stores/chainPromptStore'
 import { browser } from 'wxt/browser';
 import { quickFollowStore } from '@/stores/quickFollowStore'
+import { i18nCache } from '@/utils/i18nCache'
+
+/**
+ * i18n keys used by legacy content script features
+ * These keys are cached on module initialization to ensure availability after extension context invalidation
+ */
+const LEGACY_I18N_KEYS = {
+  EMPTY_TOC_MESSAGE: 'emptyTocMessage',
+  REGARDING_THIS: 'regardingThis',
+  ATTACHMENT_LABEL: 'attachmentLabel',
+  CLICK_TO_PIN: 'clickToPin',
+  UNPIN: 'unpin'
+} as const
+
+requestIdleCallback(() => {
+  // Pre-cache i18n strings for legacy UI features
+  // This ensures strings are available even if extension context becomes invalid
+  i18nCache.preCache(
+    [
+      { key: LEGACY_I18N_KEYS.EMPTY_TOC_MESSAGE },
+      { key: LEGACY_I18N_KEYS.REGARDING_THIS },
+      { key: LEGACY_I18N_KEYS.ATTACHMENT_LABEL },
+      { key: LEGACY_I18N_KEYS.CLICK_TO_PIN },
+      { key: LEGACY_I18N_KEYS.UNPIN }
+    ]
+  )
+})
+
 
 let isQuickQuoteEnabled = quickFollowStore.getState().settings.enabled;
 
@@ -41,7 +69,7 @@ function updateTocList(popover, chatWindow) {
   const userQueries = chatWindow.querySelectorAll('user-query');
 
   if (userQueries.length === 0) {
-    const message = chrome.i18n.getMessage('emptyTocMessage');
+    const message = i18nCache.get(LEGACY_I18N_KEYS.EMPTY_TOC_MESSAGE);
     const listItem = document.createElement('li');
     listItem.textContent = message;
     listItem.style.padding = '10px';
@@ -52,7 +80,7 @@ function updateTocList(popover, chatWindow) {
   }
 
   const fragment = document.createDocumentFragment();
-  const regardingThisText = chrome.i18n.getMessage('regardingThis');
+  const regardingThisText = i18nCache.get(LEGACY_I18N_KEYS.REGARDING_THIS);
 
   userQueries.forEach((query) => {
     const listItem = document.createElement('li');
@@ -130,7 +158,7 @@ function updateTocList(popover, chatWindow) {
 
         const textSpan = document.createElement('span');
         textSpan.className = 'toc-item-text';
-        const buttonText = fullTextToDisplay ? (fullTextToDisplay.substring(0, 80) + (fullTextToDisplay.length > 80 ? '...' : '')) : chrome.i18n.getMessage('attachmentLabel');
+        const buttonText = fullTextToDisplay ? (fullTextToDisplay.substring(0, 80) + (fullTextToDisplay.length > 80 ? '...' : '')) : i18nCache.get(LEGACY_I18N_KEYS.ATTACHMENT_LABEL);
         textSpan.textContent = buttonText;
         button.appendChild(textSpan);
     }
@@ -202,7 +230,7 @@ function initializeUI(chatWindow) {
   chatWindow.appendChild(entryIcon);
 
   const entryTooltip = tippy(entryIcon, {
-    content: chrome.i18n.getMessage('clickToPin'),
+    content: i18nCache.get(LEGACY_I18N_KEYS.CLICK_TO_PIN),
     placement: 'right',
     animation: 'shift-away-subtle',
     arrow: false,
@@ -227,10 +255,10 @@ function initializeUI(chatWindow) {
 
     if (isNowPinned) {
       // This runs when we PIN the element.
-      entryTooltip.setContent(chrome.i18n.getMessage('unpin'));
+      entryTooltip.setContent(i18nCache.get(LEGACY_I18N_KEYS.UNPIN));
     } else {
       // This runs when we UNPIN the element.
-      entryTooltip.setContent(chrome.i18n.getMessage('clickToPin'));
+      entryTooltip.setContent(i18nCache.get(LEGACY_I18N_KEYS.CLICK_TO_PIN));
     }
   }
 
@@ -470,7 +498,7 @@ function addQuoteUI(selectedText) {
   referenceText.style.userSelect = 'none';
   referenceText.style.pointerEvents = 'none';
   referenceText.contentEditable = 'false';
-  const regardingThisText = chrome.i18n.getMessage('regardingThis');
+  const regardingThisText = i18nCache.get(LEGACY_I18N_KEYS.REGARDING_THIS);
   referenceText.textContent = `${regardingThisText}: ${hiddenText}`;
   referenceText.appendChild(document.createElement('br'));
 
@@ -522,7 +550,7 @@ function transformQuoteInHistory(userQueryElement) {
   const lines = Array.from(queryTextEl.querySelectorAll('p.query-text-line'));
   if (lines.length < 2) return;
 
-  const regardingThisText = chrome.i18n.getMessage('regardingThis');
+  const regardingThisText = i18nCache.get(LEGACY_I18N_KEYS.REGARDING_THIS);
 
   // 1. Find the separator line index dynamically
   const separatorLineIndex = lines.findIndex(line => line.textContent.trim() === SEPARATOR);

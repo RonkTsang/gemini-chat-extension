@@ -8,8 +8,8 @@
   "enableQuickQuoteLabel": "Activar Cita Rápida",
   "reportIssueLabel": "Reportar un problema",
   "enableChatOutlineLabel": "Activar Esquema de Chat",
-  "settingsTitle": "Configuración de Gemini Power Kit",
-  "settingsDescription": "Personaliza tu experiencia con Gemini Power Kit",
+  "settingsTitle": "Configuración de $1",
+  "settingsDescription": "Personaliza tu experiencia con $1",
   "chatOutlineDescription": "Generar esquema clicable para navegación fácil",
   "quickQuoteDescription": "Seleccionar texto para citar rápidamente y hacer preguntas",
   "quickFollow": {
@@ -281,15 +281,13 @@
         "title": "Acerca de",
         "views": {
           "index": {
-            "title": "Acerca de",
-            "description": "Conoce más sobre Gemini Power Kit"
+            "title": "Acerca de"
           }
         }
       }
     }
   },
   "aboutPage": {
-    "productName": "Gemini Power Kit",
     "tagline": "Tu compañero esencial para Gemini",
     "motivation": {
       "title": "Motivación",
@@ -306,7 +304,7 @@
     },
     "donate": {
       "title": "Apoyar el proyecto",
-      "description": "Si Gemini Power Kit te ahorra tiempo o te genera alegría, por favor considera apoyar su futuro",
+      "description": "Si $1 te ahorra tiempo o te genera alegría, por favor considera apoyar su futuro",
       "buyMeCoffee": "Invítame un café",
       "share": "Compartir con amigos"
     }
@@ -325,6 +323,15 @@
       "description": "Esta acción no se puede deshacer. ¿Deseas continuar?",
       "confirm": "Confirmar",
       "cancel": "Cancelar"
-    }
+    },
+    "later": "Más tarde",
+    "cancel": "Cancelar"
+  },
+  "extension": {
+    "updated": {
+      "title": "Extensión actualizada",
+      "body": "$1 se ha actualizado. Por favor, recarga esta página para continuar usando la extensión."
+    },
+    "reload_page": "Recargar página"
   }
 }

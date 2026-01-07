@@ -34,6 +34,8 @@ export const ConfirmNewChatDialog: React.FC<ConfirmNewChatDialogProps> = ({
       open={open} 
       onOpenChange={(e) => !e.open && onClose()}
       size="md"
+      closeOnInteractOutside={false}  // Prevent accidental dismissal during important decision
+      closeOnEscape={true}
     >
       <Portal>
         <Dialog.Backdrop />

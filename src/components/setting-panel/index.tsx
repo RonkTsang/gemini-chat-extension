@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import { CloseButton, Dialog, Portal, Flex, Box } from "@chakra-ui/react"
-import { useEvent } from "../../hooks/useEventBus"
-import { useColorModeValue } from "../ui/color-mode"
+import { useUpdateEffect } from "ahooks"
+import { useEvent, useEventEmitter } from "../../hooks/useEventBus"
 import { Sidebar } from "./Sidebar"
 import { ContentArea } from "./ContentArea"
 import { registerDefaultViews } from "./views"
@@ -12,6 +12,7 @@ registerDefaultViews()
 
 export const SettingPanel = () => {
   const [open, setOpen] = useState(false)
+  const { emit } = useEventEmitter()
 
   useEvent('settings:open', (data: AppEvents['settings:open']) => {
     setOpen(data.open)
@@ -25,6 +26,11 @@ export const SettingPanel = () => {
   useEvent('settings:close', () => {
     setOpen(false)
   })
+
+  // Emit state change event when open state changes
+  useUpdateEffect(() => {
+    emit('settings:state-changed', { open })
+  }, [open])
 
   return (
     <Dialog.Root 

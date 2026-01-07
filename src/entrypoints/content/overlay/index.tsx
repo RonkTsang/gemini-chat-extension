@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { SettingPanel } from "@/components/setting-panel"
 import { useColorMode } from "@/components/ui/color-mode"
 import QuickFollowUp from "./quick-follow-up"
+import ExtensionUpdate from "./extension-update"
 
 function App() {
   const { setTheme } = useColorMode();
@@ -18,6 +19,7 @@ function App() {
       <SettingPanel />
       <Toaster />
       <QuickFollowUp />
+      <ExtensionUpdate />
     </>
   )
 }
