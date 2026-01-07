@@ -16,7 +16,13 @@ import iconPath from '/icon/512.png'
 
 export const AboutView: SettingViewComponent = () => {
   const [logoUrl, setLogoUrl] = useState<string>('')
-  const version = browser.runtime.getManifest().version
+  const [version] = useState(() => {
+    try {
+      return (typeof browser !== 'undefined' && browser.runtime?.getManifest()?.version) || packageJson.version
+    } catch {
+      return packageJson.version
+    }
+  })
 
   useEffect(() => {
     setLogoUrl(browser.runtime.getURL(iconPath as any))
