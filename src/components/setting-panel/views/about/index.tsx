@@ -11,6 +11,7 @@ import { TbMoodShare } from "react-icons/tb";
 import type { SettingViewComponent } from '../../types'
 import { EXTERNAL_LINKS, PRODUCT_NAME } from '@/common/config'
 import { t } from '@/utils/i18n'
+import { isExtensionContextValid } from '@/utils/contextMonitor'
 import packageJson from '../../../../../package.json'
 import iconPath from '/icon/512.png'
 
@@ -25,7 +26,10 @@ export const AboutView: SettingViewComponent = () => {
   })
 
   useEffect(() => {
-    setLogoUrl(browser.runtime.getURL(iconPath as any))
+    // Check if extension context is valid before calling getURL
+    if (isExtensionContextValid()) {
+      setLogoUrl(browser.runtime.getURL(iconPath as any))
+    }
   }, [])
 
   // Color mode values
