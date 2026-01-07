@@ -1,6 +1,4 @@
 import { useEffect, useState } from 'react'
-import { chatChangeDetector } from '@/services/chatChangeDetector'
-import { urlMonitor } from '@/services/urlMonitor'
 import { monitorExtensionContext } from '@/utils/contextMonitor'
 import { ReloadDialog } from './ReloadDialog'
 
@@ -21,17 +19,6 @@ function ExtensionUpdate() {
   // Listen for context invalidation via polling
   useEffect(() => {
     const stopMonitoring = monitorExtensionContext(() => {
-      console.info('[ExtensionUpdate] Context invalidated, stopping services...')
-      
-      // Stop all services gracefully
-      try {
-        chatChangeDetector.stop()
-        urlMonitor.stop()
-        console.info('[ExtensionUpdate] Services stopped successfully')
-      } catch (error) {
-        console.error('[ExtensionUpdate] Error stopping services:', error)
-      }
-      
       // Show reload dialog
       setShowReload(true)
     })
