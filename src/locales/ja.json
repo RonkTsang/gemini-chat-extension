@@ -325,7 +325,11 @@
       "cancel": "キャンセル"
     },
     "later": "後で",
-    "cancel": "キャンセル"
+    "cancel": "キャンセル",
+    "image": "画像",
+    "images": "画像",
+    "video": "動画",
+    "videos": "動画"
   },
   "extension": {
     "updated": {

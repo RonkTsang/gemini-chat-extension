@@ -325,7 +325,11 @@
       "cancel": "취소"
     },
     "later": "나중에",
-    "cancel": "취소"
+    "cancel": "취소",
+    "image": "이미지",
+    "images": "이미지",
+    "video": "동영상",
+    "videos": "동영상"
   },
   "extension": {
     "updated": {

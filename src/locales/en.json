@@ -325,7 +325,11 @@
       "cancel": "Cancel"
     },
     "later": "Later",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "image": "Image",
+    "images": "Images",
+    "video": "Video",
+    "videos": "Videos"
   },
   "extension": {
     "updated": {

@@ -184,17 +184,111 @@ body.dark-theme, :root[theme=dark] {
 }
 
 .toc-file-icon {
-  width: 16px;
-  height: 16px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
   margin-right: 8px;
   flex-shrink: 0; /* Prevent icon from shrinking */
 }
 
+.toc-file-icon.single-icon {
+  width: 16px;
+  height: 16px;
+}
+
 .toc-file-icon > * {
-  width: 100%;
-  height: 100%;
+  width: 16px;
+  height: 16px;
   object-fit: contain;
   display: block;
+  flex-shrink: 0;
+}
+
+.toc-file-icon-more {
+  font-size: 11px;
+  color: var(--toc-text-color);
+  opacity: 0.7;
+  margin-left: 2px;
+}
+
+/* Image preview with Tippy.js */
+.tippy-box[data-theme~='image-preview'] {
+  background-color: var(--toc-bg-color);
+  border-radius: 8px;
+  box-shadow: var(--toc-shadow);
+  padding: 0; /* Let container handle padding */
+}
+
+.toc-image-preview-container {
+  padding: 8px;
+  max-height: 500px;
+  overflow-y: auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.preview-item-wrapper {
+  position: relative;
+  margin-bottom: 8px;
+}
+
+.preview-item-wrapper:last-child {
+  margin-bottom: 0;
+}
+
+.toc-image-preview-container img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+.preview-video-indicator {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  width: 24px;
+  height: 24px;
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  pointer-events: none;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  font-size: 10px;
+  padding-top: 1px;
+  padding-left: 1px;
+  box-sizing: border-box;
+}
+
+.preview-item-wrapper.is-video img {
+  filter: brightness(0.9);
+}
+
+.preview-item-wrapper.is-video:hover img {
+  filter: brightness(1);
+}
+
+/* Scrollbar styling for image preview container */
+.toc-image-preview-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.toc-image-preview-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.toc-image-preview-container::-webkit-scrollbar-thumb {
+  background-color: var(--toc-hover-bg);
+  border-radius: 3px;
+}
+
+.toc-image-preview-container::-webkit-scrollbar-thumb:hover {
+  background-color: var(--toc-text-color);
+  opacity: 0.3;
 }
 
 .toc-item-text {
