@@ -325,7 +325,11 @@
       "cancel": "Cancelar"
     },
     "later": "Mais tarde",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "image": "Imagem",
+    "images": "Imagens",
+    "video": "Vídeo",
+    "videos": "Vídeos"
   },
   "extension": {
     "updated": {

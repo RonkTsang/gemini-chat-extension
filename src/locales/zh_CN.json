@@ -325,7 +325,11 @@
       "cancel": "取消"
     },
     "later": "稍后",
-    "cancel": "取消"
+    "cancel": "取消",
+    "image": "图片",
+    "images": "图片",
+    "video": "视频",
+    "videos": "视频"
   },
   "extension": {
     "updated": {

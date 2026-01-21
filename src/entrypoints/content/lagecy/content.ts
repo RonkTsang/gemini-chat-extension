@@ -2,7 +2,7 @@
 
 import './style.css';
 import { SEPARATOR } from '@/common/const';
-import tippy from 'tippy.js';
+import tippy, { createSingleton } from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 import { eventBus } from '@/utils/eventbus';
 import { type AppEvents, EVENTS } from '@/common/event';
@@ -20,7 +20,11 @@ const LEGACY_I18N_KEYS = {
   REGARDING_THIS: 'regardingThis',
   ATTACHMENT_LABEL: 'attachmentLabel',
   CLICK_TO_PIN: 'clickToPin',
-  UNPIN: 'unpin'
+  UNPIN: 'unpin',
+  IMAGE: 'common.image',
+  IMAGES: 'common.images',
+  VIDEO: 'common.video',
+  VIDEOS: 'common.videos'
 } as const
 
 requestIdleCallback(() => {
@@ -32,7 +36,11 @@ requestIdleCallback(() => {
       { key: LEGACY_I18N_KEYS.REGARDING_THIS },
       { key: LEGACY_I18N_KEYS.ATTACHMENT_LABEL },
       { key: LEGACY_I18N_KEYS.CLICK_TO_PIN },
-      { key: LEGACY_I18N_KEYS.UNPIN }
+      { key: LEGACY_I18N_KEYS.UNPIN },
+      { key: LEGACY_I18N_KEYS.IMAGE },
+      { key: LEGACY_I18N_KEYS.IMAGES },
+      { key: LEGACY_I18N_KEYS.VIDEO },
+      { key: LEGACY_I18N_KEYS.VIDEOS }
     ]
   )
 })
@@ -64,6 +72,23 @@ quickFollowStore.subscribe((state, previousState) => {
 function updateTocList(popover, chatWindow) {
   const list = popover.querySelector('ul');
   if (!list || !chatWindow) return;
+
+  // Clean up all Tippy instances and stored data before clearing DOM
+  // IMPORTANT: Must destroy individual instances before singleton
+  const existingButtons = list.querySelectorAll('button[data-has-images="true"]');
+  existingButtons.forEach((button) => {
+    if (button._tippy) {
+      button._tippy.destroy();
+    }
+    // Clear stored data to prevent memory leaks
+    delete button._imageData;
+  });
+
+  // Now destroy the singleton (which manages the destroyed instances)
+  if (popover._previewSingleton) {
+    popover._previewSingleton.destroy();
+    popover._previewSingleton = null;
+  }
 
   list.innerHTML = ''; // Clear old items
   const userQueries = chatWindow.querySelectorAll('user-query');
@@ -117,7 +142,33 @@ function updateTocList(popover, chatWindow) {
     }
 
     const filePreview = query.querySelector('.new-file-icon, .preview-image');
-    if (!fullTextToDisplay && !filePreview) {
+    
+    // Extract all file names and count attachments
+    const fileNames: string[] = [];
+    let totalAttachments = 0;
+    
+    // Get all file buttons (PDF, docs, etc.) with explicit file names
+    const fileButtons = query.querySelectorAll('button.new-file-preview-file');
+    fileButtons.forEach((btn) => {
+      const ariaLabel = btn.getAttribute('aria-label');
+      if (ariaLabel) {
+        fileNames.push(ariaLabel);
+        totalAttachments++;
+      }
+    });
+    
+    // Get all actual image elements (not just containers)
+    // This ensures count matches what users can actually preview
+    const imageElements = query.querySelectorAll('button.preview-image-button img[data-test-id="uploaded-img"]');
+    const actualImageCount = imageElements.length;
+    totalAttachments += actualImageCount;
+    
+    // Get all actual video thumbnail elements (not just containers)
+    const videoThumbnails = query.querySelectorAll('img[data-test-id="video-thumbnail"]');
+    const actualVideoCount = videoThumbnails.length;
+    totalAttachments += actualVideoCount;
+    
+    if (!fullTextToDisplay && !filePreview && totalAttachments === 0) {
       return; // Skip empty or unprocessed queries
     }
 
@@ -149,16 +200,106 @@ function updateTocList(popover, chatWindow) {
     } else {
         button.className = 'toc-item-button';
         const iconSpan = document.createElement('span');
-        if (filePreview) {
-            const iconClone = filePreview.cloneNode(true);
+        
+        // Display multiple icons for multiple attachments
+        const MAX_ICONS_DISPLAY = 4; // Maximum number of icons to show
+        if (totalAttachments > 0) {
+          // Get all file/image/video preview elements
+          const allPreviews = query.querySelectorAll('.new-file-icon, .preview-image, img[data-test-id="video-thumbnail"]');
+          const iconsToShow = Math.min(allPreviews.length, MAX_ICONS_DISPLAY);
+          
+          if (iconsToShow === 1) {
+            iconSpan.className = 'toc-file-icon single-icon';
+          } else {
             iconSpan.className = 'toc-file-icon';
+          }
+          
+          // Clone and append up to MAX_ICONS_DISPLAY icons
+          for (let i = 0; i < iconsToShow; i++) {
+            const iconClone = allPreviews[i].cloneNode(true);
             iconSpan.appendChild(iconClone);
+          }
+          
+          // If there are more attachments, show "+N" indicator
+          if (allPreviews.length > MAX_ICONS_DISPLAY) {
+            const moreSpan = document.createElement('span');
+            moreSpan.className = 'toc-file-icon-more';
+            moreSpan.textContent = `+${allPreviews.length - MAX_ICONS_DISPLAY}`;
+            iconSpan.appendChild(moreSpan);
+          }
+        } else if (filePreview) {
+          // Fallback: if no totalAttachments but filePreview exists
+          const iconClone = filePreview.cloneNode(true);
+          iconSpan.className = 'toc-file-icon single-icon';
+          iconSpan.appendChild(iconClone);
         }
+        
         button.appendChild(iconSpan);
 
         const textSpan = document.createElement('span');
         textSpan.className = 'toc-item-text';
-        const buttonText = fullTextToDisplay ? (fullTextToDisplay.substring(0, 80) + (fullTextToDisplay.length > 80 ? '...' : '')) : i18nCache.get(LEGACY_I18N_KEYS.ATTACHMENT_LABEL);
+        
+        // Logic 1 & 3: Display text based on attachments and user message
+        let buttonText;
+        if (fullTextToDisplay) {
+          // Has user message text
+          buttonText = fullTextToDisplay.substring(0, 80) + (fullTextToDisplay.length > 80 ? '...' : '');
+        } else if (totalAttachments > 0) {
+          // No user message but has attachments
+          if (fileNames.length > 0) {
+            // Has explicit file names
+            if (fileNames.length === 1 && totalAttachments === 1) {
+              // Single file with name
+              buttonText = fileNames[0].substring(0, 80) + (fileNames[0].length > 80 ? '...' : '');
+            } else if (fileNames.length === totalAttachments) {
+              // All attachments have names
+              const otherCount = totalAttachments - 1;
+              buttonText = `${fileNames[0]} ${otherCount > 0 ? `+${otherCount}` : ''}`;
+              if (buttonText.length > 80) {
+                buttonText = buttonText.substring(0, 80) + '...';
+              }
+            } else {
+              // Mix of named files and attachments (images/videos)
+              const unnamedCount = totalAttachments - fileNames.length;
+              const attachmentLabel = unnamedCount === 1 
+                ? i18nCache.get(LEGACY_I18N_KEYS.ATTACHMENT_LABEL)
+                : `${unnamedCount} ${i18nCache.get(LEGACY_I18N_KEYS.ATTACHMENT_LABEL)}`;
+              buttonText = `${fileNames[0]} + ${attachmentLabel}`;
+              if (buttonText.length > 80) {
+                buttonText = buttonText.substring(0, 80) + '...';
+              }
+            }
+          } else {
+            // Only images/videos without explicit names
+            // Use actual element counts (not container counts) to match preview data
+            if (actualImageCount > 0 && actualVideoCount === 0) {
+              // Only images
+              if (actualImageCount === 1) {
+                buttonText = i18nCache.get(LEGACY_I18N_KEYS.IMAGE);
+              } else {
+                buttonText = `${actualImageCount} ${i18nCache.get(LEGACY_I18N_KEYS.IMAGES)}`;
+              }
+            } else if (actualVideoCount > 0 && actualImageCount === 0) {
+              // Only videos
+              if (actualVideoCount === 1) {
+                buttonText = i18nCache.get(LEGACY_I18N_KEYS.VIDEO);
+              } else {
+                buttonText = `${actualVideoCount} ${i18nCache.get(LEGACY_I18N_KEYS.VIDEOS)}`;
+              }
+            } else {
+              // Mixed or fallback
+              if (totalAttachments === 1) {
+                buttonText = i18nCache.get(LEGACY_I18N_KEYS.ATTACHMENT_LABEL);
+              } else {
+                buttonText = `${totalAttachments} ${i18nCache.get(LEGACY_I18N_KEYS.ATTACHMENT_LABEL)}`;
+              }
+            }
+          }
+        } else {
+          // No user message and no attachments
+          buttonText = i18nCache.get(LEGACY_I18N_KEYS.ATTACHMENT_LABEL);
+        }
+        
         textSpan.textContent = buttonText;
         button.appendChild(textSpan);
     }
@@ -167,7 +308,39 @@ function updateTocList(popover, chatWindow) {
       button.title = `"${quoteText}"
 ${questionText}`;
     } else {
-      button.title = fullTextToDisplay || 'Attachment';
+      // Logic 2: Build tooltip with file names and user message
+      let tooltipParts: string[] = [];
+      
+      // Add file names section if any
+      if (fileNames.length > 0) {
+        if (fileNames.length === 1) {
+          tooltipParts.push(`📎 ${fileNames[0]}`);
+        } else {
+          tooltipParts.push(`📎 Attachments (${fileNames.length}):`);
+          fileNames.forEach((name, idx) => {
+            tooltipParts.push(`  ${idx + 1}. ${name}`);
+          });
+        }
+      } else if (totalAttachments > 0) {
+        // Only images without explicit names
+        const label = totalAttachments === 1 ? 'attachment' : 'attachments';
+        tooltipParts.push(`📎 ${totalAttachments} ${label}`);
+      }
+      
+      // Add user message if any
+      if (fullTextToDisplay) {
+        if (tooltipParts.length > 0) {
+          tooltipParts.push(''); // Empty line separator
+        }
+        tooltipParts.push(fullTextToDisplay);
+      }
+      
+      // Fallback if no content
+      if (tooltipParts.length === 0) {
+        tooltipParts.push('Attachment');
+      }
+      
+      button.title = tooltipParts.join('\n');
     }
 
     button.onclick = (e) => {
@@ -176,10 +349,133 @@ ${questionText}`;
       hidePopover();
     };
 
+    // Reuse image and video elements already queried above (avoid redundant DOM queries)
+    const totalPreviewableItems = actualImageCount + actualVideoCount;
+    
+    if (totalPreviewableItems > 0) {
+      // Store preview data on button element for later initialization
+      button.dataset.hasImages = 'true';
+      button.dataset.imageCount = totalPreviewableItems;
+      
+      // Store image and video thumbnail sources
+      const previewSrcs = [];
+      
+      // Add images
+      imageElements.forEach((img) => {
+        previewSrcs.push({
+          src: img.src,
+          alt: img.alt || 'Image Preview',
+          type: 'image'
+        });
+      });
+      
+      // Add video thumbnails
+      videoThumbnails.forEach((img) => {
+        previewSrcs.push({
+          src: img.src,
+          alt: img.alt || 'Video Preview',
+          type: 'video'
+        });
+      });
+      
+      button._imageData = previewSrcs; // Store in memory, not as dataset
+    }
+
     listItem.appendChild(button);
     fragment.appendChild(listItem);
   });
+  
   list.appendChild(fragment);
+  
+  // Initialize Tippy instances AFTER elements are added to DOM
+  const buttonsWithImages = list.querySelectorAll('button[data-has-images="true"]');
+  const previewInstances = [];
+  
+  buttonsWithImages.forEach((button) => {
+    const imageData = button._imageData;
+    
+    if (!imageData || imageData.length === 0) {
+      return;
+    }
+    
+    // Create preview content container
+    const previewContainer = document.createElement('div');
+    previewContainer.className = 'toc-image-preview-container';
+    
+    // Add all images and videos
+    imageData.forEach((itemData) => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'preview-item-wrapper';
+      
+      const img = document.createElement('img');
+      img.src = itemData.src;
+      img.alt = itemData.alt;
+      wrapper.appendChild(img);
+      
+      // Add video indicator if it's a video
+      if (itemData.type === 'video') {
+        const videoIndicator = document.createElement('div');
+        videoIndicator.className = 'preview-video-indicator';
+        videoIndicator.innerHTML = '▶'; // Play icon
+        wrapper.appendChild(videoIndicator);
+        wrapper.classList.add('is-video');
+      }
+      
+      previewContainer.appendChild(wrapper);
+    });
+
+    // Get reference to popover for coordination
+    const tocPopoverRef = list.closest('#gemini-toc-popover');
+
+    // Add mouse event listeners to preview container
+    // These handle the coordination with Chat Outline visibility
+    previewContainer.addEventListener('mouseenter', () => {
+      // When mouse enters preview, prevent Chat Outline from hiding
+      if (tocPopoverRef && tocPopoverRef._clearHideTimeout) {
+        tocPopoverRef._clearHideTimeout();
+      }
+    });
+
+    previewContainer.addEventListener('mouseleave', () => {
+      // When mouse leaves preview, allow Chat Outline to hide if mouse is not over it
+      if (tocPopoverRef && tocPopoverRef._setHideTimeout) {
+        // Small delay to check final mouse position
+        setTimeout(() => {
+          if (!tocPopoverRef.matches(':hover')) {
+            tocPopoverRef._setHideTimeout(300);
+          }
+        }, 50);
+      }
+    });
+
+    // Create Tippy instance (now button is in DOM)
+    try {
+      const instance = tippy(button, {
+        content: previewContainer,
+      });
+      previewInstances.push(instance);
+    } catch (error) {
+      console.error('[Image Preview] Error creating Tippy:', error);
+    }
+  });
+
+  if (previewInstances.length > 0) {
+    popover._previewSingleton = createSingleton(previewInstances, {
+      placement: 'right',
+      arrow: false,
+      theme: 'image-preview',
+      delay: [200, null],           // 200ms delay on show, instant hide
+      duration: [200, 150],      // Smooth animation
+      offset: [0, 8],            // 8px spacing from button
+      maxWidth: 240,             // Match TOC popover width
+      interactive: true,         // Allow mouse interaction with preview
+      interactiveBorder: 15,
+      interactiveDebounce: 100,
+      animation: 'shift-away-subtle',
+      appendTo: () => document.body,   // Use function to ensure body is ready
+      overrides: ['content'],
+    });
+  }
 }
 
 function showPopover() {
@@ -240,9 +536,23 @@ function initializeUI(chatWindow) {
   });
 
   let hideTimeout;
+  
+  // Store hideTimeout in a place accessible by Tippy instances
+  // This allows image preview to prevent Chat Outline from hiding
+  popover._hideTimeout = null;
+  popover._clearHideTimeout = () => {
+    if (hideTimeout) {
+      clearTimeout(hideTimeout);
+      hideTimeout = null;
+    }
+  };
+  popover._setHideTimeout = (delay = 300) => {
+    popover._clearHideTimeout();
+    hideTimeout = setTimeout(hidePopover, delay);
+  };
 
   function togglePinState() {
-    clearTimeout(hideTimeout); // Prevent hiding right after pinning
+    popover._clearHideTimeout(); // Prevent hiding right after pinning
     
     // isNowPinned is true if the class was added, false if removed.
     const isNowPinned = popover.classList.toggle('pinned');
@@ -268,12 +578,12 @@ function initializeUI(chatWindow) {
   const setupHoverListeners = (element) => {
     element.addEventListener('mouseenter', () => {
       if (popover.classList.contains('pinned')) return;
-      clearTimeout(hideTimeout);
+      popover._clearHideTimeout();
       showPopover();
     });
 
     element.addEventListener('mouseleave', () => {
-      hideTimeout = setTimeout(hidePopover, 300);
+      popover._setHideTimeout(300);
     });
   };
 
@@ -316,6 +626,9 @@ function initializeUI(chatWindow) {
     }
   });
   observer.observe(chatWindow, { childList: true, subtree: true });
+  
+  // Store observer reference for cleanup
+  chatWindow._tocObserver = observer;
 }
 
 // --- Robust Initialization ---
@@ -324,7 +637,30 @@ let isChatOutlineEnabled = true;
 
 function destroyUI(chatWindow) {
   const popover = chatWindow.querySelector('#gemini-toc-popover');
-  if (popover) popover.remove();
+  if (popover) {
+    // Clear any pending hide timeout
+    if (popover._clearHideTimeout) {
+      popover._clearHideTimeout();
+    }
+
+    // IMPORTANT: Must destroy individual instances before singleton
+    const buttonsWithTippy = popover.querySelectorAll('button[data-has-images="true"]');
+    buttonsWithTippy.forEach((button) => {
+      if (button._tippy) {
+        button._tippy.destroy();
+      }
+      // Clear stored data
+      delete button._imageData;
+    });
+
+    // Now destroy the singleton
+    if (popover._previewSingleton) {
+      popover._previewSingleton.destroy();
+      popover._previewSingleton = null;
+    }
+
+    popover.remove();
+  }
 
   const entryIcon = chatWindow.querySelector('#gemini-entry-icon');
   if (entryIcon) {
@@ -333,7 +669,12 @@ function destroyUI(chatWindow) {
     }
     entryIcon.remove();
   }
-  // Note: This doesn't remove the mutation observer from initializeUI for simplicity.
+
+  // Disconnect mutation observer if it exists
+  if (chatWindow._tocObserver) {
+    chatWindow._tocObserver.disconnect();
+    chatWindow._tocObserver = null;
+  }
 }
 
 function findAndInitialize(node) {
