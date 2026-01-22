@@ -4,6 +4,7 @@ import './prompt';
 import { renderOverlay } from "./overlay"
 import { chatChangeDetector } from '@/services/chatChangeDetector'
 import { urlMonitor } from '@/services/urlMonitor'
+import { tabTitleSync } from '@/services/tabTitleSync'
 import { i18nCache } from '@/utils/i18nCache'
 
 export default defineContentScript({
@@ -34,7 +35,11 @@ export default defineContentScript({
     chatChangeDetector.start()
     console.log('[ContentScript] Chat Change Detector started')
     
-    // 4. Finally create the UI
+    // 4. Start tab title sync
+    tabTitleSync.start()
+    console.log('[ContentScript] Tab Title Sync started')
+    
+    // 5. Finally create the UI
     const ui = createIntegratedUi(ctx, {
       position: 'modal',
       anchor: 'body',
