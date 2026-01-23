@@ -22,6 +22,9 @@ Turn multi-step tasks into one-click automations.
   ● Visual Builder: Manage your chains with an intuitive drag-and-drop editor.
   ● Real-time Tracking: Watch your automation progress step-by-step.
 
+💎 SEAMLESS EXPERIENCE
+● Smart Tab Titles: Automatically renames browser tabs to match your chat titles, making it effortless to switch between multiple Gemini sessions.
+
 PRIVACY FIRST
 🔒 All processing happens locally on your machine. Your data never leaves your device.
 
