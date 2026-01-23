@@ -1,3 +1,11 @@
+# [0.3.0](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.2.0...v0.3.0) (2026-01-23)
+
+
+### Features
+
+* add image preview in chat-outline ([#6](https://github.com/RonkTsang/gemini-chat-extension/issues/6)) ([19ec5f5](https://github.com/RonkTsang/gemini-chat-extension/commit/19ec5f5f5626a1f361d71701515b76b12307e1d3))
+* title sync ([#7](https://github.com/RonkTsang/gemini-chat-extension/issues/7)) ([2af8935](https://github.com/RonkTsang/gemini-chat-extension/commit/2af89353437406d11feb734f8875f0828744e8ab))
+
 # [0.2.0](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.1.1...v0.2.0) (2026-01-07)
 
 
