@@ -337,5 +337,8 @@
       "body": "$1 a été mis à jour. Veuillez recharger cette page pour continuer à utiliser l'extension."
     },
     "reload_page": "Recharger la page"
+  },
+  "stuffPage": {
+    "openInNewTab": "Ouvrir dans un nouvel onglet"
   }
 }

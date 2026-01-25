@@ -337,5 +337,8 @@
       "body": "$1 foi atualizado. Por favor, recarregue esta página para continuar usando a extensão."
     },
     "reload_page": "Recarregar página"
+  },
+  "stuffPage": {
+    "openInNewTab": "Abrir em nova guia"
   }
 }

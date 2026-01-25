@@ -337,5 +337,8 @@
       "body": "$1 已更新。请刷新此页面以继续使用插件。"
     },
     "reload_page": "刷新页面"
+  },
+  "stuffPage": {
+    "openInNewTab": "在新标签页中打开"
   }
 }
