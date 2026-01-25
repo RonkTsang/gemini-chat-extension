@@ -1,7 +1,9 @@
 import { NavigationSection } from "@/components/setting-panel/config";
+import type { MediaItem } from "@/utils/stuffMediaParser";
 
 export const GEM_EXT_EVENTS = {
   URL_CHANGE: 'gem-ext:urlchange',
+  STUFF_MEDIA_DATA: 'gem-ext:stuff-media-data',
 } as const
 
 export const EVENTS = {
@@ -22,10 +24,19 @@ export interface ChatChangeEvent {
   isFromNewChat: boolean
 }
 
+export interface StuffMediaDataEvent {
+  items: MediaItem[]
+  nextPageToken?: string
+  timestamp: number
+}
+
 export interface AppEvents {
   // common
   'urlchange': URLChangeEvent;
   'chatchange': ChatChangeEvent;
+
+  // Stuff Page
+  'stuff-media:data-received': StuffMediaDataEvent;
 
   // Quick Follow Up
   'quick-follow-up:show': {

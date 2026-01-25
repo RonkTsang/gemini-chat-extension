@@ -60,7 +60,6 @@
       "enable": "啟用對話大綱"
     }
   },
-
   "settingPanel": {
     "chainPrompt": {
       "new": "新建 Chain Prompt",
@@ -338,5 +337,8 @@
       "body": "$1 已更新。請重新載入此頁面以繼續使用插件。"
     },
     "reload_page": "重新載入頁面"
+  },
+  "stuffPage": {
+    "openInNewTab": "在新分頁中開啟"
   }
 }

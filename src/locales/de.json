@@ -337,5 +337,8 @@
       "body": "$1 wurde aktualisiert. Bitte laden Sie diese Seite neu, um die Erweiterung weiter zu verwenden."
     },
     "reload_page": "Seite neu laden"
+  },
+  "stuffPage": {
+    "openInNewTab": "In neuem Tab öffnen"
   }
 }
