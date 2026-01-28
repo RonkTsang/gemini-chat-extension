@@ -4,7 +4,6 @@
  */
 
 import { GEM_EXT_EVENTS } from '@/common/event'
-import { startStuffMonitor } from './main-world/stuff-monitor'
 
 export default defineUnlistedScript(() => {
   console.log('[URLMonitor Main World] Starting URL monitoring in main world...')
@@ -44,8 +43,4 @@ export default defineUnlistedScript(() => {
   }
 
   console.log('[URLMonitor Main World] URL monitoring started successfully')
-
-  // Start Stuff page monitoring
-  startStuffMonitor()
-  console.log('[URLMonitor Main World] Stuff monitor initialized')
 })

@@ -27,7 +27,7 @@ import {
   formatMediaItem,
   groupMediaItemsByDate,
   filterMediaItemsWithImages,
-  filterMediaItemsWithTitle,
+  filterMediaItemsAudio,
   type StuffRequestParams,
   MediaItemStatus,
 } from './stuffMediaParser';
@@ -44,9 +44,9 @@ const mediaResponseSample = readFileSync(
 );
 
 describe('stuffMediaParser', () => {
-  
+
   // ==================== 请求类型识别 ====================
-  
+
   describe('identifyStuffRequestType', () => {
     it('应该识别 Media 类型请求', () => {
       const result = identifyStuffRequestType(STUFF_REQUEST_TYPES.MEDIA);
@@ -103,7 +103,7 @@ describe('stuffMediaParser', () => {
   });
 
   // ==================== 请求参数解析 ====================
-  
+
   describe('parseRequestParams', () => {
     it('应该解析第一页请求参数', () => {
       const fReq = encodeURIComponent('[[["jGArJ","[[1,1,1,0,0,0,1],30]",null,"generic"]]]');
@@ -145,7 +145,7 @@ describe('stuffMediaParser', () => {
       const parsed = JSON.parse(decoded);
 
       expect(parsed[0][0][0]).toBe('jGArJ');
-      
+
       const innerParams = JSON.parse(parsed[0][0][1]);
       expect(innerParams[0]).toEqual([1, 1, 1, 0, 0, 0, 1]);
       expect(innerParams[1]).toBe(30);
@@ -154,7 +154,7 @@ describe('stuffMediaParser', () => {
   });
 
   // ==================== 响应解析 ====================
-  
+
   describe('parseMediaResponse', () => {
     it('应该解析真实的媒体响应数据', () => {
       // 使用真实的测试样本数据
@@ -162,7 +162,7 @@ describe('stuffMediaParser', () => {
 
       expect(result).not.toBeNull();
       expect(result?.items.length).toBeGreaterThan(0);
-      
+
       // 检查第一个项目
       const firstItem = result!.items[0];
       expect(firstItem.conversationId).toBe('c_96480b882e7bb164');
@@ -174,13 +174,13 @@ describe('stuffMediaParser', () => {
       expect(firstItem.thumbnailUrl).toContain('https://lh3.googleusercontent.com/gg/');
       expect(firstItem.resourceId).toBe('rc_be3433e9856e2387');
       expect(firstItem.date).toBeInstanceOf(Date);
-      
+
       // 检查分页 token
       expect(result?.nextPageToken).toBeTruthy();
       expect(result?.nextPageToken).toContain('tClQBf34Ig');
-      
+
       // 检查是否包含带标题的项目
-      const titleItems = result!.items.filter(item => item.status === MediaItemStatus.WithTitle);
+      const titleItems = result!.items.filter(item => item.status === MediaItemStatus.Audio);
       expect(titleItems.length).toBeGreaterThan(0);
       expect(titleItems[0].title).toBe('巴菲特为何巨亏仍买入SIRI XM');
     });
@@ -207,7 +207,7 @@ describe('stuffMediaParser', () => {
   });
 
   // ==================== 工具函数 ====================
-  
+
   describe('formatMediaItem', () => {
     it('应该格式化带图片的项目', () => {
       const item = {
@@ -234,7 +234,7 @@ describe('stuffMediaParser', () => {
         responseId: 'r_456',
         timestamp: 1768396706,
         timestampNano: 0,
-        status: MediaItemStatus.WithTitle,
+        status: MediaItemStatus.Audio,
         title: 'Test Title',
         resourceId: 'rc_789',
         hasImage: false,
@@ -309,7 +309,7 @@ describe('stuffMediaParser', () => {
           responseId: 'r_2',
           timestamp: 1768396706,
           timestampNano: 0,
-          status: MediaItemStatus.WithTitle,
+          status: MediaItemStatus.Audio,
           resourceId: 'rc_2',
           hasImage: false,
           date: new Date(),
@@ -322,7 +322,7 @@ describe('stuffMediaParser', () => {
     });
   });
 
-  describe('filterMediaItemsWithTitle', () => {
+  describe('filterMediaItemsAudio', () => {
     it('应该只返回带标题的项目', () => {
       const items = [
         {
@@ -340,7 +340,7 @@ describe('stuffMediaParser', () => {
           responseId: 'r_2',
           timestamp: 1768396706,
           timestampNano: 0,
-          status: MediaItemStatus.WithTitle,
+          status: MediaItemStatus.Audio,
           title: 'Test Title',
           resourceId: 'rc_2',
           hasImage: false,
@@ -348,7 +348,7 @@ describe('stuffMediaParser', () => {
         },
       ];
 
-      const filtered = filterMediaItemsWithTitle(items);
+      const filtered = filterMediaItemsAudio(items);
       expect(filtered).toHaveLength(1);
       expect(filtered[0].conversationId).toBe('c_2');
       expect(filtered[0].title).toBe('Test Title');

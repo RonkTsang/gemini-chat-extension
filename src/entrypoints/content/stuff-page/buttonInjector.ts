@@ -13,6 +13,7 @@
 import tippy, { type Instance as TippyInstance } from 'tippy.js'
 import { t } from '@/utils/i18n'
 import { handleOpenInNewTab } from './navigation'
+import './style.css'
 
 // Track injected buttons to avoid duplicates
 const injectedCards = new WeakSet<Element>()
@@ -42,65 +43,7 @@ const OPEN_IN_NEW_TAB_SVG = `
   </svg>
 `.trim()
 
-/**
- * CSS for the button (injected once)
- */
-const BUTTON_STYLES = `
-/* Ensure library-item-card is positioned relatively */
-library-item-card {
-  position: relative;
-}
 
-.gem-ext-open-new-tab-btn {
-  position: absolute;
-  right: 4px;
-  top: 4px;
-  width: 35px;
-  aspect-ratio: 1;
-  background: rgba(0, 0, 0, 0.4);
-  border-radius: 100%;
-  display: none;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  color: white;
-  z-index: 10;
-  transition: background 0.2s ease;
-}
-
-.gem-ext-open-new-tab-btn:hover {
-  background: rgba(0, 0, 0, 0.6);
-}
-
-library-item-card:hover .gem-ext-open-new-tab-btn {
-  display: flex;
-}
-
-/* Support for different theme modes */
-.gem-ext-open-new-tab-btn svg {
-  width: 16px;
-  height: 16px;
-}
-`
-
-/**
- * Inject CSS styles (called once)
- */
-function injectStyles(): void {
-  const styleId = 'gem-ext-stuff-page-styles'
-
-  // Check if already injected
-  if (document.getElementById(styleId)) {
-    return
-  }
-
-  const styleElement = document.createElement('style')
-  styleElement.id = styleId
-  styleElement.textContent = BUTTON_STYLES
-  document.head.appendChild(styleElement)
-
-  console.log('[ButtonInjector] Styles injected')
-}
 
 /**
  * Clean up resources associated with a card
@@ -156,7 +99,7 @@ function injectButton(card: Element): void {
     e.preventDefault()
     e.stopPropagation()
     handleOpenInNewTab(card)
-  }, { signal })
+  })
 
   // Add keyboard support (Enter and Space) with AbortController
   button.addEventListener('keydown', (e) => {
@@ -165,7 +108,7 @@ function injectButton(card: Element): void {
       e.stopPropagation()
       handleOpenInNewTab(card)
     }
-  }, { signal })
+  })
 
   // Add Tippy.js tooltip
   const span = document.createElement('span')
@@ -196,8 +139,7 @@ function injectButton(card: Element): void {
 export function startButtonInjector(): void {
   console.log('[ButtonInjector] Starting button injector...')
 
-  // Inject CSS styles
-  injectStyles()
+
 
   // Find media container from library-sections-overview-page
   const overviewPage = document.querySelector('library-sections-overview-page')
@@ -257,7 +199,7 @@ export function startButtonInjector(): void {
           }
 
           // Check for library-item-card descendants
-          const descendants = element.querySelectorAll('library-item-card')
+          const descendants = element.querySelectorAll('library-sections-overview-page library-item-card')
           removedCards.push(...Array.from(descendants))
         }
 

@@ -160,7 +160,7 @@ interface MediaItem {
 ```typescript
 enum MediaItemStatus {
   Normal = 1,      // 普通对话(带图片)
-  WithTitle = 3,   // 带标题的对话
+  Audio = 3,   // 带标题的对话
   Report = 4,      // 分析报告
   Document = 5,    // 文档
   Code = 6,        // 代码
@@ -201,7 +201,7 @@ Object.entries(grouped).forEach(([date, items]) => {
 ```typescript
 import { 
   filterMediaItemsWithImages, 
-  filterMediaItemsWithTitle 
+  filterMediaItemsAudio 
 } from '@/utils/stuffMediaParser';
 
 // 只获取带图片的记录
@@ -209,9 +209,9 @@ const withImages = filterMediaItemsWithImages(mediaData.items);
 console.log(`${withImages.length} 条记录包含图片`);
 
 // 只获取带标题的记录
-const withTitles = filterMediaItemsWithTitle(mediaData.items);
-console.log(`${withTitles.length} 条记录有标题`);
-withTitles.forEach(item => {
+const Audios = filterMediaItemsAudio(mediaData.items);
+console.log(`${Audios.length} 条记录有标题`);
+Audios.forEach(item => {
   console.log(`- ${item.title}`);
 });
 ```

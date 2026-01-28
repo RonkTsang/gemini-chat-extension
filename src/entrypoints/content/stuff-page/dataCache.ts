@@ -20,6 +20,7 @@ function getMediaItemKey(item: MediaItem): string {
 class StuffDataCache {
   private itemsMap: Map<string, MediaItem> = new Map()
   private timestampIndex: Map<number, string> = new Map()
+  private titleIndex: Map<string, string> = new Map()
 
   /**
    * Add items to cache with deduplication
@@ -47,6 +48,11 @@ class StuffDataCache {
         this.timestampIndex.set(item.timestamp, key)
       }
 
+      // Add to title index
+      if (item.title) {
+        this.titleIndex.set(item.title, key)
+      }
+
       addedCount++
     }
 
@@ -65,6 +71,21 @@ class StuffDataCache {
    */
   findByTimestamp(timestamp: number): MediaItem | null {
     const key = this.timestampIndex.get(timestamp)
+    if (!key) {
+      return null
+    }
+
+    return this.itemsMap.get(key) || null
+  }
+
+  /**
+   * Find MediaItem by title
+   * 
+   * @param title Item title
+   * @returns MediaItem if found, null otherwise
+   */
+  findByTitle(title: string): MediaItem | null {
+    const key = this.titleIndex.get(title)
     if (!key) {
       return null
     }
@@ -97,6 +118,7 @@ class StuffDataCache {
   clear(): void {
     this.itemsMap.clear()
     this.timestampIndex.clear()
+    this.titleIndex.clear()
     console.log('[StuffDataCache] Cache cleared')
   }
 

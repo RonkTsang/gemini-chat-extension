@@ -139,7 +139,7 @@ interface MediaItem {
 | `formatMediaItem()` | 格式化项目为字符串 |
 | `groupMediaItemsByDate()` | 按日期分组 |
 | `filterMediaItemsWithImages()` | 过滤有图片的项目 |
-| `filterMediaItemsWithTitle()` | 过滤有标题的项目 |
+| `filterMediaItemsAudio()` | 过滤有标题的项目 |
 
 ## 使用场景
 

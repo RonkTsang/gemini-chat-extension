@@ -4,32 +4,59 @@
  * Handles extracting jslog data and opening items in new tabs.
  */
 
-import type { MediaItem } from '@/utils/stuffMediaParser'
+import { MediaItemStatus } from '@/utils/stuffMediaParser'
 import { stuffDataCache } from './dataCache'
 
 /**
- * Extract timestamp from jslog attribute
+ * Extracted Media Info from jslog
+ */
+interface MediaInfo {
+  status: number
+  timestamp: number | null
+}
+
+/**
+ * Extract media info (status, timestamp) from jslog attribute
  * 
  * @param jslog jslog attribute value
- * @returns Timestamp in seconds, or null if not found
+ * @returns MediaInfo object or null if not found
  * 
  * @example
- * // jslog format: "279444;track:...;BardVeMetadataKey:[...[1,[1753892482,343000000]]]"
- * extractTimestampFromJslog(jslog) // => 1753892482
+ * // Normal: "...[1,[1753892482,343000000]]" -> { status: 1, timestamp: 1753892482 }
+ * // Audio: "...[3,[]]" -> { status: 3, timestamp: null }
  */
-export function extractTimestampFromJslog(jslog: string | null): number | null {
+export function extractMediaInfoFromJslog(jslog: string | null): MediaInfo | null {
   if (!jslog) return null
 
   try {
-    // Look for pattern: [1,[timestamp,nanoseconds]]
-    const match = jslog.match(/\[1,\[(\d+),\d+\]\]/)
-    if (match && match[1]) {
-      return parseInt(match[1], 10)
+    // Look for pattern: [status,[timestamp,nanoseconds]]
+    // Matches: [1,[123,456]] or [3,[]]
+    const match = jslog.match(/\[(\d+),\[(.*?)\]\]/)
+
+    if (match) {
+      const status = parseInt(match[1], 10)
+      const innerContent = match[2].trim()
+
+      let timestamp: number | null = null
+
+      // If inner content is not empty, try to parse timestamp
+      if (innerContent) {
+        // innerContent might be "1753892482,343000000"
+        const parts = innerContent.split(',')
+        if (parts.length > 0) {
+          const ts = parseInt(parts[0], 10)
+          if (!isNaN(ts)) {
+            timestamp = ts
+          }
+        }
+      }
+
+      return { status, timestamp }
     }
 
     return null
   } catch (error) {
-    console.error('[Navigation] Error extracting timestamp from jslog:', error)
+    console.error('[Navigation] Error extracting info from jslog:', error)
     return null
   }
 }
@@ -48,17 +75,38 @@ export function handleOpenInNewTab(cardElement: Element): void {
       return
     }
 
-    // Extract timestamp
-    const timestamp = extractTimestampFromJslog(jslog)
-    if (timestamp === null) {
-      console.warn('[Navigation] Could not extract timestamp from jslog')
+    // Extract media info
+    const mediaInfo = extractMediaInfoFromJslog(jslog)
+    if (!mediaInfo) {
+      console.warn('[Navigation] Could not extract media info from jslog')
       return
     }
 
-    // Find MediaItem in cache
-    const mediaItem = stuffDataCache.findByTimestamp(timestamp)
+    let mediaItem = null
+
+    // Strategy 1: Find by timestamp (Primary)
+    if (mediaInfo.timestamp !== null) {
+      mediaItem = stuffDataCache.findByTimestamp(mediaInfo.timestamp)
+    }
+    // Strategy 2: Find by Title (Fallback for Audio/No-Timestamp)
+    else if (mediaInfo.status === MediaItemStatus.Audio) {
+      // Audio items (status=3) might not have timestamp in jslog, try finding by title
+      // Structure: library-item-card > .library-item-card-container > .library-item-card > .header > .title
+      const titleElement = cardElement.querySelector('.library-item-card .header .title')
+      const title = titleElement?.textContent?.trim()
+
+      if (title) {
+        mediaItem = stuffDataCache.findByTitle(title)
+        if (!mediaItem) {
+          console.warn('[Navigation] MediaItem not found by title:', title)
+        }
+      } else {
+        console.warn('[Navigation] No title found in card element for Audio item')
+      }
+    }
+
     if (!mediaItem) {
-      console.warn('[Navigation] MediaItem not found in cache for timestamp:', timestamp)
+      console.warn('[Navigation] MediaItem not found in cache. Info:', mediaInfo)
       return
     }
 
@@ -68,7 +116,8 @@ export function handleOpenInNewTab(cardElement: Element): void {
     const url = `/app/${conversationId}#${responseId}`
 
     console.log('[Navigation] Opening in new tab:', {
-      timestamp,
+      timestamp: mediaInfo.timestamp,
+      status: mediaInfo.status,
       originalConversationId: mediaItem.conversationId,
       originalResponseId: mediaItem.responseId,
       conversationId,

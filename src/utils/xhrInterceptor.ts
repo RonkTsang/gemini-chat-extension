@@ -1,20 +1,22 @@
 /**
  * XHR Interceptor Utility
- * 
+ *
  * A singleton utility for intercepting XMLHttpRequest in the browser.
  * Designed to work in main-world context (page context) to capture API requests.
- * 
+ *
  * @usage
  * ```typescript
  * import { xhrInterceptor } from '@/utils/xhrInterceptor'
- * 
+ *
  * xhrInterceptor.intercept({
  *   urlPattern: /api\/data/,
- *   onResponse: (url, responseText) => {
+ *   onResponse: (url, responseText, status, request) => {
  *     console.log('Captured response from:', url)
+ *     console.log('Request method:', request.method)
+ *     console.log('Request body:', request.body)
  *   }
  * })
- * 
+ *
  * xhrInterceptor.start()
  * ```
  */
@@ -22,14 +24,27 @@
 // ==================== Types ====================
 
 /**
+ * Snapshot of the request information
+ */
+export interface XHRRequestSnapshot {
+  /** Request URL */
+  url: string
+  /** HTTP Method (GET, POST, etc.) */
+  method: string
+  /** Request body (for POST/PUT) */
+  body?: any
+}
+
+/**
  * Configuration for XHR interception
  */
 export interface XHRInterceptorConfig {
+
   /** URL pattern to match (string or RegExp) */
   urlPattern: string | RegExp
 
   /** Callback when response is received */
-  onResponse?: (url: string, responseText: string, status: number) => void
+  onResponse?: (url: string, responseText: string, status: number, request: XHRRequestSnapshot) => void
 
   /** Callback when request is sent */
   onRequest?: (url: string, method: string, data?: string) => void
@@ -51,7 +66,7 @@ interface InterceptorRegistration {
 
 /**
  * XHR Interceptor Singleton
- * 
+ *
  * Patches XMLHttpRequest to intercept requests matching specified patterns.
  * Multiple interceptors can be registered for different URL patterns.
  */
@@ -62,7 +77,7 @@ class XHRInterceptor {
 
   /**
    * Register a new interceptor
-   * 
+   *
    * @param config Interceptor configuration
    * @returns Function to unregister this interceptor
    */
@@ -88,6 +103,11 @@ class XHRInterceptor {
       if (reg) {
         reg.active = false
         this.interceptors.delete(id)
+
+        // Auto-stop if no active interceptors
+        if (this.interceptors.size === 0) {
+          this.stop()
+        }
       }
     }
   }
@@ -118,7 +138,7 @@ class XHRInterceptor {
 
       let requestUrl: string = ''
       let requestMethod: string = ''
-      let requestData: string | undefined
+      let requestData: any
 
       // Patch open method
       xhr.open = function (method: string, url: string | URL, ...args: any[]) {
@@ -129,10 +149,11 @@ class XHRInterceptor {
 
       // Patch send method
       xhr.send = function (data?: Document | XMLHttpRequestBodyInit | null) {
-        requestData = data ? String(data) : undefined
+        requestData = data
 
         // Notify request interceptors
-        self.notifyRequest(requestUrl, requestMethod, requestData)
+        // const stringData = typeof data === 'string' ? data : (data ? String(data) : undefined)
+        // self.notifyRequest(requestUrl, requestMethod, stringData)
 
         // Setup response handler
         const originalOnReadyStateChange = xhr.onreadystatechange
@@ -159,7 +180,11 @@ class XHRInterceptor {
                 }
 
                 if (responseText) {
-                  self.notifyResponse(requestUrl, responseText, xhr.status)
+                  self.notifyResponse(requestUrl, responseText, xhr.status, {
+                    url: requestUrl,
+                    method: requestMethod,
+                    body: requestData,
+                  })
                 }
 
               }
@@ -184,7 +209,7 @@ class XHRInterceptor {
    */
   stop(): void {
     if (!this.isPatched || !this.originalXHR) {
-      console.warn('[XHRInterceptor] Not started')
+      console.log('[XHRInterceptor] Not started')
       return
     }
 
@@ -232,13 +257,18 @@ class XHRInterceptor {
   /**
    * Notify all matching interceptors of a response
    */
-  private notifyResponse(url: string, responseText: string, status: number): void {
+  private notifyResponse(
+    url: string,
+    responseText: string,
+    status: number,
+    request: XHRRequestSnapshot
+  ): void {
     for (const registration of this.interceptors.values()) {
       if (!registration.active) continue
 
       try {
         if (this.matchesPattern(url, registration.config.urlPattern)) {
-          registration.config.onResponse?.(url, responseText, status)
+          registration.config.onResponse?.(url, responseText, status, request)
         }
       } catch (error) {
         registration.config.onError?.(error as Error)

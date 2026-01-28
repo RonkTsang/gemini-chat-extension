@@ -60,8 +60,10 @@ export interface BatchExecuteRequest {
 export enum MediaItemStatus {
   /** 普通对话(带图片) */
   Normal = 1,
-  /** 带标题的对话 */
-  WithTitle = 3,
+  /** 视频 */
+  Video = 2,
+  /** 音频 */
+  Audio = 3,
   /** 分析报告 */
   Report = 4,
   /** 文档 */
@@ -131,7 +133,7 @@ export function identifyStuffRequestType(
   if (arraysEqual(typeArray, STUFF_REQUEST_TYPES.MEDIA)) {
     return 'media';
   }
-  
+
   if (arraysEqual(typeArray, STUFF_REQUEST_TYPES.DOCS)) {
     return 'docs';
   }
@@ -157,7 +159,7 @@ export function isStuffMediaRequest(
     }
 
     const urlObj = new URL(url);
-    
+
     // 2. 检查 rpcids
     if (urlObj.searchParams.get('rpcids') !== 'jGArJ') {
       return false;
@@ -193,16 +195,16 @@ export function parseRequestParams(fReqEncoded: string): StuffRequestParams | nu
   try {
     // 1. URL 解码
     const fReqDecoded = decodeURIComponent(fReqEncoded);
-    
+
     // 2. 解析外层 JSON: [[["jGArJ", "...", null, "generic"]]]
     const fReq = JSON.parse(fReqDecoded) as [[[string, string, null, string]]];
-    
+
     // 3. 提取参数字符串: "[[1,1,1,0,0,0,1],30]" 或 "[[1,1,1,0,0,0,1],30,"token"]"
     const paramsStr = fReq[0][0][1];
-    
+
     // 4. 解析参数 JSON
     const params = JSON.parse(paramsStr) as [StuffRequestTypeArray, number, string?];
-    
+
     return {
       typeArray: params[0],
       pageSize: params[1],
@@ -260,10 +262,10 @@ export function parseMediaResponse(responseText: string): ParsedMediaResponse | 
   try {
     // 1. 移除 XSSI 保护前缀 ")]}'\n\n"
     const cleanText = responseText.replace(/^\)\]\}'\s*\n\s*\n/, '');
-    
+
     // 2. 按行分割
     const lines = cleanText.split('\n').filter(line => line.trim());
-    
+
     if (lines.length < 2) {
       console.error('[StuffMediaParser] No valid lines in response');
       return null;
@@ -271,25 +273,25 @@ export function parseMediaResponse(responseText: string): ParsedMediaResponse | 
 
     // 3. 第一行是响应字节大小
     const responseSize = parseInt(lines[0], 10);
-    
+
     // 4. 第二行是主要数据
     const dataLine = lines[1];
     if (!dataLine) {
       console.error('[StuffMediaParser] No data line found');
       return null;
     }
-    
+
     const data = JSON.parse(dataLine) as [[string, string, string, null, null, null, string]];
-    
+
     // 5. 解析 payload (data[0][2] 是 JSON 字符串)
     const innerData = data[0];
     const payload = JSON.parse(innerData[2]) as [unknown[], string?];
-    const rawItems = payload[0];
-    const nextPageToken = payload[1];
-    
+    const rawItems = payload[0] ?? [];
+    const nextPageToken = payload[1] ?? '';
+
     // 6. 解析每个媒体项目
     const items: MediaItem[] = rawItems.map((rawItem) => parseMediaItem(rawItem)).filter(Boolean) as MediaItem[];
-    
+
     // 9. 提取元数据(如果有第三、四行)
     let processingTime: number | undefined;
     if (lines.length >= 4) {
@@ -441,6 +443,6 @@ export function filterMediaItemsWithImages(items: MediaItem[]): MediaItem[] {
  * @param items 媒体项目列表
  * @returns 只包含标题的项目
  */
-export function filterMediaItemsWithTitle(items: MediaItem[]): MediaItem[] {
+export function filterMediaItemsAudio(items: MediaItem[]): MediaItem[] {
   return items.filter(item => item.title);
 }

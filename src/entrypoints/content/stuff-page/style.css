@@ -1,0 +1,35 @@
+/* Ensure library-item-card is positioned relatively */
+library-item-card {
+  position: relative;
+}
+
+.gem-ext-open-new-tab-btn {
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  width: 35px;
+  aspect-ratio: 1;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 100%;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  color: white;
+  z-index: 10;
+  transition: background 0.2s ease;
+}
+
+.gem-ext-open-new-tab-btn:hover {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+library-item-card:hover .gem-ext-open-new-tab-btn {
+  display: flex;
+}
+
+/* Support for different theme modes */
+.gem-ext-open-new-tab-btn svg {
+  width: 16px;
+  height: 16px;
+}
