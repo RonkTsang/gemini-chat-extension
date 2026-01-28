@@ -33,3 +33,28 @@ library-item-card:hover .gem-ext-open-new-tab-btn {
   width: 16px;
   height: 16px;
 }
+
+.gem-ext-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  padding: 4px 8px;
+  background-color: #333;
+  color: white;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 20;
+  font-family: "Roboto", arial, sans-serif;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.gem-ext-open-new-tab-btn:hover .gem-ext-tooltip {
+  opacity: 1;
+}
