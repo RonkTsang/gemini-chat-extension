@@ -128,19 +128,16 @@ class XHRInterceptor {
     const self = this
     const OriginalXHR = this.originalXHR
 
-    // Patch XMLHttpRequest
-    window.XMLHttpRequest = function (this: XMLHttpRequest) {
+    // Proxy Function
+    const XHRProxy = function (this: XMLHttpRequest) {
       const xhr = new OriginalXHR()
-
-      // Store original methods
-      const originalOpen = xhr.open
-      const originalSend = xhr.send
 
       let requestUrl: string = ''
       let requestMethod: string = ''
       let requestData: any
 
       // Patch open method
+      const originalOpen = xhr.open
       xhr.open = function (method: string, url: string | URL, ...args: any[]) {
         requestUrl = typeof url === 'string' ? url : url.toString()
         requestMethod = method
@@ -148,57 +145,53 @@ class XHRInterceptor {
       }
 
       // Patch send method
+      const originalSend = xhr.send
       xhr.send = function (data?: Document | XMLHttpRequestBodyInit | null) {
         requestData = data
-
-        // Notify request interceptors
-        // const stringData = typeof data === 'string' ? data : (data ? String(data) : undefined)
-        // self.notifyRequest(requestUrl, requestMethod, stringData)
-
-        // Setup response handler
-        const originalOnReadyStateChange = xhr.onreadystatechange
-
-        xhr.onreadystatechange = function (this: XMLHttpRequest, ev: Event) {
-          // Call original handler first
-          if (originalOnReadyStateChange) {
-            originalOnReadyStateChange.call(this, ev)
-          }
-
-          // Intercept when response is complete
-          if (xhr.readyState === 4) {
-            try {
-              if (xhr.status >= 200 && xhr.status < 300) {
-                // Get response text based on responseType
-                let responseText = ''
-
-                if (xhr.responseType === '' || xhr.responseType === 'text') {
-                  // Safe to access responseText directly
-                  responseText = xhr.responseText
-                } else if (xhr.responseType === 'json') {
-                  // Response is already parsed, need to stringify it
-                  responseText = JSON.stringify(xhr.response)
-                }
-
-                if (responseText) {
-                  self.notifyResponse(requestUrl, responseText, xhr.status, {
-                    url: requestUrl,
-                    method: requestMethod,
-                    body: requestData,
-                  })
-                }
-
-              }
-            } catch (error) {
-              self.notifyError(error as Error)
-            }
-          }
-        }
-
         return originalSend.apply(xhr, [data] as any)
       }
 
+      // Use addEventListener to capture response without overriding onreadystatechange
+      xhr.addEventListener('readystatechange', () => {
+        if (xhr.readyState === 4) {
+          try {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              let responseText = ''
+
+              if (xhr.responseType === '' || xhr.responseType === 'text') {
+                responseText = xhr.responseText
+              } else if (xhr.responseType === 'json') {
+                responseText = JSON.stringify(xhr.response)
+              }
+
+              if (responseText) {
+                self.notifyResponse(requestUrl, responseText, xhr.status, {
+                  url: requestUrl,
+                  method: requestMethod,
+                  body: requestData,
+                })
+              }
+            }
+          } catch (error) {
+            self.notifyError(error as Error)
+          }
+        }
+      })
+
       return xhr
     } as any
+
+    // Restore prototype chain
+    XHRProxy.prototype = OriginalXHR.prototype
+
+    // Restore static properties
+    for (const prop in OriginalXHR) {
+      if (Object.prototype.hasOwnProperty.call(OriginalXHR, prop)) {
+        (XHRProxy as any)[prop] = (OriginalXHR as any)[prop]
+      }
+    }
+
+    window.XMLHttpRequest = XHRProxy
 
     this.isPatched = true
     console.log('[XHRInterceptor] Started successfully')
