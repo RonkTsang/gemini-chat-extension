@@ -23,7 +23,8 @@ let mutationObserver: MutationObserver | null = null
 /**
  * SVG icon for "Open in New Tab" button
  */
-const OPEN_IN_NEW_TAB_SVG = `
+function getOpenInNewTabSvg(): string {
+  return `
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
     <g class="open-in-new-tab-outline">
       <g fill="currentColor" fill-rule="evenodd" class="Vector" clip-rule="evenodd">
@@ -34,6 +35,7 @@ const OPEN_IN_NEW_TAB_SVG = `
     </g>
   </svg>
 `.trim()
+}
 
 
 
@@ -55,7 +57,7 @@ function injectButton(card: Element): void {
   // Create button element
   const button = document.createElement('div')
   button.className = 'gem-ext-open-new-tab-btn'
-  button.innerHTML = OPEN_IN_NEW_TAB_SVG
+  button.innerHTML = getOpenInNewTabSvg()
   button.setAttribute('role', 'button')
   button.setAttribute('tabindex', '0')
   button.setAttribute('aria-label', t('stuffPage.openInNewTab'))
