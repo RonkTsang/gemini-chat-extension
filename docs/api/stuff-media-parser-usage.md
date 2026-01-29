@@ -1,30 +1,30 @@
-# Stuff Media Parser 使用指南
+# Stuff Media Parser Usage Guide
 
-## 概述
+## Overview
 
-`stuffMediaParser` 工具提供了完整的 Google Gemini "My Stuff" Media 接口解析功能,包括:
+The `stuffMediaParser` utility provides complete parsing functionality for the Google Gemini "My Stuff" Media interface, including:
 
-- ✅ 请求参数解析和构建
-- ✅ 响应数据解析
-- ✅ 分页处理
-- ✅ 数据过滤和格式化工具
+- ✅ Request parameter parsing and building
+- ✅ Response data parsing
+- ✅ Pagination handling
+- ✅ Data filtering and formatting tools
 
-## 快速开始
+## Quick Start
 
-### 1. 识别 Stuff Media 请求
+### 1. Identify Stuff Media Requests
 
 ```typescript
 import { isStuffMediaRequest } from '@/utils/stuffMediaParser';
 
-// 在 webRequest 拦截器中
+// In webRequest interceptor
 chrome.webRequest.onBeforeRequest.addListener(
   (details) => {
     if (details.method === 'POST' && details.requestBody) {
       const formData = parseFormDataFromRequest(details.requestBody);
       
       if (isStuffMediaRequest(details.url, formData)) {
-        console.log('[Stuff Media] 检测到 Media 请求');
-        // 存储请求信息用于后续处理响应
+        console.log('[Stuff Media] Media request detected');
+        // Store request metadata for subsequent response processing
         storeRequestMetadata(details.requestId, {
           type: 'stuff-media',
           timestamp: Date.now()
@@ -37,56 +37,56 @@ chrome.webRequest.onBeforeRequest.addListener(
 );
 ```
 
-### 2. 解析请求参数
+### 2. Parse Request Parameters
 
 ```typescript
 import { parseRequestParams, identifyStuffRequestType } from '@/utils/stuffMediaParser';
 
-// 解析 f.req 表单参数
+// Parse f.req form parameters
 const params = parseRequestParams(formData['f.req']);
 
 if (params) {
-  console.log('请求类型:', identifyStuffRequestType(params.typeArray));
-  console.log('每页数量:', params.pageSize);
-  console.log('分页 Token:', params.pageToken || '首页');
+  console.log('Request Type:', identifyStuffRequestType(params.typeArray));
+  console.log('Page Size:', params.pageSize);
+  console.log('Page Token:', params.pageToken || 'First Page');
 }
 
-// 输出:
-// 请求类型: media
-// 每页数量: 30
-// 分页 Token: 首页
+// Output:
+// Request Type: media
+// Page Size: 30
+// Page Token: First Page
 ```
 
-### 3. 解析响应数据
+### 3. Parse Response Data
 
 ```typescript
 import { parseMediaResponse } from '@/utils/stuffMediaParser';
 
-// 获取响应文本
+// Get response text
 const response = await fetch(url);
 const responseText = await response.text();
 
-// 解析媒体数据
+// Parse media data
 const mediaData = parseMediaResponse(responseText);
 
 if (mediaData) {
-  console.log(`获取到 ${mediaData.totalCount} 条媒体记录`);
+  console.log(`Fetched ${mediaData.totalCount} media records`);
   
   mediaData.items.forEach(item => {
-    console.log(`对话ID: ${item.conversationId}`);
-    console.log(`时间: ${item.date.toLocaleString()}`);
-    console.log(`标题: ${item.title || '无'}`);
-    console.log(`图片: ${item.hasImage ? item.thumbnailUrl : '无'}`);
+    console.log(`Conversation ID: ${item.conversationId}`);
+    console.log(`Date: ${item.date.toLocaleString()}`);
+    console.log(`Title: ${item.title || 'None'}`);
+    console.log(`Image: ${item.hasImage ? item.thumbnailUrl : 'None'}`);
     console.log('---');
   });
   
   if (mediaData.nextPageToken) {
-    console.log('存在下一页,Token:', mediaData.nextPageToken);
+    console.log('Next page exists, Token:', mediaData.nextPageToken);
   }
 }
 ```
 
-### 4. 处理分页
+### 4. Handle Pagination
 
 ```typescript
 import { 
@@ -100,7 +100,7 @@ async function fetchAllMediaPages(initialUrl: string, initialFormData: Record<st
   let currentFormData = initialFormData;
   
   while (true) {
-    // 发起请求
+    // Send request
     const response = await fetch(initialUrl, {
       method: 'POST',
       body: new URLSearchParams(currentFormData)
@@ -109,19 +109,19 @@ async function fetchAllMediaPages(initialUrl: string, initialFormData: Record<st
     const responseText = await response.text();
     const pageToken = extractPageToken(responseText);
     
-    // 解析当前页数据
+    // Parse current page data
     const mediaData = parseMediaResponse(responseText);
     if (mediaData) {
       allItems.push(...mediaData.items);
-      console.log(`已获取 ${allItems.length} 条记录`);
+      console.log(`Fetched ${allItems.length} records`);
     }
     
-    // 检查是否有下一页
+    // Check if there's a next page
     if (!pageToken) {
       break;
     }
     
-    // 构建下一页请求
+    // Build next page request
     const currentParams = parseRequestParams(currentFormData['f.req']);
     if (!currentParams) break;
     
@@ -136,22 +136,22 @@ async function fetchAllMediaPages(initialUrl: string, initialFormData: Record<st
 }
 ```
 
-## 数据结构
+## Data Structure
 
 ### MediaItem
 
 ```typescript
 interface MediaItem {
-  conversationId: string;    // 对话ID (如 "c_96480b882e7bb164")
-  responseId: string;        // 响应ID (如 "r_54bdc43ff50972bf")
-  timestamp: number;         // Unix 时间戳(秒)
-  timestampNano: number;     // 纳秒时间戳
-  status: MediaItemStatus;   // 状态码 (1=普通, 3=带标题)
-  title?: string;            // 对话标题(可选)
-  thumbnailUrl?: string;     // 缩略图URL(可选)
-  resourceId: string;        // 资源ID (如 "rc_be3433e9856e2387")
-  hasImage: boolean;         // 是否包含图片
-  date: Date;                // 完整的 Date 对象
+  conversationId: string;    // Conversation ID (e.g., "c_96480b882e7bb164")
+  responseId: string;        // Response ID (e.g., "r_54bdc43ff50972bf")
+  timestamp: number;         // Unix timestamp (seconds)
+  timestampNano: number;     // Nanosecond timestamp
+  status: MediaItemStatus;   // Status code (1=Normal, 3=Audio)
+  title?: string;            // Conversation title (optional)
+  thumbnailUrl?: string;     // Thumbnail URL (optional)
+  resourceId: string;        // Resource ID (e.g., "rc_be3433e9856e2387")
+  hasImage: boolean;         // Whether it contains an image
+  date: Date;                // Complete Date object
 }
 ```
 
@@ -159,27 +159,27 @@ interface MediaItem {
 
 ```typescript
 enum MediaItemStatus {
-  Normal = 1,      // 普通对话(带图片)
-  Audio = 3,   // 带标题的对话
-  Report = 4,      // 分析报告
-  Document = 5,    // 文档
-  Code = 6,        // 代码
+  Normal = 1,      // Normal conversation (with image)
+  Audio = 3,       // Conversation with title
+  Report = 4,      // Analysis report
+  Document = 5,    // Document
+  Code = 6,        // Code
 }
 ```
 
-## 工具函数
+## Utility Functions
 
-### 格式化输出
+### Formatted Output
 
 ```typescript
 import { formatMediaItem } from '@/utils/stuffMediaParser';
 
 const item = mediaData.items[0];
 console.log(formatMediaItem(item));
-// 输出: ID: c_96480b882e7bb164 | Date: 2026/1/24 10:05:06 | Has Image | Resource: rc_be3433e9856e2387
+// Output: ID: c_96480b882e7bb164 | Date: 2026/1/24 10:05:06 | Has Image | Resource: rc_be3433e9856e2387
 ```
 
-### 按日期分组
+### Group by Date
 
 ```typescript
 import { groupMediaItemsByDate } from '@/utils/stuffMediaParser';
@@ -187,16 +187,16 @@ import { groupMediaItemsByDate } from '@/utils/stuffMediaParser';
 const grouped = groupMediaItemsByDate(mediaData.items);
 
 Object.entries(grouped).forEach(([date, items]) => {
-  console.log(`${date}: ${items.length} 条记录`);
+  console.log(`${date}: ${items.length} records`);
 });
 
-// 输出:
-// 2026-01-24: 5 条记录
-// 2026-01-23: 8 条记录
-// 2026-01-22: 3 条记录
+// Output:
+// 2026-01-24: 5 records
+// 2026-01-23: 8 records
+// 2026-01-22: 3 records
 ```
 
-### 过滤数据
+### Filter Data
 
 ```typescript
 import { 
@@ -204,19 +204,19 @@ import {
   filterMediaItemsAudio 
 } from '@/utils/stuffMediaParser';
 
-// 只获取带图片的记录
+// Only get records with images
 const withImages = filterMediaItemsWithImages(mediaData.items);
-console.log(`${withImages.length} 条记录包含图片`);
+console.log(`${withImages.length} records contain images`);
 
-// 只获取带标题的记录
-const Audios = filterMediaItemsAudio(mediaData.items);
-console.log(`${Audios.length} 条记录有标题`);
-Audios.forEach(item => {
+// Only get records with titles
+const withTitles = filterMediaItemsAudio(mediaData.items);
+console.log(`${withTitles.length} records have titles`);
+withTitles.forEach(item => {
   console.log(`- ${item.title}`);
 });
 ```
 
-## 完整示例:保存到 IndexedDB
+## Complete Example: Save to IndexedDB
 
 ```typescript
 import { parseMediaResponse, type MediaItem } from '@/utils/stuffMediaParser';
@@ -226,12 +226,12 @@ async function saveMediaItemsToDB(responseText: string) {
   const mediaData = parseMediaResponse(responseText);
   
   if (!mediaData) {
-    console.error('解析响应失败');
+    console.error('Failed to parse response');
     return;
   }
   
   try {
-    // 转换为数据库格式
+    // Convert to database format
     const dbRecords = mediaData.items.map(item => ({
       conversationId: item.conversationId,
       responseId: item.responseId,
@@ -244,21 +244,21 @@ async function saveMediaItemsToDB(responseText: string) {
       syncedAt: new Date(),
     }));
     
-    // 批量保存
+    // Batch save
     await db.stuffMedia.bulkPut(dbRecords);
     
-    console.log(`成功保存 ${dbRecords.length} 条媒体记录`);
+    console.log(`Successfully saved ${dbRecords.length} media records`);
     
-    // 返回下一页 token
+    // Return next page token
     return mediaData.nextPageToken;
   } catch (error) {
-    console.error('保存到数据库失败:', error);
+    console.error('Failed to save to database:', error);
     throw error;
   }
 }
 ```
 
-## 在 Background Script 中使用
+## Use in Background Script
 
 ```typescript
 // background.ts
@@ -268,10 +268,10 @@ import {
   extractPageToken 
 } from '@/utils/stuffMediaParser';
 
-// 存储请求ID和元数据的映射
+// Map to store request ID and metadata
 const pendingRequests = new Map<string, { type: string; timestamp: number }>();
 
-// 拦截请求
+// Intercept request
 chrome.webRequest.onBeforeRequest.addListener(
   (details) => {
     if (details.method === 'POST' && details.requestBody) {
@@ -289,7 +289,7 @@ chrome.webRequest.onBeforeRequest.addListener(
   ["requestBody"]
 );
 
-// 处理响应(需要通过 content script 或其他方式获取响应体)
+// Handle response (needs to get response body via content script or other means)
 async function handleMediaResponse(requestId: string, responseText: string) {
   const metadata = pendingRequests.get(requestId);
   
@@ -297,14 +297,14 @@ async function handleMediaResponse(requestId: string, responseText: string) {
     return;
   }
   
-  // 解析响应
+  // Parse response
   const mediaData = parseMediaResponse(responseText);
   
   if (mediaData) {
-    // 保存到数据库
+    // Save to database
     await saveMediaItemsToDB(responseText);
     
-    // 通知 UI 更新
+    // Notify UI update
     chrome.runtime.sendMessage({
       type: 'stuff-media-updated',
       count: mediaData.totalCount,
@@ -312,19 +312,19 @@ async function handleMediaResponse(requestId: string, responseText: string) {
     });
   }
   
-  // 清理
+  // Clean up
   pendingRequests.delete(requestId);
 }
 
 function extractFormData(requestBody: chrome.webRequest.WebRequestBody): Record<string, string> {
-  // 实现表单数据提取逻辑
+  // Implement form data extraction logic
   // ...
 }
 ```
 
-## 类型安全
+## Type Safety
 
-所有函数都提供完整的 TypeScript 类型定义:
+All functions provide complete TypeScript type definitions:
 
 ```typescript
 import type { 
@@ -335,23 +335,23 @@ import type {
   StuffRequestTypeArray 
 } from '@/utils/stuffMediaParser';
 
-// 使用类型守卫
+// Use type guards
 function isMediaItemWithImage(item: MediaItem): item is MediaItem & { thumbnailUrl: string } {
   return item.hasImage && !!item.thumbnailUrl;
 }
 
-// 类型安全的处理
+// Type-safe processing
 mediaData.items
   .filter(isMediaItemWithImage)
   .forEach(item => {
-    // TypeScript 知道 item.thumbnailUrl 一定存在
+    // TypeScript knows item.thumbnailUrl must exist
     console.log(item.thumbnailUrl);
   });
 ```
 
-## 错误处理
+## Error Handling
 
-所有解析函数都会优雅地处理错误:
+All parsing functions handle errors gracefully:
 
 ```typescript
 import { parseMediaResponse } from '@/utils/stuffMediaParser';
@@ -359,26 +359,26 @@ import { parseMediaResponse } from '@/utils/stuffMediaParser';
 const result = parseMediaResponse(responseText);
 
 if (!result) {
-  // 解析失败,可能原因:
-  // - 响应格式错误
-  // - 不是有效的 Stuff Media 响应
-  // - 数据损坏
-  console.error('无法解析 Media 响应');
+  // Parsing failed, possible reasons:
+  // - Invalid response format
+  // - Not a valid Stuff Media response
+  // - Data corruption
+  console.error('Unable to parse Media response');
   return;
 }
 
-// 安全使用数据
-console.log(`获取到 ${result.items.length} 条记录`);
+// Safely use data
+console.log(`Fetched ${result.items.length} records`);
 ```
 
-## 性能考虑
+## Performance Considerations
 
-- ✅ 所有解析函数都是同步的,不会阻塞 I/O
-- ✅ 使用 `filter` 和 `map` 等函数式方法,性能高效
-- ✅ 分页处理避免一次性加载大量数据
-- ✅ 可选的元数据提取(如响应大小、处理时间)
+- ✅ All parsing functions are synchronous and do not block I/O
+- ✅ Efficient use of functional methods like `filter` and `map`
+- ✅ Pagination handling avoids loading large amounts of data at once
+- ✅ Optional metadata extraction (e.g., response size, processing time)
 
-## 调试技巧
+## Debugging Tips
 
 ```typescript
 import { 
@@ -387,34 +387,34 @@ import {
   formatMediaItem 
 } from '@/utils/stuffMediaParser';
 
-// 开启详细日志
+// Enable detailed logging
 const DEBUG = true;
 
 function debugParse(responseText: string) {
   if (DEBUG) {
     console.group('[Stuff Media Debug]');
     
-    // 检查响应格式
-    console.log('响应长度:', responseText.length);
-    console.log('XSSI 前缀:', responseText.substring(0, 10));
+    // Check response format
+    console.log('Response Length:', responseText.length);
+    console.log('XSSI Prefix:', responseText.substring(0, 10));
     
-    // 尝试解析
+    // Try parsing
     const result = parseMediaResponse(responseText);
     
     if (result) {
-      console.log('✅ 解析成功');
-      console.log('项目数:', result.totalCount);
-      console.log('下一页 Token:', result.nextPageToken || '无');
-      console.log('响应大小:', result.metadata?.responseSize);
-      console.log('处理时间:', result.metadata?.processingTime, 'ms');
+      console.log('✅ Parsing successful');
+      console.log('Item Count:', result.totalCount);
+      console.log('Next Page Token:', result.nextPageToken || 'None');
+      console.log('Response Size:', result.metadata?.responseSize);
+      console.log('Processing Time:', result.metadata?.processingTime, 'ms');
       
-      // 显示前 3 条
-      console.log('\n前 3 条记录:');
+      // Show first 3 records
+      console.log('\nFirst 3 Records:');
       result.items.slice(0, 3).forEach((item, idx) => {
         console.log(`${idx + 1}. ${formatMediaItem(item)}`);
       });
     } else {
-      console.error('❌ 解析失败');
+      console.error('❌ Parsing failed');
     }
     
     console.groupEnd();
@@ -422,10 +422,10 @@ function debugParse(responseText: string) {
 }
 ```
 
-## 相关文件
+## Related Files
 
-- 实现: `src/utils/stuffMediaParser.ts`
-- 测试: `src/utils/stuffMediaParser.test.ts`
-- 示例数据:
-  - `.original/api_response/stuff-media.txt` (第一页)
-  - `.original/api_response/stuff-media-page-2.txt` (第二页)
+- Implementation: `src/utils/stuffMediaParser.ts`
+- Tests: `src/utils/stuffMediaParser.test.ts`
+- Sample Data:
+  - `.original/api_response/stuff-media.txt` (Page 1)
+  - `.original/api_response/stuff-media-page-2.txt` (Page 2)
