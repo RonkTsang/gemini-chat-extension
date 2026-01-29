@@ -1,34 +1,30 @@
 /**
- * Stuff Media API Parser
- * 
- * 解析 Google Gemini "My Stuff" 页面的 Media 类型请求和响应
- * 
- * 接口标识:
- * - 端点: /_/BardChatUi/data/batchexecute
- * - rpcids: jGArJ
- * - 请求类型数组: [1,1,1,0,0,0,1] (Media)
- * 
- * @see .original/api_response/stuff-media.txt
- * @see .original/api_response/stuff-media-page-2.txt
+ * @file stuffMediaParser.ts
+ * @description Parse Media type requests and responses from Google Gemini's "My Stuff" page
+ *
+ * Interface Identification:
+ * - Endpoint: /_/BardChatUi/data/batchexecute
+ * - RPC ID: jGArJ
+ * - Request type array: [1,1,1,0,0,0,1] (Media)
  */
 
-// ==================== 类型定义 ====================
+// ==================== Type Definitions ====================
 
 /**
- * Stuff 请求类型数组
- * 位置含义:
- * [0] 启用基础对话记录
- * [1] 启用图片/媒体查询
- * [2] 启用时间戳
- * [3] 启用文档内容 (0=Media, 1=Docs)
- * [4] 启用文本摘要 (0=Media, 1=Docs)
- * [5] 保留位
- * [6] 启用资源ID
+ * Stuff request type array
+ * Index meanings:
+ * [0] Enable basic conversation records
+ * [1] Enable image/media queries
+ * [2] Enable timestamps
+ * [3] Enable document content (0=Media, 1=Docs)
+ * [4] Enable text summary (0=Media, 1=Docs)
+ * [5] Reserved
+ * [6] Enable resource ID
  */
 export type StuffRequestTypeArray = [number, number, number, number, number, number, number];
 
 /**
- * Stuff 请求类型常量
+ * Stuff request type constants
  */
 export const STUFF_REQUEST_TYPES = {
   MEDIA: [1, 1, 1, 0, 0, 0, 1] as StuffRequestTypeArray,
@@ -36,7 +32,7 @@ export const STUFF_REQUEST_TYPES = {
 } as const;
 
 /**
- * Stuff 请求参数结构
+ * Stuff request parameters structure
  */
 export interface StuffRequestParams {
   typeArray: StuffRequestTypeArray;
@@ -45,89 +41,87 @@ export interface StuffRequestParams {
 }
 
 /**
- * batchexecute 请求的 f.req 结构
+ * f.req structure for batchexecute requests
  */
 export interface BatchExecuteRequest {
   rpcId: string;
-  params: string;  // JSON 字符串,需要再次解析
+  params: string; // JSON string, needs further parsing
   placeholder: null;
   type: 'generic';
 }
 
 /**
- * Media 项目状态码
+ * Media item status codes
  */
 export enum MediaItemStatus {
-  /** 普通对话(带图片) */
+  /** Normal conversation (with image) */
   Normal = 1,
-  /** 视频 */
+  /** Video */
   Video = 2,
-  /** 音频 */
+  /** Audio */
   Audio = 3,
-  /** 分析报告 */
+  /** Analysis Report */
   Report = 4,
-  /** 文档 */
+  /** Document */
   Document = 5,
-  /** 代码 */
+  /** Code */
   Code = 6,
 }
 
 /**
- * Media 项目数据结构
+ * Media item data structure
  */
 export interface MediaItem {
-  /** 对话ID */
+  /** Conversation ID */
   conversationId: string;
-  /** 响应ID */
+  /** Response ID */
   responseId: string;
-  /** 主时间戳(Unix秒) */
+  /** Primary timestamp (Unix seconds) */
   timestamp: number;
-  /** 纳秒时间戳 */
+  /** Nanosecond timestamp */
   timestampNano: number;
-  /** 状态码 */
+  /** Status code */
   status: MediaItemStatus;
-  /** 对话标题(可选) */
+  /** Conversation title (optional) */
   title?: string;
-  /** 缩略图URL(可选) */
+  /** Thumbnail URL (optional) */
   thumbnailUrl?: string;
-  /** 资源ID */
+  /** Resource ID */
   resourceId: string;
-  /** 是否包含图片 */
+  /** Whether it contains an image */
   hasImage: boolean;
-  /** 完整的 Date 对象 */
+  /** Complete Date object */
   date: Date;
 }
 
 /**
- * 解析后的 Media 响应
+ * Parsed Media response
  */
 export interface ParsedMediaResponse {
-  /** 媒体项目列表 */
+  /** List of media items */
   items: MediaItem[];
-  /** 下一页 token */
+  /** Next page token */
   nextPageToken?: string;
-  /** 总项目数 */
+  /** Total items in current response */
   totalCount: number;
-  /** 请求元数据 */
+  /** Request metadata */
   metadata?: {
-    /** 响应字节大小 */
+    /** Response size in bytes */
     responseSize?: number;
-    /** 处理时间(ms) */
+    /** Processing time (ms) */
     processingTime?: number;
   };
 }
 
-// ==================== 请求解析 ====================
+// ==================== Request Parsing ====================
 
 /**
- * 识别 Stuff 请求类型
- * 
- * @param typeArray 类型数组
+ * Identify Stuff request type
+ *
+ * @param typeArray Request type array
  * @returns 'media' | 'docs' | null
  */
-export function identifyStuffRequestType(
-  typeArray: number[]
-): 'media' | 'docs' | null {
+export function identifyStuffRequestType(typeArray: number[]): 'media' | 'docs' | null {
   if (typeArray.length !== 7) return null;
 
   if (arraysEqual(typeArray, STUFF_REQUEST_TYPES.MEDIA)) {
@@ -142,35 +136,32 @@ export function identifyStuffRequestType(
 }
 
 /**
- * 判断是否为 Stuff Media 请求
- * 
- * @param url 请求 URL
- * @param formData 表单数据
+ * Determine if it is a Stuff Media request
+ *
+ * @param url Request URL
+ * @param formData Form data
  * @returns boolean
  */
-export function isStuffMediaRequest(
-  url: string,
-  formData: Record<string, string>
-): boolean {
+export function isStuffMediaRequest(url: string, formData: Record<string, string>): boolean {
   try {
-    // 1. 检查 URL
+    // 1. Check URL
     if (!url.includes('/_/BardChatUi/data/batchexecute')) {
       return false;
     }
 
     const urlObj = new URL(url);
 
-    // 2. 检查 rpcids
+    // 2. Check rpcids
     if (urlObj.searchParams.get('rpcids') !== 'jGArJ') {
       return false;
     }
 
-    // 3. 检查 source-path
+    // 3. Check source-path
     if (urlObj.searchParams.get('source-path') !== '/mystuff') {
       return false;
     }
 
-    // 4. 解析 f.req 并检查类型数组
+    // 4. Parse f.req and check type array
     const params = parseRequestParams(formData['f.req']);
     if (!params) return false;
 
@@ -182,27 +173,27 @@ export function isStuffMediaRequest(
 }
 
 /**
- * 解析 f.req 表单参数
- * 
- * @param fReqEncoded URL 编码的 f.req 字符串
- * @returns 解析后的请求参数
- * 
+ * Parse f.req form parameters
+ *
+ * @param fReqEncoded URL-encoded f.req string
+ * @returns Parsed request parameters
+ *
  * @example
  * const params = parseRequestParams(formData['f.req']);
  * // => { typeArray: [1,1,1,0,0,0,1], pageSize: 30, pageToken: undefined }
  */
 export function parseRequestParams(fReqEncoded: string): StuffRequestParams | null {
   try {
-    // 1. URL 解码
+    // 1. URL Decode
     const fReqDecoded = decodeURIComponent(fReqEncoded);
 
-    // 2. 解析外层 JSON: [[["jGArJ", "...", null, "generic"]]]
+    // 2. Parse outer JSON: [[["jGArJ", "...", null, "generic"]]]
     const fReq = JSON.parse(fReqDecoded) as [[[string, string, null, string]]];
 
-    // 3. 提取参数字符串: "[[1,1,1,0,0,0,1],30]" 或 "[[1,1,1,0,0,0,1],30,"token"]"
+    // 3. Extract parameter string: "[[1,1,1,0,0,0,1],30]" or "[[1,1,1,0,0,0,1],30,"token"]"
     const paramsStr = fReq[0][0][1];
 
-    // 4. 解析参数 JSON
+    // 4. Parse parameters JSON
     const params = JSON.parse(paramsStr) as [StuffRequestTypeArray, number, string?];
 
     return {
@@ -217,15 +208,15 @@ export function parseRequestParams(fReqEncoded: string): StuffRequestParams | nu
 }
 
 /**
- * 构建下一页请求参数
- * 
- * @param currentParams 当前请求参数
- * @param nextPageToken 下一页 token
- * @returns 编码后的 f.req 字符串
+ * Build parameters for the next page request
+ *
+ * @param currentParams Current request parameters
+ * @param nextPageToken Next page token
+ * @returns Encoded f.req string
  */
 export function buildNextPageRequest(
   currentParams: StuffRequestParams,
-  nextPageToken: string
+  nextPageToken: string,
 ): string {
   const newParams: StuffRequestParams = {
     ...currentParams,
@@ -239,20 +230,20 @@ export function buildNextPageRequest(
   ];
 
   const batchRequest: [[[string, string, null, string]]] = [
-    [['jGArJ', JSON.stringify(paramsArray), null, 'generic']]
+    [['jGArJ', JSON.stringify(paramsArray), null, 'generic']],
   ];
 
   return encodeURIComponent(JSON.stringify(batchRequest));
 }
 
-// ==================== 响应解析 ====================
+// ==================== Response Parsing ====================
 
 /**
- * 解析 Stuff Media 响应
- * 
- * @param responseText 原始响应文本
- * @returns 解析后的媒体数据
- * 
+ * Parse Stuff Media response
+ *
+ * @param responseText Raw response text
+ * @returns Parsed media data
+ *
  * @example
  * const response = await fetch(url);
  * const text = await response.text();
@@ -260,21 +251,21 @@ export function buildNextPageRequest(
  */
 export function parseMediaResponse(responseText: string): ParsedMediaResponse | null {
   try {
-    // 1. 移除 XSSI 保护前缀 ")]}'\n\n"
+    // 1. Remove XSSI protection prefix ")]}'\n\n"
     const cleanText = responseText.replace(/^\)\]\}'\s*\n\s*\n/, '');
 
-    // 2. 按行分割
-    const lines = cleanText.split('\n').filter(line => line.trim());
+    // 2. Split by lines
+    const lines = cleanText.split('\n').filter((line) => line.trim());
 
     if (lines.length < 2) {
       console.error('[StuffMediaParser] No valid lines in response');
       return null;
     }
 
-    // 3. 第一行是响应字节大小
+    // 3. First line is response size in bytes
     const responseSize = parseInt(lines[0], 10);
 
-    // 4. 第二行是主要数据
+    // 4. Second line is the main data
     const dataLine = lines[1];
     if (!dataLine) {
       console.error('[StuffMediaParser] No data line found');
@@ -283,16 +274,18 @@ export function parseMediaResponse(responseText: string): ParsedMediaResponse | 
 
     const data = JSON.parse(dataLine) as [[string, string, string, null, null, null, string]];
 
-    // 5. 解析 payload (data[0][2] 是 JSON 字符串)
+    // 5. Parse payload (data[0][2] is a JSON string)
     const innerData = data[0];
     const payload = JSON.parse(innerData[2]) as [unknown[], string?];
     const rawItems = payload[0] ?? [];
     const nextPageToken = payload[1] ?? '';
 
-    // 6. 解析每个媒体项目
-    const items: MediaItem[] = rawItems.map((rawItem) => parseMediaItem(rawItem)).filter(Boolean) as MediaItem[];
+    // 6. Parse each media item
+    const items: MediaItem[] = rawItems
+      .map((rawItem) => parseMediaItem(rawItem))
+      .filter(Boolean) as MediaItem[];
 
-    // 9. 提取元数据(如果有第三、四行)
+    // 9. Extract metadata if available (3rd or 4th line)
     let processingTime: number | undefined;
     if (lines.length >= 4) {
       try {
@@ -300,7 +293,7 @@ export function parseMediaResponse(responseText: string): ParsedMediaResponse | 
         const metadata = JSON.parse(metadataLine);
         processingTime = metadata[0]?.[3];
       } catch {
-        // 忽略元数据解析错误
+        // Ignore metadata parsing errors
       }
     }
 
@@ -320,22 +313,22 @@ export function parseMediaResponse(responseText: string): ParsedMediaResponse | 
 }
 
 /**
- * 解析单个媒体项目
- * 
- * @param rawItem 原始项目数据
- * @returns 解析后的媒体项目
+ * Parse a single media item
+ *
+ * @param rawItem Raw item data
+ * @returns Parsed media item
  */
-function parseMediaItem(rawItem: unknown): MediaItem | null {
+export function parseMediaItem(rawItem: unknown): MediaItem | null {
   try {
     if (!Array.isArray(rawItem) || rawItem.length < 5) {
       return null;
     }
 
-    // 结构: [[conversationId, responseId], [timestamp, nano], status, title?, thumbnail?, resourceId]
+    // Structure: [[conversationId, responseId], [timestamp, nano], status, title?, thumbnail?, resourceId]
     const [ids, timestamps, status, title, thumbnail, resourceId] = rawItem;
 
     if (!Array.isArray(ids) || ids.length !== 2) return null;
-    if (!Array.isArray(timestamps)) return null; // 允许空数组
+    if (!Array.isArray(timestamps)) return null; // Allow empty array
 
     const [conversationId, responseId] = ids as [string, string];
     const [timestamp, timestampNano] = timestamps as [number?, number?];
@@ -344,12 +337,14 @@ function parseMediaItem(rawItem: unknown): MediaItem | null {
     const thumbnailArray = thumbnail as [null, string] | null;
     const resourceIdValue = resourceId as string;
 
-    // 提取缩略图 URL
+    // Extract thumbnail URL
     const thumbnailUrl = thumbnailArray?.[1];
     const hasImage = !!thumbnailUrl;
 
-    // 创建完整的 Date 对象 (如果有时间戳)
-    const date = timestamp ? new Date(timestamp * 1000 + (timestampNano || 0) / 1000000) : new Date();
+    // Create complete Date object (if timestamp exists)
+    const date = timestamp
+      ? new Date(timestamp * 1000 + (timestampNano || 0) / 1000000)
+      : new Date();
 
     return {
       conversationId,
@@ -370,31 +365,31 @@ function parseMediaItem(rawItem: unknown): MediaItem | null {
 }
 
 /**
- * 提取分页 token
- * 
- * @param responseText 响应文本
- * @returns 下一页 token 或 null
+ * Extract page token
+ *
+ * @param responseText Response text
+ * @returns Next page token or null
  */
 export function extractPageToken(responseText: string): string | null {
   const parsed = parseMediaResponse(responseText);
   return parsed?.nextPageToken || null;
 }
 
-// ==================== 工具函数 ====================
+// ==================== Utility Functions ====================
 
 /**
- * 数组相等比较
+ * Array equality comparison
  */
-function arraysEqual(a: unknown[], b: unknown[]): boolean {
+export function arraysEqual(a: unknown[], b: unknown[]): boolean {
   if (a.length !== b.length) return false;
   return a.every((val, idx) => val === b[idx]);
 }
 
 /**
- * 格式化媒体项目为可读字符串
- * 
- * @param item 媒体项目
- * @returns 格式化字符串
+ * Format media item as a readable string
+ *
+ * @param item Media item
+ * @returns Formatted string
  */
 export function formatMediaItem(item: MediaItem): string {
   const parts = [
@@ -409,14 +404,12 @@ export function formatMediaItem(item: MediaItem): string {
 }
 
 /**
- * 按日期分组媒体项目
- * 
- * @param items 媒体项目列表
- * @returns 按日期(YYYY-MM-DD)分组的对象
+ * Group media items by date
+ *
+ * @param items List of media items
+ * @returns Object grouped by date (YYYY-MM-DD)
  */
-export function groupMediaItemsByDate(
-  items: MediaItem[]
-): Record<string, MediaItem[]> {
+export function groupMediaItemsByDate(items: MediaItem[]): Record<string, MediaItem[]> {
   return items.reduce((acc, item) => {
     const dateKey = item.date.toISOString().split('T')[0];
     if (!acc[dateKey]) {
@@ -428,21 +421,21 @@ export function groupMediaItemsByDate(
 }
 
 /**
- * 过滤带图片的媒体项目
- * 
- * @param items 媒体项目列表
- * @returns 只包含图片的项目
+ * Filter media items with images
+ *
+ * @param items List of media items
+ * @returns Only items with images
  */
 export function filterMediaItemsWithImages(items: MediaItem[]): MediaItem[] {
-  return items.filter(item => item.hasImage);
+  return items.filter((item) => item.hasImage);
 }
 
 /**
- * 过滤带标题的媒体项目
- * 
- * @param items 媒体项目列表
- * @returns 只包含标题的项目
+ * Filter media items with titles
+ *
+ * @param items List of media items
+ * @returns Only items with titles
  */
 export function filterMediaItemsAudio(items: MediaItem[]): MediaItem[] {
-  return items.filter(item => item.title);
+  return items.filter((item) => item.title);
 }
