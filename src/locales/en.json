@@ -8,7 +8,7 @@
   "enableQuickQuoteLabel": "Enable Quick Follow-up",
   "reportIssueLabel": "Report an Issue",
   "enableChatOutlineLabel": "Enable Chat Outline",
-  "settingsTitle":  "$1 Settings",
+  "settingsTitle": "$1 Settings",
   "settingsDescription": "Customize your $1 experience",
   "chatOutlineDescription": "Generate clickable outline for easy navigation",
   "quickQuoteDescription": "Select text to quickly quote and ask questions",
@@ -337,7 +337,8 @@
       "body": "$1 has been updated. Please reload this page to continue using the extension."
     },
     "reload_page": "Reload Page"
+  },
+  "stuffPage": {
+    "openInNewTab": "Open in New Tab"
   }
 }
-
-
