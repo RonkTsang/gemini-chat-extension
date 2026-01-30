@@ -26,9 +26,9 @@ class ContextMonitor {
   private constructor() {
     // Create throttled check method
     this.throttledCheck = throttle(() => {
-      console.info('[ContextMonitor] Checking context validity')
+      console.log('[ContextMonitor] Checking context validity')
       if (!ContextMonitor.checkAndNotify()) {
-        console.info('[ContextMonitor] Context invalidated')
+        console.log('[ContextMonitor] Context invalidated')
       }
     }, this.THROTTLE_DELAY_MS)
   }

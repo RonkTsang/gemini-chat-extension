@@ -19,11 +19,11 @@ export const createNewChatByClick = async (): Promise<boolean> => {
     // Button selectors (ordered by priority)
     const selectors = [
       // Primary selector (based on Gemini DOM structure)
-      'bard-sidenav side-nav-action-button[data-test-id="new-chat-button"] button[aria-label="New chat"]',
+      'side-navigation-v2 side-nav-action-button[data-test-id="new-chat-button"] a[aria-label="New chat"]',
       
       // Alternative selectors
-      'button[aria-label="New chat"]',
-      'side-nav-action-button[data-test-id="new-chat-button"] button',
+      'a[aria-label="New chat"]',
+      'side-nav-action-button[data-test-id="new-chat-button"] a',
       '[data-test-id="new-chat-button"]',
       
       // Generic fallbacks
