@@ -1,3 +1,16 @@
+# [0.4.0](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.3.0...v0.4.0) (2026-01-30)
+
+
+### Bug Fixes
+
+* theme error when select theme manually ([#10](https://github.com/RonkTsang/gemini-chat-extension/issues/10)) ([655a5f9](https://github.com/RonkTsang/gemini-chat-extension/commit/655a5f9503a0081183f91c496149faa0c42b6eda))
+
+
+### Features
+
+* open stuff item in new tab ([#9](https://github.com/RonkTsang/gemini-chat-extension/issues/9)) ([66a1961](https://github.com/RonkTsang/gemini-chat-extension/commit/66a196113bf583aeaeacd555777694e3f6d4a1cb))
+* update notice style ([#11](https://github.com/RonkTsang/gemini-chat-extension/issues/11)) ([1aec4af](https://github.com/RonkTsang/gemini-chat-extension/commit/1aec4af938a53c72018db8d8e1db256e52459281))
+
 # [0.3.0](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.2.0...v0.3.0) (2026-01-23)
 
 
