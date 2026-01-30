@@ -8,6 +8,15 @@ import { Provider } from '@/components/ui/provider-shadow-dom'
 import { RunStatusContainer } from '@/components/run-status'
 import { getDefaultChatWindow } from '@/utils/messageUtils'
 import { useChainPromptStore } from '@/stores/chainPromptStore'
+import { useSyncColorMode } from '@/hooks/useSyncColorMode'
+
+/**
+ * Wrapper component to sync color mode with Gemini page theme
+ */
+function RunStatusApp() {
+  useSyncColorMode()
+  return <RunStatusContainer />
+}
 
 type MountResult = { mountEl: HTMLDivElement; root: Root } | null
 
@@ -120,7 +129,7 @@ export async function mountRunStatusUI(remount = false): Promise<MountResult> {
   statusRoot = createRoot(statusMountEl)
   statusRoot.render(
     <Provider host={{ style: { backgroundColor: 'unset' } }}>
-      <RunStatusContainer />
+      <RunStatusApp />
     </Provider>
   )
 
