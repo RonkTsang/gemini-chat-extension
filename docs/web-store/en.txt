@@ -24,6 +24,7 @@ Turn multi-step tasks into one-click automations.
 
 💎 SEAMLESS EXPERIENCE
 ● Smart Tab Titles: Automatically renames browser tabs to match your chat titles, making it effortless to switch between multiple Gemini sessions.
+● Open Media in New Tab: From the My Stuff gallery, open any item in a new tab and keep your place—review results without losing your scroll position.
 
 PRIVACY FIRST
 🔒 All processing happens locally on your machine. Your data never leaves your device.
