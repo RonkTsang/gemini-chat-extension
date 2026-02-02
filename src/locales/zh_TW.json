@@ -340,5 +340,17 @@
   },
   "stuffPage": {
     "openInNewTab": "在新分頁中開啟"
+  },
+  "whatsnew": {
+    "title": "更新內容",
+    "releaseNotes": "完整更新說明",
+    "feature1": {
+      "title": "智慧分頁標題",
+      "description": "自動將瀏覽器分頁重新命名為對話標題，輕鬆在多個 Gemini 工作階段之間切換。"
+    },
+    "feature2": {
+      "title": "在新分頁中開啟媒體",
+      "description": "從「我的內容」庫中在新分頁開啟任何項目，並保留您的位置——無需丟失捲動位置即可查看結果。"
+    }
   }
 }

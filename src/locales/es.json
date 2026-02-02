@@ -340,5 +340,17 @@
   },
   "stuffPage": {
     "openInNewTab": "Abrir en nueva pestaña"
+  },
+  "whatsnew": {
+    "title": "Novedades",
+    "releaseNotes": "Notas de la versión",
+    "feature1": {
+      "title": "Títulos de pestañas inteligentes",
+      "description": "Cambia automáticamente el nombre de las pestañas del navegador para que coincidan con los títulos de tus chats, lo que facilita el cambio entre varias sesiones de Gemini."
+    },
+    "feature2": {
+      "title": "Abrir archivos multimedia en una pestaña nueva",
+      "description": "Desde la galería Mis cosas, abre cualquier elemento en una pestaña nueva y mantén tu lugar: revisa los resultados sin perder tu posición de desplazamiento."
+    }
   }
 }

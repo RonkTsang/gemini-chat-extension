@@ -340,5 +340,17 @@
   },
   "stuffPage": {
     "openInNewTab": "Ouvrir dans un nouvel onglet"
+  },
+  "whatsnew": {
+    "title": "Quoi de neuf",
+    "releaseNotes": "Notes de version",
+    "feature1": {
+      "title": "Titres d'onglets intelligents",
+      "description": "Renomme automatiquement les onglets du navigateur pour correspondre aux titres de vos discussions, facilitant ainsi le passage entre plusieurs sessions Gemini."
+    },
+    "feature2": {
+      "title": "Ouvrir les médias dans un nouvel onglet",
+      "description": "Depuis la galerie Mes contenus, ouvrez n'importe quel élément dans un nouvel onglet et gardez votre place — consultez les résultats sans perdre votre position de défilement."
+    }
   }
 }

@@ -11,5 +11,6 @@ export const EXTERNAL_LINKS = {
   REVIEW: 'https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn',
   GITHUB: 'https://github.com/RonkTsang/gemini-chat-extension',
   COFFEE: 'https://ko-fi.com/ronktsang',
-  SHARE: 'https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn'
+  SHARE: 'https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn',
+  RELEASE_NOTES: 'https://www.notion.so/What-s-New-2eeda35941ef80d98e9df17363aeabfb'
 } as const;

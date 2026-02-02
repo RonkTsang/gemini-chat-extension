@@ -340,5 +340,17 @@
   },
   "stuffPage": {
     "openInNewTab": "Open in New Tab"
+  },
+  "whatsnew": {
+    "title": "What's New",
+    "releaseNotes": "Release Notes",
+    "feature1": {
+      "title": "Smart Tab Titles",
+      "description": "Automatically renames browser tabs to match your chat titles, making it effortless to switch between multiple Gemini sessions."
+    },
+    "feature2": {
+      "title": "Open Media in New Tab",
+      "description": "From the My Stuff gallery, open any item in a new tab and keep your place—review results without losing your scroll position."
+    }
   }
 }

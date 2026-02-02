@@ -34,18 +34,18 @@ function getThemeFromBody(): 'light' | 'dark' | undefined {
  * ```
  */
 export function useSyncColorMode() {
-  const { setColorMode } = useColorMode()
+  const { colorMode, setColorMode } = useColorMode()
 
   useEffect(() => {
     const applyTheme = () => {
       const theme = getThemeFromBody()
-      if (theme) {
-        setColorMode(theme)
-      } else {
-        // Fallback to system preference
-        setColorMode(
-          window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-        )
+      const targetTheme = theme || (
+        window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+      )
+      
+      // Only update if the target theme is different from the current color mode
+      if (targetTheme !== colorMode) {
+        setColorMode(targetTheme)
       }
     }
 
@@ -70,5 +70,5 @@ export function useSyncColorMode() {
     return () => {
       observer.disconnect()
     }
-  }, [setColorMode])
+  }, [colorMode, setColorMode])
 }
