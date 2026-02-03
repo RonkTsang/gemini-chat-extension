@@ -340,5 +340,17 @@
   },
   "stuffPage": {
     "openInNewTab": "在新标签页中打开"
+  },
+  "whatsnew": {
+    "title": "更新内容",
+    "releaseNotes": "完整更新说明",
+    "feature1": {
+      "title": "智能标签标题",
+      "description": "自动将浏览器标签重命名为对话标题，轻松在多个 Gemini 会话之间切换。"
+    },
+    "feature2": {
+      "title": "在新标签页中打开媒体",
+      "description": "从「我的内容」画廊中在新标签页打开任何项目，并保留您的位置——无需丢失滚动位置即可查看结果。"
+    }
   }
 }

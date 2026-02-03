@@ -340,5 +340,17 @@
   },
   "stuffPage": {
     "openInNewTab": "In neuem Tab öffnen"
+  },
+  "whatsnew": {
+    "title": "Was gibt's Neues",
+    "releaseNotes": "Versionshinweise",
+    "feature1": {
+      "title": "Intelligente Tab-Titel",
+      "description": "Benennt Browser-Tabs automatisch nach Ihren Chat-Titeln um, sodass Sie mühelos zwischen mehreren Gemini-Sitzungen wechseln können."
+    },
+    "feature2": {
+      "title": "Medien in neuem Tab öffnen",
+      "description": "Öffnen Sie in der Galerie „Meine Inhalte“ jedes Element in einem neuen Tab und behalten Sie Ihren Platz bei – sehen Sie sich die Ergebnisse an, ohne Ihre Scrollposition zu verlieren."
+    }
   }
 }

@@ -340,5 +340,17 @@
   },
   "stuffPage": {
     "openInNewTab": "새 탭에서 열기"
+  },
+  "whatsnew": {
+    "title": "새로운 기능",
+    "releaseNotes": "릴리스 노트",
+    "feature1": {
+      "title": "스마트 탭 제목",
+      "description": "브라우저 탭 이름을 채팅 제목과 일치하도록 자동으로 변경하여 여러 Gemini 세션 간의 전환을 간편하게 만듭니다."
+    },
+    "feature2": {
+      "title": "새 탭에서 미디어 열기",
+      "description": "내 보관함 갤러리에서 항목을 새 탭으로 열어 현재 위치를 유지하면서 결과를 확인하세요. 스크롤 위치를 잃지 않고 검토할 수 있습니다."
+    }
   }
 }
