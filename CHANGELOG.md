@@ -1,3 +1,10 @@
+## [0.5.1](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.5.0...v0.5.1) (2026-02-04)
+
+
+### Bug Fixes
+
+* show "What's New" toast when no version record is found ([#13](https://github.com/RonkTsang/gemini-chat-extension/issues/13)) ([a36049d](https://github.com/RonkTsang/gemini-chat-extension/commit/a36049ddc0b7346ca68e45e866b6cc34e946d87a))
+
 # [0.5.0](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.4.0...v0.5.0) (2026-02-04)
 
 
