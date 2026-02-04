@@ -2,7 +2,7 @@
   "name": "gemini-extension",
   "description": "Supercharge Gemini with Chat Outline, Quick Follow-up & Prompt Chaining. The ultimate power kit for productivity.",
   "private": true,
-  "version": "0.4.0",
+  "version": "0.5.0",
   "author": "RonkTsang",
   "type": "module",
   "scripts": {
