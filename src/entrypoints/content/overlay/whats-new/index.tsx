@@ -24,8 +24,12 @@ function WhatsNew() {
         // Get last seen version from storage
         const lastVersion = await getLastSeenVersion()
 
-        // If no last version (first install), save current version and skip
+        // If no last version (first install)
         if (!lastVersion) {
+          // Check if there are release notes to show
+          if (CURRENT_RELEASE_NOTES.length > 0) {
+            setShowToast(true)
+          }
           await setLastSeenVersion(version)
           return
         }
