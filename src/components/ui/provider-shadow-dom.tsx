@@ -22,7 +22,7 @@ const config = defineConfig({
   globalCss: {
     [varRoot]: {
       ...defaultConfig.globalCss?.html ?? {},
-      colorPalette: "blue", // Change this to any color palette you prefer
+      colorPalette: "pink", // Change this to any color palette you prefer
     },
   },
 })
