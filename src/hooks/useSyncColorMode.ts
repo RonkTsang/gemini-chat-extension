@@ -5,7 +5,7 @@
  * with the Gemini page theme (dark-theme / light-theme).
  */
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useColorMode } from '@/components/ui/color-mode'
 
 /**
@@ -35,6 +35,9 @@ function getThemeFromBody(): 'light' | 'dark' | undefined {
  */
 export function useSyncColorMode() {
   const { colorMode, setColorMode } = useColorMode()
+  
+  // Use ref to store the latest colorMode without causing re-renders
+  const colorModeRef = useRef(colorMode)
 
   useEffect(() => {
     const applyTheme = () => {
@@ -44,7 +47,9 @@ export function useSyncColorMode() {
       )
       
       // Only update if the target theme is different from the current color mode
-      if (targetTheme !== colorMode) {
+      // Update ref immediately before calling setColorMode to keep them in sync
+      if (targetTheme !== colorModeRef.current) {
+        colorModeRef.current = targetTheme
         setColorMode(targetTheme)
       }
     }
@@ -70,5 +75,5 @@ export function useSyncColorMode() {
     return () => {
       observer.disconnect()
     }
-  }, [colorMode, setColorMode])
+  }, [setColorMode])
 }
