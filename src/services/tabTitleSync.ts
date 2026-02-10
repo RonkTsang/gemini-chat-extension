@@ -78,7 +78,7 @@ class TabTitleSync {
    */
   private checkAndAttachTitleObserver(): void {
     // Priority 1: Chat conversation title
-    let titleElement = document.querySelector('.conversation-title.gds-title-m') as HTMLElement | null
+    let titleElement = document.querySelector('top-bar-actions .conversation-title-container') as HTMLElement | null
     let titleType = 'chat'
     
     // Priority 2: MyStuff page title (with parent container for precision)
