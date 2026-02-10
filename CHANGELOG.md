@@ -1,3 +1,11 @@
+## [0.5.2](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.5.1...v0.5.2) (2026-02-10)
+
+
+### Bug Fixes
+
+* synchronize color mode updates using useRef ([1a43a01](https://github.com/RonkTsang/gemini-chat-extension/commit/1a43a01bc12e3cc5fdc4cc234a713710f8f0b9df))
+* update chat title selector in tabTitleSync ([#14](https://github.com/RonkTsang/gemini-chat-extension/issues/14)) ([86b3deb](https://github.com/RonkTsang/gemini-chat-extension/commit/86b3deba3bfb58e869aaad42bf338e45668f26cc))
+
 ## [0.5.1](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.5.0...v0.5.1) (2026-02-04)
 
 
