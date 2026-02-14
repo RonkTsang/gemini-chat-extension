@@ -1,0 +1,58 @@
+:where(.theme-host) {
+  --theme-50: #ecfeff;
+  --theme-100: #cffafe;
+  --theme-200: #a5f3fc;
+  --theme-300: #67e8f9;
+  --theme-400: #22d3ee;
+  --theme-500: #06b6d4;
+  --theme-600: #0891b2;
+  --theme-700: #0e7490;
+  --theme-800: #155e75;
+  --theme-900: #083344;
+  --theme-950: #051e2c;
+}
+
+:where(.theme-host):where(.light-theme),
+:root .light-theme {
+  --gem-sys-color--primary: var(--theme-600);
+  --bard-color-sidenav-background-desktop: color-mix(in srgb, var(--theme-50), black 2%);
+  --gem-sys-color--surface-container: var(--theme-50);
+  --gem-sys-color--surface-container-high: var(--theme-100);
+  --gem-sys-color--primary-container: var(--theme-600);
+  --gem-sys-color--on-primary-container: #ffffff;
+  --gem-sys-color--on-surface: var(--theme-900);
+  --bard-color-surface-dim-tmp: color-mix(in srgb, var(--theme-50), #ffffff 50%);
+  --gem-sys-color--secondary-container: var(--theme-200);
+  --gem-sys-color--on-secondary-container: var(--theme-700);
+  --gem-sys-color--surface-container-low: color-mix(in srgb, var(--theme-50), black 3%);
+  --mat-icon-color: var(--theme-800);
+  --gem-sys-color--on-surface-variant: var(--theme-800);
+  --gem-sys-color--surface-container-highest: color-mix(in srgb, var(--theme-50), black 5%);
+}
+
+:where(.theme-host):where(.dark-theme) {
+  --gem-sys-color--primary: var(--theme-600);
+  --bard-color-sidenav-background-desktop: var(--theme-950) !important;
+  --gem-sys-color--primary-container: var(--theme-800);
+  --gem-sys-color--surface-container: var(--theme-900);
+  --gem-sys-color--surface-container-high: var(--theme-700);
+  --gem-sys-color--surface: color-mix(in srgb, var(--theme-950), black 25%);
+  --bard-color-surface-dim-tmp: color-mix(in srgb, var(--theme-950), black 25%) !important;
+  --gem-sys-color--surface-container-highest: var(--theme-800);
+  --gem-sys-color--surface-container-lowest: var(--theme-900);
+  --gem-sys-color--on-surface-variant: white;
+  --gem-sys-color--surface-container-low: var(--theme-950);
+  --gem-sys-color--surface-bright: color-mix(in srgb, var(--theme-700), black 70%);
+  --gem-sys-color--on-primary: #e3e3e3;
+  --mat-slide-toggle-selected-track-color: var(--theme-600);
+  --mat-slide-toggle-selected-handle-color: white;
+  --gem-sys-color--on-primary-container: white;
+}
+
+:where(.theme-host):where(.dark-theme)::selection {
+  background-color: var(--theme-800);
+}
+
+:where(.theme-host):where(.dark-theme) button.send-button.submit {
+  background-color: var(--theme-700) !important;
+}
