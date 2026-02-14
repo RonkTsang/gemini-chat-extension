@@ -9,6 +9,7 @@ import { useEffect, useState } from "react"
 import root from "react-shadow/emotion"
 import themeConfig from "./theme"
 import { ColorModeProvider, ColorModeProviderProps } from "./color-mode"
+import { registerShadowHost, initChakraTheme } from "@/hooks/useThemeColorPalette"
 
 const varRoot = ":host"
 
@@ -22,7 +23,7 @@ const config = defineConfig({
   globalCss: {
     [varRoot]: {
       ...defaultConfig.globalCss?.html ?? {},
-      colorPalette: "pink", // Change this to any color palette you prefer
+      colorPalette: "blue", // Change this to any color palette you prefer
     },
   },
 })
@@ -58,6 +59,9 @@ export function Provider(props: ProviderProps) {
       container: shadow.shadowRoot,
     })
     setCache(emotionCache)
+    // Register shadow host for dynamic colorPalette switching
+    registerShadowHost(shadow)
+    void initChakraTheme()
   }, [shadow, cache])
 
   return (

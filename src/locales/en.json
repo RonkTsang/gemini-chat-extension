@@ -61,6 +61,17 @@
     }
   },
   "settingPanel": {
+    "theme": {
+      "colorPresets": "COLOR PRESETS",
+      "customBackground": "CUSTOM BACKGROUND",
+      "livePreview": "LIVE PREVIEW",
+      "dropBackground": "Drop your background here",
+      "fileTypes": "PNG, JPG or WebP up to 5MB",
+      "selectFile": "Select File",
+      "transparency": "Transparency",
+      "blurIntensity": "Blur Intensity",
+      "footerNote": "Changes are reflected immediately. Your settings are saved automatically."
+    },
     "chainPrompt": {
       "new": "New Chain Prompt",
       "searchPlaceholder": "Search by name or description...",
@@ -268,12 +279,8 @@
         "title": "Theme",
         "views": {
           "index": {
-            "title": "Theme",
-            "description": "Main overview for theme settings."
-          },
-          "detail": {
-            "title": "Theme Detail",
-            "description": "Detailed configuration for theme settings."
+            "title": "Theme Settings",
+            "description": "Customize Gemini's color theme to match your style."
           }
         }
       },

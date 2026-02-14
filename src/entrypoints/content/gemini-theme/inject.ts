@@ -19,3 +19,11 @@ export function injectGeminiThemeOverride(css: string): void {
   }
   el.textContent = css
 }
+
+export function removeGeminiThemeOverride(): void {
+  if (typeof document === "undefined" || !document.head) return
+  const el = document.getElementById(STYLE_ID)
+  if (el) {
+    el.remove()
+  }
+}
