@@ -1,3 +1,10 @@
+## [0.5.3](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.5.2...v0.5.3) (2026-02-16)
+
+
+### Bug Fixes
+
+* improve text extraction logic in updateTocList function ([#15](https://github.com/RonkTsang/gemini-chat-extension/issues/15)) ([fd97e22](https://github.com/RonkTsang/gemini-chat-extension/commit/fd97e22a006973f8db93c03bc9c42dd4c38217c1))
+
 ## [0.5.2](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.5.1...v0.5.2) (2026-02-10)
 
 
