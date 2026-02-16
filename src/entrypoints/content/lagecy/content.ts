@@ -126,8 +126,23 @@ function updateTocList(popover, chatWindow) {
     // 2. Fallback: If dataset is not ready, check the raw text content.
     // This handles the race condition where TOC updates before the transformation runs.
     } else {
-      const textEl = query.querySelector('.query-text');
-      const currentText = (textEl ? textEl.innerText : query.innerText).trim();
+      // Use p.query-text-line selector to avoid reading hidden accessibility elements
+      // (e.g., cdk-visually-hidden spans like "You said")
+      const textLines = query.querySelectorAll('.query-text p.query-text-line');
+      let currentText = '';
+      
+      if (textLines.length > 0) {
+        // Extract text from all query-text-line elements, skipping hidden elements
+        currentText = Array.from(textLines)
+          .map(line => (line.textContent || '').trim())
+          .join('\n')
+          .trim();
+      } else {
+        // Fallback to innerText if no query-text-line elements found (shouldn't happen in modern DOM)
+        const textEl = query.querySelector('.query-text');
+        currentText = (textEl ? textEl.innerText : query.innerText).trim();
+      }
+      
       const separatorIndex = currentText.indexOf(SEPARATOR);
 
       if (currentText.startsWith(regardingThisText) && separatorIndex !== -1) {
