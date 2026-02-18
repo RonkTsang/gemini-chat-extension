@@ -6,28 +6,60 @@
   --theme-400: #facc15;
   --theme-500: #eab308;
   --theme-600: #ca8a04;
-  --theme-700: #a16207;
-  --theme-800: #854d0e;
+  --theme-700: #845209;
+  --theme-800: #713f12;
   --theme-900: #422006;
-  --theme-950: #291404;
+  --theme-950: #281304;
 }
 
 :where(.theme-host):where(.light-theme),
 :root .light-theme {
   --gem-sys-color--primary: var(--theme-600);
-  --bard-color-sidenav-background-desktop: color-mix(in srgb, var(--theme-50), black 2%);
+
+  /* 左边导航栏 */
+  --bard-color-sidenav-background-desktop: color-mix(in srgb, var(--theme-50), white 30%);
+
+  /* 容器类组件背景色：菜单组件、PDF消息、模型回复中的引用组件 */
   --gem-sys-color--surface-container: var(--theme-50);
+
+  /* 用户消息背景色、模型回复中 Code 标签底色 */
   --gem-sys-color--surface-container-high: var(--theme-100);
-  --gem-sys-color--primary-container: var(--theme-600);
-  --gem-sys-color--on-primary-container: #ffffff;
-  --gem-sys-color--on-surface: var(--theme-900);
+
+  /* 主色容器：左边导航栏被激活的item背景色 */
+  --gem-sys-color--primary-container: var(--theme-200);
+
+  /* 主色容器字体色：左边导航栏被激活的item字体色 */
+  --gem-sys-color--on-primary-container: var(--theme-700);
+
+  /* 消息界面字体颜色：ChatApp 消息字体 */
+  --gem-sys-color--on-surface: var(--theme-950);
+
+  /* welcome 页面的背景色 */
   --bard-color-surface-dim-tmp: color-mix(in srgb, var(--theme-50), #ffffff 50%);
   --gem-sys-color--secondary-container: var(--theme-200);
   --gem-sys-color--on-secondary-container: var(--theme-700);
   --gem-sys-color--surface-container-low: color-mix(in srgb, var(--theme-50), black 3%);
-  --mat-icon-color: var(--theme-800);
-  --gem-sys-color--on-surface-variant: var(--theme-800);
+  /* --mat-icon-color: var(--theme-800);  */
+
+  /* 界面字体颜色：包含左侧导航栏等 */
+  --gem-sys-color--on-surface-variant: var(--theme-900);
   --gem-sys-color--surface-container-highest: color-mix(in srgb, var(--theme-50), black 5%);
+
+  /* 按钮边框颜色 */
+  /* --gem-sys-color--outline-variant: var(--theme-300); */
+}
+
+:where(.theme-host)::selection {
+  background-color: var(--theme-100);
+}
+
+/* 输入框右侧发送按钮 */
+:where(.theme-host):where(.light-theme) input-area-v2 button.send-button mat-icon.send-button-icon {
+  color: var(--theme-600);
+}
+
+:where(.theme-host):where(.light-theme) input-area-v2 speech-dictation-mic-button button mat-icon {
+  color: var(--theme-600);
 }
 
 :where(.theme-host):where(.dark-theme) {
@@ -37,7 +69,7 @@
   --gem-sys-color--surface-container: var(--theme-900);
   --gem-sys-color--surface-container-high: var(--theme-700);
   --gem-sys-color--surface: color-mix(in srgb, var(--theme-950), black 25%);
-  --bard-color-surface-dim-tmp: color-mix(in srgb, var(--theme-950), black 25%) !important;
+  --bard-color-surface-dim-tmp: color-mix(in srgb, var(--theme-950), black 60%) !important;
   --gem-sys-color--surface-container-highest: var(--theme-800);
   --gem-sys-color--surface-container-lowest: var(--theme-900);
   --gem-sys-color--on-surface-variant: white;
@@ -47,6 +79,9 @@
   --mat-slide-toggle-selected-track-color: var(--theme-600);
   --mat-slide-toggle-selected-handle-color: white;
   --gem-sys-color--on-primary-container: white;
+  --gem-sys-color--outline-variant: var(--theme-800);
+  --gem-sys-color--secondary-container: var(--theme-700);
+  --gem-sys-color--on-secondary-container: var(--theme-100);
 }
 
 :where(.theme-host):where(.dark-theme)::selection {

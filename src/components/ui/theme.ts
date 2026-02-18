@@ -8,6 +8,8 @@ const config = defineConfig({
     },
     tokens: {
       colors: {
+        gemSidenavBg: { value: "var(--bard-color-sidenav-background-desktop)" },
+
         gemPrimary: { value: "var(--gem-sys-color--primary)" },
         gemSecondary: { value: "var(--gem-sys-color--secondary)" },
 
@@ -30,7 +32,7 @@ const config = defineConfig({
           value: "color(from {colors.gemOnSurfaceVariant} srgb r g b/.08)",
         },
         tocBg: {
-          value: { _light: "#ffffff", _dark: "#2d2d2d",  },
+          value: { _light: "#ffffff", _dark: "#2d2d2d", },
         },
         tocHoverBg: {
           value: { _light: "#f1f3f4", _dark: "#3a3a3a" },

@@ -46,7 +46,6 @@ export function CustomBackground() {
           <Button
             size="sm"
             variant="outline"
-            colorPalette="blue"
             disabled
           >
             {t('settingPanel.theme.selectFile')}

@@ -11,7 +11,7 @@ interface ColorPresetsProps {
 
 export function ColorPresets({ activeKey, onSelect, isLoading }: ColorPresetsProps) {
   return (
-    <Box mb={8}>
+    <Box mb={8} overflow="visible">
       <Text
         fontSize="xs"
         fontWeight="bold"
@@ -23,7 +23,7 @@ export function ColorPresets({ activeKey, onSelect, isLoading }: ColorPresetsPro
         {t('settingPanel.theme.colorPresets')}
       </Text>
 
-      <SimpleGrid columns={5} gap={3}>
+      <SimpleGrid columns={5} gap={5} p={4} overflow="visible">
         {themePresets.map((preset) => {
           const isActive = activeKey === preset.key
           return (
@@ -34,20 +34,21 @@ export function ColorPresets({ activeKey, onSelect, isLoading }: ColorPresetsPro
               position="relative"
               width="100%"
               aspectRatio="1"
-              borderRadius="xl"
+              borderRadius="lg"
               bg={preset.primary}
               cursor={isLoading ? 'not-allowed' : 'pointer'}
               opacity={isLoading ? 0.5 : 1}
               pointerEvents={isLoading ? 'none' : 'auto'}
-              transition="all 0.2s"
-              border="3px solid"
+              transition="all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
+              border="2px solid"
               borderColor={isActive ? preset.primary : 'transparent'}
-              outline={isActive ? '3px solid' : 'none'}
+              outline={isActive ? '2px solid' : 'none'}
               outlineColor={isActive ? `${preset.primary}40` : 'transparent'}
-              outlineOffset="1px"
+              outlineOffset="2px"
               _hover={{
-                transform: isLoading ? 'none' : 'scale(1.05)',
-                shadow: 'md',
+                transform: isLoading ? 'none' : 'scale(1.1)',
+                shadow: 'lg',
+                zIndex: 1,
               }}
               _active={{
                 transform: 'scale(0.95)',
@@ -64,7 +65,7 @@ export function ColorPresets({ activeKey, onSelect, isLoading }: ColorPresetsPro
                   justifyContent="center"
                   color="white"
                 >
-                  <HiCheck size={24} />
+                  <HiCheck size={18} />
                 </Box>
               )}
             </Box>

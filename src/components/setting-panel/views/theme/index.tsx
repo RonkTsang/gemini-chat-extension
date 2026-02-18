@@ -1,37 +1,29 @@
 import { useState, useEffect } from 'react'
 import { Box, Flex, Text } from '@chakra-ui/react'
-import { applyTheme, themePresets, getThemeKey } from '@/entrypoints/content/gemini-theme'
+import { applyTheme, themePresets } from '@/entrypoints/content/gemini-theme'
 import { ColorPresets } from './ColorPresets'
 import { CustomBackground } from './CustomBackground'
 import { LivePreview } from './LivePreview'
 import { t } from '@/utils/i18n'
-import { updateChakraColorPalette } from '@/hooks/useThemeColorPalette'
+import { useColorPalette } from '@/hooks/useThemeColorPalette'
 
 export function ThemeSettingsView() {
-  const [activeKey, setActiveKey] = useState('blue')
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const key = await getThemeKey()
-        setActiveKey(key || 'blue')
-      } catch {
-        // fallback to default
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    void load()
-  }, [])
+  // Use global palette state instead of local state + storage reading
+  const { palette, setPalette } = useColorPalette()
+  // We still need a loading state? Not really, palette is initialized by provider.
+  // But provider initializes async. We might want to show loading if palette is default but storage has something else?
+  // However, provider handles it fast enough for the panel which opens later.
+  // If the panel is open during init, it might flash blue -> stored.
 
   const handleSelect = async (key: string) => {
-    setActiveKey(key)
+    // 1. Apply to page (Gemini)
     await applyTheme(key)
-    // Sync Chakra UI color palette
-    updateChakraColorPalette(key || 'blue')
+    // 2. Apply to extension UI (Chakra) via context
+    setPalette(key || 'blue')
   }
 
+  // Fallback to blue if empty (though context handles defaults)
+  const activeKey = palette || 'blue'
   const activePrimary = themePresets.find((p) => p.key === activeKey)?.primary ?? '#4285f4'
 
   return (
@@ -49,7 +41,7 @@ export function ThemeSettingsView() {
             <ColorPresets
               activeKey={activeKey}
               onSelect={handleSelect}
-              isLoading={isLoading}
+              isLoading={false} // Removed loading state as it's handled by context availability
             />
             <CustomBackground />
           </Box>

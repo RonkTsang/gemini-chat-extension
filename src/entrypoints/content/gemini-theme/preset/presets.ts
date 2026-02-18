@@ -25,7 +25,7 @@ export interface ThemePreset {
 
 export const themePresets: ThemePreset[] = [
   { key: 'blue', primary: '#4285f4', css: null },
-  { key: 'gray', primary: '#374151', css: grayCss },
+  { key: 'gray', primary: '#52525b', css: grayCss },
   { key: 'red', primary: '#dc2626', css: redCss },
   { key: 'pink', primary: '#db2777', css: pinkCss },
   { key: 'purple', primary: '#9333ea', css: purpleCss },
