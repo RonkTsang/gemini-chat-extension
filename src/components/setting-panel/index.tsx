@@ -16,7 +16,7 @@ export const SettingPanel = () => {
 
   useEvent('settings:open', (data: AppEvents['settings:open']) => {
     setOpen(data.open)
-    
+
     // If data.module has a value, set settingPanel to the corresponding NavigationSection
     if (data.module) {
       setActiveSection(data.module)
@@ -33,8 +33,8 @@ export const SettingPanel = () => {
   }, [open])
 
   return (
-    <Dialog.Root 
-      open={open} 
+    <Dialog.Root
+      open={open}
       onOpenChange={(e) => setOpen(e.open)}
       closeOnInteractOutside={false}  // Prevent accidental closing
       closeOnEscape={true}            // Keep ESC key to close
@@ -42,26 +42,28 @@ export const SettingPanel = () => {
         mdDown: "cover",
         md: "cover"
       }}
-      
+
     >
       <Portal>
         <Dialog.Backdrop />
         <Dialog.Positioner>
-          <Dialog.Content 
-            maxWidth="1200px" 
+          <Dialog.Content
+            maxWidth="1200px"
             height="90vh"
             borderRadius="lg"
             overflow="hidden"
             bg="gemSurface"
+            borderWidth="1px"
+            borderColor="border.muted"
           >
-            <Dialog.Header 
-              position="relative" 
+            <Dialog.Header
+              position="relative"
               p={0}
             >
-              <Box 
-                position="absolute" 
-                top={2} 
-                right={2} 
+              <Box
+                position="absolute"
+                top={2}
+                right={2}
                 zIndex={10}
               >
                 <Dialog.CloseTrigger asChild>
@@ -69,7 +71,7 @@ export const SettingPanel = () => {
                 </Dialog.CloseTrigger>
               </Box>
             </Dialog.Header>
-            
+
             <Dialog.Body p={0} height="100%">
               <Flex height="100%">
                 <Sidebar />

@@ -54,7 +54,7 @@ export function RunModal({ prompt, open, onClose, onEdit }: RunModalProps) {
         initialValues[v.key] = v.defaultValue || ''
       })
       setVariableValues(initialValues)
-      
+
       // Detect chat history
       const summary = getChatSummary()
       setChatMessageCount(summary.messageCount)
@@ -134,18 +134,18 @@ export function RunModal({ prompt, open, onClose, onEdit }: RunModalProps) {
 
   const executeChainPrompt = async () => {
     setIsExecuting(true)
-    
+
     // 1. Initialize run status
     startRun(prompt)
-    
+
     // 2. Close all setting panels and modals (wait for animation to avoid flicker)
     onClose()
-    
+
     // Close setting panel via event bus
     emit('settings:close', { from: 'run-modal', reason: 'execution-started' })
-    
+
     await new Promise(resolve => setTimeout(resolve, 150))
-    
+
     // 3. Mount run status UI (dynamic import to avoid errors in non-content script environments)
     try {
       const { mountRunStatusUI } = await import('@/entrypoints/content/status')
@@ -158,7 +158,7 @@ export function RunModal({ prompt, open, onClose, onEdit }: RunModalProps) {
       // Get chat window and abort signal
       const chatWindow = getDefaultChatWindow() || undefined
       const abortSignal = running.abortController?.signal
-      
+
       await executionCoordinator.executeChainPrompt(
         prompt,
         variableValues,
@@ -208,9 +208,9 @@ export function RunModal({ prompt, open, onClose, onEdit }: RunModalProps) {
   }
 
   return (
-    <Dialog.Root 
-      open={open} 
-      onOpenChange={(e) => !e.open && onClose()} 
+    <Dialog.Root
+      open={open}
+      onOpenChange={(e) => !e.open && onClose()}
       size="xl"
       closeOnInteractOutside={false}
     >
@@ -218,21 +218,21 @@ export function RunModal({ prompt, open, onClose, onEdit }: RunModalProps) {
         <Dialog.Backdrop />
         <Dialog.Positioner>
           <Dialog.Content bg="bg" maxW="900px">
-          <Dialog.Header>
-            <Flex justify="space-between" align="center" width="100%">
-              <Dialog.Title>{t('settingPanel.runModal.title', prompt.name)}</Dialog.Title>
-              {onEdit && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleEdit}
-                  disabled={isExecuting}
-                >
-                  <HiOutlinePencil />
-                  {t('settingPanel.runModal.edit')}
-                </Button>
-              )}
-            </Flex>
+            <Dialog.Header>
+              <Flex justify="space-between" align="center" width="100%">
+                <Dialog.Title>{t('settingPanel.runModal.title', prompt.name)}</Dialog.Title>
+                {onEdit && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleEdit}
+                    disabled={isExecuting}
+                  >
+                    <HiOutlinePencil />
+                    {t('settingPanel.runModal.edit')}
+                  </Button>
+                )}
+              </Flex>
             </Dialog.Header>
 
             <Dialog.Body>
