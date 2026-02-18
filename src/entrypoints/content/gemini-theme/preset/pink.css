@@ -1,65 +1,72 @@
 :where(.theme-host) {
-  --theme-50: #fdf2f8;
-  --theme-100: #fce7f3;
-  --theme-200: #fbcfe8;
-  --theme-300: #f9a8d4;
-  --theme-400: #f472b6;
-  --theme-500: #ec4899;
-  --theme-600: #db2777;
-  --theme-700: #a41752;
-  --theme-800: #6d0e34;
-  --theme-900: #45061f;
-  --theme-950: #2c0514;
+  --theme-25: #fff4f9;
+  --theme-50: #ffe8f3;
+  --theme-75: #ffd4e8;
+  --theme-100: #ffbada;
+  --theme-200: #ffa3ce;
+  --theme-300: #ff8cc1;
+  --theme-400: #ff66ad;
+  --theme-500: #e04c91;
+  --theme-600: #ba437a;
+  --theme-700: #963c67;
+  --theme-800: #6e2c4a;
+  --theme-900: #4d1f34;
+  --theme-950: #29101c;
+  --theme-1000: #1a0a11;
+  --theme-a25: #ff66ad14;
+  --theme-a50: #ff66ad29;
+  --theme-a75: #ff66ad47;
+  --theme-a100: #ff66ad73;
+  --theme-a200: #ff66ad99;
+  --theme-a300: #ff66adc2;
+}
+
+:where(.theme-host)::selection {
+  background-color: color-mix(in oklab, var(--theme-300) 35%, transparent);
 }
 
 :where(.theme-host):where(.light-theme),
 :root .light-theme {
-  --gem-sys-color--primary: var(--theme-600);
+  --gem-sys-color--primary: var(--theme-500);
 
   /* 左边导航栏 */
-  --bard-color-sidenav-background-desktop: color-mix(in srgb, var(--theme-50), white 30%);
+  --bard-color-sidenav-background-desktop: var(--theme-a25);
 
   /* 容器类组件背景色：菜单组件、PDF消息、模型回复中的引用组件 */
-  --gem-sys-color--surface-container: var(--theme-50);
+  --gem-sys-color--surface-container: var(--theme-25);
 
   /* 用户消息背景色、模型回复中 Code 标签底色 */
-  --gem-sys-color--surface-container-high: var(--theme-100);
+  --gem-sys-color--surface-container-high: var(--theme-50);
 
   /* 主色容器：左边导航栏被激活的item背景色 */
-  --gem-sys-color--primary-container: var(--theme-200);
+  --gem-sys-color--primary-container: var(--theme-a50);
 
   /* 主色容器字体色：左边导航栏被激活的item字体色 */
-  --gem-sys-color--on-primary-container: var(--theme-700);
+  --gem-sys-color--on-primary-container: var(--theme-600);
 
   /* 消息界面字体颜色：ChatApp 消息字体 */
-  --gem-sys-color--on-surface: var(--theme-950);
+  --gem-sys-color--on-surface: var(--theme-1000);
 
   /* welcome 页面的背景色 */
-  --bard-color-surface-dim-tmp: color-mix(in srgb, var(--theme-50), #ffffff 50%);
-  --gem-sys-color--secondary-container: var(--theme-200);
-  --gem-sys-color--on-secondary-container: var(--theme-700);
-  --gem-sys-color--surface-container-low: color-mix(in srgb, var(--theme-50), black 3%);
-  /* --mat-icon-color: var(--theme-800);  */
+  --bard-color-surface-dim-tmp: color-mix(in srgb, var(--theme-25), #ffffff 50%);
+  --gem-sys-color--secondary-container: var(--theme-50);
+  --gem-sys-color--on-secondary-container: var(--theme-800);
+  --gem-sys-color--surface-container-low: var(--theme-25);
 
   /* 界面字体颜色：包含左侧导航栏等 */
-  --gem-sys-color--on-surface-variant: var(--theme-900);
+  --gem-sys-color--on-surface-variant: var(--theme-950);
   --gem-sys-color--surface-container-highest: color-mix(in srgb, var(--theme-50), black 5%);
 
   /* 按钮边框颜色 */
   /* --gem-sys-color--outline-variant: var(--theme-300); */
 }
 
-:where(.theme-host)::selection {
-  background-color: var(--theme-100);
-}
-
-/* 输入框右侧发送按钮 */
 :where(.theme-host):where(.light-theme) input-area-v2 button.send-button mat-icon.send-button-icon {
-  color: var(--theme-600);
+  color: var(--theme-500);
 }
 
 :where(.theme-host):where(.light-theme) input-area-v2 speech-dictation-mic-button button mat-icon {
-  color: var(--theme-600);
+  color: var(--theme-500);
 }
 
 :where(.theme-host):where(.dark-theme) {
@@ -67,8 +74,8 @@
   --bard-color-sidenav-background-desktop: var(--theme-950) !important;
   --gem-sys-color--primary-container: var(--theme-800);
   --gem-sys-color--surface-container: var(--theme-900);
-  --gem-sys-color--surface-container-high: var(--theme-700);
-  --gem-sys-color--surface: color-mix(in srgb, var(--theme-950), black 25%);
+  --gem-sys-color--surface-container-high: var(--theme-800);
+  --gem-sys-color--surface: color-mix(in srgb, var(--theme-1000), black 40%);
   --bard-color-surface-dim-tmp: color-mix(in srgb, var(--theme-950), black 60%) !important;
   --gem-sys-color--surface-container-highest: var(--theme-800);
   --gem-sys-color--surface-container-lowest: var(--theme-900);

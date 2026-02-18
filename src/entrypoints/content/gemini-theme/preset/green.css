@@ -51,7 +51,7 @@
   --bard-color-surface-dim-tmp: color-mix(in srgb, var(--theme-25), #ffffff 50%);
   --gem-sys-color--secondary-container: var(--theme-50);
   --gem-sys-color--on-secondary-container: var(--theme-800);
-  --gem-sys-color--surface-container-low: color-mix(in srgb, var(--theme-50), black 3%);
+  --gem-sys-color--surface-container-low: var(--theme-25);
 
   /* 界面字体颜色：包含左侧导航栏等 */
   --gem-sys-color--on-surface-variant: var(--theme-950);
@@ -75,7 +75,7 @@
   --gem-sys-color--primary-container: var(--theme-800);
   --gem-sys-color--surface-container: var(--theme-900);
   --gem-sys-color--surface-container-high: var(--theme-800);
-  --gem-sys-color--surface: color-mix(in srgb, var(--theme-950), black 25%);
+  --gem-sys-color--surface: color-mix(in srgb, var(--theme-1000), black 40%);
   --bard-color-surface-dim-tmp: color-mix(in srgb, var(--theme-950), black 60%) !important;
   --gem-sys-color--surface-container-highest: var(--theme-800);
   --gem-sys-color--surface-container-lowest: var(--theme-900);
