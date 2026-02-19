@@ -61,10 +61,12 @@
   /* --gem-sys-color--outline-variant: var(--theme-300); */
 }
 
+/* 发送按钮 */
 :where(.theme-host):where(.light-theme) input-area-v2 button.send-button mat-icon.send-button-icon {
   color: var(--theme-500);
 }
 
+/* 语音输入按钮 */
 :where(.theme-host):where(.light-theme) input-area-v2 speech-dictation-mic-button button mat-icon {
   color: var(--theme-500);
 }
@@ -81,12 +83,14 @@
   --gem-sys-color--surface-container-lowest: var(--theme-900);
   --gem-sys-color--on-surface-variant: white;
   --gem-sys-color--surface-container-low: var(--theme-950);
+
+  /* 输入组件背景色 */
   --gem-sys-color--surface-bright: color-mix(in srgb, var(--theme-700), black 70%);
   --gem-sys-color--on-primary: #e3e3e3;
   --mat-slide-toggle-selected-track-color: var(--theme-600);
   --mat-slide-toggle-selected-handle-color: white;
   --gem-sys-color--on-primary-container: white;
-  --gem-sys-color--outline-variant: var(--theme-800);
+  --gem-sys-color--outline-variant: var(--theme-900);
   --gem-sys-color--secondary-container: var(--theme-700);
   --gem-sys-color--on-secondary-container: var(--theme-100);
 }

@@ -86,7 +86,7 @@
   --mat-slide-toggle-selected-track-color: var(--theme-600);
   --mat-slide-toggle-selected-handle-color: white;
   --gem-sys-color--on-primary-container: white;
-  --gem-sys-color--outline-variant: var(--theme-800);
+  --gem-sys-color--outline-variant: var(--theme-900);
   --gem-sys-color--secondary-container: var(--theme-700);
   --gem-sys-color--on-secondary-container: var(--theme-100);
 }
