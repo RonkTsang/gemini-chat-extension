@@ -72,9 +72,9 @@
 :where(.theme-host):where(.dark-theme) {
   --gem-sys-color--primary: var(--theme-600);
   --bard-color-sidenav-background-desktop: var(--theme-950) !important;
-  --gem-sys-color--primary-container: var(--theme-800);
+  --gem-sys-color--primary-container: var(--theme-700);
   --gem-sys-color--surface-container: var(--theme-900);
-  --gem-sys-color--surface-container-high: var(--theme-800);
+  --gem-sys-color--surface-container-high: var(--theme-700);
   --gem-sys-color--surface: color-mix(in srgb, var(--theme-1000), black 40%);
   --bard-color-surface-dim-tmp: color-mix(in srgb, var(--theme-950), black 60%) !important;
   --gem-sys-color--surface-container-highest: var(--theme-800);
