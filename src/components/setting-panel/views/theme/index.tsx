@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react'
 import { Box, Flex, Text } from '@chakra-ui/react'
-import { applyTheme, themePresets } from '@/entrypoints/content/gemini-theme'
+import { applyTheme } from '@/entrypoints/content/gemini-theme'
 import { ColorPresets } from './ColorPresets'
 import { CustomBackground } from './CustomBackground'
 import { LivePreview } from './LivePreview'
@@ -24,8 +23,6 @@ export function ThemeSettingsView() {
 
   // Fallback to blue if empty (though context handles defaults)
   const activeKey = palette || 'blue'
-  const activePrimary = themePresets.find((p) => p.key === activeKey)?.primary ?? '#4285f4'
-
   return (
     <Box
       position="relative"
@@ -52,7 +49,7 @@ export function ThemeSettingsView() {
             flexShrink={0}
             display={{ base: 'none', md: 'block' }}
           >
-            <LivePreview primaryColor={activePrimary} />
+            <LivePreview />
           </Box>
         </Flex>
       </Box>
