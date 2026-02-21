@@ -61,6 +61,24 @@
     }
   },
   "settingPanel": {
+    "theme": {
+      "colorPresets": "颜色",
+      "customBackground": "壁纸",
+      "livePreview": "实时预览",
+      "enableBackgroundImage": "启用壁纸",
+      "backgroundImageUpload": "背景图上传",
+      "dropBackground": "将图片拖放到这里",
+      "fileTypes": "支持 PNG、JPG、WebP，最大 5MB",
+      "selectFile": "选择文件",
+      "blurIntensity": "模糊",
+      "messageGlassEffect": "消息毛玻璃效果",
+      "messageGlassEffectInfo": "开启后可获得毛玻璃视觉效果。对于低性能设备，可能会影响流畅度。",
+      "invalidFileType": "仅支持 PNG/JPG/WebP",
+      "fileTooLarge": "图片大小不能超过 5MB",
+      "imageLoadFailed": "图片加载失败，请重试",
+      "removeBackgroundImage": "删除背景图",
+      "footerNote": "修改会立即生效，设置会自动保存。"
+    },
     "chainPrompt": {
       "new": "新建 Chain Prompt",
       "searchPlaceholder": "按名称或描述搜索...",

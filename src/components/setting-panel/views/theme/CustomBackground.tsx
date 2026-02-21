@@ -1,138 +1,307 @@
-import { Box, Text, VStack, HStack, Button } from '@chakra-ui/react'
-import { HiOutlineCloudUpload } from 'react-icons/hi'
+import { useRef, useState, type ChangeEvent, type DragEvent } from 'react'
+import {
+  Box,
+  Text,
+  Heading,
+  VStack,
+  HStack,
+  Button,
+  IconButton,
+  Image,
+  Slider,
+  Switch,
+} from '@chakra-ui/react'
+import {
+  HiOutlineCloudUpload,
+  HiOutlineInformationCircle,
+  HiOutlineTrash,
+} from 'react-icons/hi'
+import type { ThemeBackgroundResolvedState } from '@/entrypoints/content/gemini-theme'
+import { Tooltip } from '@/components/ui/tooltip'
 import { t } from '@/utils/i18n'
 
-/**
- * Custom Background section — placeholder UI only (non-functional).
- * Displays the upload area, transparency slider, and blur slider
- * as disabled placeholders for future implementation.
- */
-export function CustomBackground() {
+interface CustomBackgroundProps {
+  state: ThemeBackgroundResolvedState | null
+  isLoading: boolean
+  onToggleBackground: (enabled: boolean) => Promise<void>
+  onBlurChange: (value: number) => Promise<void>
+  onToggleMessageGlass: (enabled: boolean) => Promise<void>
+  onUploadFile: (file: File) => Promise<void>
+  onRemoveImage: () => Promise<void>
+}
+
+function tt(key: string, fallback: string): string {
+  const value = t(key)
+  return value === key ? fallback : value
+}
+
+export function CustomBackground(props: CustomBackgroundProps) {
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [isFilePending, setIsFilePending] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
+
+  const settings = props.state?.settings
+  const isBackgroundEnabled = settings?.backgroundImageEnabled ?? false
+  const blurValue = settings?.backgroundBlurPx ?? 5
+  const hasImage = settings?.imageRef.kind === 'asset' && Boolean(props.state?.resolvedBackgroundUrl)
+  const primaryTextColor = hasImage ? 'whiteAlpha.900' : 'gemOnSurface'
+  const secondaryTextColor = hasImage ? 'whiteAlpha.700' : 'gray.400'
+  const uploadIconColor = hasImage ? 'whiteAlpha.900' : 'blue.400'
+
+  const handleSelectFile = () => {
+    if (props.isLoading || isFilePending) return
+    fileInputRef.current?.click()
+  }
+
+  const handleUpload = async (file: File) => {
+    setIsFilePending(true)
+    try {
+      await props.onUploadFile(file)
+    } catch {
+      // The parent already handles user-facing errors.
+    } finally {
+      setIsFilePending(false)
+    }
+  }
+
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+
+    await handleUpload(file)
+  }
+
+  const handleRemoveImage = async () => {
+    setIsFilePending(true)
+    try {
+      await props.onRemoveImage()
+    } catch {
+      // The parent already handles user-facing errors.
+    } finally {
+      setIsFilePending(false)
+    }
+  }
+
+  const handleDragEnter = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    if (props.isLoading || isFilePending) return
+    setIsDragging(true)
+  }
+
+  const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    if (props.isLoading || isFilePending) return
+    event.dataTransfer.dropEffect = 'copy'
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    const nextTarget = event.relatedTarget as Node | null
+    if (nextTarget && event.currentTarget.contains(nextTarget)) return
+    setIsDragging(false)
+  }
+
+  const handleDrop = async (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setIsDragging(false)
+    if (props.isLoading || isFilePending) return
+
+    const file = event.dataTransfer.files?.[0]
+    if (!file) return
+    await handleUpload(file)
+  }
+
   return (
     <Box>
-      <Text
-        fontSize="xs"
-        fontWeight="bold"
-        color="gemOnSurfaceVariant"
-        textTransform="uppercase"
-        letterSpacing="wider"
-        mb={4}
-      >
-        {t('settingPanel.theme.customBackground')}
-      </Text>
+      <Heading size="sm" mb={3}>
+        {tt('settingPanel.theme.customBackground', 'Wallpaper')}
+      </Heading>
 
-      {/* Upload area */}
+      <HStack justify="space-between" mb={4}>
+        <Text fontSize="sm" color="gemOnSurface">
+          {tt('settingPanel.theme.enableBackgroundImage', 'Enable wallpaper')}
+        </Text>
+        <Switch.Root
+          checked={settings?.backgroundImageEnabled ?? false}
+          onCheckedChange={(details) => void props.onToggleBackground(details.checked)}
+          disabled={props.isLoading || isFilePending}
+        >
+          <Switch.HiddenInput />
+          <Switch.Control>
+            <Switch.Thumb />
+          </Switch.Control>
+        </Switch.Root>
+      </HStack>
+
       <Box
         border="2px dashed"
-        borderColor="gray.300"
+        borderColor={isDragging ? 'blue.400' : 'border'}
         borderRadius="xl"
-        py={8}
+        py={6}
         px={4}
         textAlign="center"
-        opacity={0.5}
-        cursor="not-allowed"
-        mb={6}
+        position="relative"
+        mb={5}
+        transition="border-color 0.2s ease, background-color 0.2s ease"
+        bg={isDragging ? 'blue.subtle' : undefined}
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={(event) => void handleDrop(event)}
       >
-        <VStack gap={3}>
-          <Box color="blue.400" fontSize="2xl">
+        {hasImage && (
+          <Box
+            position="absolute"
+            inset={2}
+            borderRadius="lg"
+            overflow="hidden"
+            opacity={1}
+            pointerEvents="none"
+          >
+            <Image
+              src={props.state?.resolvedBackgroundUrl ?? undefined}
+              alt="Theme background"
+              width="100%"
+              height="100%"
+              objectFit="cover"
+            />
+          </Box>
+        )}
+        {hasImage && (
+          <Box
+            position="absolute"
+            inset={2}
+            borderRadius="lg"
+            bg="blackAlpha.500"
+            pointerEvents="none"
+          />
+        )}
+
+        <VStack gap={3} position="relative" zIndex={1}>
+          <Box color={uploadIconColor} fontSize="2xl">
             <HiOutlineCloudUpload size={32} />
           </Box>
-          <Text fontSize="sm" fontWeight="medium" color="gemOnSurface">
-            {t('settingPanel.theme.dropBackground')}
+          <Text fontSize="sm" color={primaryTextColor}>
+            {tt('settingPanel.theme.dropBackground', 'Drop your image here')}
           </Text>
-          <Text fontSize="xs" color="gray.400">
-            {t('settingPanel.theme.fileTypes')}
+          <Text fontSize="xs" color={secondaryTextColor}>
+            {tt('settingPanel.theme.fileTypes', 'PNG, JPG or WebP up to 5MB')}
           </Text>
-          <Button
-            size="sm"
-            variant="outline"
-            disabled
-          >
-            {t('settingPanel.theme.selectFile')}
-          </Button>
+          <HStack>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleSelectFile}
+              disabled={props.isLoading || isFilePending}
+              color={hasImage ? 'whiteAlpha.900' : undefined}
+              borderColor={hasImage ? 'whiteAlpha.700' : undefined}
+              bg={hasImage ? 'blackAlpha.300' : undefined}
+              _hover={hasImage ? { bg: 'blackAlpha.400' } : undefined}
+            >
+              {tt('settingPanel.theme.selectFile', 'Select File')}
+            </Button>
+            {hasImage && (
+              <IconButton
+                aria-label={tt('settingPanel.theme.removeBackgroundImage', 'Remove Background Image')}
+                size="sm"
+                variant="ghost"
+                onClick={() => void handleRemoveImage()}
+                disabled={props.isLoading || isFilePending}
+                color={hasImage ? 'whiteAlpha.900' : undefined}
+                _hover={hasImage ? { bg: 'blackAlpha.300' } : undefined}
+              >
+                <HiOutlineTrash />
+              </IconButton>
+            )}
+          </HStack>
         </VStack>
-      </Box>
 
-      {/* Transparency slider (placeholder) */}
-      <HStack justify="space-between" mb={2}>
-        <Text fontSize="sm" fontWeight="medium" color="gemOnSurface">
-          {t('settingPanel.theme.transparency')}
-        </Text>
-        <Text fontSize="sm" fontWeight="medium" color="blue.400">
-          20%
-        </Text>
-      </HStack>
-      <Box
-        height="6px"
-        bg="gray.200"
-        borderRadius="full"
-        mb={6}
-        position="relative"
-        opacity={0.5}
-        cursor="not-allowed"
-      >
-        <Box
-          position="absolute"
-          left="0"
-          top="0"
-          height="100%"
-          width="20%"
-          bg="blue.400"
-          borderRadius="full"
-        />
-        <Box
-          position="absolute"
-          left="20%"
-          top="50%"
-          transform="translate(-50%, -50%)"
-          width="14px"
-          height="14px"
-          bg="blue.500"
-          borderRadius="full"
-          border="2px solid white"
-          shadow="sm"
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          style={{ display: 'none' }}
+          onChange={(event) => void handleFileChange(event)}
         />
       </Box>
 
-      {/* Blur Intensity slider (placeholder) */}
-      <HStack justify="space-between" mb={2}>
-        <Text fontSize="sm" fontWeight="medium" color="gemOnSurface">
-          {t('settingPanel.theme.blurIntensity')}
-        </Text>
-        <Text fontSize="sm" fontWeight="medium" color="blue.400">
-          8px
-        </Text>
-      </HStack>
-      <Box
-        height="6px"
-        bg="gray.200"
-        borderRadius="full"
-        position="relative"
-        opacity={0.5}
-        cursor="not-allowed"
-      >
-        <Box
-          position="absolute"
-          left="0"
-          top="0"
-          height="100%"
-          width="40%"
-          bg="blue.400"
-          borderRadius="full"
-        />
-        <Box
-          position="absolute"
-          left="40%"
-          top="50%"
-          transform="translate(-50%, -50%)"
-          width="14px"
-          height="14px"
-          bg="blue.500"
-          borderRadius="full"
-          border="2px solid white"
-          shadow="sm"
-        />
-      </Box>
+      {isBackgroundEnabled && (
+        <>
+          <HStack justify="space-between" align="center" mb={5} gap={4}>
+            <Text fontSize="sm" color="gemOnSurface">
+              {tt('settingPanel.theme.blurIntensity', 'Blur')}
+            </Text>
+            <Slider.Root
+              min={0}
+              max={20}
+              step={1}
+              value={[blurValue]}
+              onValueChange={(details) => void props.onBlurChange(details.value[0] ?? 0)}
+              disabled={props.isLoading || isFilePending}
+              width={{ base: '170px', md: '220px' }}
+            >
+              <Slider.Control>
+                <Slider.Track>
+                  <Slider.Range />
+                </Slider.Track>
+                <Slider.Thumb index={0}>
+                  <Slider.DraggingIndicator
+                    layerStyle="fill.solid"
+                    top="6"
+                    rounded="sm"
+                    px="1.5"
+                    fontSize="xs"
+                  >
+                    <HStack gap="0.5">
+                      <Slider.ValueText />
+                      <Box as="span">px</Box>
+                    </HStack>
+                  </Slider.DraggingIndicator>
+                </Slider.Thumb>
+              </Slider.Control>
+            </Slider.Root>
+          </HStack>
+
+          <HStack justify="space-between">
+            <HStack gap={1}>
+              <Text fontSize="sm" color="gemOnSurface">
+                {tt('settingPanel.theme.messageGlassEffect', 'Message Glass Effect')}
+              </Text>
+              <Tooltip
+                content={tt(
+                  'settingPanel.theme.messageGlassEffectInfo',
+                  'Enabling this adds a glass effect. It may impact performance on low-end devices.',
+                )}
+              >
+                <IconButton
+                  aria-label={tt('settingPanel.theme.messageGlassEffect', 'Message Glass Effect')}
+                  size="2xs"
+                  variant="ghost"
+                >
+                  <HiOutlineInformationCircle />
+                </IconButton>
+              </Tooltip>
+            </HStack>
+
+            <Switch.Root
+              checked={settings?.messageGlassEnabled ?? false}
+              onCheckedChange={(details) => void props.onToggleMessageGlass(details.checked)}
+              disabled={props.isLoading || isFilePending}
+            >
+              <Switch.HiddenInput />
+              <Switch.Control>
+                <Switch.Thumb />
+              </Switch.Control>
+            </Switch.Root>
+          </HStack>
+        </>
+      )}
     </Box>
   )
 }

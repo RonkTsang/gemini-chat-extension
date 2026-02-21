@@ -1,0 +1,131 @@
+:root {
+  --gpk-bg-image: none;
+  --gpk-bg-blur: 5px;
+}
+
+#gpk-theme-bg-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: none;
+  pointer-events: none;
+  background-image: none;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(var(--gpk-bg-blur));
+  transform: scale(1.08);
+  transform-origin: center center;
+}
+
+:root[data-gpk-bg-enabled="true"] #gpk-theme-bg-layer {
+  display: block;
+  background-image: var(--gpk-bg-image);
+}
+
+:root[data-gpk-bg-enabled="true"] #app-root {
+  position: relative;
+  z-index: 1;
+}
+
+:root[data-gpk-bg-enabled="true"] body.dark-theme #gpk-theme-bg-layer,
+:root[data-gpk-bg-enabled="true"]:has(:where(.theme-host):where(.dark-theme)) #gpk-theme-bg-layer {
+  filter: blur(var(--gpk-bg-blur)) brightness(0.5);
+}
+
+:root[data-gpk-bg-enabled="true"] bard-sidenav-container>bard-sidenav {
+  background: color-mix(in srgb, var(--bard-color-sidenav-background-desktop), transparent 60%) !important;
+  backdrop-filter: blur(10px);
+}
+
+:root[data-gpk-bg-enabled="true"] body.dark-theme bard-sidenav-container>bard-sidenav,
+:root[data-gpk-bg-enabled="true"] :where(.theme-host):where(.dark-theme) bard-sidenav-container>bard-sidenav {
+  background-color: color-mix(in srgb, var(--theme-600), transparent 80%) !important;
+}
+
+:root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] user-query user-query-content span.user-query-bubble-with-background {
+  background-color: color-mix(in srgb, var(--gem-sys-color--surface-container-high), transparent 40%) !important;
+  backdrop-filter: blur(20px);
+  box-shadow: inset 0 0 1px 0 #ffffff;
+}
+
+:root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] body.dark-theme user-query user-query-content span.user-query-bubble-with-background,
+:root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] :where(.theme-host):where(.dark-theme) user-query user-query-content span.user-query-bubble-with-background {
+  background-color: color-mix(in srgb, var(--gem-sys-color--surface-container-high), transparent 40%) !important;
+  backdrop-filter: blur(10px);
+  box-shadow: inset 0 0 1px 0 #ffffff;
+  border: none;
+}
+
+:root[data-gpk-bg-enabled="true"] body.light-theme model-response response-container>div.response-container,
+:root[data-gpk-bg-enabled="true"] :where(.theme-host):where(.light-theme) model-response response-container>div.response-container,
+:root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] model-response response-container>div.response-container {
+  padding: 12px;
+}
+
+:root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] model-response response-container>div.response-container {
+  background: color-mix(in srgb, var(--theme-50), transparent 40%);
+  backdrop-filter: blur(20px);
+  box-shadow: inset 0 0 1px 0 #ffffff;
+}
+
+:root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] body.dark-theme model-response response-container>div.response-container,
+:root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] :where(.theme-host):where(.dark-theme) model-response response-container>div.response-container {
+  background: color-mix(in srgb, var(--theme-600), transparent 60%);
+  backdrop-filter: blur(20px);
+  box-shadow: inset 0 0 1px 0 #ffffff;
+  border: none;
+}
+
+:root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="false"] model-response response-container>div.response-container {
+  background: var(--theme-25, color-mix(in srgb, var(--gem-sys-color--surface-container), #ffffff 35%));
+}
+
+:root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="false"] body.dark-theme model-response response-container>div.response-container,
+:root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="false"] :where(.theme-host):where(.dark-theme) model-response response-container>div.response-container {
+  background-color: transparent;
+}
+
+:root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] input-container input-area-v2 {
+  background-color: color-mix(in srgb, var(--gem-sys-color--surface-bright), transparent 40%);
+  backdrop-filter: blur(10px);
+}
+
+:root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] intent-card>button {
+  background-color: color-mix(in srgb, var(--gem-sys-color--surface-container-lowest), transparent 40%);
+  backdrop-filter: blur(10px);
+  box-shadow: inset 0 0 1px 0 #ffffff;
+}
+
+:root[data-gpk-bg-enabled="true"] input-container::before,
+:root[data-gpk-bg-enabled="true"] bard-sidenav-container>bard-sidenav>side-navigation-content>div>div>infinite-scroller .top-gradient,
+:root[data-gpk-bg-enabled="true"] bard-sidenav-container>bard-sidenav>side-navigation-content>div>div>infinite-scroller .bottom-gradient {
+  visibility: hidden !important;
+}
+
+:root[data-gpk-bg-enabled="true"] input-area-v2>div>auto-suggest>div {
+  border-radius: 24px;
+  background: var(--gem-sys-color--surface-bright);
+}
+
+:root[data-gpk-bg-enabled="true"] div.blur-bg.visible-primary-message.blur-shown {
+  visibility: hidden !important;
+}
+
+:root[data-gpk-bg-enabled="true"] chat-window.immersives-mode {
+  background: none !important;
+}
+
+:root[data-gpk-bg-enabled="true"] all-bots>div.container {
+  background: none !important;
+}
+
+@media (max-width: 959px) {
+  :root[data-gpk-bg-enabled="true"] #app-root>main>side-navigation-v2>mat-sidenav-container {
+    background-color: transparent !important;
+  }
+}
+
+pending-response > response-container > div.response-container {
+  background-color: transparent !important;
+}

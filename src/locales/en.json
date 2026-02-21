@@ -62,14 +62,21 @@
   },
   "settingPanel": {
     "theme": {
-      "colorPresets": "COLOR PRESETS",
-      "customBackground": "CUSTOM BACKGROUND",
-      "livePreview": "LIVE PREVIEW",
-      "dropBackground": "Drop your background here",
+      "colorPresets": "Colors",
+      "customBackground": "Wallpaper",
+      "livePreview": "Live Preview",
+      "enableBackgroundImage": "Enable wallpaper",
+      "backgroundImageUpload": "Background Image Upload",
+      "dropBackground": "Drop your image here",
       "fileTypes": "PNG, JPG or WebP up to 5MB",
       "selectFile": "Select File",
-      "transparency": "Transparency",
-      "blurIntensity": "Blur Intensity",
+      "blurIntensity": "Blur",
+      "messageGlassEffect": "Message Glass Effect",
+      "messageGlassEffectInfo": "Enabling this adds a glass effect. It may impact performance on low-end devices.",
+      "invalidFileType": "Only PNG/JPG/WebP is supported",
+      "fileTooLarge": "Image size must be 5MB or less",
+      "imageLoadFailed": "Image loading failed, please try again",
+      "removeBackgroundImage": "Remove Background Image",
       "footerNote": "Changes are reflected immediately. Your settings are saved automatically."
     },
     "chainPrompt": {

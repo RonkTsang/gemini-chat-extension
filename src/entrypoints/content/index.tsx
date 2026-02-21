@@ -7,7 +7,7 @@ import { urlMonitor } from '@/services/urlMonitor'
 import { tabTitleSync } from '@/services/tabTitleSync'
 import { i18nCache } from '@/utils/i18nCache'
 import { stuffPageModule } from './stuff-page'
-import { initTheme } from './gemini-theme'
+import { initTheme, initThemeBackground } from './gemini-theme'
 
 export default defineContentScript({
   matches: ['*://gemini.google.com/*'],
@@ -46,7 +46,7 @@ export default defineContentScript({
     console.log('[ContentScript] Stuff Page Module started')
 
     // Apply persisted theme (or default if none saved)
-    void initTheme()
+    void initTheme().then(() => initThemeBackground())
 
     // 6. Finally create the UI
     const ui = createIntegratedUi(ctx, {

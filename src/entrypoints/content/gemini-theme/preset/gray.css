@@ -50,7 +50,7 @@
 }
 
 :where(.theme-host)::selection {
-  background-color: var(--theme-100);
+  background-color: color-mix(in srgb, var(--theme-400), transparent 20%);
 }
 
 /* 输入框右侧发送按钮 */
