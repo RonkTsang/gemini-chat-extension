@@ -1,5 +1,6 @@
 import './lagecy/content';
 import './prompt';
+import './power-kit-entry';
 
 import { renderOverlay } from "./overlay"
 import { chatChangeDetector } from '@/services/chatChangeDetector'
