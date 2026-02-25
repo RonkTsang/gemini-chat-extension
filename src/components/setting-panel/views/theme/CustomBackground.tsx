@@ -1,4 +1,4 @@
-import { useRef, useState, type ChangeEvent, type DragEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type DragEvent } from 'react'
 import {
   Box,
   Text,
@@ -38,6 +38,13 @@ export function CustomBackground(props: CustomBackgroundProps) {
   const settings = props.state?.settings
   const isBackgroundEnabled = settings?.backgroundImageEnabled ?? false
   const blurValue = settings?.backgroundBlurPx ?? 5
+
+  const [localBlurValue, setLocalBlurValue] = useState(blurValue)
+
+  useEffect(() => {
+    setLocalBlurValue(blurValue)
+  }, [blurValue])
+
   const hasImage = settings?.imageRef.kind === 'asset' && Boolean(props.state?.resolvedBackgroundUrl)
   const primaryTextColor = hasImage ? 'whiteAlpha.900' : 'gemOnSurface'
   const secondaryTextColor = hasImage ? 'whiteAlpha.700' : 'gray.400'
@@ -236,8 +243,9 @@ export function CustomBackground(props: CustomBackgroundProps) {
               min={0}
               max={20}
               step={1}
-              value={[blurValue]}
-              onValueChange={(details) => void props.onBlurChange(details.value[0] ?? 0)}
+              value={[localBlurValue]}
+              onValueChange={(details) => setLocalBlurValue(details.value[0] ?? 0)}
+              onValueChangeEnd={(details) => void props.onBlurChange(details.value[0] ?? 0)}
               disabled={props.isLoading || isFilePending}
               width={{ base: '170px', md: '220px' }}
             >

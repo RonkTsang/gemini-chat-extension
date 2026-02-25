@@ -6,7 +6,7 @@
 
 import { injectGeminiThemeOverride, removeGeminiThemeOverride } from './inject'
 import { themePresets, getPresetByKey } from './preset/presets'
-import { getThemeKey, setThemeKey } from './themeStorage'
+import { getThemeKey, setThemeKey, themeKeyStorage } from './themeStorage'
 export * from './background'
 export * from './appearance'
 
@@ -34,6 +34,7 @@ export async function applyTheme(key: string): Promise<void> {
 
 /**
  * Initialize theme on page load. Reads persisted key and applies.
+ * Also starts a cross-tab watcher so other tabs react to theme changes.
  */
 export async function initTheme(): Promise<void> {
   try {
@@ -47,6 +48,16 @@ export async function initTheme(): Promise<void> {
   } catch (error) {
     console.warn('[Theme] Failed to initialize theme:', error)
   }
+
+  themeKeyStorage.watch((newKey) => {
+    const key = newKey ?? ''
+    const preset = getPresetByKey(key)
+    if (preset?.css) {
+      injectGeminiThemeOverride(preset.css)
+    } else {
+      removeGeminiThemeOverride()
+    }
+  })
 }
 
 /**

@@ -8,6 +8,7 @@ import {
   resolveThemeBackgroundPreviewUrl,
   setAppearanceMode,
   subscribeSystemThemeChange,
+  themeBackgroundSettingsStorage,
   ThemeBackgroundError,
   updateThemeBackgroundSettings,
   uploadThemeBackground,
@@ -80,6 +81,19 @@ export function ThemeSettingsView() {
   useEffect(() => {
     void loadBackgroundState()
   }, [loadBackgroundState])
+
+  useEffect(() => {
+    const unwatch = themeBackgroundSettingsStorage.watch(async (newSettings) => {
+      if (!newSettings) return
+      try {
+        const previewUrl = await resolveThemeBackgroundPreviewUrl(newSettings)
+        setBackgroundState(toResolvedState(newSettings, previewUrl))
+      } catch {
+        // silently ignore watcher-triggered errors; initial load already handles error state
+      }
+    })
+    return unwatch
+  }, [])
 
   useEffect(() => {
     if (!isPanelOpen || appearanceState.mode !== 'system') {

@@ -17,6 +17,7 @@ import {
 import {
   getStoredThemeBackgroundSettings,
   setStoredThemeBackgroundSettings,
+  themeBackgroundSettingsStorage,
 } from './storage'
 
 type ThemeBackgroundErrorCode =
@@ -197,6 +198,20 @@ export async function initThemeBackground(): Promise<void> {
     console.warn('[ThemeBackground] Failed to initialize background settings:', error)
     clearThemeBackgroundStyle()
   }
+
+  themeBackgroundSettingsStorage.watch(async (newSettings) => {
+    if (!newSettings) {
+      clearThemeBackgroundStyle()
+      return
+    }
+    try {
+      const resolvedBackgroundUrl = await resolveBackgroundUrlFromSettings(newSettings)
+      const state = buildThemeBackgroundResolvedState(newSettings, resolvedBackgroundUrl)
+      applyThemeBackgroundStyle(state)
+    } catch (error) {
+      console.warn('[ThemeBackground] Failed to sync background settings:', error)
+    }
+  })
 }
 
 export async function updateThemeBackgroundSettings(
