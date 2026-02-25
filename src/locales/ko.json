@@ -61,6 +61,28 @@
     }
   },
   "settingPanel": {
+    "theme": {
+      "appearance": "테마",
+      "appearanceSystem": "시스템",
+      "appearanceLight": "라이트",
+      "appearanceDark": "다크",
+      "colorPresets": "색상",
+      "customBackground": "배경화면",
+      "livePreview": "실시간 미리보기",
+      "enableBackgroundImage": "배경화면 활성화",
+      "backgroundImageUpload": "배경 이미지 업로드",
+      "dropBackground": "여기에 이미지 드롭",
+      "fileTypes": "PNG, JPG 또는 WebP(최대 5MB)",
+      "selectFile": "파일 선택",
+      "blurIntensity": "흐림",
+      "messageGlassEffect": "메시지 유리 효과",
+      "messageGlassEffectInfo": "이 기능을 활성화하면 유리 효과가 추가됩니다. 저사양 기기에서는 성능에 영향을 줄 수 있습니다.",
+      "invalidFileType": "PNG/JPG/WebP만 지원됩니다",
+      "fileTooLarge": "이미지 크기는 5MB 이하여야 합니다",
+      "imageLoadFailed": "이미지 로드 실패, 다시 시도해 주세요",
+      "removeBackgroundImage": "배경 이미지 제거",
+      "footerNote": "변경 사항은 즉시 반영됩니다. 설정은 자동으로 저장됩니다."
+    },
     "chainPrompt": {
       "new": "새 Chain Prompt",
       "searchPlaceholder": "이름 또는 설명으로 검색...",

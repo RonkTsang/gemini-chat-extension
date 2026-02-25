@@ -62,6 +62,10 @@
   },
   "settingPanel": {
     "theme": {
+      "appearance": "外观",
+      "appearanceSystem": "跟随系统",
+      "appearanceLight": "浅色",
+      "appearanceDark": "深色",
       "colorPresets": "颜色",
       "customBackground": "壁纸",
       "livePreview": "实时预览",

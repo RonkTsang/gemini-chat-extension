@@ -30,6 +30,13 @@ export default defineContentScript({
     })
     console.log('[ContentScript] Main world script injected')
 
+    // 1.1 Inject theme sync bridge script (main world)
+    console.log('[ContentScript] Injecting theme sync main world script...')
+    await injectScript('/theme-sync-main-world.js', {
+      keepInDom: true,
+    })
+    console.log('[ContentScript] Theme sync main world script injected')
+
     // 2. Start URL monitor (now listening to events from main world)
     urlMonitor.start()
     console.log('[ContentScript] URL Monitor started')

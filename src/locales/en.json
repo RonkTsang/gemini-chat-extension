@@ -62,6 +62,10 @@
   },
   "settingPanel": {
     "theme": {
+      "appearance": "Appearance",
+      "appearanceSystem": "System",
+      "appearanceLight": "Light",
+      "appearanceDark": "Dark",
       "colorPresets": "Colors",
       "customBackground": "Wallpaper",
       "livePreview": "Live Preview",

@@ -8,6 +8,7 @@ import { injectGeminiThemeOverride, removeGeminiThemeOverride } from './inject'
 import { themePresets, getPresetByKey } from './preset/presets'
 import { getThemeKey, setThemeKey } from './themeStorage'
 export * from './background'
+export * from './appearance'
 
 export { themePresets, getPresetByKey } from './preset/presets'
 export { getThemeKey } from './themeStorage'

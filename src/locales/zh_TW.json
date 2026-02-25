@@ -61,6 +61,28 @@
     }
   },
   "settingPanel": {
+    "theme": {
+      "appearance": "外觀",
+      "appearanceSystem": "跟隨系統",
+      "appearanceLight": "淺色",
+      "appearanceDark": "深色",
+      "colorPresets": "顏色",
+      "customBackground": "桌布",
+      "livePreview": "即時預覽",
+      "enableBackgroundImage": "啟用桌布",
+      "backgroundImageUpload": "背景圖上傳",
+      "dropBackground": "將圖片拖放到這裡",
+      "fileTypes": "支援 PNG、JPG、WebP，最大 5MB",
+      "selectFile": "選擇檔案",
+      "blurIntensity": "模糊",
+      "messageGlassEffect": "訊息毛玻璃效果",
+      "messageGlassEffectInfo": "開啟後可獲得毛玻璃視覺效果。對於低效能設備，可能會影響流暢度。",
+      "invalidFileType": "僅支援 PNG/JPG/WebP",
+      "fileTooLarge": "圖片大小不能超過 5MB",
+      "imageLoadFailed": "圖片載入失敗，請重試",
+      "removeBackgroundImage": "刪除背景圖",
+      "footerNote": "修改會立即生效，設定會自動儲存。"
+    },
     "chainPrompt": {
       "new": "新建 Chain Prompt",
       "searchPlaceholder": "按名稱或描述搜尋...",

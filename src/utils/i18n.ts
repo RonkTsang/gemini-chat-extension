@@ -28,6 +28,11 @@ export function t(id: string, substitutions?: string | string[] | number) {
   }
 }
 
+export function tt(key: string, fallback: string): string {
+  const value = t(key)
+  return value === key ? fallback : value
+}
+
 export function getCurrentLocale() {
   // Check context validity before accessing extension APIs
   if (!isExtensionContextValid()) {

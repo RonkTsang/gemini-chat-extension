@@ -2,19 +2,26 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Box, Flex, Text } from '@chakra-ui/react'
 import {
   applyTheme,
+  getAppearanceState,
   getThemeBackgroundSettings,
   removeThemeBackground,
   resolveThemeBackgroundPreviewUrl,
+  setAppearanceMode,
+  subscribeSystemThemeChange,
   ThemeBackgroundError,
   updateThemeBackgroundSettings,
   uploadThemeBackground,
+  type AppearanceMode,
+  type AppearanceState,
   type ThemeBackgroundResolvedState,
   type ThemeBackgroundSettings,
 } from '@/entrypoints/content/gemini-theme'
+import { useEvent } from '@/hooks/useEventBus'
+import { AppearanceSelector } from './AppearanceSelector'
 import { ColorPresets } from './ColorPresets'
 import { CustomBackground } from './CustomBackground'
 import { LivePreview } from './LivePreview'
-import { t } from '@/utils/i18n'
+import { t, tt } from '@/utils/i18n'
 import { useColorPalette } from '@/hooks/useThemeColorPalette'
 import { toaster } from '@/components/ui/toaster'
 
@@ -27,11 +34,6 @@ function toResolvedState(
     resolvedBackgroundUrl: previewUrl,
     isBackgroundRenderable: settings.backgroundImageEnabled && Boolean(previewUrl),
   }
-}
-
-function tt(key: string, fallback: string): string {
-  const value = t(key)
-  return value === key ? fallback : value
 }
 
 function getBackgroundErrorMessage(error: unknown): string {
@@ -53,8 +55,14 @@ function getBackgroundErrorMessage(error: unknown): string {
 
 export function ThemeSettingsView() {
   const { palette, setPalette } = useColorPalette()
+  const [appearanceState, setAppearanceState] = useState<AppearanceState>(() => getAppearanceState())
+  const [isPanelOpen, setIsPanelOpen] = useState(true)
   const [backgroundState, setBackgroundState] = useState<ThemeBackgroundResolvedState | null>(null)
   const [isBackgroundLoading, setIsBackgroundLoading] = useState(true)
+
+  useEvent('settings:state-changed', (data) => {
+    setIsPanelOpen(data.open)
+  })
 
   const loadBackgroundState = useCallback(async () => {
     setIsBackgroundLoading(true)
@@ -73,10 +81,27 @@ export function ThemeSettingsView() {
     void loadBackgroundState()
   }, [loadBackgroundState])
 
+  useEffect(() => {
+    if (!isPanelOpen || appearanceState.mode !== 'system') {
+      return
+    }
+
+    const unsubscribe = subscribeSystemThemeChange(() => {
+      setAppearanceState(setAppearanceMode('system'))
+    })
+
+    return unsubscribe
+  }, [appearanceState.mode, isPanelOpen])
+
   const handleSelect = async (key: string) => {
     await applyTheme(key)
     setPalette(key || 'blue')
   }
+
+  const handleAppearanceChange = useCallback((mode: AppearanceMode) => {
+    const state = setAppearanceMode(mode)
+    setAppearanceState(state)
+  }, [])
 
   const handleToggleBackground = useCallback(async (enabled: boolean) => {
     try {
@@ -169,6 +194,11 @@ export function ThemeSettingsView() {
             overflowY="auto"
             pr={{ base: 0, lg: 2 }}
           >
+            <AppearanceSelector
+              value={appearanceState.mode}
+              onChange={handleAppearanceChange}
+              isLoading={false}
+            />
             <ColorPresets
               activeKey={activeKey}
               onSelect={handleSelect}

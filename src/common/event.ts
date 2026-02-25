@@ -4,6 +4,7 @@ import type { MediaItem } from "@/utils/stuffMediaParser";
 export const GEM_EXT_EVENTS = {
   URL_CHANGE: 'gem-ext:urlchange',
   STUFF_MEDIA_DATA: 'gem-ext:stuff-media-data',
+  THEME_APPEARANCE_APPLY: 'gem-ext:theme-appearance-apply',
 } as const
 
 export const EVENTS = {

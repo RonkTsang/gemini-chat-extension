@@ -61,6 +61,28 @@
     }
   },
   "settingPanel": {
+    "theme": {
+      "appearance": "外観",
+      "appearanceSystem": "システム",
+      "appearanceLight": "ライト",
+      "appearanceDark": "ダーク",
+      "colorPresets": "カラー",
+      "customBackground": "壁紙",
+      "livePreview": "ライブプレビュー",
+      "enableBackgroundImage": "壁紙を有効にする",
+      "backgroundImageUpload": "背景画像のアップロード",
+      "dropBackground": "ここに画像をドロップ",
+      "fileTypes": "PNG、JPG、WebP（最大5MB）",
+      "selectFile": "ファイルを選択",
+      "blurIntensity": "ぼかし",
+      "messageGlassEffect": "メッセージのグラスエフェクト",
+      "messageGlassEffectInfo": "これを有効にするとグラスエフェクトが追加されます。低スペックのデバイスではパフォーマンスに影響する場合があります。",
+      "invalidFileType": "PNG/JPG/WebPのみサポートされています",
+      "fileTooLarge": "画像サイズは5MB以下である必要があります",
+      "imageLoadFailed": "画像の読み込みに失敗しました。もう一度お試しください",
+      "removeBackgroundImage": "背景画像を削除",
+      "footerNote": "変更は即座に反映されます。設定は自動的に保存されます。"
+    },
     "chainPrompt": {
       "new": "新しい Chain Prompt",
       "searchPlaceholder": "名前または説明で検索...",

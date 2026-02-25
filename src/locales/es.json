@@ -61,6 +61,28 @@
     }
   },
   "settingPanel": {
+    "theme": {
+      "appearance": "Apariencia",
+      "appearanceSystem": "Sistema",
+      "appearanceLight": "Claro",
+      "appearanceDark": "Oscuro",
+      "colorPresets": "Colores",
+      "customBackground": "Fondo de pantalla",
+      "livePreview": "Vista previa en vivo",
+      "enableBackgroundImage": "Habilitar fondo de pantalla",
+      "backgroundImageUpload": "Subir imagen de fondo",
+      "dropBackground": "Arrastra tu imagen aquí",
+      "fileTypes": "PNG, JPG o WebP hasta 5MB",
+      "selectFile": "Seleccionar archivo",
+      "blurIntensity": "Desenfoque",
+      "messageGlassEffect": "Efecto de cristal en mensajes",
+      "messageGlassEffectInfo": "Activar esto añade un efecto de cristal. Puede afectar el rendimiento en dispositivos de gama baja.",
+      "invalidFileType": "Solo se admite PNG/JPG/WebP",
+      "fileTooLarge": "El tamaño de la imagen debe ser de 5MB o menos",
+      "imageLoadFailed": "Error al cargar la imagen, por favor inténtalo de nuevo",
+      "removeBackgroundImage": "Eliminar imagen de fondo",
+      "footerNote": "Los cambios se reflejan inmediatamente. Tus ajustes se guardan automáticamente."
+    },
     "chainPrompt": {
       "new": "Nuevo Chain Prompt",
       "searchPlaceholder": "Buscar por nombre o descripción...",

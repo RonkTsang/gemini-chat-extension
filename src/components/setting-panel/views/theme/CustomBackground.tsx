@@ -18,7 +18,7 @@ import {
 } from 'react-icons/hi'
 import type { ThemeBackgroundResolvedState } from '@/entrypoints/content/gemini-theme'
 import { Tooltip } from '@/components/ui/tooltip'
-import { t } from '@/utils/i18n'
+import { t, tt } from '@/utils/i18n'
 
 interface CustomBackgroundProps {
   state: ThemeBackgroundResolvedState | null
@@ -28,11 +28,6 @@ interface CustomBackgroundProps {
   onToggleMessageGlass: (enabled: boolean) => Promise<void>
   onUploadFile: (file: File) => Promise<void>
   onRemoveImage: () => Promise<void>
-}
-
-function tt(key: string, fallback: string): string {
-  const value = t(key)
-  return value === key ? fallback : value
 }
 
 export function CustomBackground(props: CustomBackgroundProps) {
