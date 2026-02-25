@@ -1,5 +1,6 @@
 import { eventBus } from '@/utils/eventbus'
 import tippy, { type Instance } from 'tippy.js'
+import { shouldShowBadge, dismissBadge } from './badge'
 
 const DESKTOP_POWER_KIT_HOST_TEST_ID = 'gemini-power-kit-button'
 const DESKTOP_SETTINGS_HOST_TEST_ID = 'settings-and-help-button'
@@ -17,6 +18,69 @@ const SYNC_RELATED_SELECTOR = [
 ].join(',')
 
 type DesktopVariant = 'expanded' | 'collapsed'
+
+// ── Badge (small red dot) state ──────────────────────────────────────────────
+
+const BADGE_DOT_ATTR = 'data-gpk-badge'
+const BADGE_STYLE_ID = 'gpk-badge-style'
+
+let badgeVisible = false
+
+const injectBadgeStyle = () => {
+  if (document.getElementById(BADGE_STYLE_ID)) return
+  const style = document.createElement('style')
+  style.id = BADGE_STYLE_ID
+  style.textContent = `
+mat-icon[data-gpk-icon-applied="1"] {
+  position: relative !important;
+  overflow: visible !important;
+}
+[${BADGE_DOT_ATTR}="icon"] {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gem-sys-color--primary);
+  pointer-events: none;
+  z-index: 1;
+}
+[${BADGE_DOT_ATTR}="inline"] {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gem-sys-color--primary);
+  pointer-events: none;
+  vertical-align: middle;
+  margin-left: 6px;
+  flex-shrink: 0;
+}
+`
+  document.head.appendChild(style)
+}
+
+const ensureBadgeDot = (el: HTMLElement, mode: 'icon' | 'inline') => {
+  const existing = el.querySelector(`[${BADGE_DOT_ATTR}]`)
+  if (badgeVisible) {
+    if (!existing) {
+      const dot = document.createElement('span')
+      dot.setAttribute(BADGE_DOT_ATTR, mode)
+      el.appendChild(dot)
+    } else if (existing.getAttribute(BADGE_DOT_ATTR) !== mode) {
+      existing.setAttribute(BADGE_DOT_ATTR, mode)
+    }
+  } else {
+    existing?.remove()
+  }
+}
+
+const removeAllBadgeDots = () => {
+  document.querySelectorAll(`[${BADGE_DOT_ATTR}]`).forEach((el) => el.remove())
+}
+
+// ── End badge state ──────────────────────────────────────────────────────────
 
 let rafId: number | null = null
 let bootstrapRetryTimer: number | null = null
@@ -84,6 +148,11 @@ const bindThemeOpenHandler = (button: HTMLButtonElement) => {
     event.preventDefault()
     event.stopPropagation()
     button.blur()
+    if (badgeVisible) {
+      badgeVisible = false
+      removeAllBadgeDots()
+      void dismissBadge()
+    }
     openThemeSettings()
   })
 }
@@ -201,6 +270,13 @@ const decorateDesktopEntry = (host: HTMLElement, variant: DesktopVariant) => {
   }
 
   ensureDesktopTooltip(button as HTMLButtonElement, variant)
+  if (variant === 'expanded') {
+    const textTarget = host.querySelector('[data-test-id="side-nav-action-button-content"]') as HTMLElement | null
+    if (textTarget) ensureBadgeDot(textTarget, 'inline')
+  } else {
+    const iconTarget = (host.querySelector('mat-icon[data-gpk-icon-applied="1"]') ?? host.querySelector('mat-icon')) as HTMLElement | null
+    if (iconTarget) ensureBadgeDot(iconTarget, 'icon')
+  }
 }
 
 const buildDesktopEntryFromSettings = (settingsHost: HTMLElement, variant: DesktopVariant) => {
@@ -261,6 +337,8 @@ const decorateMobileEntry = (button: HTMLButtonElement, sourceClassName: string)
   if (label) {
     setTextIfDifferent(label, ` ${POWER_KIT_LABEL} `)
   }
+  const mobileIconTarget = (button.querySelector('mat-icon[data-gpk-icon-applied="1"]') ?? button.querySelector('mat-icon')) as HTMLElement | null
+  if (mobileIconTarget) ensureBadgeDot(mobileIconTarget, 'icon')
 }
 
 const buildMobileEntryFromSettings = (settingsButton: HTMLButtonElement) => {
@@ -541,5 +619,12 @@ if (!window.__geminiPowerKitEntryBootstrapped) {
   window.__geminiPowerKitEntryBootstrapped = true
   ensureObserverBindings()
   syncEntries()
+  void shouldShowBadge().then((show) => {
+    badgeVisible = show
+    if (show) {
+      injectBadgeStyle()
+      syncEntries()
+    }
+  })
   window.addEventListener('beforeunload', stopObservers)
 }
