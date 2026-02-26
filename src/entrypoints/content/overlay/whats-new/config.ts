@@ -17,9 +17,5 @@ export const CURRENT_RELEASE_NOTES: ReleaseNote[] = [
   {
     titleKey: 'whatsnew.feature1.title',
     descriptionKey: 'whatsnew.feature1.description'
-  },
-  {
-    titleKey: 'whatsnew.feature2.title',
-    descriptionKey: 'whatsnew.feature2.description'
   }
 ]

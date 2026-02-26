@@ -363,12 +363,8 @@
     "title": "What's New",
     "releaseNotes": "Release Notes",
     "feature1": {
-      "title": "Smart Tab Titles",
-      "description": "Automatically renames browser tabs to match your chat titles, making it effortless to switch between multiple Gemini sessions."
-    },
-    "feature2": {
-      "title": "Open Media in New Tab",
-      "description": "From the My Stuff gallery, open any item in a new tab and keep your place—review results without losing your scroll position."
+      "title": "Personalize Your Gemini",
+      "description": "Transform your workspace with stunning color presets and custom wallpapers. Make Gemini truly yours."
     }
   }
 }
