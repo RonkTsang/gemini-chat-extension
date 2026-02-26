@@ -46,10 +46,11 @@ export const SettingPanel = () => {
     >
       <Portal>
         <Dialog.Backdrop />
-        <Dialog.Positioner>
+        <Dialog.Positioner alignItems="center" justifyContent="center">
           <Dialog.Content
             maxWidth="1200px"
             height="90vh"
+            maxHeight="800px"
             borderRadius="lg"
             overflow="hidden"
             bg="gemSurface"
