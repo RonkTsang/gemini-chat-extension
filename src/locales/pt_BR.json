@@ -367,12 +367,8 @@
     "title": "O que há de novo",
     "releaseNotes": "Notas de lançamento",
     "feature1": {
-      "title": "Títulos de abas inteligentes",
-      "description": "Renomeia automaticamente as abas do navegador para corresponder aos títulos dos seus chats, facilitando a alternância entre várias sessões do Gemini."
-    },
-    "feature2": {
-      "title": "Abrir mídia em nova aba",
-      "description": "Na galeria Minhas Coisas, abra qualquer item em uma nova aba e mantenha seu lugar — revise os resultados sem perder sua posição de rolagem."
+      "title": "Personalize o seu Gemini",
+      "description": "Transforme seu espaço de trabalho com predefinições de cores incríveis e papéis de parede personalizados."
     }
   }
 }
