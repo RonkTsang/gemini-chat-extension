@@ -47,29 +47,43 @@ mat-icon[data-gpk-icon-applied="1"] {
   z-index: 1;
 }
 [${BADGE_DOT_ATTR}="inline"] {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: var(--gem-sys-color--primary);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: var(--gem-sys-spacing--xs) var(--gem-sys-spacing--s);
+  border-radius: var(--gem-sys-shape--corner-full);
   pointer-events: none;
   vertical-align: middle;
-  margin-left: 6px;
+  margin-left: 8px;
   flex-shrink: 0;
+  line-height: 1;
+  font-family: inherit;
 }
 `
   document.head.appendChild(style)
 }
 
 const ensureBadgeDot = (el: HTMLElement, mode: 'icon' | 'inline') => {
-  const existing = el.querySelector(`[${BADGE_DOT_ATTR}]`)
+  const existing = el.querySelector(`[${BADGE_DOT_ATTR}]`) as HTMLElement | null
   if (badgeVisible) {
     if (!existing) {
       const dot = document.createElement('span')
       dot.setAttribute(BADGE_DOT_ATTR, mode)
+      if (mode === 'inline') {
+        dot.textContent = 'New'
+      }
       el.appendChild(dot)
     } else if (existing.getAttribute(BADGE_DOT_ATTR) !== mode) {
       existing.setAttribute(BADGE_DOT_ATTR, mode)
+      if (mode === 'inline') {
+        existing.textContent = 'New'
+      } else {
+        existing.textContent = ''
+      }
     }
   } else {
     existing?.remove()

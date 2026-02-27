@@ -56,7 +56,7 @@ export interface AppEvents {
 
   // settings panel
   'settings:open': {
-    from: 'prompt-entrance' | 'popup',
+    from: 'prompt-entrance' | 'popup' | 'whats-new',
     open: boolean
     module?: NavigationSection
   };
