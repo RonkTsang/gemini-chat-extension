@@ -9,6 +9,9 @@ const {
   mockSetStored,
   mockApplyStyle,
   mockClearStyle,
+  mockApplyWelcomeGreetingStyle,
+  mockClearWelcomeGreetingStyle,
+  mockResolveWelcomeGreetingReadabilitySettings,
 } = vi.hoisted(() => ({
   mockGet: vi.fn(),
   mockPut: vi.fn(),
@@ -17,6 +20,9 @@ const {
   mockSetStored: vi.fn(),
   mockApplyStyle: vi.fn(),
   mockClearStyle: vi.fn(),
+  mockApplyWelcomeGreetingStyle: vi.fn(),
+  mockClearWelcomeGreetingStyle: vi.fn(),
+  mockResolveWelcomeGreetingReadabilitySettings: vi.fn(),
 }))
 
 vi.mock('@/data/db', () => ({
@@ -48,6 +54,13 @@ vi.mock('./styleController', () => ({
   clearThemeBackgroundStyle: mockClearStyle,
 }))
 
+vi.mock('./welcome-greeting', () => ({
+  applyWelcomeGreetingReadabilityFromState: mockApplyWelcomeGreetingStyle,
+  clearWelcomeGreetingReadabilityStyle: mockClearWelcomeGreetingStyle,
+  resolveWelcomeGreetingReadabilitySettings: mockResolveWelcomeGreetingReadabilitySettings,
+  __resetWelcomeGreetingReadabilityServiceForTests: vi.fn(),
+}))
+
 import {
   __resetThemeBackgroundServiceForTests,
   getThemeBackgroundSettings,
@@ -60,12 +73,15 @@ import { BACKGROUND_FILE_SIZE_LIMIT } from './types'
 
 function createSettings(overrides: Partial<ThemeBackgroundSettings> = {}): ThemeBackgroundSettings {
   return {
-    version: 2,
+    version: 3,
     backgroundImageEnabled: false,
     backgroundBlurPx: 5,
     messageGlassEnabled: false,
     sidebarScrimEnabled: true,
     sidebarScrimIntensity: 20,
+    welcomeGreetingReadabilityMode: 'auto',
+    welcomeGreetingResolved: 'default',
+    welcomeGreetingResolvedAssetId: null,
     imageRef: { kind: 'none' },
     updatedAt: '2026-02-20T00:00:00.000Z',
     ...overrides,
@@ -84,8 +100,14 @@ describe('theme background service', () => {
     mockSetStored.mockReset()
     mockApplyStyle.mockReset()
     mockClearStyle.mockReset()
+    mockApplyWelcomeGreetingStyle.mockReset()
+    mockClearWelcomeGreetingStyle.mockReset()
+    mockResolveWelcomeGreetingReadabilitySettings.mockReset()
     mockGetStored.mockResolvedValue(createSettings())
     mockSetStored.mockImplementation(async (next) => next)
+    mockResolveWelcomeGreetingReadabilitySettings.mockImplementation(
+      async ({ settings }) => settings,
+    )
 
     createObjectURLMock.mockReset()
     revokeObjectURLMock.mockReset()

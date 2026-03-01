@@ -4,6 +4,12 @@ import {
   clearThemeBackgroundStyle,
 } from './styleController'
 import {
+  applyWelcomeGreetingReadabilityFromState,
+  clearWelcomeGreetingReadabilityStyle,
+  resolveWelcomeGreetingReadabilitySettings,
+  __resetWelcomeGreetingReadabilityServiceForTests,
+} from './welcome-greeting'
+import {
   BACKGROUND_FILE_SIZE_LIMIT,
   buildThemeBackgroundResolvedState,
   isAllowedBackgroundImageMimeType,
@@ -56,6 +62,11 @@ function revokeObjectUrl(url: string | null): void {
 
 let activeAssetId: string | null = null
 let activeObjectUrl: string | null = null
+
+interface PersistAndApplyOptions {
+  readabilityAsset?: ThemeAssetRow | null
+  forceRecomputeWelcomeGreeting?: boolean
+}
 
 async function getThemeAssetById(assetId: string): Promise<ThemeAssetRow | undefined> {
   return await db.theme_assets.get(assetId)
@@ -163,19 +174,56 @@ async function repairSettingsIfNeeded(
     ...settings,
     imageRef: { kind: 'none' },
     backgroundImageEnabled: false,
+    welcomeGreetingResolved: 'default',
+    welcomeGreetingResolvedAssetId: null,
     updatedAt: nowIso(),
   }
 }
 
+async function resolveReadabilityAsset(
+  settings: ThemeBackgroundSettings,
+  preferredAsset?: ThemeAssetRow | null,
+): Promise<ThemeAssetRow | null> {
+  if (
+    !settings.backgroundImageEnabled
+    || settings.imageRef.kind !== 'asset'
+  ) {
+    return null
+  }
+
+  if (preferredAsset && preferredAsset.id === settings.imageRef.assetId) {
+    return preferredAsset
+  }
+  return (await getThemeAssetById(settings.imageRef.assetId)) ?? null
+}
+
+function settingsChanged(
+  before: ThemeBackgroundSettings,
+  after: ThemeBackgroundSettings,
+): boolean {
+  return JSON.stringify(before) !== JSON.stringify(after)
+}
+
 async function persistAndApplySettings(
   settings: ThemeBackgroundSettings,
+  options: PersistAndApplyOptions = {},
 ): Promise<ThemeBackgroundResolvedState> {
   const normalized = normalizeThemeBackgroundSettings(settings)
   const repaired = await repairSettingsIfNeeded(normalized)
-  const stored = await setStoredThemeBackgroundSettings(repaired)
+  const readabilityAsset = await resolveReadabilityAsset(
+    repaired,
+    options.readabilityAsset,
+  )
+  const withReadability = await resolveWelcomeGreetingReadabilitySettings({
+    settings: repaired,
+    asset: readabilityAsset,
+    forceRecompute: options.forceRecomputeWelcomeGreeting,
+  })
+  const stored = await setStoredThemeBackgroundSettings(withReadability)
   const resolvedBackgroundUrl = await resolveBackgroundUrlFromSettings(stored)
   const state = buildThemeBackgroundResolvedState(stored, resolvedBackgroundUrl)
   applyThemeBackgroundStyle(state)
+  applyWelcomeGreetingReadabilityFromState(state)
   return state
 }
 
@@ -191,17 +239,31 @@ export async function getThemeBackgroundSettings(): Promise<ThemeBackgroundSetti
 export async function initThemeBackground(): Promise<void> {
   try {
     const settings = await getThemeBackgroundSettings()
-    const resolvedBackgroundUrl = await resolveBackgroundUrlFromSettings(settings)
-    const state = buildThemeBackgroundResolvedState(settings, resolvedBackgroundUrl)
+    const readabilityAsset = await resolveReadabilityAsset(settings)
+    const withReadability = await resolveWelcomeGreetingReadabilitySettings({
+      settings,
+      asset: readabilityAsset,
+    })
+    if (settingsChanged(settings, withReadability)) {
+      await setStoredThemeBackgroundSettings(withReadability)
+    }
+    const resolvedBackgroundUrl = await resolveBackgroundUrlFromSettings(withReadability)
+    const state = buildThemeBackgroundResolvedState(
+      withReadability,
+      resolvedBackgroundUrl,
+    )
     applyThemeBackgroundStyle(state)
+    applyWelcomeGreetingReadabilityFromState(state)
   } catch (error) {
     console.warn('[ThemeBackground] Failed to initialize background settings:', error)
     clearThemeBackgroundStyle()
+    clearWelcomeGreetingReadabilityStyle()
   }
 
   themeBackgroundSettingsStorage.watch(async (newSettings) => {
     if (!newSettings) {
       clearThemeBackgroundStyle()
+      clearWelcomeGreetingReadabilityStyle()
       return
     }
     try {
@@ -209,6 +271,7 @@ export async function initThemeBackground(): Promise<void> {
       const resolvedBackgroundUrl = await resolveBackgroundUrlFromSettings(normalizedSettings)
       const state = buildThemeBackgroundResolvedState(normalizedSettings, resolvedBackgroundUrl)
       applyThemeBackgroundStyle(state)
+      applyWelcomeGreetingReadabilityFromState(state)
     } catch (error) {
       console.warn('[ThemeBackground] Failed to sync background settings:', error)
     }
@@ -271,7 +334,10 @@ export async function uploadThemeBackground(
       updatedAt: nowIso(),
     })
 
-    state = await persistAndApplySettings(next)
+    state = await persistAndApplySettings(next, {
+      readabilityAsset: assetRow,
+      forceRecomputeWelcomeGreeting: true,
+    })
   } catch (error) {
     await deleteThemeAssetById(id).catch(() => undefined)
     throw error
@@ -320,4 +386,5 @@ export async function resolveThemeBackgroundPreviewUrl(
 export function __resetThemeBackgroundServiceForTests(): void {
   resetActiveObjectUrl(null, null)
   clearThemeBackgroundStyle()
+  __resetWelcomeGreetingReadabilityServiceForTests()
 }

@@ -18,6 +18,7 @@ import {
   type AppearanceState,
   type ThemeBackgroundResolvedState,
   type ThemeBackgroundSettings,
+  type WelcomeGreetingReadabilityMode,
 } from '@/entrypoints/content/gemini-theme'
 import { useEvent } from '@/hooks/useEventBus'
 import { AppearanceSelector } from './AppearanceSelector'
@@ -173,6 +174,20 @@ export function ThemeSettingsView() {
     }
   }, [])
 
+  const handleWelcomeGreetingReadabilityModeChange = useCallback(
+    async (mode: WelcomeGreetingReadabilityMode) => {
+      try {
+        const state = await updateThemeBackgroundSettings({
+          welcomeGreetingReadabilityMode: mode,
+        })
+        setBackgroundState(state)
+      } catch (error) {
+        toaster.create({ type: 'error', title: getBackgroundErrorMessage(error) })
+      }
+    },
+    [],
+  )
+
   const handleUploadFile = useCallback(async (file: File) => {
     try {
       const state = await uploadThemeBackground(file)
@@ -244,6 +259,9 @@ export function ThemeSettingsView() {
               onToggleSidebarScrim={handleToggleSidebarScrim}
               onSidebarScrimIntensityChange={handleSidebarScrimIntensityChange}
               onToggleMessageGlass={handleToggleMessageGlass}
+              onWelcomeGreetingReadabilityModeChange={
+                handleWelcomeGreetingReadabilityModeChange
+              }
               onUploadFile={handleUploadFile}
               onRemoveImage={handleRemoveImage}
             />

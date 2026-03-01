@@ -19,6 +19,11 @@ export type {
   ThemeBackgroundSettings,
 } from './types'
 
+export type {
+  WelcomeGreetingReadabilityMode,
+  WelcomeGreetingResolved,
+} from './welcome-greeting'
+
 export {
   ALLOWED_BACKGROUND_IMAGE_MIME_TYPES,
   BACKGROUND_BLUR_MAX,

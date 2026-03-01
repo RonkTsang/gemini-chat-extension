@@ -1,4 +1,9 @@
-export const THEME_BACKGROUND_VERSION = 2 as const
+import type {
+  WelcomeGreetingReadabilityMode,
+  WelcomeGreetingResolved,
+} from './welcome-greeting/types'
+
+export const THEME_BACKGROUND_VERSION = 3 as const
 
 export const BACKGROUND_BLUR_MIN = 0
 export const BACKGROUND_BLUR_MAX = 20
@@ -26,6 +31,9 @@ export interface ThemeBackgroundSettings {
   messageGlassEnabled: boolean
   sidebarScrimEnabled: boolean
   sidebarScrimIntensity: number
+  welcomeGreetingReadabilityMode: WelcomeGreetingReadabilityMode
+  welcomeGreetingResolved: WelcomeGreetingResolved
+  welcomeGreetingResolvedAssetId: string | null
   imageRef: BackgroundImageRef
   updatedAt: string
 }
@@ -36,6 +44,9 @@ export interface ThemeBackgroundPatch {
   messageGlassEnabled?: boolean
   sidebarScrimEnabled?: boolean
   sidebarScrimIntensity?: number
+  welcomeGreetingReadabilityMode?: WelcomeGreetingReadabilityMode
+  welcomeGreetingResolved?: WelcomeGreetingResolved
+  welcomeGreetingResolvedAssetId?: string | null
   imageRef?: BackgroundImageRef
 }
 
@@ -65,6 +76,9 @@ export const DEFAULT_THEME_BACKGROUND_SETTINGS: ThemeBackgroundSettings = {
   messageGlassEnabled: false,
   sidebarScrimEnabled: true,
   sidebarScrimIntensity: 20,
+  welcomeGreetingReadabilityMode: 'auto',
+  welcomeGreetingResolved: 'default',
+  welcomeGreetingResolvedAssetId: null,
   imageRef: { kind: 'none' },
   updatedAt: '',
 }
@@ -99,6 +113,30 @@ function normalizeImageRef(value: unknown): BackgroundImageRef {
   return { kind: 'none' }
 }
 
+function normalizeWelcomeGreetingMode(value: unknown): WelcomeGreetingReadabilityMode {
+  if (
+    value === 'default'
+    || value === 'auto'
+    || value === 'force-light'
+  ) {
+    return value
+  }
+  return DEFAULT_THEME_BACKGROUND_SETTINGS.welcomeGreetingReadabilityMode
+}
+
+function normalizeWelcomeGreetingResolved(value: unknown): WelcomeGreetingResolved {
+  if (value === 'default' || value === 'force-light') {
+    return value
+  }
+  return DEFAULT_THEME_BACKGROUND_SETTINGS.welcomeGreetingResolved
+}
+
+function normalizeWelcomeGreetingResolvedAssetId(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : null
+}
+
 export function isAllowedBackgroundImageMimeType(
   mimeType: string,
 ): mimeType is ThemeBackgroundMimeType {
@@ -129,9 +167,23 @@ export function normalizeThemeBackgroundSettings(
   const sidebarScrimEnabled = typeof source.sidebarScrimEnabled === 'boolean'
     ? source.sidebarScrimEnabled
     : DEFAULT_THEME_BACKGROUND_SETTINGS.sidebarScrimEnabled
+  const welcomeGreetingReadabilityMode = normalizeWelcomeGreetingMode(
+    source.welcomeGreetingReadabilityMode,
+  )
+  let welcomeGreetingResolved = normalizeWelcomeGreetingResolved(
+    source.welcomeGreetingResolved,
+  )
+  let welcomeGreetingResolvedAssetId = normalizeWelcomeGreetingResolvedAssetId(
+    source.welcomeGreetingResolvedAssetId,
+  )
   const updatedAt = typeof source.updatedAt === 'string' && source.updatedAt
     ? source.updatedAt
     : new Date().toISOString()
+
+  if (!enabled || imageRef.kind !== 'asset') {
+    welcomeGreetingResolved = 'default'
+    welcomeGreetingResolvedAssetId = null
+  }
 
   return {
     version: THEME_BACKGROUND_VERSION,
@@ -140,6 +192,9 @@ export function normalizeThemeBackgroundSettings(
     messageGlassEnabled: Boolean(source.messageGlassEnabled),
     sidebarScrimEnabled,
     sidebarScrimIntensity,
+    welcomeGreetingReadabilityMode,
+    welcomeGreetingResolved,
+    welcomeGreetingResolvedAssetId,
     imageRef,
     updatedAt,
   }

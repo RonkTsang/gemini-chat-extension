@@ -10,12 +10,15 @@ function createState(
 ): ThemeBackgroundResolvedState {
   const base: ThemeBackgroundResolvedState = {
     settings: {
-      version: 2,
+      version: 3,
       backgroundImageEnabled: false,
       backgroundBlurPx: 5,
       messageGlassEnabled: false,
       sidebarScrimEnabled: true,
       sidebarScrimIntensity: 20,
+      welcomeGreetingReadabilityMode: 'auto',
+      welcomeGreetingResolved: 'default',
+      welcomeGreetingResolvedAssetId: null,
       imageRef: { kind: 'none' },
       updatedAt: new Date().toISOString(),
     },

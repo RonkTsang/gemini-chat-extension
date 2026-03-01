@@ -21,6 +21,15 @@ describe('theme background settings normalize', () => {
     expect(result.sidebarScrimIntensity).toBe(
       DEFAULT_THEME_BACKGROUND_SETTINGS.sidebarScrimIntensity,
     )
+    expect(result.welcomeGreetingReadabilityMode).toBe(
+      DEFAULT_THEME_BACKGROUND_SETTINGS.welcomeGreetingReadabilityMode,
+    )
+    expect(result.welcomeGreetingResolved).toBe(
+      DEFAULT_THEME_BACKGROUND_SETTINGS.welcomeGreetingResolved,
+    )
+    expect(result.welcomeGreetingResolvedAssetId).toBe(
+      DEFAULT_THEME_BACKGROUND_SETTINGS.welcomeGreetingResolvedAssetId,
+    )
     expect(result.imageRef).toEqual(DEFAULT_THEME_BACKGROUND_SETTINGS.imageRef)
     expect(result.version).toBe(DEFAULT_THEME_BACKGROUND_SETTINGS.version)
     expect(typeof result.updatedAt).toBe('string')
@@ -52,5 +61,17 @@ describe('theme background settings normalize', () => {
       imageRef: { kind: 'asset', assetId: '' },
     })
     expect(result.imageRef).toEqual({ kind: 'none' })
+  })
+
+  it('resets welcome greeting cache when background is disabled', () => {
+    const result = normalizeThemeBackgroundSettings({
+      backgroundImageEnabled: false,
+      imageRef: { kind: 'asset', assetId: 'asset-1' },
+      welcomeGreetingReadabilityMode: 'auto',
+      welcomeGreetingResolved: 'force-light',
+      welcomeGreetingResolvedAssetId: 'asset-1',
+    })
+    expect(result.welcomeGreetingResolved).toBe('default')
+    expect(result.welcomeGreetingResolvedAssetId).toBeNull()
   })
 })
