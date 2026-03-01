@@ -77,7 +77,7 @@
   background: color-mix(in srgb, var(--gem-sys-color--surface-bright), transparent 30%);
 }
 
-.mat-mdc-unelevated-button:not(:disabled) {
+:root[data-gpk-bg-enabled="true"] div.edit-button-area>button.mat-mdc-unelevated-button:not(:disabled) {
   background-color: var(--mat-button-filled-container-color, var(--mat-sys-primary)) !important;
 }
 
