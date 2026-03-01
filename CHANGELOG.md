@@ -1,3 +1,10 @@
+# [0.6.0](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.5.3...v0.6.0) (2026-03-01)
+
+
+### Features
+
+* Add Gemini theme customization features ([#17](https://github.com/RonkTsang/gemini-chat-extension/issues/17)) ([0681c35](https://github.com/RonkTsang/gemini-chat-extension/commit/0681c351a6c63fc2cc3a89f610a918c0d8bb3666)), closes [#16](https://github.com/RonkTsang/gemini-chat-extension/issues/16)
+
 ## [0.5.3](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.5.2...v0.5.3) (2026-02-16)
 
 
