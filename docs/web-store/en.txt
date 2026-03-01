@@ -22,6 +22,11 @@ Turn multi-step tasks into one-click automations.
   ● Visual Builder: Manage your chains with an intuitive drag-and-drop editor.
   ● Real-time Tracking: Watch your automation progress step-by-step.
 
+🎨 VISUAL THEMES — PERSONALIZE YOUR GEMINI
+Transform your workspace and make Gemini truly yours.
+  ● Stunning Color Presets: Choose from a variety of vibrant themes to create a more personal environment.
+  ● Custom Wallpapers: Elevate your experience with personal backgrounds and elegant glass effects.
+
 💎 SEAMLESS EXPERIENCE
 ● Smart Tab Titles: Automatically renames browser tabs to match your chat titles, making it effortless to switch between multiple Gemini sessions.
 ● Open Media in New Tab: From the My Stuff gallery, open any item in a new tab and keep your place—review results without losing your scroll position.
@@ -31,4 +36,4 @@ PRIVACY FIRST
 
 PERFORMANCE
 - Lightweight & Clean: Minimalist design that integrates seamlessly with the native UI.
-- Theme Aware: Beautifully supports both Light and Dark modes.
+- Beautifully supports both Light and Dark modes.

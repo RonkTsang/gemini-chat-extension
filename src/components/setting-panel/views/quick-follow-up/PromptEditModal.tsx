@@ -32,7 +32,7 @@ export function PromptEditModal({
   onCreate
 }: PromptEditModalProps) {
   const isCreating = !prompt
-  
+
   const [nameValue, setNameValue] = useState('')
   const [templateValue, setTemplateValue] = useState<string>(QUICK_FOLLOW_PLACEHOLDER)
   const [iconKey, setIconKey] = useState<QuickFollowIconKey>('sparkles')
@@ -83,10 +83,10 @@ export function PromptEditModal({
   const handleSave = async () => {
     const nameValidation = validateName(nameValue)
     const templateValidation = validateTemplate(templateValue)
-    
+
     setNameError(nameValidation)
     setTemplateError(templateValidation)
-    
+
     if (nameValidation || templateValidation) {
       return
     }
@@ -123,9 +123,9 @@ export function PromptEditModal({
   }
 
   return (
-    <Dialog.Root 
-      open={isOpen} 
-      onOpenChange={(e) => !e.open && handleCancel()} 
+    <Dialog.Root
+      open={isOpen}
+      onOpenChange={(e) => !e.open && handleCancel()}
       placement="center"
       size="lg"
       closeOnInteractOutside={false}  // Prevent accidental closing
@@ -136,8 +136,8 @@ export function PromptEditModal({
         <Dialog.Content>
           <Dialog.Header>
             <Dialog.Title>
-              {isCreating 
-                ? t('settings.quickFollow.createModal.title') 
+              {isCreating
+                ? t('settings.quickFollow.createModal.title')
                 : t('settings.quickFollow.editModal.title')}
             </Dialog.Title>
             <Dialog.CloseTrigger />

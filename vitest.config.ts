@@ -21,6 +21,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '#imports': path.resolve(__dirname, './src/test/mocks/wxt-imports.ts'),
     },
   },
 });

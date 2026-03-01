@@ -61,6 +61,35 @@
     }
   },
   "settingPanel": {
+    "theme": {
+      "appearance": "Aparência",
+      "appearanceSystem": "Sistema",
+      "appearanceLight": "Claro",
+      "appearanceDark": "Escuro",
+      "colorPresets": "Cores",
+      "customBackground": "Papel de parede",
+      "livePreview": "Visualização ao vivo",
+      "enableBackgroundImage": "Habilitar papel de parede",
+      "backgroundImageUpload": "Upload de imagem de fundo",
+      "dropBackground": "Solte sua imagem aqui",
+      "fileTypes": "PNG, JPG ou WebP até 5MB",
+      "selectFile": "Selecionar arquivo",
+      "blurIntensity": "Desfoque",
+      "sidebarScrim": "Melhoria de legibilidade da barra lateral",
+      "sidebarScrimInfo": "Melhora o contraste do texto da barra lateral no papel de parede. Se a legibilidade for ruim no modo claro, tente aumentar a intensidade.",
+      "sidebarScrimIntensity": "Intensidade",
+      "welcomeGreetingReadability": "Legibilidade da saudação inicial",
+      "welcomeGreetingReadabilityInfo": "Afeta apenas a saudação da página inicial no modo claro. O modo escuro não é afetado.",
+      "welcomeGreetingReadabilityDefault": "Manter padrão",
+      "welcomeGreetingReadabilityAuto": "Adaptação automática (primeira estimativa)",
+      "welcomeGreetingReadabilityForceLight": "Forçar texto claro",
+      "messageGlassEffect": "Efeito de vidro nas mensagens",
+      "messageGlassEffectInfo": "Ativar isso adiciona um efeito de vidro. Pode impactar o desempenho em dispositivos de baixo custo.",
+      "invalidFileType": "Apenas PNG/JPG/WebP são suportados",
+      "fileTooLarge": "O tamanho da imagem deve ser de 5MB ou menos",
+      "imageLoadFailed": "Falha ao carregar a imagem, tente novamente",
+      "removeBackgroundImage": "Remover imagem de fundo"
+    },
     "chainPrompt": {
       "new": "Novo Chain Prompt",
       "searchPlaceholder": "Pesquisar por nome ou descrição...",
@@ -345,12 +374,8 @@
     "title": "O que há de novo",
     "releaseNotes": "Notas de lançamento",
     "feature1": {
-      "title": "Títulos de abas inteligentes",
-      "description": "Renomeia automaticamente as abas do navegador para corresponder aos títulos dos seus chats, facilitando a alternância entre várias sessões do Gemini."
-    },
-    "feature2": {
-      "title": "Abrir mídia em nova aba",
-      "description": "Na galeria Minhas Coisas, abra qualquer item em uma nova aba e mantenha seu lugar — revise os resultados sem perder sua posição de rolagem."
+      "title": "Personalize o seu Gemini",
+      "description": "Transforme seu espaço de trabalho com predefinições de cores incríveis e papéis de parede personalizados."
     }
   }
 }

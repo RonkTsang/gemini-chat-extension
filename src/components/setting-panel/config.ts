@@ -99,7 +99,7 @@ export const settingSectionDefinitions: SettingSectionDefinition<NavigationSecti
       {
         id: 'index',
         title: t('settingPanel.config.theme.views.index.title'),
-        componentId: 'default/index'
+        componentId: 'theme/index'
       }
     ]
   },

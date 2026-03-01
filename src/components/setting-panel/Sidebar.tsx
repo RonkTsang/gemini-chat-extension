@@ -107,7 +107,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ width = '240px' }) => {
     <Box
       width={width}
       height="100%"
-      bg="gemSurfaceContainer"
+      bg="gemSidenavBg"
       px={3}
       py={6}
       display="flex"
@@ -121,7 +121,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ width = '240px' }) => {
           activeSection={activeSection}
           onSelect={setActiveSection}
         />
-        
+
         {/* Tools Group */}
         <NavigationGroup
           label="Tools"

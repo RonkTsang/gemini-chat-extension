@@ -61,6 +61,35 @@
     }
   },
   "settingPanel": {
+    "theme": {
+      "appearance": "Appearance",
+      "appearanceSystem": "System",
+      "appearanceLight": "Light",
+      "appearanceDark": "Dark",
+      "colorPresets": "Colors",
+      "customBackground": "Wallpaper",
+      "livePreview": "Live Preview",
+      "enableBackgroundImage": "Enable wallpaper",
+      "backgroundImageUpload": "Background Image Upload",
+      "dropBackground": "Drop your image here",
+      "fileTypes": "PNG, JPG or WebP up to 5MB",
+      "selectFile": "Select File",
+      "blurIntensity": "Blur",
+      "sidebarScrim": "Sidebar readability scrim",
+      "sidebarScrimInfo": "Improves sidebar text contrast on wallpaper. If text readability is poor in Light mode, try increasing the scrim intensity.",
+      "sidebarScrimIntensity": "Scrim intensity",
+      "welcomeGreetingReadability": "Welcome greeting readability",
+      "welcomeGreetingReadabilityInfo": "Controls text color adaptation for the homepage welcome greeting when wallpaper is enabled. Use this if the greeting is hard to read in Light mode.",
+      "welcomeGreetingReadabilityDefault": "Keep default",
+      "welcomeGreetingReadabilityAuto": "Auto adapt (first estimate)",
+      "welcomeGreetingReadabilityForceLight": "Force light text",
+      "messageGlassEffect": "Message Glass Effect",
+      "messageGlassEffectInfo": "Enabling this adds a glass effect. It may impact performance on low-end devices.",
+      "invalidFileType": "Only PNG/JPG/WebP is supported",
+      "fileTooLarge": "Image size must be 5MB or less",
+      "imageLoadFailed": "Image loading failed, please try again",
+      "removeBackgroundImage": "Remove Background Image"
+    },
     "chainPrompt": {
       "new": "New Chain Prompt",
       "searchPlaceholder": "Search by name or description...",
@@ -268,12 +297,8 @@
         "title": "Theme",
         "views": {
           "index": {
-            "title": "Theme",
-            "description": "Main overview for theme settings."
-          },
-          "detail": {
-            "title": "Theme Detail",
-            "description": "Detailed configuration for theme settings."
+            "title": "Theme Settings",
+            "description": "Customize Gemini's color theme to match your style."
           }
         }
       },
@@ -345,12 +370,8 @@
     "title": "What's New",
     "releaseNotes": "Release Notes",
     "feature1": {
-      "title": "Smart Tab Titles",
-      "description": "Automatically renames browser tabs to match your chat titles, making it effortless to switch between multiple Gemini sessions."
-    },
-    "feature2": {
-      "title": "Open Media in New Tab",
-      "description": "From the My Stuff gallery, open any item in a new tab and keep your place—review results without losing your scroll position."
+      "title": "Personalize Your Gemini",
+      "description": "Transform your workspace with stunning color presets and custom wallpapers. Make Gemini truly yours."
     }
   }
 }

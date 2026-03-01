@@ -58,8 +58,8 @@ const escapeRegExp = (string: string): string => {
  * @returns Array of step updates with modified prompts
  */
 const updateVariableReferences = (
-  oldKey: string, 
-  newKey: string, 
+  oldKey: string,
+  newKey: string,
   steps: Array<{ id: string; prompt: string }>
 ): Array<{ index: number; step: { prompt: string } }> => {
   if (!oldKey.trim() || !newKey.trim() || oldKey === newKey) {
@@ -122,7 +122,7 @@ export const ChainPromptEditorView: SettingViewComponent = ({ openView }) => {
     if (editing && editing.steps.length > previousStepsLength.current) {
       const lastIndex = editing.steps.length - 1
       const lastStepRef = stepRefs.current[lastIndex]
-      
+
       if (lastStepRef) {
         // Use setTimeout to ensure DOM is updated
         setTimeout(() => {
@@ -133,7 +133,7 @@ export const ChainPromptEditorView: SettingViewComponent = ({ openView }) => {
         }, 100)
       }
     }
-    
+
     previousStepsLength.current = editing?.steps.length || 0
   }, [editing?.steps.length])
 
@@ -148,7 +148,7 @@ export const ChainPromptEditorView: SettingViewComponent = ({ openView }) => {
       setSelectedText(null)
       setButtonPosition(null)
     }
-    
+
     if (selectedText) {
       document.addEventListener('click', handleClickAway)
       return () => document.removeEventListener('click', handleClickAway)
@@ -218,7 +218,7 @@ export const ChainPromptEditorView: SettingViewComponent = ({ openView }) => {
         })
         toaster.create({
           title: t('settingPanel.editor.saveToast.created'),
-          description: ignoredCount > 0 
+          description: ignoredCount > 0
             ? t('settingPanel.editor.saveToast.ignoredVars', String(ignoredCount))
             : undefined,
           type: 'success'
@@ -232,7 +232,7 @@ export const ChainPromptEditorView: SettingViewComponent = ({ openView }) => {
         })
         toaster.create({
           title: t('settingPanel.editor.saveToast.updated'),
-          description: ignoredCount > 0 
+          description: ignoredCount > 0
             ? t('settingPanel.editor.saveToast.ignoredVars', String(ignoredCount))
             : undefined,
           type: 'success'
@@ -306,12 +306,12 @@ export const ChainPromptEditorView: SettingViewComponent = ({ openView }) => {
       // Method 1: Use window.getSelection() for better cross-browser support
       const selection = window.getSelection()
       const selectedText = selection ? selection.toString().trim() : ''
-      
+
       // Method 2: Try to get textarea from ref
       let textareaSelectedText = ''
       const refTextarea = textareaRefs.current[stepIndex]
       const activeTextarea = textarea || refTextarea
-      
+
       if (activeTextarea && activeTextarea.selectionStart !== null && activeTextarea.selectionEnd !== null) {
         const start = activeTextarea.selectionStart
         const end = activeTextarea.selectionEnd
@@ -319,23 +319,23 @@ export const ChainPromptEditorView: SettingViewComponent = ({ openView }) => {
         // Record last selection for this step for later variable insertion
         lastSelectionRef.current[stepIndex] = { start, end }
       }
-      
+
       // Use the method that has text
       const finalSelectedText = selectedText || textareaSelectedText
-      
+
       if (finalSelectedText.length === 0) {
         setSelectedText(null)
         setButtonPosition(null)
         return
       }
-      
+
       // Edge case 1: Check if selected text contains variable syntax special characters
       if (finalSelectedText.includes('{{') || finalSelectedText.includes('}}')) {
         setSelectedText(null)
         setButtonPosition(null)
         return
       }
-      
+
       // Calculate button position relative to steps container (with null check)
       if (!activeTextarea) {
         console.warn('No active textarea found, cannot calculate position')
@@ -379,17 +379,17 @@ export const ChainPromptEditorView: SettingViewComponent = ({ openView }) => {
     if (oldKey && newKey && oldKey !== newKey) {
       try {
         const stepUpdates = updateVariableReferences(oldKey, newKey, editing.steps)
-        
+
         if (stepUpdates.length > 0) {
           // Immediately batch update all affected steps
           updateSteps(stepUpdates)
-          
+
           // Trigger debounced Toast notification
           showDebouncedToast()
         }
       } catch (error) {
         console.error('Failed to update variable references:', error)
-        
+
         // Error notifications are displayed immediately, no debouncing needed
         toaster.create({
           title: t('settingPanel.editor.variableUpdateError'),
@@ -424,7 +424,7 @@ export const ChainPromptEditorView: SettingViewComponent = ({ openView }) => {
         ta.focus()
         try {
           ta.setSelectionRange(caret, caret)
-        } catch {}
+        } catch { }
       }
     }, 0)
   }
@@ -436,32 +436,32 @@ export const ChainPromptEditorView: SettingViewComponent = ({ openView }) => {
   const handleTextSelection = (e: React.SyntheticEvent<HTMLTextAreaElement>, stepIndex: number) => {
     // Store the textarea reference immediately to avoid async issues
     const textarea = e.currentTarget
-    
+
     // Trigger debounced text selection handling
     debouncedHandleTextSelection(textarea, stepIndex)
   }
 
   const handleCreateVariableFromSelection = () => {
     if (!selectedText || !editing) return
-    
+
     const { stepIndex, text, textarea } = selectedText
     const step = editing.steps[stepIndex]
-    
+
     // Edge case 2: Check if selected text is already an existing variable name
     const existingVariable = editing.variables.find(variable => variable.key === text)
-    
+
     if (existingVariable) {
       // If variable exists, only replace text with interpolation syntax, do not create a new variable
       if (textarea && textarea.selectionStart !== null && textarea.selectionEnd !== null) {
         const start = textarea.selectionStart
         const end = textarea.selectionEnd
-        const newPrompt = 
+        const newPrompt =
           step.prompt.substring(0, start) +
           `{{${text}}}` +
           step.prompt.substring(end)
-        
+
         updateStep(stepIndex, { prompt: newPrompt })
-        
+
         // Restore focus and set caret position after insertion
         setTimeout(() => {
           textarea.focus()
@@ -476,18 +476,18 @@ export const ChainPromptEditorView: SettingViewComponent = ({ openView }) => {
     } else {
       // If variable does not exist, create a new variable and replace text
       addVariableFromText(text, text)
-      
+
       // Replace selected text with variable syntax (with null check)
       if (textarea && textarea.selectionStart !== null && textarea.selectionEnd !== null) {
         const start = textarea.selectionStart
         const end = textarea.selectionEnd
-        const newPrompt = 
+        const newPrompt =
           step.prompt.substring(0, start) +
           `{{${text}}}` +
           step.prompt.substring(end)
-        
+
         updateStep(stepIndex, { prompt: newPrompt })
-        
+
         // Restore focus and set caret position after insertion
         setTimeout(() => {
           textarea.focus()
@@ -500,7 +500,7 @@ export const ChainPromptEditorView: SettingViewComponent = ({ openView }) => {
         updateStep(stepIndex, { prompt: newPrompt })
       }
     }
-    
+
     // Clear selection state
     setSelectedText(null)
     setButtonPosition(null)
@@ -533,445 +533,444 @@ export const ChainPromptEditorView: SettingViewComponent = ({ openView }) => {
 
           {/* Steps List - Scrollable */}
           <Box flex={1} overflowY="auto" pr={2} position="relative" ref={stepsScrollRef}>
-          {editing.steps.length === 0 ? (
-            <Box
-              backgroundColor="gemSurfaceContainer"
-              borderRadius="lg"
-              p={8}
-              textAlign="center"
-            >
-              <Text fontSize="4xl" mb={2}>💡</Text>
-              <Heading size="sm" mb={2}>{t('settingPanel.editor.startTitle')}</Heading>
-              <Text fontSize="sm" color="fg.muted" mb={4}>
-                {t('settingPanel.editor.startDesc')}
-              </Text>
-              <Button colorScheme="blue" onClick={() => addStep()}>
-                <HiOutlinePlus />
-                {t('settingPanel.editor.addFirstStep')}
-              </Button>
-            </Box>
-          ) : (
-            <VStack align="stretch" gap={0} pb={4}>
-              {editing.steps.map((step, index) => (
-                <Box 
-                  key={step.id}
-                  ref={(el: HTMLDivElement | null) => { stepRefs.current[index] = el }}
-                >
-                  {/* Step Card */}
+            {editing.steps.length === 0 ? (
+              <Box
+                backgroundColor="gemSurfaceContainer"
+                borderRadius="lg"
+                p={8}
+                textAlign="center"
+              >
+                <Text fontSize="4xl" mb={2}>💡</Text>
+                <Heading size="sm" mb={2}>{t('settingPanel.editor.startTitle')}</Heading>
+                <Text fontSize="sm" color="fg.muted" mb={4}>
+                  {t('settingPanel.editor.startDesc')}
+                </Text>
+                <Button onClick={() => addStep()}>
+                  <HiOutlinePlus />
+                  {t('settingPanel.editor.addFirstStep')}
+                </Button>
+              </Box>
+            ) : (
+              <VStack align="stretch" gap={0} pb={4}>
+                {editing.steps.map((step, index) => (
                   <Box
-                    data-card
-                    // bg={draggedIndex === index ? 'blue.subtle' : 'bg.panel'}
-                    bg="chainPromptCardBg"
-                    border="1px solid"
-                    borderColor="border"
-                    borderRadius="lg"
-                    overflow="hidden"
-                    shadow={draggedIndex === index ? 'sm' : 'none'}
-                    transition="all 0.2s"
-                    onDragOver={(e) => handleDragOver(e, index)}
-                    onDrop={(e) => handleDrop(e, index)}
-                    _hover={{
-                      borderColor: draggedIndex === index ? 'blue.muted' : 'border',
-                      shadow: 'xs'
-                    }}
+                    key={step.id}
+                    ref={(el: HTMLDivElement | null) => { stepRefs.current[index] = el }}
                   >
-                    <Flex align="stretch">
-                      {/* Left: Number Area */}
-                      <VStack
-                        w="60px"
-                        justify="flex-start"
-                        align="center"
-                        pt={4}
-                        pb={3}
-                        cursor="grab"
-                        draggable
-                        onDragStart={(e) => {
-                          handleDragStart(index)
-                          const card = (e.currentTarget.closest('[data-card]') as HTMLElement | null)
-                          if (card && e.dataTransfer) {
-                            try {
-                              const rect = card.getBoundingClientRect()
-                              const offsetX = e.clientX - rect.left
-                              const offsetY = e.clientY - rect.top
-                              e.dataTransfer.setDragImage(card, Math.round(offsetX), Math.round(offsetY))
-                              // e.dataTransfer.setDragImage(card, Math.floor(card.offsetWidth / 2), 16)
-                            } catch {}
-                          }
-                        }}
-                      >
-                        <Box
-                          fontSize="lg"
-                          fontWeight="bold"
-                          w="36px"
-                          h="36px"
-                          display="flex"
-                          alignItems="center"
-                          justifyContent="center"
-                          borderRadius="full"
-                          color="blue.fg"
-                          bg="blue.subtle"
+                    {/* Step Card */}
+                    <Box
+                      data-card
+                      // bg={draggedIndex === index ? 'blue.subtle' : 'bg.panel'}
+                      bg="chainPromptCardBg"
+                      border="1px solid"
+                      borderColor="border"
+                      borderRadius="lg"
+                      overflow="hidden"
+                      shadow={draggedIndex === index ? 'sm' : 'none'}
+                      transition="all 0.2s"
+                      onDragOver={(e) => handleDragOver(e, index)}
+                      onDrop={(e) => handleDrop(e, index)}
+                      _hover={{
+                        borderColor: draggedIndex === index ? 'blue.muted' : 'border',
+                        shadow: 'xs'
+                      }}
+                    >
+                      <Flex align="stretch">
+                        {/* Left: Number Area */}
+                        <VStack
+                          w="60px"
+                          justify="flex-start"
+                          align="center"
+                          pt={4}
+                          pb={3}
+                          cursor="grab"
+                          draggable
+                          onDragStart={(e) => {
+                            handleDragStart(index)
+                            const card = (e.currentTarget.closest('[data-card]') as HTMLElement | null)
+                            if (card && e.dataTransfer) {
+                              try {
+                                const rect = card.getBoundingClientRect()
+                                const offsetX = e.clientX - rect.left
+                                const offsetY = e.clientY - rect.top
+                                e.dataTransfer.setDragImage(card, Math.round(offsetX), Math.round(offsetY))
+                                // e.dataTransfer.setDragImage(card, Math.floor(card.offsetWidth / 2), 16)
+                              } catch { }
+                            }
+                          }}
                         >
-                          {index + 1}
-                        </Box>
-                      </VStack>
-
-                      {/* Right: Content */}
-                      <Box
-                        flex={1}
-                        p={4}
-                        position="relative"
-                        onDragStart={(e) => {
-                          // Guard: prevent drag when interacting with inputs/textareas
-                          const target = e.target as HTMLElement
-                          if (target && target.closest('input, textarea, [contenteditable]')) {
-                            e.preventDefault()
-                          }
-                        }}
-                      >
-                        <VStack align="stretch" gap={3}>
-                          {/* Step Name Input - No Label */}
-                          <Input
-                            borderColor="gemOutlineVariant"
-                            value={step.name || ''}
-                            onChange={(e) => updateStep(index, { name: e.target.value })}
-                            placeholder={t('settingPanel.editor.placeholders.stepName', String(index + 1))}
-                            size="md"
-                            fontWeight="medium"
-                            onMouseDown={(e) => e.stopPropagation()}
-                            onDragStart={(e) => e.stopPropagation()}
-                          />
-
-                          {/* Prompt Textarea - No Label */}
-                          <Textarea
-                            borderColor="gemOutlineVariant"
-                            ref={(el: HTMLTextAreaElement | null) => { textareaRefs.current[index] = el }}
-                            value={step.prompt}
-                            onChange={(e) => updateStep(index, { prompt: e.target.value })}
-                            onMouseUp={(e) => handleTextSelection(e, index)}
-                            onKeyUp={(e) => handleTextSelection(e, index)}
-                            placeholder={t('settingPanel.editor.placeholders.prompt')}
-                            rows={4}
-                            size="sm"
-                            onMouseDown={(e) => e.stopPropagation()}
-                            onDragStart={(e) => e.stopPropagation()}
-                          />
-
-                          {/* Bottom Row: Insert Helper & Delete Button */}
-                          <Flex justify="space-between" align="center">
-                            {/* Insert Variable Helper */}
-                            <Flex gap={2} align="center">
-                              <Text fontSize="sm" color="fg.muted">
-                                {t('settingPanel.editor.insert')}
-                              </Text>
-                              <MenuRoot positioning={{ strategy: "fixed", hideWhenDetached: true }}>
-                                <MenuTrigger asChild>
-                                  <Button size="xs" variant="outline">
-                                    {t('settingPanel.editor.variables')}
-                                    <HiOutlineChevronDown />
-                                  </Button>
-                                </MenuTrigger>
-                                <Menu.Positioner>
-                                  <MenuContent>
-                                    {getAvailableVariablesForStep(index).length > 0 ? (
-                                      getAvailableVariablesForStep(index).map((variable) => (
-                                        <MenuItem
-                                          key={variable}
-                                          value={variable}
-                                          onClick={() => insertVariableToStep(index, variable)}
-                                        >
-                                          {`{{${variable}}}`}
-                                        </MenuItem>
-                                      ))
-                                    ) : (
-                                      <MenuItem value="add-variable" onClick={addVariable}>
-                                        <HiOutlinePlus />
-                                        {t('settingPanel.editor.addVariable')}
-                                      </MenuItem>
-                                    )}
-                                  </MenuContent>
-                                </Menu.Positioner>
-                              </MenuRoot>
-                            </Flex>
-
-                            {/* Delete Button */}
-                            <IconButton
-                              aria-label={t('settingPanel.editor.aria.removeStep')}
-                              variant="ghost"
-                              colorPalette="red"
-                              onClick={() => removeStep(index)}
-                              size="xs"
-                            >
-                              <HiOutlineTrash />
-                            </IconButton>
-                          </Flex>
+                          <Box
+                            fontSize="lg"
+                            fontWeight="bold"
+                            w="36px"
+                            h="36px"
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="center"
+                            borderRadius="full"
+                            color="colorPalette.fg"
+                            bg="colorPalette.subtle"
+                          >
+                            {index + 1}
+                          </Box>
                         </VStack>
-                      </Box>
-                    </Flex>
+
+                        {/* Right: Content */}
+                        <Box
+                          flex={1}
+                          p={4}
+                          position="relative"
+                          onDragStart={(e) => {
+                            // Guard: prevent drag when interacting with inputs/textareas
+                            const target = e.target as HTMLElement
+                            if (target && target.closest('input, textarea, [contenteditable]')) {
+                              e.preventDefault()
+                            }
+                          }}
+                        >
+                          <VStack align="stretch" gap={3}>
+                            {/* Step Name Input - No Label */}
+                            <Input
+                              borderColor="gemOutlineVariant"
+                              value={step.name || ''}
+                              onChange={(e) => updateStep(index, { name: e.target.value })}
+                              placeholder={t('settingPanel.editor.placeholders.stepName', String(index + 1))}
+                              size="md"
+                              fontWeight="medium"
+                              onMouseDown={(e) => e.stopPropagation()}
+                              onDragStart={(e) => e.stopPropagation()}
+                            />
+
+                            {/* Prompt Textarea - No Label */}
+                            <Textarea
+                              borderColor="gemOutlineVariant"
+                              ref={(el: HTMLTextAreaElement | null) => { textareaRefs.current[index] = el }}
+                              value={step.prompt}
+                              onChange={(e) => updateStep(index, { prompt: e.target.value })}
+                              onMouseUp={(e) => handleTextSelection(e, index)}
+                              onKeyUp={(e) => handleTextSelection(e, index)}
+                              placeholder={t('settingPanel.editor.placeholders.prompt')}
+                              rows={4}
+                              size="sm"
+                              onMouseDown={(e) => e.stopPropagation()}
+                              onDragStart={(e) => e.stopPropagation()}
+                            />
+
+                            {/* Bottom Row: Insert Helper & Delete Button */}
+                            <Flex justify="space-between" align="center">
+                              {/* Insert Variable Helper */}
+                              <Flex gap={2} align="center">
+                                <Text fontSize="sm" color="fg.muted">
+                                  {t('settingPanel.editor.insert')}
+                                </Text>
+                                <MenuRoot positioning={{ strategy: "fixed", hideWhenDetached: true }}>
+                                  <MenuTrigger asChild>
+                                    <Button size="xs" variant="outline">
+                                      {t('settingPanel.editor.variables')}
+                                      <HiOutlineChevronDown />
+                                    </Button>
+                                  </MenuTrigger>
+                                  <Menu.Positioner>
+                                    <MenuContent>
+                                      {getAvailableVariablesForStep(index).length > 0 ? (
+                                        getAvailableVariablesForStep(index).map((variable) => (
+                                          <MenuItem
+                                            key={variable}
+                                            value={variable}
+                                            onClick={() => insertVariableToStep(index, variable)}
+                                          >
+                                            {`{{${variable}}}`}
+                                          </MenuItem>
+                                        ))
+                                      ) : (
+                                        <MenuItem value="add-variable" onClick={addVariable}>
+                                          <HiOutlinePlus />
+                                          {t('settingPanel.editor.addVariable')}
+                                        </MenuItem>
+                                      )}
+                                    </MenuContent>
+                                  </Menu.Positioner>
+                                </MenuRoot>
+                              </Flex>
+
+                              {/* Delete Button */}
+                              <IconButton
+                                aria-label={t('settingPanel.editor.aria.removeStep')}
+                                variant="ghost"
+                                colorPalette="red"
+                                onClick={() => removeStep(index)}
+                                size="xs"
+                              >
+                                <HiOutlineTrash />
+                              </IconButton>
+                            </Flex>
+                          </VStack>
+                        </Box>
+                      </Flex>
+                    </Box>
+
+                    {/* Connector Line */}
+                    {index < editing.steps.length - 1 && (
+                      <Flex justify="center" py={2}>
+                        <Box
+                          w="2px"
+                          h="24px"
+                          borderLeft="2px dashed"
+                          borderColor="border.emphasized"
+                        />
+                      </Flex>
+                    )}
+
+                    {/* Add Step Button (after last step) */}
+                    {index === editing.steps.length - 1 && (
+                      <Flex justify="center" py={3} position="relative">
+                        <Box
+                          w="2px"
+                          h="16px"
+                          borderLeft="2px dashed"
+                          borderColor="border.emphasized"
+                          position="absolute"
+                          top={0}
+                        />
+                        <IconButton
+                          aria-label="Add step"
+                          variant="outline"
+                          size="lg"
+                          onClick={() => addStep()}
+                          borderRadius="lg"
+                          mt={4}
+                        >
+                          <HiOutlinePlus size={20} />
+                        </IconButton>
+                      </Flex>
+                    )}
                   </Box>
+                ))}
+              </VStack>
+            )}
 
-                  {/* Connector Line */}
-                  {index < editing.steps.length - 1 && (
-                    <Flex justify="center" py={2}>
-                      <Box
-                        w="2px"
-                        h="24px"
-                        borderLeft="2px dashed"
-                        borderColor="border.emphasized"
-                      />
-                    </Flex>
-                  )}
-
-                  {/* Add Step Button (after last step) */}
-                  {index === editing.steps.length - 1 && (
-                    <Flex justify="center" py={3} position="relative">
-                      <Box
-                        w="2px"
-                        h="16px"
-                        borderLeft="2px dashed"
-                        borderColor="border.emphasized"
-                        position="absolute"
-                        top={0}
-                      />
-                      <IconButton
-                        aria-label="Add step"
-                        variant="outline"
-                        size="lg"
-                        onClick={() => addStep()}
-                        borderRadius="lg"
-                        mt={4}
-                      >
-                        <HiOutlinePlus size={20} />
-                      </IconButton>
-                    </Flex>
-                  )}
-                </Box>
-              ))}
-            </VStack>
-          )}
-
-          {/* Floating Variable Creation Button (within steps container) */}
-          {selectedText && buttonPosition && (
-            <Button
-              size="xs"
-              colorScheme="blue"
-              position="absolute"
-              top={`${buttonPosition.top}px`}
-              left={`${buttonPosition.left}px`}
-              transform="translateX(-50%)"
-              zIndex="popover"
-              shadow="md"
-              data-floating-variable-button="true"
-              onClick={handleCreateVariableFromSelection}
-              onMouseDown={(e) => e.stopPropagation()}
-            >
-              {t('settingPanel.editor.addAsVariable')}
-            </Button>
-          )}
+            {/* Floating Variable Creation Button (within steps container) */}
+            {selectedText && buttonPosition && (
+              <Button
+                size="xs"
+                position="absolute"
+                top={`${buttonPosition.top}px`}
+                left={`${buttonPosition.left}px`}
+                transform="translateX(-50%)"
+                zIndex="popover"
+                shadow="md"
+                data-floating-variable-button="true"
+                onClick={handleCreateVariableFromSelection}
+                onMouseDown={(e) => e.stopPropagation()}
+              >
+                {t('settingPanel.editor.addAsVariable')}
+              </Button>
+            )}
+          </Box>
         </Box>
-      </Box>
 
-      {/* Right: Sidebar (Name & Variables) */}
-      <Box
-        w="320px"
-        minW="280px"
-        maxW="400px"
-        height="100%"
-        borderLeft="1px solid"
-        borderColor="border.muted"
-        pl={4}
-        display="flex"
-        flexDirection="column"
-      >
-        {/* Scrollable Content */}
-        <VStack align="stretch" gap={3} flex={1} overflowY="auto" pr={2} pb={4}>
-          {/* Name - Collapsible */}
-          <Collapsible.Root defaultOpen={true}>
-            <Collapsible.Trigger asChild>
-              <Flex
-                justify="space-between"
-                align="center"
-                cursor="pointer"
-                p={2}
-                borderRadius="md"
-                _hover={{ bg: 'bg.muted' }}
-              >
-                        <Heading size="sm">{t('settingPanel.editor.sidebar.name')}</Heading>
-                <Collapsible.Context>
-                  {({ open }) => (
-                    open ? <HiOutlineChevronUp /> : <HiOutlineChevronDown />
-                  )}
-                </Collapsible.Context>
-              </Flex>
-            </Collapsible.Trigger>
-            <Collapsible.Content>
-              <Box pt={2} px={1} pb={1}>
-                <Input
-                  value={editing.name}
-                  onChange={(e) => updateName(e.target.value)}
-                  placeholder={t('settingPanel.editor.placeholders.name')}
-                  size="sm"
-                />
-              </Box>
-            </Collapsible.Content>
-          </Collapsible.Root>
-
-          {/* Description - Collapsible */}
-          <Collapsible.Root defaultOpen={false}>
-            <Collapsible.Trigger asChild>
-              <Flex
-                justify="space-between"
-                align="center"
-                cursor="pointer"
-                p={2}
-                borderRadius="md"
-                _hover={{ bg: 'bg.muted' }}
-              >
-                        <Heading size="sm">{t('settingPanel.editor.sidebar.description')}</Heading>
-                <Collapsible.Context>
-                  {({ open }) => (
-                    open ? <HiOutlineChevronUp /> : <HiOutlineChevronDown />
-                  )}
-                </Collapsible.Context>
-              </Flex>
-            </Collapsible.Trigger>
-            <Collapsible.Content>
-              <Box pt={2} px={1} pb={1}>
-                <Textarea
-                  value={editing.description}
-                  onChange={(e) => updateDescription(e.target.value)}
-                  placeholder={t('settingPanel.editor.placeholders.desc')}
-                  rows={1}
-                  size="sm"
-                />
-              </Box>
-            </Collapsible.Content>
-          </Collapsible.Root>
-
-          {/* Variables - Collapsible */}
-          <Collapsible.Root defaultOpen={true}>
-            <Collapsible.Trigger asChild>
-              <Flex
-                justify="space-between"
-                align="center"
-                cursor="pointer"
-                p={2}
-                borderRadius="md"
-                _hover={{ bg: 'bg.muted' }}
-              >
-                <Heading size="sm">{t('settingPanel.editor.sidebar.inputVariables')}</Heading>
-                <HStack gap={1}>
-                  <IconButton
-                    aria-label="Add variable"
-                    size="xs"
-                    variant="ghost"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      addVariable()
-                    }}
-                  >
-                    <HiOutlinePlus />
-                  </IconButton>
+        {/* Right: Sidebar (Name & Variables) */}
+        <Box
+          w="320px"
+          minW="280px"
+          maxW="400px"
+          height="100%"
+          borderLeft="1px solid"
+          borderColor="border.muted"
+          pl={4}
+          display="flex"
+          flexDirection="column"
+        >
+          {/* Scrollable Content */}
+          <VStack align="stretch" gap={3} flex={1} overflowY="auto" pr={2} pb={4}>
+            {/* Name - Collapsible */}
+            <Collapsible.Root defaultOpen={true}>
+              <Collapsible.Trigger asChild>
+                <Flex
+                  justify="space-between"
+                  align="center"
+                  cursor="pointer"
+                  p={2}
+                  borderRadius="md"
+                  _hover={{ bg: 'bg.muted' }}
+                >
+                  <Heading size="sm">{t('settingPanel.editor.sidebar.name')}</Heading>
                   <Collapsible.Context>
                     {({ open }) => (
                       open ? <HiOutlineChevronUp /> : <HiOutlineChevronDown />
                     )}
                   </Collapsible.Context>
-                </HStack>
-              </Flex>
-            </Collapsible.Trigger>
-            <Collapsible.Content>
-              <Box pt={2} px={1} pb={1}>
-                {editing.variables.length === 0 ? (
-                  <Box
-                    bg="bg.muted"
-                    p={3}
-                    borderRadius="md"
-                    textAlign="center"
-                  >
-                    <Text fontSize="xs" color="fg.muted" mb={2}>
-                      {t('settingPanel.editor.sidebar.noVariables')}
-                    </Text>
-                    <Button size="xs" variant="outline" colorScheme="blue" onClick={addVariable}>
+                </Flex>
+              </Collapsible.Trigger>
+              <Collapsible.Content>
+                <Box pt={2} px={1} pb={1}>
+                  <Input
+                    value={editing.name}
+                    onChange={(e) => updateName(e.target.value)}
+                    placeholder={t('settingPanel.editor.placeholders.name')}
+                    size="sm"
+                  />
+                </Box>
+              </Collapsible.Content>
+            </Collapsible.Root>
+
+            {/* Description - Collapsible */}
+            <Collapsible.Root defaultOpen={false}>
+              <Collapsible.Trigger asChild>
+                <Flex
+                  justify="space-between"
+                  align="center"
+                  cursor="pointer"
+                  p={2}
+                  borderRadius="md"
+                  _hover={{ bg: 'bg.muted' }}
+                >
+                  <Heading size="sm">{t('settingPanel.editor.sidebar.description')}</Heading>
+                  <Collapsible.Context>
+                    {({ open }) => (
+                      open ? <HiOutlineChevronUp /> : <HiOutlineChevronDown />
+                    )}
+                  </Collapsible.Context>
+                </Flex>
+              </Collapsible.Trigger>
+              <Collapsible.Content>
+                <Box pt={2} px={1} pb={1}>
+                  <Textarea
+                    value={editing.description}
+                    onChange={(e) => updateDescription(e.target.value)}
+                    placeholder={t('settingPanel.editor.placeholders.desc')}
+                    rows={1}
+                    size="sm"
+                  />
+                </Box>
+              </Collapsible.Content>
+            </Collapsible.Root>
+
+            {/* Variables - Collapsible */}
+            <Collapsible.Root defaultOpen={true}>
+              <Collapsible.Trigger asChild>
+                <Flex
+                  justify="space-between"
+                  align="center"
+                  cursor="pointer"
+                  p={2}
+                  borderRadius="md"
+                  _hover={{ bg: 'bg.muted' }}
+                >
+                  <Heading size="sm">{t('settingPanel.editor.sidebar.inputVariables')}</Heading>
+                  <HStack gap={1}>
+                    <IconButton
+                      aria-label="Add variable"
+                      size="xs"
+                      variant="ghost"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        addVariable()
+                      }}
+                    >
                       <HiOutlinePlus />
-                      {t('settingPanel.editor.addVariable')}
-                    </Button>
-                  </Box>
-                ) : (
-                  <VStack align="stretch" gap={2}>
-                    {editing.variables.map((variable, index) => {
-                      const isEmpty = !variable.key.trim()
-                      return (
-                        <HStack 
-                          key={index} 
-                          gap={2}
-                          opacity={isEmpty ? 0.6 : 1}
-                          transition="opacity 0.2s"
-                        >
-                          <Input
-                            value={variable.key}
-                            onChange={(e) =>
-                              handleVariableUpdate(index, { ...variable, key: e.target.value })
-                            }
-                            placeholder={t('settingPanel.editor.placeholders.variableKey')}
-                            size="xs"
-                            flex={1}
-                            // Fix: Only show orange border when not active
-                            _focus={{
-                              borderColor: 'blue.500',
-                              boxShadow: '0 0 0 1px var(--chakra-colors-blue-500)'
-                            }}
-                            {...(isEmpty && {
-                              borderColor: 'orange.300'
-                            })}
-                          />
-                          <Input
-                            value={variable.defaultValue || ''}
-                            onChange={(e) =>
-                              handleVariableUpdate(index, { ...variable, defaultValue: e.target.value })
-                            }
-                            placeholder={t('settingPanel.editor.placeholders.variableDefault')}
-                            size="xs"
-                            flex={1}
-                          />
-                          <IconButton
-                            aria-label={t('settingPanel.editor.aria.removeVariable')}
-                            size="xs"
-                            variant="ghost"
-                            colorPalette="red"
-                            onClick={() => removeVariable(index)}
+                    </IconButton>
+                    <Collapsible.Context>
+                      {({ open }) => (
+                        open ? <HiOutlineChevronUp /> : <HiOutlineChevronDown />
+                      )}
+                    </Collapsible.Context>
+                  </HStack>
+                </Flex>
+              </Collapsible.Trigger>
+              <Collapsible.Content>
+                <Box pt={2} px={1} pb={1}>
+                  {editing.variables.length === 0 ? (
+                    <Box
+                      bg="bg.muted"
+                      p={3}
+                      borderRadius="md"
+                      textAlign="center"
+                    >
+                      <Text fontSize="xs" color="fg.muted" mb={2}>
+                        {t('settingPanel.editor.sidebar.noVariables')}
+                      </Text>
+                      <Button size="xs" variant="outline" colorScheme="blue" onClick={addVariable}>
+                        <HiOutlinePlus />
+                        {t('settingPanel.editor.addVariable')}
+                      </Button>
+                    </Box>
+                  ) : (
+                    <VStack align="stretch" gap={2}>
+                      {editing.variables.map((variable, index) => {
+                        const isEmpty = !variable.key.trim()
+                        return (
+                          <HStack
+                            key={index}
+                            gap={2}
+                            opacity={isEmpty ? 0.6 : 1}
+                            transition="opacity 0.2s"
                           >
-                            <HiOutlineTrash />
-                          </IconButton>
-                        </HStack>
-                      )
-                    })}
-                  </VStack>
-                )}
-              </Box>
-            </Collapsible.Content>
-          </Collapsible.Root>
-        </VStack>
-      </Box>
-    </HStack>
-
-    {/* Footer - Fixed at Bottom */}
-    <Box
-      borderTop="1px solid"
-      borderColor="border.muted"
-      pt={4}
-      flexShrink={0}
-    >
-      <HStack justify="flex-end">
-        <Button variant="outline" onClick={handleCancel} size="sm">
-          {t('settingPanel.editor.footer.cancel')}
-        </Button>
-        <Button colorScheme="blue" onClick={handleSave} loading={saving} size="sm">
-          {t('settingPanel.editor.footer.save')}
-        </Button>
+                            <Input
+                              value={variable.key}
+                              onChange={(e) =>
+                                handleVariableUpdate(index, { ...variable, key: e.target.value })
+                              }
+                              placeholder={t('settingPanel.editor.placeholders.variableKey')}
+                              size="xs"
+                              flex={1}
+                              // Fix: Only show orange border when not active
+                              _focus={{
+                                borderColor: 'blue.500',
+                                boxShadow: '0 0 0 1px var(--chakra-colors-blue-500)'
+                              }}
+                              {...(isEmpty && {
+                                borderColor: 'orange.300'
+                              })}
+                            />
+                            <Input
+                              value={variable.defaultValue || ''}
+                              onChange={(e) =>
+                                handleVariableUpdate(index, { ...variable, defaultValue: e.target.value })
+                              }
+                              placeholder={t('settingPanel.editor.placeholders.variableDefault')}
+                              size="xs"
+                              flex={1}
+                            />
+                            <IconButton
+                              aria-label={t('settingPanel.editor.aria.removeVariable')}
+                              size="xs"
+                              variant="ghost"
+                              colorPalette="red"
+                              onClick={() => removeVariable(index)}
+                            >
+                              <HiOutlineTrash />
+                            </IconButton>
+                          </HStack>
+                        )
+                      })}
+                    </VStack>
+                  )}
+                </Box>
+              </Collapsible.Content>
+            </Collapsible.Root>
+          </VStack>
+        </Box>
       </HStack>
-    </Box>
 
-  </VStack>
+      {/* Footer - Fixed at Bottom */}
+      <Box
+        borderTop="1px solid"
+        borderColor="border.muted"
+        pt={4}
+        flexShrink={0}
+      >
+        <HStack justify="flex-end">
+          <Button variant="outline" onClick={handleCancel} size="sm">
+            {t('settingPanel.editor.footer.cancel')}
+          </Button>
+          <Button colorScheme="blue" onClick={handleSave} loading={saving} size="sm">
+            {t('settingPanel.editor.footer.save')}
+          </Button>
+        </HStack>
+      </Box>
+
+    </VStack>
   )
 }
 

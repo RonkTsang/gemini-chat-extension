@@ -30,8 +30,8 @@ export const ConfirmNewChatDialog: React.FC<ConfirmNewChatDialogProps> = ({
   messageCount = 0
 }) => {
   return (
-    <Dialog.Root 
-      open={open} 
+    <Dialog.Root
+      open={open}
       onOpenChange={(e) => !e.open && onClose()}
       size="md"
       closeOnInteractOutside={false}  // Prevent accidental dismissal during important decision
@@ -60,7 +60,7 @@ export const ConfirmNewChatDialog: React.FC<ConfirmNewChatDialogProps> = ({
                     Would you like to:
                   </Text>
                 </Box>
-                
+
                 <VStack align="stretch" gap={2}>
                   <Button
                     onClick={onContinue}
@@ -74,7 +74,6 @@ export const ConfirmNewChatDialog: React.FC<ConfirmNewChatDialogProps> = ({
                   </Button>
                   <Button
                     onClick={onNewChat}
-                    colorPalette="blue"
                     width="100%"
                     justifyContent="flex-start"
                     size="md"

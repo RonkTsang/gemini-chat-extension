@@ -81,9 +81,9 @@ export function TemplateModal({ open, onClose, onImport }: TemplateModalProps) {
   }
 
   return (
-    <Dialog.Root 
-      open={open} 
-      onOpenChange={(e) => !e.open && onClose()} 
+    <Dialog.Root
+      open={open}
+      onOpenChange={(e) => !e.open && onClose()}
       size="xl"
       closeOnInteractOutside={false}
       placement="center"
@@ -101,7 +101,7 @@ export function TemplateModal({ open, onClose, onImport }: TemplateModalProps) {
               {/* Templates Grid */}
               {loading ? (
                 <Flex justify="center" align="center" py={8}>
-                  <Spinner size="lg" colorPalette="blue" />
+                  <Spinner size="lg" />
                 </Flex>
               ) : templates.length === 0 ? (
                 <Flex
@@ -148,7 +148,6 @@ export function TemplateModal({ open, onClose, onImport }: TemplateModalProps) {
                           onClick={() => handleImport(template)}
                           width="100%"
                           size="sm"
-                          colorPalette="blue"
                           loading={importing === template.id}
                           disabled={importing !== null}
                         >

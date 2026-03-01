@@ -6,6 +6,7 @@
 import Dexie, { type Table } from 'dexie'
 
 import type { QuickFollowIconKey } from '@/domain/quick-follow/iconKeys'
+import type { ThemeAssetRow } from '@/entrypoints/content/gemini-theme/background/types'
 
 export interface QuickFollowPromptRow {
   id: string
@@ -37,6 +38,7 @@ export class GeminiExtensionDB extends Dexie {
   chain_prompts!: Table<ChainPromptRow, string>
   quick_follow_prompts!: Table<QuickFollowPromptRow, string>
   quick_follow_settings!: Table<QuickFollowSettingsRow, string>
+  theme_assets!: Table<ThemeAssetRow, string>
 
   constructor() {
     super('gemini_extension')
@@ -52,9 +54,18 @@ export class GeminiExtensionDB extends Dexie {
       .upgrade(() => {
         // no-op: existing installations do not require data migration
       })
+    this.version(3)
+      .stores({
+        chain_prompts: 'id, name, createdAt, updatedAt',
+        quick_follow_prompts: 'id, updatedAt',
+        quick_follow_settings: 'id',
+        theme_assets: 'id, feature, updatedAt'
+      })
+      .upgrade(() => {
+        // no-op: existing installations do not require data migration
+      })
   }
 }
 
 export const db = new GeminiExtensionDB()
-
 

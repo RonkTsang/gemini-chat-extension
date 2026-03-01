@@ -61,6 +61,35 @@
     }
   },
   "settingPanel": {
+    "theme": {
+      "appearance": "Apariencia",
+      "appearanceSystem": "Sistema",
+      "appearanceLight": "Claro",
+      "appearanceDark": "Oscuro",
+      "colorPresets": "Colores",
+      "customBackground": "Fondo de pantalla",
+      "livePreview": "Vista previa en vivo",
+      "enableBackgroundImage": "Habilitar fondo de pantalla",
+      "backgroundImageUpload": "Subir imagen de fondo",
+      "dropBackground": "Arrastra tu imagen aquí",
+      "fileTypes": "PNG, JPG o WebP hasta 5MB",
+      "selectFile": "Seleccionar archivo",
+      "blurIntensity": "Desenfoque",
+      "sidebarScrim": "Mejora de legibilidad de la barra lateral",
+      "sidebarScrimInfo": "Mejora el contraste del texto de la barra lateral en el fondo de pantalla. Si la legibilidad es pobre en modo claro, intente aumentar la intensidad.",
+      "sidebarScrimIntensity": "Intensidad",
+      "welcomeGreetingReadability": "Legibilidad del saludo inicial",
+      "welcomeGreetingReadabilityInfo": "Solo afecta al saludo de la página de inicio en modo claro. El modo oscuro no se ve afectado.",
+      "welcomeGreetingReadabilityDefault": "Mantener predeterminado",
+      "welcomeGreetingReadabilityAuto": "Adaptación automática (primera estimación)",
+      "welcomeGreetingReadabilityForceLight": "Forzar texto claro",
+      "messageGlassEffect": "Efecto de cristal en mensajes",
+      "messageGlassEffectInfo": "Activar esto añade un efecto de cristal. Puede afectar el rendimiento en dispositivos de gama baja.",
+      "invalidFileType": "Solo se admite PNG/JPG/WebP",
+      "fileTooLarge": "El tamaño de la imagen debe ser de 5MB o menos",
+      "imageLoadFailed": "Error al cargar la imagen, por favor inténtalo de nuevo",
+      "removeBackgroundImage": "Eliminar imagen de fondo"
+    },
     "chainPrompt": {
       "new": "Nuevo Chain Prompt",
       "searchPlaceholder": "Buscar por nombre o descripción...",
@@ -345,12 +374,8 @@
     "title": "Novedades",
     "releaseNotes": "Notas de la versión",
     "feature1": {
-      "title": "Títulos de pestañas inteligentes",
-      "description": "Cambia automáticamente el nombre de las pestañas del navegador para que coincidan con los títulos de tus chats, lo que facilita el cambio entre varias sesiones de Gemini."
-    },
-    "feature2": {
-      "title": "Abrir archivos multimedia en una pestaña nueva",
-      "description": "Desde la galería Mis cosas, abre cualquier elemento en una pestaña nueva y mantén tu lugar: revisa los resultados sin perder tu posición de desplazamiento."
+      "title": "Personaliza tu Gemini",
+      "description": "Transforma tu espacio de trabajo con impresionantes ajustes de color y fondos de pantalla personalizados."
     }
   }
 }

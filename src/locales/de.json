@@ -61,6 +61,35 @@
     }
   },
   "settingPanel": {
+    "theme": {
+      "appearance": "Aussehen",
+      "appearanceSystem": "System",
+      "appearanceLight": "Hell",
+      "appearanceDark": "Dunkel",
+      "colorPresets": "Farben",
+      "customBackground": "Hintergrundbild",
+      "livePreview": "Live-Vorschau",
+      "enableBackgroundImage": "Hintergrundbild aktivieren",
+      "backgroundImageUpload": "Hintergrundbild hochladen",
+      "dropBackground": "Bild hierher ziehen",
+      "fileTypes": "PNG, JPG oder WebP bis zu 5MB",
+      "selectFile": "Datei auswählen",
+      "blurIntensity": "Weichzeichnen",
+      "sidebarScrim": "Lesbarkeit der Seitenleiste verbessern",
+      "sidebarScrimInfo": "Verbessert den Textkontrast der Seitenleiste auf dem Hintergrundbild. Wenn die Lesbarkeit im hellen Modus schlecht ist, versuchen Sie, die Intensität zu erhöhen.",
+      "sidebarScrimIntensity": "Intensität",
+      "welcomeGreetingReadability": "Lesbarkeit der Begrüßung",
+      "welcomeGreetingReadabilityInfo": "Wirkt nur auf die Startseiten-Begrüßung im Hellmodus. Der Dunkelmodus bleibt unverändert.",
+      "welcomeGreetingReadabilityDefault": "Standard beibehalten",
+      "welcomeGreetingReadabilityAuto": "Automatisch anpassen (einmalige Berechnung)",
+      "welcomeGreetingReadabilityForceLight": "Hellen Text erzwingen",
+      "messageGlassEffect": "Nachrichten-Glaseffekt",
+      "messageGlassEffectInfo": "Aktiviert einen Glaseffekt. Dies kann die Leistung auf schwächeren Geräten beeinträchtigen.",
+      "invalidFileType": "Nur PNG/JPG/WebP wird unterstützt",
+      "fileTooLarge": "Bildgröße darf maximal 5MB betragen",
+      "imageLoadFailed": "Laden des Bildes fehlgeschlagen, bitte versuchen Sie es erneut",
+      "removeBackgroundImage": "Hintergrundbild entfernen"
+    },
     "chainPrompt": {
       "new": "Neuer Chain Prompt",
       "searchPlaceholder": "Nach Name oder Beschreibung suchen...",
@@ -345,12 +374,8 @@
     "title": "Was gibt's Neues",
     "releaseNotes": "Versionshinweise",
     "feature1": {
-      "title": "Intelligente Tab-Titel",
-      "description": "Benennt Browser-Tabs automatisch nach Ihren Chat-Titeln um, sodass Sie mühelos zwischen mehreren Gemini-Sitzungen wechseln können."
-    },
-    "feature2": {
-      "title": "Medien in neuem Tab öffnen",
-      "description": "Öffnen Sie in der Galerie „Meine Inhalte“ jedes Element in einem neuen Tab und behalten Sie Ihren Platz bei – sehen Sie sich die Ergebnisse an, ohne Ihre Scrollposition zu verlieren."
+      "title": "Personalisiere dein Gemini",
+      "description": "Gestalte deinen Arbeitsbereich mit atemberaubenden Farb-Voreinstellungen und individuellen Hintergründen."
     }
   }
 }

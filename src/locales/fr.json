@@ -61,6 +61,35 @@
     }
   },
   "settingPanel": {
+    "theme": {
+      "appearance": "Apparence",
+      "appearanceSystem": "Système",
+      "appearanceLight": "Clair",
+      "appearanceDark": "Sombre",
+      "colorPresets": "Couleurs",
+      "customBackground": "Fond d'écran",
+      "livePreview": "Aperçu en direct",
+      "enableBackgroundImage": "Activer le fond d'écran",
+      "backgroundImageUpload": "Téléchargement de l'image de fond",
+      "dropBackground": "Déposez votre image ici",
+      "fileTypes": "PNG, JPG ou WebP jusqu'à 5 Mo",
+      "selectFile": "Sélectionner un fichier",
+      "blurIntensity": "Flou",
+      "sidebarScrim": "Amélioration de la lisibilité de la barre latérale",
+      "sidebarScrimInfo": "Améliore le contraste du texte de la barre latérale sur le fond d'écran. Si la lisibilité du texte est médiocre en mode clair, essayez d'augmenter l'intensité.",
+      "sidebarScrimIntensity": "Intensité",
+      "welcomeGreetingReadability": "Lisibilité du message d'accueil",
+      "welcomeGreetingReadabilityInfo": "S'applique uniquement au message d'accueil de la page d'accueil en mode clair. Le mode sombre n'est pas affecté.",
+      "welcomeGreetingReadabilityDefault": "Conserver par défaut",
+      "welcomeGreetingReadabilityAuto": "Adaptation automatique (première estimation)",
+      "welcomeGreetingReadabilityForceLight": "Forcer le texte clair",
+      "messageGlassEffect": "Effet de verre sur les messages",
+      "messageGlassEffectInfo": "L'activation de cette option ajoute un effet de verre. Cela peut affecter les performances sur les appareils bas de gamme.",
+      "invalidFileType": "Seuls les formats PNG/JPG/WebP sont pris en charge",
+      "fileTooLarge": "La taille de l'image doit être de 5 Mo ou moins",
+      "imageLoadFailed": "Échec du chargement de l'image, veuillez réessayer",
+      "removeBackgroundImage": "Supprimer l'image de fond"
+    },
     "chainPrompt": {
       "new": "Nouveau Chain Prompt",
       "searchPlaceholder": "Rechercher par nom ou description...",
@@ -345,12 +374,8 @@
     "title": "Quoi de neuf",
     "releaseNotes": "Notes de version",
     "feature1": {
-      "title": "Titres d'onglets intelligents",
-      "description": "Renomme automatiquement les onglets du navigateur pour correspondre aux titres de vos discussions, facilitant ainsi le passage entre plusieurs sessions Gemini."
-    },
-    "feature2": {
-      "title": "Ouvrir les médias dans un nouvel onglet",
-      "description": "Depuis la galerie Mes contenus, ouvrez n'importe quel élément dans un nouvel onglet et gardez votre place — consultez les résultats sans perdre votre position de défilement."
+      "title": "Personnalisez votre Gemini",
+      "description": "Transformez votre espace de travail avec de superbes préréglages de couleurs et des fonds d'écran personnalisés."
     }
   }
 }

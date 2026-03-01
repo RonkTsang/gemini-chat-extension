@@ -38,7 +38,7 @@ export default defineConfig({
       ],
       web_accessible_resources: [
         {
-          resources: ["url-monitor-main-world.js", "icon/512.png"],
+          resources: ["url-monitor-main-world.js", "theme-sync-main-world.js", "icon/512.png"],
           matches: ["*://gemini.google.com/*"]
         }
       ]

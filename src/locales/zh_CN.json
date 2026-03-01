@@ -61,6 +61,35 @@
     }
   },
   "settingPanel": {
+    "theme": {
+      "appearance": "外观",
+      "appearanceSystem": "跟随系统",
+      "appearanceLight": "浅色",
+      "appearanceDark": "深色",
+      "colorPresets": "颜色",
+      "customBackground": "壁纸",
+      "livePreview": "实时预览",
+      "enableBackgroundImage": "启用壁纸",
+      "backgroundImageUpload": "背景图上传",
+      "dropBackground": "将图片拖放到这里",
+      "fileTypes": "支持 PNG、JPG、WebP，最大 5MB",
+      "selectFile": "选择文件",
+      "blurIntensity": "模糊",
+      "sidebarScrim": "侧边栏文字增强",
+      "sidebarScrimInfo": "在壁纸上提高侧边栏文字对比度。如果在浅色模式下文字可读性不佳，可尝试提高增强强度。",
+      "sidebarScrimIntensity": "增强强度",
+      "welcomeGreetingReadability": "欢迎语可读性",
+      "welcomeGreetingReadabilityInfo": "用于在启用壁纸时调节首页欢迎语的文字适配。若亮色模式下欢迎语不清晰，建议开启自动适配或强制浅色文字。",
+      "welcomeGreetingReadabilityDefault": "保持默认",
+      "welcomeGreetingReadabilityAuto": "自动适配（首次推算）",
+      "welcomeGreetingReadabilityForceLight": "强制浅色文字",
+      "messageGlassEffect": "消息毛玻璃效果",
+      "messageGlassEffectInfo": "开启后可获得毛玻璃视觉效果。对于低性能设备，可能会影响流畅度。",
+      "invalidFileType": "仅支持 PNG/JPG/WebP",
+      "fileTooLarge": "图片大小不能超过 5MB",
+      "imageLoadFailed": "图片加载失败，请重试",
+      "removeBackgroundImage": "删除背景图"
+    },
     "chainPrompt": {
       "new": "新建 Chain Prompt",
       "searchPlaceholder": "按名称或描述搜索...",
@@ -345,12 +374,8 @@
     "title": "更新内容",
     "releaseNotes": "完整更新说明",
     "feature1": {
-      "title": "智能标签标题",
-      "description": "自动将浏览器标签重命名为对话标题，轻松在多个 Gemini 会话之间切换。"
-    },
-    "feature2": {
-      "title": "在新标签页中打开媒体",
-      "description": "从「我的内容」画廊中在新标签页打开任何项目，并保留您的位置——无需丢失滚动位置即可查看结果。"
+      "title": "打造你的专属 Gemini",
+      "description": "多款精美主题与自定义背景，让 Gemini 焕然一新，工作心情更悦目。"
     }
   }
 }

@@ -166,7 +166,7 @@ export const ChainPromptListView: SettingViewComponent = ({ openView }) => {
       {/* Content */}
       {loading ? (
         <Flex justify="center" align="center" flex={1}>
-          <Spinner size="lg" colorPalette="blue" />
+          <Spinner size="lg" />
         </Flex>
       ) : prompts.length === 0 ? (
         <Flex

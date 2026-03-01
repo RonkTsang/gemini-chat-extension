@@ -9,7 +9,7 @@ import {
 const config = defineConfig({
   globalCss: {
     html: {
-      colorPalette: "blue", // Change this to any color palette you prefer
+      colorPalette: "green", // Change this to any color palette you prefer
     },
   },
 })

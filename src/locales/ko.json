@@ -61,6 +61,35 @@
     }
   },
   "settingPanel": {
+    "theme": {
+      "appearance": "테마",
+      "appearanceSystem": "시스템",
+      "appearanceLight": "라이트",
+      "appearanceDark": "다크",
+      "colorPresets": "색상",
+      "customBackground": "배경화면",
+      "livePreview": "실시간 미리보기",
+      "enableBackgroundImage": "배경화면 활성화",
+      "backgroundImageUpload": "배경 이미지 업로드",
+      "dropBackground": "여기에 이미지 드롭",
+      "fileTypes": "PNG, JPG 또는 WebP(최대 5MB)",
+      "selectFile": "파일 선택",
+      "blurIntensity": "흐림",
+      "sidebarScrim": "사이드바 가독성 조정",
+      "sidebarScrimInfo": "배경화면에서 사이드바 텍스트 대비를 개선합니다. 라이트 모드에서 텍스트가 잘 보이지 않으면 강도를 높여보세요.",
+      "sidebarScrimIntensity": "조정 강도",
+      "welcomeGreetingReadability": "환영 문구 가독성",
+      "welcomeGreetingReadabilityInfo": "라이트 모드 홈 화면의 환영 문구에만 적용됩니다. 다크 모드는 영향을 받지 않습니다.",
+      "welcomeGreetingReadabilityDefault": "기본값 유지",
+      "welcomeGreetingReadabilityAuto": "자동 조정(최초 추정)",
+      "welcomeGreetingReadabilityForceLight": "밝은 텍스트 강제",
+      "messageGlassEffect": "메시지 유리 효과",
+      "messageGlassEffectInfo": "이 기능을 활성화하면 유리 효과가 추가됩니다. 저사양 기기에서는 성능에 영향을 줄 수 있습니다.",
+      "invalidFileType": "PNG/JPG/WebP만 지원됩니다",
+      "fileTooLarge": "이미지 크기는 5MB 이하여야 합니다",
+      "imageLoadFailed": "이미지 로드 실패, 다시 시도해 주세요",
+      "removeBackgroundImage": "배경 이미지 제거"
+    },
     "chainPrompt": {
       "new": "새 Chain Prompt",
       "searchPlaceholder": "이름 또는 설명으로 검색...",
@@ -345,12 +374,8 @@
     "title": "새로운 기능",
     "releaseNotes": "릴리스 노트",
     "feature1": {
-      "title": "스마트 탭 제목",
-      "description": "브라우저 탭 이름을 채팅 제목과 일치하도록 자동으로 변경하여 여러 Gemini 세션 간의 전환을 간편하게 만듭니다."
-    },
-    "feature2": {
-      "title": "새 탭에서 미디어 열기",
-      "description": "내 보관함 갤러리에서 항목을 새 탭으로 열어 현재 위치를 유지하면서 결과를 확인하세요. 스크롤 위치를 잃지 않고 검토할 수 있습니다."
+      "title": "나만의 Gemini 꾸미기",
+      "description": "다양한 색상 프리셋과 사용자 지정 배경으로 작업 공간을 더욱 아름답게 변화시켜 보세요."
     }
   }
 }

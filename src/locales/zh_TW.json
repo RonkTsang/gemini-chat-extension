@@ -61,6 +61,35 @@
     }
   },
   "settingPanel": {
+    "theme": {
+      "appearance": "外觀",
+      "appearanceSystem": "跟隨系統",
+      "appearanceLight": "淺色",
+      "appearanceDark": "深色",
+      "colorPresets": "顏色",
+      "customBackground": "桌布",
+      "livePreview": "即時預覽",
+      "enableBackgroundImage": "啟用桌布",
+      "backgroundImageUpload": "背景圖上傳",
+      "dropBackground": "將圖片拖放到這裡",
+      "fileTypes": "支援 PNG、JPG、WebP，最大 5MB",
+      "selectFile": "選擇檔案",
+      "blurIntensity": "模糊",
+      "sidebarScrim": "側邊欄文字增強",
+      "sidebarScrimInfo": "在桌布上提高側邊欄文字對比度。如果在淺色模式下文字可讀性不佳，可嘗試提高增強強度。",
+      "sidebarScrimIntensity": "增強強度",
+      "welcomeGreetingReadability": "歡迎語可讀性",
+      "welcomeGreetingReadabilityInfo": "僅在亮色模式首頁生效；暗色模式不受影響。",
+      "welcomeGreetingReadabilityDefault": "保持預設",
+      "welcomeGreetingReadabilityAuto": "自動適配（首次推算）",
+      "welcomeGreetingReadabilityForceLight": "強制淺色文字",
+      "messageGlassEffect": "訊息毛玻璃效果",
+      "messageGlassEffectInfo": "開啟後可獲得毛玻璃視覺效果。對於低效能設備，可能會影響流暢度。",
+      "invalidFileType": "僅支援 PNG/JPG/WebP",
+      "fileTooLarge": "圖片大小不能超過 5MB",
+      "imageLoadFailed": "圖片載入失敗，請重試",
+      "removeBackgroundImage": "刪除背景圖"
+    },
     "chainPrompt": {
       "new": "新建 Chain Prompt",
       "searchPlaceholder": "按名稱或描述搜尋...",
@@ -345,12 +374,8 @@
     "title": "更新內容",
     "releaseNotes": "完整更新說明",
     "feature1": {
-      "title": "智慧分頁標題",
-      "description": "自動將瀏覽器分頁重新命名為對話標題，輕鬆在多個 Gemini 工作階段之間切換。"
-    },
-    "feature2": {
-      "title": "在新分頁中開啟媒體",
-      "description": "從「我的內容」庫中在新分頁開啟任何項目，並保留您的位置——無需丟失捲動位置即可查看結果。"
+      "title": "打造您的專屬 Gemini",
+      "description": "多款精美主題與自訂背景，讓 Gemini 煥然一新，工作心情更悅目。"
     }
   }
 }

@@ -61,6 +61,35 @@
     }
   },
   "settingPanel": {
+    "theme": {
+      "appearance": "外観",
+      "appearanceSystem": "システム",
+      "appearanceLight": "ライト",
+      "appearanceDark": "ダーク",
+      "colorPresets": "カラー",
+      "customBackground": "壁紙",
+      "livePreview": "ライブプレビュー",
+      "enableBackgroundImage": "壁紙を有効にする",
+      "backgroundImageUpload": "背景画像のアップロード",
+      "dropBackground": "ここに画像をドロップ",
+      "fileTypes": "PNG、JPG、WebP（最大5MB）",
+      "selectFile": "ファイルを選択",
+      "blurIntensity": "ぼかし",
+      "sidebarScrim": "サイドバーの視認性調整",
+      "sidebarScrimInfo": "壁紙上のサイドバーの文字のコントラストを向上させます。ライトモードで文字が読み取りにくい場合は、強度を上げてみてください。",
+      "sidebarScrimIntensity": "調整強度",
+      "welcomeGreetingReadability": "ウェルカム表示の可読性",
+      "welcomeGreetingReadabilityInfo": "ライトモードのホーム画面のウェルカム表示にのみ適用されます。ダークモードには影響しません。",
+      "welcomeGreetingReadabilityDefault": "既定のまま",
+      "welcomeGreetingReadabilityAuto": "自動調整（初回推定）",
+      "welcomeGreetingReadabilityForceLight": "明るい文字を強制",
+      "messageGlassEffect": "メッセージのグラスエフェクト",
+      "messageGlassEffectInfo": "これを有効にするとグラスエフェクトが追加されます。低スペックのデバイスではパフォーマンスに影響する場合があります。",
+      "invalidFileType": "PNG/JPG/WebPのみサポートされています",
+      "fileTooLarge": "画像サイズは5MB以下である必要があります",
+      "imageLoadFailed": "画像の読み込みに失敗しました。もう一度お試しください",
+      "removeBackgroundImage": "背景画像を削除"
+    },
     "chainPrompt": {
       "new": "新しい Chain Prompt",
       "searchPlaceholder": "名前または説明で検索...",
@@ -345,12 +374,8 @@
     "title": "新機能",
     "releaseNotes": "リリースノート",
     "feature1": {
-      "title": "スマートタブタイトル",
-      "description": "ブラウザのタブ名をチャットのタイトルに合わせて自動的に変更し、複数の Gemini セッションを簡単に切り替えられるようにします。"
-    },
-    "feature2": {
-      "title": "メディアを新しいタブで開く",
-      "description": "「マイコンテンツ」ギャラリーから、任意のアイテムを新しいタブで開き、元の場所を保持したまま結果を確認できます。スクロール位置を失う心配はありません。"
+      "title": "Gemini をパーソナライズ",
+      "description": "美しいカラープリセットとカスタム壁紙で、ワークスペースを自分好みに変えましょう。"
     }
   }
 }
