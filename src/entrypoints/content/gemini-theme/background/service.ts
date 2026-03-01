@@ -205,8 +205,9 @@ export async function initThemeBackground(): Promise<void> {
       return
     }
     try {
-      const resolvedBackgroundUrl = await resolveBackgroundUrlFromSettings(newSettings)
-      const state = buildThemeBackgroundResolvedState(newSettings, resolvedBackgroundUrl)
+      const normalizedSettings = normalizeThemeBackgroundSettings(newSettings)
+      const resolvedBackgroundUrl = await resolveBackgroundUrlFromSettings(normalizedSettings)
+      const state = buildThemeBackgroundResolvedState(normalizedSettings, resolvedBackgroundUrl)
       applyThemeBackgroundStyle(state)
     } catch (error) {
       console.warn('[ThemeBackground] Failed to sync background settings:', error)

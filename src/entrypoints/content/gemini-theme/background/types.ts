@@ -1,8 +1,10 @@
-export const THEME_BACKGROUND_VERSION = 1 as const
+export const THEME_BACKGROUND_VERSION = 2 as const
 
 export const BACKGROUND_BLUR_MIN = 0
 export const BACKGROUND_BLUR_MAX = 20
 export const BACKGROUND_FILE_SIZE_LIMIT = 5 * 1024 * 1024
+export const SIDEBAR_SCRIM_INTENSITY_MIN = 0
+export const SIDEBAR_SCRIM_INTENSITY_MAX = 100
 
 export const ALLOWED_BACKGROUND_IMAGE_MIME_TYPES = [
   'image/png',
@@ -22,6 +24,8 @@ export interface ThemeBackgroundSettings {
   backgroundImageEnabled: boolean
   backgroundBlurPx: number
   messageGlassEnabled: boolean
+  sidebarScrimEnabled: boolean
+  sidebarScrimIntensity: number
   imageRef: BackgroundImageRef
   updatedAt: string
 }
@@ -30,6 +34,8 @@ export interface ThemeBackgroundPatch {
   backgroundImageEnabled?: boolean
   backgroundBlurPx?: number
   messageGlassEnabled?: boolean
+  sidebarScrimEnabled?: boolean
+  sidebarScrimIntensity?: number
   imageRef?: BackgroundImageRef
 }
 
@@ -57,6 +63,8 @@ export const DEFAULT_THEME_BACKGROUND_SETTINGS: ThemeBackgroundSettings = {
   backgroundImageEnabled: false,
   backgroundBlurPx: 5,
   messageGlassEnabled: false,
+  sidebarScrimEnabled: true,
+  sidebarScrimIntensity: 20,
   imageRef: { kind: 'none' },
   updatedAt: '',
 }
@@ -65,6 +73,13 @@ function clampBlur(value: number): number {
   return Math.min(
     BACKGROUND_BLUR_MAX,
     Math.max(BACKGROUND_BLUR_MIN, Math.round(value)),
+  )
+}
+
+function clampSidebarScrimIntensity(value: number): number {
+  return Math.min(
+    SIDEBAR_SCRIM_INTENSITY_MAX,
+    Math.max(SIDEBAR_SCRIM_INTENSITY_MIN, Math.round(value)),
   )
 }
 
@@ -104,8 +119,16 @@ export function normalizeThemeBackgroundSettings(
     ? clampBlur(blurCandidate)
     : DEFAULT_THEME_BACKGROUND_SETTINGS.backgroundBlurPx
 
+  const scrimIntensityCandidate = Number(source.sidebarScrimIntensity)
+  const sidebarScrimIntensity = Number.isFinite(scrimIntensityCandidate)
+    ? clampSidebarScrimIntensity(scrimIntensityCandidate)
+    : DEFAULT_THEME_BACKGROUND_SETTINGS.sidebarScrimIntensity
+
   const imageRef = normalizeImageRef(source.imageRef)
   const enabled = Boolean(source.backgroundImageEnabled)
+  const sidebarScrimEnabled = typeof source.sidebarScrimEnabled === 'boolean'
+    ? source.sidebarScrimEnabled
+    : DEFAULT_THEME_BACKGROUND_SETTINGS.sidebarScrimEnabled
   const updatedAt = typeof source.updatedAt === 'string' && source.updatedAt
     ? source.updatedAt
     : new Date().toISOString()
@@ -115,6 +138,8 @@ export function normalizeThemeBackgroundSettings(
     backgroundImageEnabled: enabled,
     backgroundBlurPx: blur,
     messageGlassEnabled: Boolean(source.messageGlassEnabled),
+    sidebarScrimEnabled,
+    sidebarScrimIntensity,
     imageRef,
     updatedAt,
   }

@@ -3,7 +3,9 @@ import { Box, Flex, Text } from '@chakra-ui/react'
 import {
   applyTheme,
   getAppearanceState,
+  DEFAULT_THEME_BACKGROUND_SETTINGS,
   getThemeBackgroundSettings,
+  normalizeThemeBackgroundSettings,
   removeThemeBackground,
   resolveThemeBackgroundPreviewUrl,
   setAppearanceMode,
@@ -86,8 +88,9 @@ export function ThemeSettingsView() {
     const unwatch = themeBackgroundSettingsStorage.watch(async (newSettings) => {
       if (!newSettings) return
       try {
-        const previewUrl = await resolveThemeBackgroundPreviewUrl(newSettings)
-        setBackgroundState(toResolvedState(newSettings, previewUrl))
+        const normalizedSettings = normalizeThemeBackgroundSettings(newSettings)
+        const previewUrl = await resolveThemeBackgroundPreviewUrl(normalizedSettings)
+        setBackgroundState(toResolvedState(normalizedSettings, previewUrl))
       } catch {
         // silently ignore watcher-triggered errors; initial load already handles error state
       }
@@ -137,6 +140,28 @@ export function ThemeSettingsView() {
     }
   }, [])
 
+  const handleToggleSidebarScrim = useCallback(async (enabled: boolean) => {
+    try {
+      const state = await updateThemeBackgroundSettings({
+        sidebarScrimEnabled: enabled,
+      })
+      setBackgroundState(state)
+    } catch (error) {
+      toaster.create({ type: 'error', title: getBackgroundErrorMessage(error) })
+    }
+  }, [])
+
+  const handleSidebarScrimIntensityChange = useCallback(async (value: number) => {
+    try {
+      const state = await updateThemeBackgroundSettings({
+        sidebarScrimIntensity: value,
+      })
+      setBackgroundState(state)
+    } catch (error) {
+      toaster.create({ type: 'error', title: getBackgroundErrorMessage(error) })
+    }
+  }, [])
+
   const handleToggleMessageGlass = useCallback(async (enabled: boolean) => {
     try {
       const state = await updateThemeBackgroundSettings({
@@ -171,14 +196,7 @@ export function ThemeSettingsView() {
   const activeKey = palette || 'blue'
   const previewState = useMemo(
     () => backgroundState ?? {
-      settings: {
-        version: 1 as const,
-        backgroundImageEnabled: false,
-        backgroundBlurPx: 5,
-        messageGlassEnabled: false,
-        imageRef: { kind: 'none' as const },
-        updatedAt: '',
-      },
+      settings: DEFAULT_THEME_BACKGROUND_SETTINGS,
       resolvedBackgroundUrl: null,
       isBackgroundRenderable: false,
     },
@@ -223,6 +241,8 @@ export function ThemeSettingsView() {
               isLoading={isBackgroundLoading}
               onToggleBackground={handleToggleBackground}
               onBlurChange={handleBlurChange}
+              onToggleSidebarScrim={handleToggleSidebarScrim}
+              onSidebarScrimIntensityChange={handleSidebarScrimIntensityChange}
               onToggleMessageGlass={handleToggleMessageGlass}
               onUploadFile={handleUploadFile}
               onRemoveImage={handleRemoveImage}
@@ -242,6 +262,8 @@ export function ThemeSettingsView() {
               backgroundEnabled={previewState.settings.backgroundImageEnabled}
               backgroundUrl={previewState.resolvedBackgroundUrl}
               blurPx={previewState.settings.backgroundBlurPx}
+              sidebarScrimEnabled={previewState.settings.sidebarScrimEnabled}
+              sidebarScrimIntensity={previewState.settings.sidebarScrimIntensity}
               messageGlassEnabled={previewState.settings.messageGlassEnabled}
             />
           </Box>

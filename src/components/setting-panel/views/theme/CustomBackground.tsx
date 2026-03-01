@@ -18,13 +18,15 @@ import {
 } from 'react-icons/hi'
 import type { ThemeBackgroundResolvedState } from '@/entrypoints/content/gemini-theme'
 import { Tooltip } from '@/components/ui/tooltip'
-import { t, tt } from '@/utils/i18n'
+import { tt } from '@/utils/i18n'
 
 interface CustomBackgroundProps {
   state: ThemeBackgroundResolvedState | null
   isLoading: boolean
   onToggleBackground: (enabled: boolean) => Promise<void>
   onBlurChange: (value: number) => Promise<void>
+  onToggleSidebarScrim: (enabled: boolean) => Promise<void>
+  onSidebarScrimIntensityChange: (value: number) => Promise<void>
   onToggleMessageGlass: (enabled: boolean) => Promise<void>
   onUploadFile: (file: File) => Promise<void>
   onRemoveImage: () => Promise<void>
@@ -38,12 +40,21 @@ export function CustomBackground(props: CustomBackgroundProps) {
   const settings = props.state?.settings
   const isBackgroundEnabled = settings?.backgroundImageEnabled ?? false
   const blurValue = settings?.backgroundBlurPx ?? 5
+  const sidebarScrimEnabled = settings?.sidebarScrimEnabled ?? true
+  const sidebarScrimIntensity = settings?.sidebarScrimIntensity ?? 20
 
   const [localBlurValue, setLocalBlurValue] = useState(blurValue)
+  const [localSidebarScrimValue, setLocalSidebarScrimValue] = useState(
+    sidebarScrimIntensity,
+  )
 
   useEffect(() => {
     setLocalBlurValue(blurValue)
   }, [blurValue])
+
+  useEffect(() => {
+    setLocalSidebarScrimValue(sidebarScrimIntensity)
+  }, [sidebarScrimIntensity])
 
   const hasImage = settings?.imageRef.kind === 'asset' && Boolean(props.state?.resolvedBackgroundUrl)
   const primaryTextColor = hasImage ? 'whiteAlpha.900' : 'gemOnSurface'
@@ -271,7 +282,7 @@ export function CustomBackground(props: CustomBackgroundProps) {
             </Slider.Root>
           </HStack>
 
-          <HStack justify="space-between">
+          <HStack justify="space-between" mb={4}>
             <HStack gap={1}>
               <Text fontSize="sm" color="gemOnSurface">
                 {tt('settingPanel.theme.messageGlassEffect', 'Message Glass Effect')}
@@ -302,6 +313,74 @@ export function CustomBackground(props: CustomBackgroundProps) {
                 <Switch.Thumb />
               </Switch.Control>
             </Switch.Root>
+          </HStack>
+
+          <HStack justify="space-between" mt={5} mb={4}>
+            <HStack gap={1}>
+              <Text fontSize="sm" color="gemOnSurface">
+                {tt('settingPanel.theme.sidebarScrim', 'Sidebar readability scrim')}
+              </Text>
+              <Tooltip
+                content={tt(
+                  'settingPanel.theme.sidebarScrimInfo',
+                  'Improves sidebar text contrast on wallpaper. This option only takes effect in Light mode.',
+                )}
+              >
+                <IconButton
+                  aria-label={tt('settingPanel.theme.sidebarScrim', 'Sidebar readability scrim')}
+                  size="2xs"
+                  variant="ghost"
+                >
+                  <HiOutlineInformationCircle />
+                </IconButton>
+              </Tooltip>
+            </HStack>
+            <Switch.Root
+              checked={sidebarScrimEnabled}
+              onCheckedChange={(details) => void props.onToggleSidebarScrim(details.checked)}
+              disabled={props.isLoading || isFilePending}
+            >
+              <Switch.HiddenInput />
+              <Switch.Control>
+                <Switch.Thumb />
+              </Switch.Control>
+            </Switch.Root>
+          </HStack>
+
+          <HStack justify="space-between" align="center" mb={5} gap={4}>
+            <Text fontSize="sm" color="gemOnSurface">
+              {tt('settingPanel.theme.sidebarScrimIntensity', 'Scrim intensity')}
+            </Text>
+            <Slider.Root
+              min={0}
+              max={100}
+              step={1}
+              value={[localSidebarScrimValue]}
+              onValueChange={(details) => setLocalSidebarScrimValue(details.value[0] ?? 0)}
+              onValueChangeEnd={(details) => void props.onSidebarScrimIntensityChange(details.value[0] ?? 0)}
+              disabled={props.isLoading || isFilePending || !sidebarScrimEnabled}
+              width={{ base: '170px', md: '220px' }}
+            >
+              <Slider.Control>
+                <Slider.Track>
+                  <Slider.Range />
+                </Slider.Track>
+                <Slider.Thumb index={0}>
+                  <Slider.DraggingIndicator
+                    layerStyle="fill.solid"
+                    top="6"
+                    rounded="sm"
+                    px="1.5"
+                    fontSize="xs"
+                  >
+                    <HStack gap="0.5">
+                      <Slider.ValueText />
+                      <Box as="span">%</Box>
+                    </HStack>
+                  </Slider.DraggingIndicator>
+                </Slider.Thumb>
+              </Slider.Control>
+            </Slider.Root>
           </HStack>
         </>
       )}

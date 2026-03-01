@@ -6,6 +6,8 @@ interface LivePreviewProps {
   backgroundEnabled: boolean
   backgroundUrl: string | null
   blurPx: number
+  sidebarScrimEnabled: boolean
+  sidebarScrimIntensity: number
   messageGlassEnabled: boolean
 }
 
@@ -60,12 +62,21 @@ export function LivePreview({
   backgroundEnabled,
   backgroundUrl,
   blurPx,
+  sidebarScrimEnabled,
+  sidebarScrimIntensity,
   messageGlassEnabled,
 }: LivePreviewProps) {
   const { colorMode } = useColorMode()
   const isDark = colorMode === 'dark'
   const isBackgroundMode = backgroundEnabled
   const canRenderBackground = backgroundEnabled && Boolean(backgroundUrl)
+  const canRenderSidebarScrim =
+    canRenderBackground
+    && sidebarScrimEnabled
+    && !isDark
+    && sidebarScrimIntensity > 0
+  const sidebarScrimAlpha = (Math.min(100, Math.max(0, sidebarScrimIntensity)) / 100)
+    .toFixed(2)
   const previewTitle = t('settingPanel.theme.livePreview')
 
   return (
@@ -120,7 +131,18 @@ export function LivePreview({
             borderTopLeftRadius="2xl"
             borderBottomLeftRadius="2xl"
             overflow="hidden"
+            position="relative"
           >
+            {canRenderSidebarScrim && (
+              <Box
+                position="absolute"
+                inset={0}
+                pointerEvents="none"
+                bg={
+                  `rgb(255 255 255 / ${sidebarScrimAlpha})`
+                }
+              />
+            )}
             <Box
               h="10px"
               w="14px"

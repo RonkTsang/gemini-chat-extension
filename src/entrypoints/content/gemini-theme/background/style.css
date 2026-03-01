@@ -1,6 +1,7 @@
 :root {
   --gpk-bg-image: none;
   --gpk-bg-blur: 5px;
+  --gpk-sidebar-scrim-alpha: 0.2;
 }
 
 #gpk-theme-bg-layer {
@@ -38,9 +39,18 @@
   backdrop-filter: blur(10px);
 }
 
+:root[data-gpk-bg-enabled="true"][data-gpk-sidebar-scrim-enabled="true"] bard-sidenav-container>bard-sidenav {
+  box-shadow: inset 0 0 0 9999px rgb(255 255 255 / var(--gpk-sidebar-scrim-alpha));
+}
+
 :root[data-gpk-bg-enabled="true"] body.dark-theme bard-sidenav-container>bard-sidenav,
 :root[data-gpk-bg-enabled="true"] :where(.theme-host):where(.dark-theme) bard-sidenav-container>bard-sidenav {
   background-color: color-mix(in srgb, var(--theme-600), transparent 80%) !important;
+}
+
+:root[data-gpk-bg-enabled="true"][data-gpk-sidebar-scrim-enabled="true"] body.dark-theme bard-sidenav-container>bard-sidenav,
+:root[data-gpk-bg-enabled="true"][data-gpk-sidebar-scrim-enabled="true"] :where(.theme-host):where(.dark-theme) bard-sidenav-container>bard-sidenav {
+  box-shadow: none;
 }
 
 :root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] user-query user-query-content span.user-query-bubble-with-background {

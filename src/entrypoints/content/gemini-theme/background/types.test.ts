@@ -3,6 +3,8 @@ import {
   BACKGROUND_BLUR_MAX,
   BACKGROUND_BLUR_MIN,
   DEFAULT_THEME_BACKGROUND_SETTINGS,
+  SIDEBAR_SCRIM_INTENSITY_MAX,
+  SIDEBAR_SCRIM_INTENSITY_MIN,
   normalizeThemeBackgroundSettings,
 } from './types'
 
@@ -13,6 +15,12 @@ describe('theme background settings normalize', () => {
     expect(result.backgroundImageEnabled).toBe(DEFAULT_THEME_BACKGROUND_SETTINGS.backgroundImageEnabled)
     expect(result.backgroundBlurPx).toBe(DEFAULT_THEME_BACKGROUND_SETTINGS.backgroundBlurPx)
     expect(result.messageGlassEnabled).toBe(DEFAULT_THEME_BACKGROUND_SETTINGS.messageGlassEnabled)
+    expect(result.sidebarScrimEnabled).toBe(
+      DEFAULT_THEME_BACKGROUND_SETTINGS.sidebarScrimEnabled,
+    )
+    expect(result.sidebarScrimIntensity).toBe(
+      DEFAULT_THEME_BACKGROUND_SETTINGS.sidebarScrimIntensity,
+    )
     expect(result.imageRef).toEqual(DEFAULT_THEME_BACKGROUND_SETTINGS.imageRef)
     expect(result.version).toBe(DEFAULT_THEME_BACKGROUND_SETTINGS.version)
     expect(typeof result.updatedAt).toBe('string')
@@ -25,6 +33,18 @@ describe('theme background settings normalize', () => {
 
     expect(low.backgroundBlurPx).toBe(BACKGROUND_BLUR_MIN)
     expect(high.backgroundBlurPx).toBe(BACKGROUND_BLUR_MAX)
+  })
+
+  it('clamps sidebar scrim intensity to valid range', () => {
+    const low = normalizeThemeBackgroundSettings({ sidebarScrimIntensity: -100 })
+    const high = normalizeThemeBackgroundSettings({ sidebarScrimIntensity: 999 })
+    const invalid = normalizeThemeBackgroundSettings({ sidebarScrimIntensity: Number.NaN })
+
+    expect(low.sidebarScrimIntensity).toBe(SIDEBAR_SCRIM_INTENSITY_MIN)
+    expect(high.sidebarScrimIntensity).toBe(SIDEBAR_SCRIM_INTENSITY_MAX)
+    expect(invalid.sidebarScrimIntensity).toBe(
+      DEFAULT_THEME_BACKGROUND_SETTINGS.sidebarScrimIntensity,
+    )
   })
 
   it('normalizes invalid imageRef to none', () => {

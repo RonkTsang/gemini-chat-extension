@@ -10,10 +10,12 @@ function createState(
 ): ThemeBackgroundResolvedState {
   const base: ThemeBackgroundResolvedState = {
     settings: {
-      version: 1,
+      version: 2,
       backgroundImageEnabled: false,
       backgroundBlurPx: 5,
       messageGlassEnabled: false,
+      sidebarScrimEnabled: true,
+      sidebarScrimIntensity: 20,
       imageRef: { kind: 'none' },
       updatedAt: new Date().toISOString(),
     },
@@ -43,6 +45,8 @@ describe('styleController', () => {
           backgroundImageEnabled: true,
           backgroundBlurPx: 12,
           messageGlassEnabled: true,
+          sidebarScrimEnabled: true,
+          sidebarScrimIntensity: 50,
           imageRef: { kind: 'asset', assetId: 'asset-1' },
         } as ThemeBackgroundResolvedState['settings'],
         resolvedBackgroundUrl: 'blob:preview',
@@ -52,7 +56,13 @@ describe('styleController', () => {
 
     expect(document.documentElement.getAttribute('data-gpk-bg-enabled')).toBe('true')
     expect(document.documentElement.getAttribute('data-gpk-msg-glass')).toBe('true')
+    expect(document.documentElement.getAttribute('data-gpk-sidebar-scrim-enabled')).toBe(
+      'true',
+    )
     expect(document.documentElement.style.getPropertyValue('--gpk-bg-blur')).toBe('12px')
+    expect(document.documentElement.style.getPropertyValue('--gpk-sidebar-scrim-alpha')).toBe(
+      '0.50',
+    )
     expect(document.documentElement.style.getPropertyValue('--gpk-bg-image')).toContain(
       'blob:preview',
     )
@@ -71,6 +81,8 @@ describe('styleController', () => {
           backgroundImageEnabled: true,
           backgroundBlurPx: 5,
           messageGlassEnabled: false,
+          sidebarScrimEnabled: false,
+          sidebarScrimIntensity: 0,
           imageRef: { kind: 'none' },
         } as ThemeBackgroundResolvedState['settings'],
         resolvedBackgroundUrl: null,
@@ -79,7 +91,13 @@ describe('styleController', () => {
     )
 
     expect(document.documentElement.getAttribute('data-gpk-bg-enabled')).toBe('false')
+    expect(document.documentElement.getAttribute('data-gpk-sidebar-scrim-enabled')).toBe(
+      'false',
+    )
     expect(document.documentElement.style.getPropertyValue('--gpk-bg-image')).toBe('none')
+    expect(document.documentElement.style.getPropertyValue('--gpk-sidebar-scrim-alpha')).toBe(
+      '0.00',
+    )
 
     const bgLayer = document.getElementById('gpk-theme-bg-layer')
     expect(bgLayer).toBeTruthy()
@@ -95,7 +113,11 @@ describe('styleController', () => {
     expect(document.getElementById('gpk-theme-bg-layer')).toBeNull()
     expect(document.documentElement.getAttribute('data-gpk-bg-enabled')).toBeNull()
     expect(document.documentElement.getAttribute('data-gpk-msg-glass')).toBeNull()
+    expect(document.documentElement.getAttribute('data-gpk-sidebar-scrim-enabled')).toBeNull()
     expect(document.documentElement.style.getPropertyValue('--gpk-bg-image')).toBe('')
     expect(document.documentElement.style.getPropertyValue('--gpk-bg-blur')).toBe('')
+    expect(document.documentElement.style.getPropertyValue('--gpk-sidebar-scrim-alpha')).toBe(
+      '',
+    )
   })
 })
