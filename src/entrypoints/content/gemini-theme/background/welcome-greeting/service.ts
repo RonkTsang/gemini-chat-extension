@@ -3,14 +3,13 @@ import type {
   ThemeBackgroundResolvedState,
   ThemeBackgroundSettings,
 } from '../types'
+import { eventBus } from '@/utils/eventbus'
 import { estimateWelcomeGreetingReadability } from './estimator'
-import { getWelcomeGreetingRect, hasGreetingTitleElement } from './rect'
+import { getWelcomeGreetingRect } from './rect'
 import {
   __clearWelcomeGreetingStyleControllerForTests,
   applyWelcomeGreetingForceLightStyle,
   clearWelcomeGreetingStyle,
-  hasWelcomeGreetingTargetElement,
-  hasWelcomeGreetingTitleElementInDom,
 } from './styleController'
 import type { WelcomeGreetingReadabilityMode, WelcomeGreetingResolved } from './types'
 
@@ -21,8 +20,9 @@ interface ResolveWelcomeGreetingOptions {
 }
 
 let activeState: ThemeBackgroundResolvedState | null = null
-let domObserver: MutationObserver | null = null
 let bodyThemeObserver: MutationObserver | null = null
+let rootThemeObserver: MutationObserver | null = null
+let stopUrlChangeListener: (() => void) | null = null
 let isReconcileQueued = false
 
 function shouldForceLightByMode(
@@ -36,16 +36,21 @@ function shouldForceLightByMode(
 
 function isDarkThemeActive(): boolean {
   if (typeof document === 'undefined') return false
-  if (document.body?.classList.contains('dark-theme')) return true
-  return Boolean(document.querySelector(':where(.theme-host):where(.dark-theme)'))
+  return (
+    document.body?.classList.contains('dark-theme') === true
+    || document.documentElement.classList.contains('dark-theme')
+  )
 }
 
-function isWelcomeLikePage(): boolean {
-  return (
-    hasGreetingTitleElement()
-    || hasWelcomeGreetingTitleElementInDom()
-    || hasWelcomeGreetingTargetElement()
-  )
+function isHomepageByUrl(): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    const url = new URL(window.location.href)
+    const normalizedPath = url.pathname.replace(/\/+$/, '')
+    return normalizedPath === '/app'
+  } catch {
+    return false
+  }
 }
 
 function reconcileWelcomeGreetingStyle(): void {
@@ -56,7 +61,7 @@ function reconcileWelcomeGreetingStyle(): void {
 
   if (
     !activeState.isBackgroundRenderable
-    || !isWelcomeLikePage()
+    || !isHomepageByUrl()
     || isDarkThemeActive()
   ) {
     clearWelcomeGreetingStyle()
@@ -84,18 +89,14 @@ function queueReconcile(): void {
   })
 }
 
-function ensureObservers(): void {
+function ensureReactivityHooks(): void {
   if (typeof document === 'undefined' || typeof MutationObserver === 'undefined') {
     return
   }
 
-  if (!domObserver && document.body) {
-    domObserver = new MutationObserver(() => {
+  if (!stopUrlChangeListener) {
+    stopUrlChangeListener = eventBus.on('urlchange', () => {
       queueReconcile()
-    })
-    domObserver.observe(document.body, {
-      childList: true,
-      subtree: true,
     })
   }
 
@@ -104,6 +105,16 @@ function ensureObservers(): void {
       queueReconcile()
     })
     bodyThemeObserver.observe(document.body, {
+      attributes: true,
+      attributeFilter: ['class'],
+    })
+  }
+
+  if (!rootThemeObserver && document.documentElement) {
+    rootThemeObserver = new MutationObserver(() => {
+      queueReconcile()
+    })
+    rootThemeObserver.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ['class'],
     })
@@ -135,7 +146,7 @@ export async function resolveWelcomeGreetingReadabilitySettings(
     return {
       ...settings,
       welcomeGreetingResolved: 'default',
-      welcomeGreetingResolvedAssetId: currentAssetId,
+      welcomeGreetingResolvedAssetId: null,
     }
   }
 
@@ -180,7 +191,7 @@ export function applyWelcomeGreetingReadabilityFromState(
   state: ThemeBackgroundResolvedState,
 ): void {
   activeState = state
-  ensureObservers()
+  ensureReactivityHooks()
   queueReconcile()
 }
 
@@ -191,9 +202,11 @@ export function clearWelcomeGreetingReadabilityStyle(): void {
 export function __resetWelcomeGreetingReadabilityServiceForTests(): void {
   activeState = null
   isReconcileQueued = false
-  domObserver?.disconnect()
+  stopUrlChangeListener?.()
+  stopUrlChangeListener = null
   bodyThemeObserver?.disconnect()
-  domObserver = null
+  rootThemeObserver?.disconnect()
   bodyThemeObserver = null
+  rootThemeObserver = null
   __clearWelcomeGreetingStyleControllerForTests()
 }

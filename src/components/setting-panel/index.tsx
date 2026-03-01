@@ -50,7 +50,7 @@ export const SettingPanel = () => {
           <Dialog.Content
             maxWidth="1200px"
             height="90vh"
-            maxHeight="800px"
+            maxHeight="860px"
             borderRadius="lg"
             overflow="hidden"
             bg="gemSurface"

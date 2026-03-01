@@ -88,8 +88,7 @@
       "invalidFileType": "Seuls les formats PNG/JPG/WebP sont pris en charge",
       "fileTooLarge": "La taille de l'image doit être de 5 Mo ou moins",
       "imageLoadFailed": "Échec du chargement de l'image, veuillez réessayer",
-      "removeBackgroundImage": "Supprimer l'image de fond",
-      "footerNote": "Les modifications sont appliquées immédiatement. Vos paramètres sont enregistrés automatiquement."
+      "removeBackgroundImage": "Supprimer l'image de fond"
     },
     "chainPrompt": {
       "new": "Nouveau Chain Prompt",

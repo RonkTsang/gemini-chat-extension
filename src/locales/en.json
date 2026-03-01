@@ -88,8 +88,7 @@
       "invalidFileType": "Only PNG/JPG/WebP is supported",
       "fileTooLarge": "Image size must be 5MB or less",
       "imageLoadFailed": "Image loading failed, please try again",
-      "removeBackgroundImage": "Remove Background Image",
-      "footerNote": "Changes are reflected immediately. Your settings are saved automatically."
+      "removeBackgroundImage": "Remove Background Image"
     },
     "chainPrompt": {
       "new": "New Chain Prompt",

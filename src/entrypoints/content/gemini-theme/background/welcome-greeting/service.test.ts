@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ThemeAssetRow, ThemeBackgroundResolvedState, ThemeBackgroundSettings } from '../types'
+import { eventBus } from '@/utils/eventbus'
 
 const { mockEstimate } = vi.hoisted(() => ({
   mockEstimate: vi.fn(),
@@ -63,6 +64,7 @@ describe('welcome-greeting service', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
     document.body.className = ''
+    history.replaceState({}, '', '/app')
     mockEstimate.mockReset()
     mockEstimate.mockResolvedValue({
       resolved: 'force-light',
@@ -110,10 +112,6 @@ describe('welcome-greeting service', () => {
 
   it('does not apply force-light style in dark mode', async () => {
     document.body.classList.add('dark-theme')
-    document.body.innerHTML = `
-      <div class="top-section-container visible-primary-message"></div>
-      <greeting><div class="greeting-title"></div></greeting>
-    `
 
     const settings = createSettings({
       welcomeGreetingReadabilityMode: 'force-light',
@@ -122,18 +120,13 @@ describe('welcome-greeting service', () => {
     applyWelcomeGreetingReadabilityFromState(createState(settings))
     await Promise.resolve()
 
-    const target = document.querySelector(
-      'div.top-section-container.visible-primary-message',
-    ) as HTMLElement
-    expect(target.getAttribute('data-gpk-welcome-greeting-force-light')).toBeNull()
+    expect(
+      document.documentElement.getAttribute('data-gpk-welcome-greeting-force-light'),
+    ).toBeNull()
   })
 
   it('applies force-light style in light mode on welcome page', async () => {
     document.body.classList.add('light-theme')
-    document.body.innerHTML = `
-      <div class="top-section-container visible-primary-message"></div>
-      <greeting><div class="greeting-title"></div></greeting>
-    `
 
     const settings = createSettings({
       welcomeGreetingReadabilityMode: 'force-light',
@@ -142,9 +135,32 @@ describe('welcome-greeting service', () => {
     applyWelcomeGreetingReadabilityFromState(createState(settings))
     await Promise.resolve()
 
-    const target = document.querySelector(
-      'div.top-section-container.visible-primary-message',
-    ) as HTMLElement
-    expect(target.getAttribute('data-gpk-welcome-greeting-force-light')).toBe('true')
+    expect(
+      document.documentElement.getAttribute('data-gpk-welcome-greeting-force-light'),
+    ).toBe('true')
+  })
+
+  it('clears force-light style when URL changes away from homepage', async () => {
+    document.body.classList.add('light-theme')
+    const settings = createSettings({
+      welcomeGreetingReadabilityMode: 'force-light',
+    })
+
+    applyWelcomeGreetingReadabilityFromState(createState(settings))
+    await Promise.resolve()
+    expect(
+      document.documentElement.getAttribute('data-gpk-welcome-greeting-force-light'),
+    ).toBe('true')
+
+    history.replaceState({}, '', '/app/abc123')
+    await eventBus.emit('urlchange', {
+      url: 'http://localhost:3000/app/abc123',
+      timestamp: Date.now(),
+    })
+    await Promise.resolve()
+
+    expect(
+      document.documentElement.getAttribute('data-gpk-welcome-greeting-force-light'),
+    ).toBeNull()
   })
 })

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Box, Flex, Text } from '@chakra-ui/react'
+import { Box, Flex } from '@chakra-ui/react'
 import {
   applyTheme,
   getAppearanceState,
@@ -25,7 +25,7 @@ import { AppearanceSelector } from './AppearanceSelector'
 import { ColorPresets } from './ColorPresets'
 import { CustomBackground } from './CustomBackground'
 import { LivePreview } from './LivePreview'
-import { t, tt } from '@/utils/i18n'
+import { tt } from '@/utils/i18n'
 import { useColorPalette } from '@/hooks/useThemeColorPalette'
 import { toaster } from '@/components/ui/toaster'
 
@@ -217,8 +217,6 @@ export function ThemeSettingsView() {
     },
     [backgroundState],
   )
-  const footerNote = t('settingPanel.theme.footerNote')
-
   return (
     <Box
       position="relative"
@@ -288,17 +286,6 @@ export function ThemeSettingsView() {
         </Flex>
       </Box>
 
-      <Box pt={4} pb={2}>
-        <Text
-          fontSize="sm"
-          color="gray.400"
-          textAlign="center"
-        >
-          {footerNote === 'settingPanel.theme.footerNote'
-            ? 'Changes are reflected immediately. Your settings are saved automatically.'
-            : footerNote}
-        </Text>
-      </Box>
     </Box>
   )
 }

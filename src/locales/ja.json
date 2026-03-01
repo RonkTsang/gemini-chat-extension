@@ -88,8 +88,7 @@
       "invalidFileType": "PNG/JPG/WebPのみサポートされています",
       "fileTooLarge": "画像サイズは5MB以下である必要があります",
       "imageLoadFailed": "画像の読み込みに失敗しました。もう一度お試しください",
-      "removeBackgroundImage": "背景画像を削除",
-      "footerNote": "変更は即座に反映されます。設定は自動的に保存されます。"
+      "removeBackgroundImage": "背景画像を削除"
     },
     "chainPrompt": {
       "new": "新しい Chain Prompt",

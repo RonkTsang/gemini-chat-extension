@@ -88,8 +88,7 @@
       "invalidFileType": "PNG/JPG/WebP만 지원됩니다",
       "fileTooLarge": "이미지 크기는 5MB 이하여야 합니다",
       "imageLoadFailed": "이미지 로드 실패, 다시 시도해 주세요",
-      "removeBackgroundImage": "배경 이미지 제거",
-      "footerNote": "변경 사항은 즉시 반영됩니다. 설정은 자동으로 저장됩니다."
+      "removeBackgroundImage": "배경 이미지 제거"
     },
     "chainPrompt": {
       "new": "새 Chain Prompt",

@@ -88,8 +88,7 @@
       "invalidFileType": "僅支援 PNG/JPG/WebP",
       "fileTooLarge": "圖片大小不能超過 5MB",
       "imageLoadFailed": "圖片載入失敗，請重試",
-      "removeBackgroundImage": "刪除背景圖",
-      "footerNote": "修改會立即生效，設定會自動儲存。"
+      "removeBackgroundImage": "刪除背景圖"
     },
     "chainPrompt": {
       "new": "新建 Chain Prompt",
