@@ -1,3 +1,10 @@
+## [0.6.1](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.6.0...v0.6.1) (2026-03-01)
+
+
+### Bug Fixes
+
+* theme button style ([a3d1f2e](https://github.com/RonkTsang/gemini-chat-extension/commit/a3d1f2efa046ad13eec8547f3a5b454a900d5e5f))
+
 # [0.6.0](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.5.3...v0.6.0) (2026-03-01)
 
 
