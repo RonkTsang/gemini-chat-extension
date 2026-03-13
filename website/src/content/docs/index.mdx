@@ -1,0 +1,45 @@
+---
+title: Welcome to Gemini Power Kit
+description: Transform your Gemini experience with professional tools built for precision and speed.
+template: splash
+hero:
+  tagline: The toolkit your Gemini workflow has been missing. Enhance your productivity with Chat Outline, Quick Follow-up, and Chain Prompt.
+  image:
+    file: ../../assets/icon-512.png
+  actions:
+    - text: Begin setup
+      link: /guide/quick-start/
+      icon: right-arrow
+      variant: primary
+    - text: Try the extension
+      link: https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn
+      icon: external
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+import chatOutlineImg from '../../assets/features/chat-outline.png';
+import quickFollowUpImg from '../../assets/features/quick-follow-up.png';
+import chainPromptImg from '../../assets/features/chain-prompt.png';
+import nativeExpImg from '../../assets/features/theme-wallpaper.jpg';
+
+## Professional tools for your workflow
+
+<CardGrid stagger>
+	<Card title="Chat outline" icon="list-format">
+		<Image src={chatOutlineImg} alt="Chat outline demonstration" class="feature-image" />
+		Generates a navigable list of all your prompts in a conversation. Keep the outline open while you scroll, and never get lost in long conversations again.
+	</Card>
+	<Card title="Quick follow-up" icon="rocket">
+		<Image src={quickFollowUpImg} alt="Quick follow-up demonstration" class="feature-image" />
+		Select any text and instantly access custom prompts. Create your own quick-action templates to translate, explain, or summarize with a single click.
+	</Card>
+	<Card title="Chain prompt" icon="setting">
+		<Image src={chainPromptImg} alt="Chain prompt demonstration" class="feature-image" />
+		Execute complex conversation workflows automatically. Define reusable variables and automate multi-step prompts natively.
+	</Card>
+	<Card title="Native experience" icon="open-book">
+		<Image src={nativeExpImg} alt="Native experience demonstration" class="feature-image" />
+		A minimalist UI with light and dark themes that automatically adapt to Gemini's website seamlessly. Isolated styles guarantee a beautiful experience.
+	</Card>
+</CardGrid>

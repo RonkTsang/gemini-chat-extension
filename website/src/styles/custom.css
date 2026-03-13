@@ -1,0 +1,187 @@
+@import '@fontsource/outfit/400.css';
+@import '@fontsource/outfit/500.css';
+@import '@fontsource/outfit/600.css';
+@import '@fontsource/outfit/700.css';
+
+/* Custom branding for Gemini Power Kit */
+:root {
+  /* Premium Typography */
+  --sl-font: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+
+  /* Cyan / Blue accent colors (Dark Mode Focused) - Desaturated for elegance */
+  --sl-color-accent-high: hsl(190, 60%, 80%);
+  --sl-color-accent: hsl(190, 70%, 50%);
+  --sl-color-accent-low: hsl(190, 80%, 20%);
+  
+  /* Deep off-black background */
+  --sl-color-bg: #0a0c10;
+  --sl-color-bg-nav: rgba(10, 12, 16, 0.8);
+  --sl-color-bg-sidebar: #0a0c10;
+  
+  /* Subtle borders */
+  --sl-color-hairline: rgba(255, 255, 255, 0.05);
+  --sl-color-hairline-shade: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme='light'] {
+  /* Cyan / Blue accent colors (Light Mode) */
+  --sl-color-accent-high: hsl(192, 91%, 20%);
+  --sl-color-accent: hsl(192, 91%, 36%);
+  --sl-color-accent-low: hsl(186, 94%, 88%);
+  
+  /* Off-white background */
+  --sl-color-bg: #f8fafc;
+  --sl-color-bg-nav: rgba(248, 250, 252, 0.8);
+  --sl-color-bg-sidebar: #f8fafc;
+  
+  /* Subtle borders */
+  --sl-color-hairline: rgba(0, 0, 0, 0.05);
+  --sl-color-hairline-shade: rgba(0, 0, 0, 0.1);
+}
+
+/* Base Body Enhancements */
+body {
+  letter-spacing: 0.01em;
+  /* Ambient radial gradient for depth */
+  background-image: radial-gradient(circle at top right, rgba(0, 150, 200, 0.03), transparent 40%),
+                    radial-gradient(circle at bottom left, rgba(0, 100, 150, 0.03), transparent 40%);
+  background-attachment: fixed;
+}
+
+[data-theme='light'] body {
+    background-image: radial-gradient(circle at top right, rgba(0, 150, 200, 0.02), transparent 40%),
+                      radial-gradient(circle at bottom left, rgba(0, 100, 150, 0.02), transparent 40%);
+}
+
+/* Typography Enhancements */
+h1 {
+  letter-spacing: -0.04em !important;
+  font-weight: 700 !important;
+}
+
+h2, h3, h4 {
+  letter-spacing: -0.02em;
+  font-weight: 600 !important;
+}
+
+/* Premium Card (Bento/Liquid Glass) Overrides */
+.card {
+  border: 1px solid var(--sl-color-hairline-shade) !important;
+  background: rgba(255, 255, 255, 0.01) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  
+  /* Liquid Glass Inner Refraction */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05),
+              0 4px 20px -5px rgba(0, 0, 0, 0.2) !important;
+              
+  border-radius: 1.5rem !important;
+  padding: 2rem !important;
+  
+  /* Spring motion for hover */
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme='light'] .card {
+  background: rgba(255, 255, 255, 0.8) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 1),
+              0 4px 20px -5px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Card Hover Interactions */
+.card:hover {
+  transform: translateY(-4px) scale(1.01) !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-color: var(--sl-color-accent) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1),
+              0 10px 40px -10px rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-theme='light'] .card:hover {
+   background: rgba(255, 255, 255, 1) !important;
+   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 1),
+               0 10px 40px -10px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Card Active States */
+.card:active {
+  transform: translateY(1px) scale(0.98) !important;
+  transition: all 0.1s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Sub-elements inside cards */
+.card .title {
+  font-weight: 600 !important;
+  font-size: 1.125rem !important;
+  letter-spacing: -0.01em;
+}
+
+.card .icon {
+  color: var(--sl-color-accent) !important;
+  background: rgba(var(--sl-color-accent-rgb, 0, 150, 200), 0.1) !important; /* fallback generic blue */
+  padding: 0.5rem !important;
+  border-radius: 0.75rem !important;
+  box-sizing: content-box !important;
+}
+
+/* Nav/Header Enhancements */
+header.header {
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border-bottom: 1px solid var(--sl-color-hairline) !important;
+}
+
+/* Button & Link Enhancements */
+a {
+  transition: all 0.2s ease-in-out;
+}
+
+.sl-button {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  border-radius: 9999px !important; /* Pill shape */
+  font-weight: 500 !important;
+}
+
+.sl-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px -3px rgba(var(--sl-color-accent-rgb, 0, 150, 200), 0.3);
+}
+
+.sl-button:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+/* Action button specifically */
+.hero .actions a.primary {
+    background: var(--sl-color-accent) !important;
+    color: #fff !important;
+    border: none !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 4px 15px -3px rgba(var(--sl-color-accent-rgb, 0, 150, 200), 0.4) !important;
+}
+
+.hero .actions a.primary:hover {
+    background: var(--sl-color-accent-high) !important;
+}
+
+/* Feature Image Enhancements */
+.feature-image {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 0.75rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--sl-color-hairline-shade);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme='light'] .feature-image {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.card:hover .feature-image {
+  transform: scale(1.03) translateY(-2px);
+}

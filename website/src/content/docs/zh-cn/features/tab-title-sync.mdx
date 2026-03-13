@@ -1,0 +1,18 @@
+---
+title: 标签页标题同步
+description: 让你一眼识别不同的标签页。
+---
+
+import { Image } from 'astro:assets';
+import tabTitleImg from '../../../../assets/features/tab-title.jpg';
+
+<Image src={tabTitleImg} alt="标签页标题同步演示" class="feature-image" />
+
+“标签页标题同步”确保您打开的每个 Gemini 标签页都能准确反映其包含的对话内容，而不仅仅是显示的 “Google Gemini”。
+
+## 功能特性
+
+- **实时同步**：自动更新浏览器标签页标题，使其与对话标题保持一致。
+- **智能检测**：支持检测包括对话、我的内容和文档在内的多种页面类型。
+- **零性能损耗**：采用高效的事件驱动逻辑（MutationObservers），无需后台定时轮询。
+- **自动恢复**：在导航回主屏幕或开始新对话时，安全恢复默认标题。

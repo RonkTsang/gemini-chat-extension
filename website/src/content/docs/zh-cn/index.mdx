@@ -1,0 +1,36 @@
+---
+title: 欢迎使用 Gemini Power Kit
+description: 使用强大的工具提升您的 Gemini 使用体验，显著提高工作效率。
+template: splash
+hero:
+  tagline: 终极生产力套件。通过对话大纲、快速跟进和链式提示词来增强 Gemini。
+  image:
+    file: ../../../assets/icon-512.png
+  actions:
+    - text: 快速开始
+      link: /zh-cn/guide/quick-start/
+      icon: right-arrow
+      variant: primary
+    - text: 添加到 Chrome
+      link: https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn
+      icon: external
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## 提升您的工作流程
+
+<CardGrid stagger>
+	<Card title="对话大纲" icon="list-format">
+		生成对话中所有提示词的可导航列表。在滚动时保持大纲可见，再也不会在长对话中迷失方向。
+	</Card>
+	<Card title="快速跟进" icon="rocket">
+		选择任意文本并立即访问自定义提示词。创建您自己的快速操作模板，一键翻译、解释或总结。
+	</Card>
+	<Card title="链式提示词" icon="setting">
+		自动执行复杂的对话工作流程。定义可复用的变量，原生自动化多步骤提示词。
+	</Card>
+	<Card title="原生体验" icon="open-book">
+		极简 UI，支持明暗主题，自动适配 Gemini 网站。隔离样式保证美观体验。
+	</Card>
+</CardGrid>
