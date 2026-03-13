@@ -11,6 +11,11 @@
 
 import { GEM_EXT_EVENTS, type StuffMediaDataEvent } from '@/common/event'
 import { eventBus } from '@/utils/eventbus'
+import { browser } from 'wxt/browser'
+import {
+  STUFF_MEDIA_DATA_RECEIVED_MESSAGE,
+  isStuffMediaDataReceivedMessage,
+} from '@/types/runtime-messages'
 import { stuffDataCache } from './dataCache'
 import { startButtonInjector, stopButtonInjector } from './buttonInjector'
 
@@ -73,12 +78,10 @@ class StuffPageModule {
    * Setup event listeners for main-world events
    */
   private setupEventListeners(): void {
-    // Listen to CustomEvent from main world
-    const handleMainWorldEvent = (event: Event) => {
-      const customEvent = event as CustomEvent<StuffMediaDataEvent>
-      const { items, nextPageToken, timestamp } = customEvent.detail
+    const handleStuffMediaData = (data: StuffMediaDataEvent, source: 'main world' | 'runtime') => {
+      const { items, nextPageToken, timestamp } = data
 
-      console.log('[StuffPageModule] Received MediaItem data from main world:', {
+      console.log(`[StuffPageModule] Received MediaItem data from ${source}:`, {
         itemCount: items.length,
         nextPageToken,
         timestamp,
@@ -100,12 +103,30 @@ class StuffPageModule {
       })
     }
 
+    // Listen to CustomEvent from main world
+    const handleMainWorldEvent = (event: Event) => {
+      const customEvent = event as CustomEvent<StuffMediaDataEvent>
+      handleStuffMediaData(customEvent.detail, 'main world')
+    }
+
+    const handleRuntimeMessage = (message: unknown): void => {
+      if (!isStuffMediaDataReceivedMessage(message)) {
+        return
+      }
+      if (message.type !== STUFF_MEDIA_DATA_RECEIVED_MESSAGE) {
+        return
+      }
+      handleStuffMediaData(message.payload, 'runtime')
+    }
+
     // Listen to the CustomEvent from main world
     window.addEventListener(GEM_EXT_EVENTS.STUFF_MEDIA_DATA, handleMainWorldEvent)
+    browser.runtime.onMessage.addListener(handleRuntimeMessage)
 
     // Store cleanup function
     this.eventCleanup = () => {
       window.removeEventListener(GEM_EXT_EVENTS.STUFF_MEDIA_DATA, handleMainWorldEvent)
+      browser.runtime.onMessage.removeListener(handleRuntimeMessage)
       console.log('[StuffPageModule] Event listeners cleaned up')
     }
 

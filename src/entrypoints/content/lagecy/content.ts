@@ -1000,58 +1000,65 @@ function safeParseBoolean(value: any): boolean {
 }
 
 // 1. Load settings and then initialize
-chrome.storage.sync.get({
-  enableChatOutline: true
-}, (data) => {
-    isChatOutlineEnabled = safeParseBoolean(data.enableChatOutline);
+async function initializeLegacyMainExecution(): Promise<void> {
+  try {
+    const data = await browser.storage.sync.get({
+      enableChatOutline: true
+    })
+
+    isChatOutlineEnabled = safeParseBoolean(data.enableChatOutline)
 
     // Create a persistent observer to watch for chat-window additions
     const mainObserver = new MutationObserver((mutations) => {
-        for (const mutation of mutations) {
-            // Proactive cleanup on chat switch
-            if (mutation.removedNodes.length > 0 && document.getElementById('gemini-quote-sentinel')) {
-                let chatWasCleared = false;
-                for (const node of mutation.removedNodes) {
-                    if (node.nodeType === 1 && (node.matches('user-query, model-response') || node.querySelector('user-query, model-response'))) {
-                        chatWasCleared = true;
-                        break;
-                    }
-                }
-                if (chatWasCleared) {
-                    removeQuoteUI();
-                }
+      for (const mutation of mutations) {
+        // Proactive cleanup on chat switch
+        if (mutation.removedNodes.length > 0 && document.getElementById('gemini-quote-sentinel')) {
+          let chatWasCleared = false
+          for (const node of mutation.removedNodes) {
+            if (node.nodeType === 1 && (node.matches('user-query, model-response') || node.querySelector('user-query, model-response'))) {
+              chatWasCleared = true
+              break
             }
-
-            for (const addedNode of mutation.addedNodes) {
-                if (addedNode.nodeType !== 1) continue;
-                
-                // Initialize main features if a chat-window is added
-                findAndInitialize(addedNode);
-
-                // Also, check if a user-query was added to transform it
-                if (addedNode.matches('user-query')) {
-                    transformQuoteInHistory(addedNode);
-                }
-                addedNode.querySelectorAll('user-query').forEach(transformQuoteInHistory);
-            }
+          }
+          if (chatWasCleared) {
+            removeQuoteUI()
+          }
         }
-    });
+
+        for (const addedNode of mutation.addedNodes) {
+          if (addedNode.nodeType !== 1) continue
+
+          // Initialize main features if a chat-window is added
+          findAndInitialize(addedNode)
+
+          // Also, check if a user-query was added to transform it
+          if (addedNode.matches('user-query')) {
+            transformQuoteInHistory(addedNode)
+          }
+          addedNode.querySelectorAll('user-query').forEach(transformQuoteInHistory)
+        }
+      }
+    })
 
     // Start by checking if the chat-window is already on the page
-    findAndInitialize(document.body);
+    findAndInitialize(document.body)
     // Also transform any existing user queries on load
-    document.querySelectorAll('user-query').forEach(transformQuoteInHistory);
-
+    document.querySelectorAll('user-query').forEach(transformQuoteInHistory)
 
     // Then, observe the entire body for future changes
     mainObserver.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
-});
+      childList: true,
+      subtree: true
+    })
+  } catch (error) {
+    console.error('Failed to initialize legacy content main execution:', error)
+  }
+}
+
+void initializeLegacyMainExecution()
 
 // 2. Listen for changes in settings
-chrome.storage.onChanged.addListener((changes, namespace) => {
+browser.storage.onChanged.addListener((changes, namespace) => {
     if (namespace !== 'sync') return;
     const chatWindows = document.querySelectorAll('chat-window');
 
@@ -1083,17 +1090,20 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 
 });
 
-function openChatoutline() {
-  browser.storage.sync.get(['enableChatOutline'], (result) => {
-    const isEnabled = safeParseBoolean(result.enableChatOutline);
-    
+async function openChatoutline() {
+  try {
+    const result = await browser.storage.sync.get(['enableChatOutline'])
+    const isEnabled = safeParseBoolean(result.enableChatOutline)
+
     if (!isEnabled) {
-      console.log('Chat outline is disabled, ignoring open request');
-      return;
+      console.log('Chat outline is disabled, ignoring open request')
+      return
     }
-    
-    showPopover();
-  });
+
+    showPopover()
+  } catch (error) {
+    console.error('Failed to open chat outline:', error)
+  }
 }
 
 function setupChatoutlineOpenEvent() {
@@ -1102,7 +1112,7 @@ function setupChatoutlineOpenEvent() {
    * Uses browser storage to get the latest setting value
    */
   function handleChatoutlineOpenEvent(data: AppEvents['chatoutline:open']) {
-    openChatoutline();
+    void openChatoutline()
   }
   eventBus.on('chatoutline:open', handleChatoutlineOpenEvent);
 }
