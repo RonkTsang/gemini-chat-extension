@@ -8,6 +8,7 @@ import {
   normalizeThemeBackgroundSettings,
   removeThemeBackground,
   resolveThemeBackgroundPreviewUrl,
+  resolveThemeBackgroundPreviewUrlForPanel,
   setAppearanceMode,
   subscribeSystemThemeChange,
   themeBackgroundSettingsStorage,
@@ -72,7 +73,7 @@ export function ThemeSettingsView() {
     setIsBackgroundLoading(true)
     try {
       const settings = await getThemeBackgroundSettings()
-      const previewUrl = await resolveThemeBackgroundPreviewUrl(settings)
+      const previewUrl = await resolveThemeBackgroundPreviewUrlForPanel(settings)
       setBackgroundState(toResolvedState(settings, previewUrl))
     } catch (error) {
       toaster.create({ type: 'error', title: getBackgroundErrorMessage(error) })
@@ -90,7 +91,7 @@ export function ThemeSettingsView() {
       if (!newSettings) return
       try {
         const normalizedSettings = normalizeThemeBackgroundSettings(newSettings)
-        const previewUrl = await resolveThemeBackgroundPreviewUrl(normalizedSettings)
+        const previewUrl = await resolveThemeBackgroundPreviewUrlForPanel(normalizedSettings)
         setBackgroundState(toResolvedState(normalizedSettings, previewUrl))
       } catch {
         // silently ignore watcher-triggered errors; initial load already handles error state

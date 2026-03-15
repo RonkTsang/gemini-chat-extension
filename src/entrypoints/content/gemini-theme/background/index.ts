@@ -4,6 +4,7 @@ export {
   initThemeBackground,
   removeThemeBackground,
   resolveThemeBackgroundPreviewUrl,
+  resolveThemeBackgroundPreviewUrlForPanel,
   updateThemeBackgroundSettings,
   uploadThemeBackground,
   validateThemeBackgroundFile,

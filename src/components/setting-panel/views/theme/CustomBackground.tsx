@@ -45,6 +45,7 @@ export function CustomBackground(props: CustomBackgroundProps) {
   const [isDragging, setIsDragging] = useState(false)
 
   const settings = props.state?.settings
+  const previewUrl = props.state?.resolvedBackgroundUrl ?? null
   const isBackgroundEnabled = settings?.backgroundImageEnabled ?? false
   const blurValue = settings?.backgroundBlurPx ?? 5
   const sidebarScrimEnabled = settings?.sidebarScrimEnabled ?? true
@@ -65,7 +66,7 @@ export function CustomBackground(props: CustomBackgroundProps) {
     setLocalSidebarScrimValue(sidebarScrimIntensity)
   }, [sidebarScrimIntensity])
 
-  const hasImage = settings?.imageRef.kind === 'asset' && Boolean(props.state?.resolvedBackgroundUrl)
+  const hasImage = settings?.imageRef.kind === 'asset' && Boolean(previewUrl)
   const primaryTextColor = hasImage ? 'whiteAlpha.900' : 'gemOnSurface'
   const secondaryTextColor = hasImage ? 'whiteAlpha.700' : 'gray.400'
   const uploadIconColor = hasImage ? 'whiteAlpha.900' : 'blue.400'
@@ -187,7 +188,7 @@ export function CustomBackground(props: CustomBackgroundProps) {
             pointerEvents="none"
           >
             <Image
-              src={props.state?.resolvedBackgroundUrl ?? undefined}
+              src={previewUrl ?? undefined}
               alt="Theme background"
               width="100%"
               height="100%"
