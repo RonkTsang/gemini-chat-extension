@@ -1,13 +1,44 @@
 ---
 title: Open in New Tab
-description: Smooth resource navigation in Gemini.
+description: "Open Gemini My stuff items in new tabs without losing scroll position or interrupting your workflow."
 ---
 
-Open in New Tab solves the workflow interruption when browsing your historical resources in the "My stuff" page.
+import { Image } from 'astro:assets';
+import openInNewTabImg from '../../../assets/features/open-in-new-tab/image.png';
 
-## Features
+<Image
+  src={openInNewTabImg}
+  alt="Open in New Tab button displayed on items in Gemini My stuff page"
+  class="feature-image feature-image-narrow"
+/>
 
-- **New Tab Entry**: Adds a dedicated button to every item in the "My stuff" page to open it in a new tab.
-- **Scroll Preservation**: Keep your position in the stuff library while opening specific chat histories separately.
-- **Seamless Integration**: Discreet buttons that appear on hover, maintaining Gemini's native aesthetic.
-- **Workflow Continuity**: Switch between historical resources without losing current page state.
+## Overview
+
+Open in New Tab adds a direct new-tab action to each item in **My stuff**.
+
+## Why It Matters
+
+On Gemini **My stuff**, opening a history item normally redirects the current page. This breaks browsing flow:
+
+- You lose list context when leaving the page.
+- Returning with Back often does not restore the previous scroll position.
+- Native one-click new-tab entry is missing on item cards.
+
+This feature solves those gaps by adding a dedicated **Open in new tab** action where users actually browse history.
+
+## Key Capabilities
+
+- Open a history item without leaving the current list page.
+- Keep your current scroll position while exploring multiple items.
+- Compare several chats/files across tabs in parallel.
+
+## Quick Workflow
+
+1. Go to **My stuff** in Gemini.
+2. Hover an item card.
+3. Click **Open in new tab**.
+4. Continue browsing and opening more items.
+
+## Related Features
+
+- [Tab Title Sync](/features/tab-title-sync/)

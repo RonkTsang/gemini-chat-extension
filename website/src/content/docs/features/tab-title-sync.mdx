@@ -1,18 +1,40 @@
 ---
 title: Tab Title Sync
-description: Identify your tabs at a glance.
+description: "Fix generic Google Gemini tab names by syncing each browser tab title with its conversation in real time."
 ---
 
 import { Image } from 'astro:assets';
 import tabTitleImg from '../../../assets/features/tab-title.jpg';
 
-<Image src={tabTitleImg} alt="Tab title synchronization demonstration" class="feature-image" />
+<Image src={tabTitleImg} alt="Browser tabs showing synced Gemini chat titles" class="feature-image feature-image-narrow" />
 
-Tab Title Sync ensures that every Gemini tab you open accurately reflects the conversation it contains, rather than just "Google Gemini".
+## Overview
 
-## Features
+Tab Title Sync automatically updates your Gemini browser tab title to the current conversation title.
 
-- **Real-time Synchronization**: Automatically updates your browser tab title to match the chat conversation title.
-- **Smart Detection**: Detects titles across different pages including Chat, My stuff, and Documents.
-- **Zero Overhead**: Uses efficient event-driven logic (MutationObservers) with no background CPU polling.
-- **Fallback Recovery**: Safely restores default titles when navigating back to the home screen or starting new chats.
+## Why It Matters
+
+When multiple Gemini tabs are open, they often show the same generic title, making tab management slow and error-prone:
+
+- You cannot identify the right conversation at a glance.
+- You waste time clicking tabs to find the target chat.
+- Context switching across projects becomes harder.
+
+This feature aligns tab titles with actual conversation names so multi-tab Gemini workflows stay fast and predictable.
+
+## Key Capabilities
+
+- Identify the right Gemini tab immediately.
+- Avoid confusion when many Gemini chats are open.
+- Keep tab names aligned as conversation titles change.
+
+## Quick Workflow
+
+1. Open a Gemini conversation.
+2. Wait for title generation/update in Gemini.
+3. Check your browser tab title.
+4. Use tab titles to switch to the target conversation faster.
+
+## Related Features
+
+- [Open in New Tab](/features/stuff-open-new-tab/)

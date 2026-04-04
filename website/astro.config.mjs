@@ -1,9 +1,20 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
+import { fileURLToPath } from 'node:url';
 import starlight from '@astrojs/starlight';
+
+const nanoidNonSecureCompat = fileURLToPath(new URL('./src/shims/nanoid-non-secure.ts', import.meta.url));
 
 // https://astro.build/config
 export default defineConfig({
+	site: 'https://gpkit.ronktsang.com',
+	vite: {
+		resolve: {
+			alias: {
+				'nanoid/non-secure': nanoidNonSecureCompat,
+			},
+		},
+	},
 	integrations: [
 		starlight({
 			title: {
@@ -15,37 +26,10 @@ export default defineConfig({
 			},
 			favicon: '/favicon.png',
 			social: [
-				{ icon: 'github', label: 'GitHub', href: 'https://github.com/google-gemini/gemini-cli' },
+				{ icon: 'github', label: 'GitHub', href: 'https://github.com/RonkTsang/gemini-chat-extension' },
 			],
 			customCss: [
 				'./src/styles/custom.css',
-			],
-			head: [
-				{
-					tag: 'link',
-					attrs: {
-						rel: 'preconnect',
-						href: 'https://fonts.googleapis.com',
-					},
-				},
-				{
-					tag: 'link',
-					attrs: {
-						rel: 'preconnect',
-						href: 'https://fonts.gstatic.com',
-						crossorigin: true,
-					},
-				},
-				{
-					tag: 'link',
-					attrs: {
-						rel: 'preload',
-						as: 'font',
-						type: 'font/woff2',
-						href: '/node_modules/@fontsource/outfit/files/outfit-latin-400-normal.woff2',
-						crossorigin: true,
-					},
-				},
 			],
 			defaultLocale: 'root',
 			locales: {
@@ -85,8 +69,10 @@ export default defineConfig({
 					items: [
 						{ label: 'FAQ', translations: { 'zh-CN': '常见问题' }, slug: 'support/faq' },
 						{ label: 'Changelog', translations: { 'zh-CN': '更新日志' }, slug: 'support/changelog' },
+						{ label: 'Privacy Policy', translations: { 'zh-CN': '隐私政策' }, slug: 'privacy-policy' },
 					],
 				},
+
 			],
 		}),
 	],

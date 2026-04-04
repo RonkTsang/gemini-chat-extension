@@ -1,0 +1,50 @@
+---
+title: 对话大纲
+description: Chat Outline 帮你在 Gemini 长对话中快速定位关键内容并保持上下文。
+---
+
+import { Image } from 'astro:assets';
+import chatOutlineInterfaceImg from '../../../../assets/features/chat-outline/interface.png';
+
+<Image
+  src={chatOutlineInterfaceImg}
+  alt="对话大纲面板显示在 Gemini 对话侧边"
+  class="feature-image"
+/>
+
+## 功能概览
+
+对话大纲是当前 Gemini 对话的导航面板。它把长对话整理成结构化目录，方便你直接跳到目标段落。
+
+## 你可以做什么
+
+- 快速跳转到早前提示词和回复，不再反复滚动。
+- 在比对不同回答时保持上下文不丢失。
+- 使用 **固定模式**，在长会话中保持面板常驻可见。
+- 对包含媒体的条目可悬停预览图片/视频，再决定是否跳转。
+
+## 使用方法
+
+1. 在 Gemini Power Kit 侧边栏打开 **Chat Outline**。
+2. 悬停浮动触发区打开大纲。
+3. 点击任意条目跳转到对应消息。
+4. 需要持续导航时切换到固定模式。
+
+### 固定 / 取消固定模式
+
+1. 点击一次 Chat Outline 浮动图标，进入**固定**状态。
+2. 固定后滚动页面时大纲会持续显示。
+3. 再点击一次同一图标，进入**取消固定**状态。
+4. 取消固定后恢复“悬停显示、移开隐藏”的行为。
+
+### 悬停图片预览
+
+1. 在大纲列表中找到带图片/视频附件的条目。
+2. 将鼠标悬停在该条目按钮上，右侧会显示预览面板。
+3. 在不同条目间悬停可快速对比预览内容。
+4. 确认目标后点击条目，直接跳转到对应消息位置。
+
+## 相关功能
+
+- [快速跟进](/zh-cn/features/quick-follow-up/)
+- [链式提示词](/zh-cn/features/chain-prompt/)

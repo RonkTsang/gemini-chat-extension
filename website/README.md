@@ -1,49 +1,63 @@
-# Starlight Starter Kit: Basics
+# Gemini Power Kit Documentation Website
 
-[![Built with Starlight](https://astro.badg.es/v2/built-with-starlight/tiny.svg)](https://starlight.astro.build)
+This is the official documentation website for [Gemini Power Kit](https://github.com/RonkTsang/gemini-chat-extension), a Chrome extension that supercharges your Gemini experience with productivity-focused features.
 
-```
-npm create astro@latest -- --template starlight
-```
+The site is built using [Astro](https://astro.build/) and the [Starlight](https://starlight.astro.build/) documentation framework.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## 🚀 Getting Started
 
-## 🚀 Project Structure
+### Prerequisites
 
-Inside of your Astro + Starlight project, you'll see the following folders and files:
+- Node.js v18.14.1 or higher
+- [pnpm](https://pnpm.io/) (recommended)
 
-```
-.
-├── public/
-├── src/
-│   ├── assets/
-│   ├── content/
-│   │   └── docs/
-│   └── content.config.ts
-├── astro.config.mjs
-├── package.json
-└── tsconfig.json
+### Installation
+
+```bash
+# Install dependencies from the project root
+pnpm install
 ```
 
-Starlight looks for `.md` or `.mdx` files in the `src/content/docs/` directory. Each file is exposed as a route based on its file name.
+### Development
 
-Images can be added to `src/assets/` and embedded in Markdown with a relative link.
+To start the development server for the website:
 
-Static assets, like favicons, can be placed in the `public/` directory.
+```bash
+cd website
+pnpm run dev
+```
+
+The documentation will be live at `http://localhost:4321`.
+
+## 📂 Project Structure
+
+Inside the `website` directory, you'll find:
+
+- `src/content/docs/`: Contains the documentation content in Markdown (`.md`) or MDX (`.mdx`).
+  - `zh-cn/`: Chinese translations of the documentation.
+- `src/assets/`: Static assets like images and logos.
+- `src/styles/`: Custom CSS styling for the site.
+- `astro.config.mjs`: Configuration for Astro and Starlight integrations.
 
 ## 🧞 Commands
 
-All commands are run from the root of the project, from a terminal:
+All commands should be run from within the `website` directory:
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+| Command | Action |
+| :--- | :--- |
+| `pnpm run dev` | Starts local dev server |
+| `pnpm run build` | Builds the production site to `./dist/` |
+| `pnpm run preview` | Previews the build locally |
+| `pnpm run astro ...` | Runs Astro CLI commands |
 
-## 👀 Want to learn more?
+## 🌐 Localization
 
-Check out [Starlight’s docs](https://starlight.astro.build/), read [the Astro documentation](https://docs.astro.build), or jump into the [Astro Discord server](https://astro.build/chat).
+This documentation supports multiple languages:
+- **English**: Located in `src/content/docs/`
+- **Chinese (简体中文)**: Located in `src/content/docs/zh-cn/`
+
+## 👀 Learn More
+
+- [Starlight Documentation](https://starlight.astro.build/)
+- [Astro Documentation](https://docs.astro.build)
+- [Gemini Power Kit GitHub](https://github.com/RonkTsang/gemini-chat-extension)

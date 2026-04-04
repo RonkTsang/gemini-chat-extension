@@ -1,0 +1,37 @@
+---
+title: 链式提示词
+description: Chain Prompt 用于将 Gemini 多步骤任务结构化、变量化并可复用执行。
+---
+
+import { Image } from 'astro:assets';
+import chainPromptImg from '../../../../assets/features/chain-prompt.png';
+
+<Image
+  src={chainPromptImg}
+  alt="链式提示词编辑器，用于配置多步骤工作流"
+  class="feature-image"
+/>
+
+## 功能概览
+
+链式提示词是 Gemini 的多步骤提示词工作流能力。它把多个步骤组织成一个可复用流程，并按顺序执行。
+
+## 你可以做什么
+
+- 把重复任务沉淀成固定流程，减少重复输入。
+- 定义输入变量，同一流程可复用于不同任务。
+- 使用 `{{StepN.output}}` 让后续步骤引用前一步结果。
+- 在运行状态区查看执行进度和结果。
+
+## 使用方法
+
+1. 打开 **Chain Prompt** 并新建流程。
+2. 按执行顺序添加步骤提示词。
+3. 对可变内容添加输入变量。
+4. 保存后在列表页点击运行。
+5. 如有失败步骤，修改后再次运行。
+
+## 相关功能
+
+- [快速跟进](/zh-cn/features/quick-follow-up/)
+- [对话大纲](/zh-cn/features/chat-outline/)
