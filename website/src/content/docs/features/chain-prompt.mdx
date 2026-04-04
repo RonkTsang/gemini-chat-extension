@@ -1,0 +1,37 @@
+---
+title: Chain Prompt
+description: "Chain Prompt for Gemini: design reusable multi-step prompt workflows with variables and execution status."
+---
+
+import { Image } from 'astro:assets';
+import chainPromptImg from '../../../assets/features/chain-prompt.png';
+
+<Image
+  src={chainPromptImg}
+  alt="Chain Prompt editor for building multi-step workflows"
+  class="feature-image"
+/>
+
+## Overview
+
+Chain Prompt is a workflow engine for Gemini prompts. It lets you organize multiple steps into one reusable chain and run them in sequence.
+
+## Key Capabilities
+
+- Build multi-step prompt flows for repeatable tasks.
+- Define input variables and reuse the same workflow with different inputs.
+- Reference previous step output via `{{StepN.output}}`.
+- Track run progress from the run status UI.
+
+## Quick Workflow
+
+1. Open **Chain Prompt** and create a new chain.
+2. Add step prompts in execution order.
+3. Add variables if any part of the prompt should change per run.
+4. Save and run the chain from the list page.
+5. Check run status and revise failed steps when needed.
+
+## Related Features
+
+- [Quick Follow-up](/features/quick-follow-up/)
+- [Chat Outline](/features/chat-outline/)

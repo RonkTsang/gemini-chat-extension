@@ -1,0 +1,163 @@
+---
+title: Theme
+description: "Customize Gemini with appearance modes, color presets, wallpaper, and Light-mode readability controls for clearer long-session work."
+---
+
+import { Image } from 'astro:assets';
+import themeSettingImg from '../../../assets/features/theme/setting.png';
+
+<Image
+  src={themeSettingImg}
+  alt="Theme Settings showing appearance mode, color presets, wallpaper, and readability options"
+  class="feature-image"
+/>
+
+## Overview
+
+Theme helps you turn Gemini into a workspace that is easier to read, easier to scan, and better suited for long sessions.
+
+Instead of only changing colors, it gives you three layers of control:
+
+- appearance mode
+- color presets
+- wallpaper and readability tuning
+
+## Why It Matters
+
+Default Gemini styling works for short chats, but longer sessions usually expose a few friction points:
+
+- you may want Gemini to stay in Light or Dark instead of following the current device state
+- the default color system can feel too plain when you keep many tabs open every day
+- wallpaper improves atmosphere, but it can also reduce contrast if readability controls are missing
+
+Theme solves those issues inside one settings panel, with live preview and automatic saving.
+
+## Settings Guide
+
+### Appearance
+
+<div class="settings-card-grid">
+  <article class="settings-card">
+    <div class="settings-label">System</div>
+    <p class="settings-detail">Follows your operating system and Gemini native theme behavior.</p>
+    <p class="settings-when">Use it when you already switch your whole device between Light and Dark.</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">Light</div>
+    <p class="settings-detail">Forces Gemini into Light mode.</p>
+    <p class="settings-when">Use it for daylight work, screenshots, or a cleaner paper-like interface.</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">Dark</div>
+    <p class="settings-detail">Forces Gemini into Dark mode.</p>
+    <p class="settings-when">Use it for night work, OLED screens, or stronger visual separation between content blocks.</p>
+  </article>
+</div>
+
+### Colors
+
+`Colors` lets you switch between 10 preset swatches, including the default blue style and stronger alternatives like gray, red, cyan, teal, green, yellow, and orange.
+
+Use it when:
+
+- you want a clearer accent color for buttons, outlines, and active states
+- you want Gemini tabs to feel visually distinct from other AI tools
+- you want Light or Dark mode to feel less flat without changing layout behavior
+
+### Wallpaper
+
+Wallpaper settings are where visual style and readability work together.
+
+<div class="settings-card-grid">
+  <article class="settings-card">
+    <div class="settings-label">Enable wallpaper</div>
+    <p class="settings-detail">Turns the wallpaper layer on or off. Detailed wallpaper controls appear after it is enabled.</p>
+    <p class="settings-when">Turn it on when you want a more personal workspace. Turn it off if you want the cleanest native look.</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">Select File / drag area</div>
+    <p class="settings-detail">Uploads a wallpaper image. Supports `PNG`, `JPG`, and `WebP` up to `5MB`. Uploading an image enables wallpaper automatically. Removing the image disables it automatically.</p>
+    <p class="settings-when">Use a landscape image with soft contrast if you want the most balanced result.</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">Blur</div>
+    <p class="settings-detail">Controls wallpaper blur from `0` to `20px`. Higher values reduce background detail and make text stand out more.</p>
+    <p class="settings-when">Start low for subtle texture. Raise it when the wallpaper competes with content.</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">Message Glass Effect</div>
+    <p class="settings-detail">Adds a glass-like surface to user and model messages so chat content separates more clearly from the wallpaper.</p>
+    <p class="settings-when">Turn it on when the chat area feels visually mixed with the background. Keep it off on lower-end devices if you want the lightest rendering cost.</p>
+  </article>
+</div>
+
+## Light-Mode Readability Controls
+
+These are the most important settings if you use `Light` mode with wallpaper.
+
+<div class="settings-card-grid">
+  <article class="settings-card">
+    <div class="settings-label">Sidebar readability scrim</div>
+    <p class="settings-detail">Adds a soft readability layer behind the left sidebar so labels and history items remain legible on top of wallpaper.</p>
+    <p class="settings-when">Turn it on when sidebar text blends into a bright or detailed wallpaper. This setting is designed for Light mode.</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">Scrim intensity</div>
+    <p class="settings-detail">Controls how strong the sidebar readability layer is, from `0%` to `100%`.</p>
+    <p class="settings-when">Raise it if sidebar text still feels noisy. Lower it if you want more of the wallpaper to stay visible.</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">Welcome greeting readability</div>
+    <p class="settings-detail">Controls text adaptation for the Gemini home welcome area when wallpaper is enabled. This setting mainly affects the homepage in Light mode.</p>
+    <p class="settings-when">Use it when the large welcome greeting becomes hard to read against your wallpaper.</p>
+  </article>
+</div>
+
+For `Welcome greeting readability`, the options mean:
+
+<div class="settings-card-grid settings-card-grid-compact">
+  <article class="settings-card">
+    <div class="settings-label">Keep default</div>
+    <p class="settings-detail">Leave Gemini's original greeting color unchanged.</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">Auto adapt (first estimate)</div>
+    <p class="settings-detail">Recommended default. The extension estimates whether the wallpaper under the greeting needs lighter text.</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">Force light text</div>
+    <p class="settings-detail">Applies a stronger manual fix when the homepage greeting still disappears into the background.</p>
+  </article>
+</div>
+
+## Default Behavior
+
+When you first use wallpaper-related settings, the current defaults are:
+
+- wallpaper is `off`
+- blur starts at `5px`
+- `Message Glass Effect` is `off`
+- `Sidebar readability scrim` is `on`
+- `Scrim intensity` starts at `20%`
+- `Welcome greeting readability` starts at `Auto adapt (first estimate)`
+
+## Recommended Use
+
+- For a clean everyday setup: `System` + a preset color + no wallpaper.
+- For a branded personal workspace: `Light` or `Dark` + preset color + wallpaper.
+- For Light mode with wallpaper: turn on `Sidebar readability scrim`, keep `Welcome greeting readability` on `Auto adapt (first estimate)`, then raise `Blur` if content still feels busy.
+- For the best balance between style and clarity: choose a softer wallpaper, keep blur moderate, and only enable `Force light text` when the homepage greeting is still hard to read.
+
+## Quick Workflow
+
+1. Open Gemini Power Kit sidebar.
+2. Go to `Settings` -> `Theme`.
+3. Choose `Appearance` first so Light or Dark behavior is stable.
+4. Pick a color preset that fits your daily workflow.
+5. If you want wallpaper, enable it and upload one image.
+6. Adjust `Blur`, then turn on readability helpers only where needed.
+7. Use the live preview to check contrast before returning to chat.
+
+## Related Features
+
+- [Chat Outline](/features/chat-outline/)

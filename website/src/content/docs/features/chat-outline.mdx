@@ -1,0 +1,50 @@
+---
+title: Chat Outline
+description: "Chat Outline for Gemini: understand long chats quickly, jump to key sections, and stay oriented."
+---
+
+import { Image } from 'astro:assets';
+import chatOutlineInterfaceImg from '../../../assets/features/chat-outline/interface.png';
+
+<Image
+  src={chatOutlineInterfaceImg}
+  alt="Chat Outline panel displayed beside a Gemini conversation"
+  class="feature-image"
+/>
+
+## Overview
+
+Chat Outline is a navigation panel for the current Gemini conversation. It converts long chat history into a structured outline so you can jump directly to the part you need.
+
+## Key Capabilities
+
+- Jump to earlier prompts and responses without continuous scrolling.
+- Keep context while comparing different sections of the same conversation.
+- Use **Pin mode** to keep the panel visible during long research sessions.
+- Hover outline items with media to preview images/videos before jumping.
+
+## Quick Workflow
+
+1. Open **Chat Outline** from Gemini Power Kit sidebar.
+2. Hover the floating trigger to open the outline.
+3. Click an outline item to jump to that message.
+4. Switch to pinned mode when you need persistent navigation.
+
+### Pin / Unpin Mode
+
+1. Click the Chat Outline floating icon once to **pin** the panel.
+2. The panel stays visible while you scroll and navigate.
+3. Click the same icon again to **unpin**.
+4. After unpinning, the panel returns to hover-based show/hide behavior.
+
+### Hover Image Preview
+
+1. In the outline list, find items that include image/video attachments.
+2. Hover the item button to open the preview panel on the right.
+3. Move between items to compare previews quickly.
+4. Click the item when you want to jump to its exact position in chat.
+
+## Related Features
+
+- [Quick Follow-up](/features/quick-follow-up/)
+- [Chain Prompt](/features/chain-prompt/)

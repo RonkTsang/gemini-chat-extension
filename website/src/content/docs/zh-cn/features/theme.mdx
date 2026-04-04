@@ -1,0 +1,163 @@
+---
+title: 主题个性化
+description: 通过外观模式、颜色预设、壁纸与可读性设置，自定义 Gemini 的长期使用体验。
+---
+
+import { Image } from 'astro:assets';
+import themeSettingImg from '../../../../assets/features/theme/setting.png';
+
+<Image
+  src={themeSettingImg}
+  alt="Theme 设置面板中的外观、颜色、壁纸与可读性选项"
+  class="feature-image"
+/>
+
+## 功能概览
+
+Theme 不只是换颜色，而是把 Gemini 调整成一个更适合长期使用的工作界面。
+
+它主要提供三层控制能力：
+
+- 外观模式
+- 颜色预设
+- 壁纸与可读性调节
+
+## 为什么重要
+
+Gemini 默认界面适合快速对话，但在长时间使用时通常会出现几个问题：
+
+- 你可能希望 Gemini 固定为浅色或深色，而不是跟随设备状态变化
+- 默认配色偏保守，日常高频使用时会显得单调
+- 壁纸虽然能提升氛围感，但如果缺少对比度控制，文字会变得难读
+
+Theme 把这些能力集中到一个设置面板里，并且支持实时预览与自动保存。
+
+## 设置说明
+
+### 外观模式
+
+<div class="settings-card-grid">
+  <article class="settings-card">
+    <div class="settings-label">System</div>
+    <p class="settings-detail">跟随操作系统与 Gemini 原生主题行为自动切换。</p>
+    <p class="settings-when">如果你平时会整体切换系统浅色和深色，这是最省心的选择。</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">Light</div>
+    <p class="settings-detail">强制 Gemini 使用浅色模式。</p>
+    <p class="settings-when">适合白天办公、需要截图，或者偏好更干净纸面感界面的场景。</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">Dark</div>
+    <p class="settings-detail">强制 Gemini 使用深色模式。</p>
+    <p class="settings-when">适合夜间使用、OLED 屏幕，或希望内容区块层次更强时。</p>
+  </article>
+</div>
+
+### 颜色预设
+
+`Colors` 用来切换预设主题色。当前提供 10 组色块，包括默认蓝色，以及灰、红、青、蓝绿、绿、黄、橙等风格。
+
+适合在这些场景下使用：
+
+- 你希望按钮、选中态、描边等强调色更清晰
+- 你想让 Gemini 和其他 AI 工具在视觉上更容易区分
+- 你想保留原有布局，只调整整体观感
+
+### 壁纸
+
+壁纸部分负责氛围感，也负责和文字可读性之间的平衡。
+
+<div class="settings-card-grid">
+  <article class="settings-card">
+    <div class="settings-label">Enable wallpaper</div>
+    <p class="settings-detail">开启或关闭壁纸层。开启后，下面的壁纸相关设置才会显示。</p>
+    <p class="settings-when">想要更个性化、更有氛围感的工作界面时开启；想保留最简洁原生界面时关闭。</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">Select File / 拖拽上传区</div>
+    <p class="settings-detail">上传壁纸图片。支持 `PNG`、`JPG`、`WebP`，大小不超过 `5MB`。上传成功后会自动开启壁纸；删除图片后会自动关闭。</p>
+    <p class="settings-when">建议优先选择对比不过强、细节不过密的横向图片，后续更容易兼顾美观和可读性。</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">Blur</div>
+    <p class="settings-detail">调整壁纸模糊强度，范围 `0` 到 `20px`。数值越高，背景细节越弱，前景文字越容易看清。</p>
+    <p class="settings-when">壁纸细节较多、聊天内容与背景混在一起时，应该提高这个值。</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">Message Glass Effect</div>
+    <p class="settings-detail">给用户消息和模型消息增加毛玻璃层，让聊天内容从壁纸中分离出来。</p>
+    <p class="settings-when">当你觉得消息区和背景贴得太近、层次不够明显时开启。低性能设备如果更在意流畅度，可以关闭。</p>
+  </article>
+</div>
+
+## Light 模式可读性
+
+如果你在 `Light` 模式下使用壁纸，这一组设置最关键。
+
+<div class="settings-card-grid">
+  <article class="settings-card">
+    <div class="settings-label">Sidebar readability scrim</div>
+    <p class="settings-detail">在左侧边栏后面叠加一层柔和的可读性遮罩，让历史记录和标签在壁纸上更容易辨认。</p>
+    <p class="settings-when">当侧边栏文字被亮色或高细节壁纸干扰时开启。这个设置主要服务于 Light 模式。</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">Scrim intensity</div>
+    <p class="settings-detail">控制边栏遮罩强度，范围 `0%` 到 `100%`。</p>
+    <p class="settings-when">如果边栏还是发花，就继续调高；如果你想保留更多壁纸存在感，就适当调低。</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">Welcome greeting readability</div>
+    <p class="settings-detail">控制 Gemini 首页欢迎语区域的文字适配方式。这个设置主要在 Light 模式首页配合壁纸使用。</p>
+    <p class="settings-when">当首页欢迎语与背景图对比度不足、标题不够清楚时使用。</p>
+  </article>
+</div>
+
+`Welcome greeting readability` 有三种模式：
+
+<div class="settings-card-grid settings-card-grid-compact">
+  <article class="settings-card">
+    <div class="settings-label">Keep default</div>
+    <p class="settings-detail">保持 Gemini 原本的欢迎语文字颜色。</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">Auto adapt (first estimate)</div>
+    <p class="settings-detail">推荐默认值。扩展会根据欢迎语所在区域的大致背景情况，自动决定是否使用浅色文字。</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">Force light text</div>
+    <p class="settings-detail">当自动结果仍然不够清楚时，直接强制首页欢迎语使用浅色文字。</p>
+  </article>
+</div>
+
+## 默认行为
+
+当前壁纸相关设置的默认值如下：
+
+- 壁纸默认 `关闭`
+- `Blur` 默认是 `5px`
+- `Message Glass Effect` 默认 `关闭`
+- `Sidebar readability scrim` 默认 `开启`
+- `Scrim intensity` 默认是 `20%`
+- `Welcome greeting readability` 默认是 `Auto adapt (first estimate)`
+
+## 推荐搭配
+
+- 日常稳定使用：`System` + 一个颜色预设 + 不开壁纸。
+- 想做更有个性的工作台：`Light` 或 `Dark` + 颜色预设 + 壁纸。
+- `Light` + 壁纸场景：建议开启 `Sidebar readability scrim`，`Welcome greeting readability` 保持 `Auto adapt (first estimate)`，再根据实际情况提高 `Blur`。
+- 想兼顾风格与清晰度：优先选择柔和壁纸，先用中等模糊，再决定是否需要 `Force light text`。
+
+## 使用方法
+
+1. 打开 Gemini Power Kit 侧边栏。
+2. 进入 `Settings` -> `Theme`。
+3. 先选 `Appearance`，确定浅色、深色或跟随系统。
+4. 再选择适合你的颜色预设。
+5. 如果要用壁纸，先开启 `Enable wallpaper` 并上传一张图片。
+6. 先调 `Blur`，再按需开启可读性辅助项。
+7. 通过右侧实时预览确认效果后返回聊天页。
+
+## 相关功能
+
+- [对话大纲](/zh-cn/features/chat-outline/)

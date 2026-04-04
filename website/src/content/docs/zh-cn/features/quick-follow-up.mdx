@@ -1,0 +1,105 @@
+---
+title: 快速跟进
+description: Quick Follow-up 帮你在 Gemini 中基于选中文本追问，支持 Ask Gemini 手动跟进与 Custom Prompt 一键执行。
+---
+
+import { Image } from 'astro:assets';
+import quickFollowUpDemoGif from '../../../../assets/features/quick-follow-up/quick-follow-up.gif';
+import inputUiImg from '../../../../assets/features/quick-follow-up/input-ui.png';
+import customPromptImg from '../../../../assets/features/quick-follow-up/custom-prompt.png';
+
+<img src={quickFollowUpDemoGif.src} alt="在 Gemini 中选中文本后出现 Quick Follow-up 胶囊菜单" class="feature-image feature-image-narrow" />
+
+## 功能概览
+
+Quick Follow-up 是一个“划词即追问”的交互层。你在 Gemini 回复里选中文本后，鼠标附近会出现胶囊操作条。
+
+它包含两种模式：
+
+- **Ask Gemini**：把选中文本附加为引用上下文，然后由你继续输入并手动发送。
+- **Custom Prompt**：把模板中的 **Selected Text** 替换为选中文本，一键自动发送。
+
+## 你可以做什么
+
+- 不用复制粘贴也能基于原文快速追问。
+- 在输入框上方保留引用上下文，避免提问时丢失语境。
+- 把高频追问动作固化为一键模板（翻译、解释、总结等）。
+- 调整图标顺序，让高频动作优先出现。
+
+## 使用方法
+
+### Ask Gemini
+
+1. 在 Gemini 回复中选中一段文本。
+2. 点击胶囊里的 **Ask Gemini**。
+3. 确认输入框上方出现引用上下文。
+4. 输入你的追问并点击发送。
+5. 若不再需要引用，点击引用状态 UI 的关闭按钮。
+
+<Image
+  src={inputUiImg}
+  alt="点击 Ask Gemini 后，Gemini 输入框上方显示引用内容"
+  class="feature-image feature-image-narrow"
+/>
+
+Ask Gemini 事例：
+
+- `请把这段和上一个回答做对比，说明关键差异。`
+- `把引用段落总结为 3 个要点。`
+- `把引用内容改写成更容易理解的版本。`
+
+### Custom Prompt
+
+当你的追问模式重复出现时，建议使用 Custom Prompt 一键执行。
+
+<Image
+  src={customPromptImg}
+  alt="Custom Prompt 创建弹窗，包含 Icon and Name 与 Prompt Content"
+  class="feature-image feature-image-narrow"
+/>
+
+常见场景：
+
+- 固定语言翻译。
+- 固定格式总结（例如：要点 + 行动项）。
+- 固定风格代码解释（例如：ELI5）。
+- 固定结构的事实核查。
+
+#### 添加方式
+
+1. 打开 Gemini Power Kit 侧边栏。
+2. 进入 **Settings** -> **Quick Follow-up**。
+3. 开启 **Enable Quick Follow-up**。
+4. 在 **Custom Prompt** 区域点击添加按钮（`+`）。
+5. 填写图标、名称、模板后点击 **Save**。
+6. 回到对话，划词后点击新图标即可执行。
+
+#### 完整填写指南
+
+- **Icon（图标）**：用于在胶囊中快速识别动作。
+- **Name（名称）**：必填，最多 30 字符，用作 tooltip 文案。
+- **Prompt Content（模板内容）**：必填，建议包含 **Selected Text**。
+- **占位符规则**：运行时会把 **Selected Text** 替换为当前选中文本。
+- **执行行为**：点击自定义图标后会自动发送替换后的完整提示词。
+
+图片对齐说明：
+
+- 弹窗字段是 **Icon and Name**，输入框提示类似 **Enter skill name**。
+- 模板字段是 **Prompt Content**，示例写法：`e.g. Explain [Selected Text] in simple terms`。
+
+Custom Prompt 事例：
+
+- `将以下内容翻译成日语并保持正式语气：[Selected Text]`
+- `按步骤解释这段代码，并给出时间复杂度：[Selected Text]`
+- `从这段内容提取 5 个关键点和 3 个风险：[Selected Text]`
+
+内置模板：
+
+- **Tell me more**：`Explain [Selected Text] in detail`
+- **Search**：`Search web for latest info on: [Selected Text]`
+- **ELI5**：`Explain [Selected Text] like I'm 5 years old`
+
+## 相关功能
+
+- [链式提示词](/zh-cn/features/chain-prompt/)
+- [对话大纲](/zh-cn/features/chat-outline/)
