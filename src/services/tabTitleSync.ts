@@ -3,12 +3,16 @@
  * Automatically syncs Gemini chat title to browser tab title using layered MutationObserver strategy
  */
 
-class TabTitleSync {
+import type { URLChangeEvent } from '@/common/event'
+import { eventBus } from '@/utils/eventbus'
+
+export class TabTitleSync {
   private domTreeObserver: MutationObserver | null = null      // Outer: monitors DOM tree
   private titleContentObserver: MutationObserver | null = null // Inner: monitors title content
   private currentTitleElement: HTMLElement | null = null       // Current title element reference
   private lastTitle: string = ''                               // Cache for debouncing
   private fallbackTitle: string = ''                           // Fallback title when no chat title exists
+  private currentUrl: string = window.location.href
   private isActive = false
 
   /**
@@ -18,8 +22,12 @@ class TabTitleSync {
     if (this.isActive) return
     
     this.isActive = true
+    this.currentUrl = window.location.href
     console.log('[TabTitleSync] Starting tab title sync...')
     
+    // Listen to SPA navigation so blank chat pages can restore the default title
+    eventBus.on('urlchange', this.onURLChange)
+
     // Setup outer observer to monitor DOM tree
     this.setupDomTreeObserver()
     
@@ -44,6 +52,9 @@ class TabTitleSync {
     
     // Cleanup inner observer
     this.detachTitleObserver()
+
+    // Remove event bus listener
+    eventBus.off('urlchange', this.onURLChange)
   }
 
   /**
@@ -74,9 +85,31 @@ class TabTitleSync {
   }
 
   /**
+   * URL change callback: reset stale chat title state on blank new chat pages.
+   */
+  private onURLChange = (eventData: URLChangeEvent): void => {
+    this.currentUrl = eventData.url
+
+    if (this.isBlankNewChatUrl(this.currentUrl)) {
+      this.detachTitleObserver()
+      return
+    }
+
+    this.checkAndAttachTitleObserver()
+  }
+
+  /**
    * Check for title element and attach inner observer if found
    */
   private checkAndAttachTitleObserver(): void {
+    if (this.isBlankNewChatUrl(this.currentUrl)) {
+      if (this.currentTitleElement) {
+        console.log('[TabTitleSync] Title element ignored on blank new chat page')
+        this.detachTitleObserver()
+      }
+      return
+    }
+
     // Priority 1: Chat conversation title
     let titleElement = document.querySelector('top-bar-actions .conversation-title-container') as HTMLElement | null
     let titleType = 'chat'
@@ -106,6 +139,15 @@ class TabTitleSync {
       // Title element disappeared
       console.log('[TabTitleSync] Title element disappeared')
       this.detachTitleObserver()
+    }
+  }
+
+  private isBlankNewChatUrl(url: string): boolean {
+    try {
+      const { pathname } = new URL(url, window.location.href)
+      return pathname === '/app' || pathname === '/app/'
+    } catch {
+      return false
     }
   }
 
