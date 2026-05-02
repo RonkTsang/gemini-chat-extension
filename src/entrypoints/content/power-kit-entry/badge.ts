@@ -21,7 +21,8 @@ export const POWER_KIT_BADGE_VERSION = '3'
 export async function shouldShowBadge(): Promise<boolean> {
   try {
     const result = await browser.storage.local.get(BADGE_STORAGE_KEY)
-    const seenVersion: string | undefined = result[BADGE_STORAGE_KEY]
+    const storedVersion = result[BADGE_STORAGE_KEY]
+    const seenVersion = typeof storedVersion === 'string' ? storedVersion : undefined
     return seenVersion !== POWER_KIT_BADGE_VERSION
   } catch {
     return false
