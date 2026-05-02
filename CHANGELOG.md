@@ -1,3 +1,10 @@
+## [0.6.2](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.6.1...v0.6.2) (2026-05-02)
+
+
+### Bug Fixes
+
+* adapt prompt controls for new Gemini UI ([#21](https://github.com/RonkTsang/gemini-chat-extension/issues/21)) ([1e96860](https://github.com/RonkTsang/gemini-chat-extension/commit/1e968602c5f09d1f79444feae8e68e58c9ce492f))
+
 ## [0.6.1](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.6.0...v0.6.1) (2026-03-01)
 
 
