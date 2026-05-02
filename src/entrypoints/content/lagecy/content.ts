@@ -791,6 +791,30 @@ function removeQuoteUI() {
   if (sentinel) sentinel.remove();
 }
 
+function focusEditorWithRetry(editor) {
+  if (!editor) return;
+
+  const placeCaretToEnd = () => {
+    const selection = window.getSelection();
+    if (!selection) return;
+
+    const range = document.createRange();
+    range.selectNodeContents(editor);
+    range.collapse(false);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  };
+
+  const focusOnce = () => {
+    editor.focus();
+    placeCaretToEnd();
+  };
+
+  focusOnce();
+  requestAnimationFrame(focusOnce);
+  setTimeout(focusOnce, 50);
+}
+
 function addQuoteUI(selectedText) {
   const inputContainer = document.querySelector('rich-textarea');
   if (!inputContainer) return;
@@ -881,7 +905,7 @@ function addQuoteUI(selectedText) {
     fragment.appendChild(sentinel);
     qlEditor.prepend(fragment);
     
-    qlEditor.focus();
+    focusEditorWithRetry(qlEditor);
 
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {

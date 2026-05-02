@@ -130,8 +130,11 @@ function QuickFollowUp() {
     if (!selectedText) {
       return
     }
-    eventBus.emit(EVENTS.QUICK_FOLLOW_UP_ADD_QUOTE, { text: selectedText })
+    const text = selectedText
     closeOverlay()
+    requestAnimationFrame(() => {
+      eventBus.emit(EVENTS.QUICK_FOLLOW_UP_ADD_QUOTE, { text })
+    })
   })
 
   const runPrompt = useMemoizedFn(

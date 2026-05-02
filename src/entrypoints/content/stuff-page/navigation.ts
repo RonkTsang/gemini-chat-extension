@@ -5,6 +5,7 @@
  */
 
 import { MediaItemStatus } from '@/utils/stuffMediaParser'
+import { OPEN_IN_NEW_TAB_MESSAGE } from '@/types/runtime-messages'
 import { stuffDataCache } from './dataCache'
 
 /**
@@ -114,6 +115,7 @@ export function handleOpenInNewTab(cardElement: Element): void {
     const conversationId = mediaItem.conversationId.replace(/^c_/, '')
     const responseId = mediaItem.responseId.replace(/^r_/, '')
     const url = `/app/${conversationId}#${responseId}`
+    const absoluteUrl = new URL(url, window.location.origin).href
 
     console.log('[Navigation] Opening in new tab:', {
       timestamp: mediaInfo.timestamp,
@@ -122,11 +124,22 @@ export function handleOpenInNewTab(cardElement: Element): void {
       originalResponseId: mediaItem.responseId,
       conversationId,
       responseId,
-      url,
+      url: absoluteUrl,
     })
 
+    if (import.meta.env.FIREFOX) {
+      void browser.runtime.sendMessage({
+        type: OPEN_IN_NEW_TAB_MESSAGE,
+        payload: { url: absoluteUrl },
+      }).catch((error) => {
+        console.warn('[Navigation] Failed to request new tab:', error)
+        window.open(absoluteUrl, '_blank')
+      })
+      return
+    }
+
     // Open in new tab
-    window.open(url, '_blank')
+    window.open(absoluteUrl, '_blank')
   } catch (error) {
     console.error('[Navigation] Error opening in new tab:', error)
   }

@@ -6,6 +6,7 @@ const BACKGROUND_LAYER_ID = 'gpk-theme-bg-layer'
 const ROOT_BG_ENABLED_ATTR = 'data-gpk-bg-enabled'
 const ROOT_MSG_GLASS_ATTR = 'data-gpk-msg-glass'
 const ROOT_SIDEBAR_SCRIM_ENABLED_ATTR = 'data-gpk-sidebar-scrim-enabled'
+const ROOT_FIREFOX_ATTR = 'data-gpk-firefox'
 const ROOT_BG_IMAGE_VAR = '--gpk-bg-image'
 const ROOT_BG_BLUR_VAR = '--gpk-bg-blur'
 const ROOT_SIDEBAR_SCRIM_ALPHA_VAR = '--gpk-sidebar-scrim-alpha'
@@ -53,6 +54,11 @@ export function applyThemeBackgroundStyle(
     ROOT_BG_ENABLED_ATTR,
     state.isBackgroundRenderable ? 'true' : 'false',
   )
+  if (import.meta.env.FIREFOX) {
+    root.setAttribute(ROOT_FIREFOX_ATTR, 'true')
+  } else {
+    root.removeAttribute(ROOT_FIREFOX_ATTR)
+  }
   root.setAttribute(
     ROOT_MSG_GLASS_ATTR,
     state.settings.messageGlassEnabled ? 'true' : 'false',
@@ -88,6 +94,7 @@ export function clearThemeBackgroundStyle(): void {
   root.removeAttribute(ROOT_BG_ENABLED_ATTR)
   root.removeAttribute(ROOT_MSG_GLASS_ATTR)
   root.removeAttribute(ROOT_SIDEBAR_SCRIM_ENABLED_ATTR)
+  root.removeAttribute(ROOT_FIREFOX_ATTR)
   root.style.removeProperty(ROOT_BG_IMAGE_VAR)
   root.style.removeProperty(ROOT_BG_BLUR_VAR)
   root.style.removeProperty(ROOT_SIDEBAR_SCRIM_ALPHA_VAR)

@@ -68,6 +68,14 @@ function applyAppearance(detail: ThemeAppearanceApplyEventDetail): void {
   const oldTheme = safeGetStorageValue(STORAGE_KEY_THEME)
   const oldBardColorTheme = safeGetStorageValue(STORAGE_KEY_BARD_COLOR_THEME)
 
+  console.log('[ThemeAppearanceDebug][MainWorld] applyAppearance', {
+    href: window.location.href,
+    oldTheme,
+    oldBardColorTheme,
+    nextTheme: detail.theme,
+    nextBardColorTheme: detail.bardColorTheme,
+  })
+
   applyBodyTheme(detail.theme)
   safeSetStorageValue(STORAGE_KEY_THEME, detail.theme)
   if (detail.bardColorTheme) {
@@ -88,6 +96,30 @@ export default defineUnlistedScript(() => {
   const handleAppearanceApply = (event: Event) => {
     const customEvent = event as CustomEvent<ThemeAppearanceApplyEventDetail>
     const detail = customEvent.detail
+    console.log('[ThemeAppearanceDebug][MainWorld] event', {
+      href: window.location.href,
+      detail,
+    })
+    if (!detail || (detail.theme !== 'light' && detail.theme !== 'dark')) {
+      return
+    }
+    applyAppearance(detail)
+  }
+
+  const handleMessage = (event: MessageEvent) => {
+    if (event.source !== window) return
+    if (event.origin !== window.location.origin) return
+    const data = event.data as {
+      source?: string
+      type?: string
+      detail?: ThemeAppearanceApplyEventDetail
+    }
+    if (data?.source !== 'gpk-theme-sync' || data?.type !== 'apply') return
+    const detail = data.detail
+    console.log('[ThemeAppearanceDebug][MainWorld] message', {
+      href: window.location.href,
+      detail,
+    })
     if (!detail || (detail.theme !== 'light' && detail.theme !== 'dark')) {
       return
     }
@@ -95,6 +127,10 @@ export default defineUnlistedScript(() => {
   }
 
   window.addEventListener(GEM_EXT_EVENTS.THEME_APPEARANCE_APPLY, handleAppearanceApply)
+  window.addEventListener('message', handleMessage)
   document.documentElement.setAttribute(READY_ATTR, 'true')
+  console.log('[ThemeAppearanceDebug][MainWorld] ready', {
+    href: window.location.href,
+    readyAttr: document.documentElement.getAttribute(READY_ATTR),
+  })
 })
-

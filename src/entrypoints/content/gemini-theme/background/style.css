@@ -19,6 +19,10 @@
   transform-origin: center center;
 }
 
+#gpk-theme-bg-layer::before {
+  content: '';
+}
+
 :root[data-gpk-bg-enabled="true"] #gpk-theme-bg-layer {
   display: block;
   background-image: var(--gpk-bg-image);
@@ -32,6 +36,26 @@
 :root[data-gpk-bg-enabled="true"] body.dark-theme #gpk-theme-bg-layer,
 :root[data-gpk-bg-enabled="true"]:has(:where(.theme-host):where(.dark-theme)) #gpk-theme-bg-layer {
   filter: blur(var(--gpk-bg-blur)) brightness(0.5);
+}
+
+:root[data-gpk-firefox="true"] #gpk-theme-bg-layer {
+  overflow: hidden;
+  filter: none;
+  transform: none;
+}
+
+:root[data-gpk-firefox="true"] #gpk-theme-bg-layer::before {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(var(--gpk-bg-blur));
+  -webkit-backdrop-filter: blur(var(--gpk-bg-blur));
+  background: rgba(0, 0, 0, 0.001);
+}
+
+:root[data-gpk-firefox="true"][data-gpk-bg-enabled="true"] body.dark-theme #gpk-theme-bg-layer::before,
+:root[data-gpk-firefox="true"][data-gpk-bg-enabled="true"]:has(:where(.theme-host):where(.dark-theme)) #gpk-theme-bg-layer::before {
+  backdrop-filter: blur(var(--gpk-bg-blur)) brightness(0.5);
+  -webkit-backdrop-filter: blur(var(--gpk-bg-blur)) brightness(0.5);
 }
 
 :root[data-gpk-bg-enabled="true"] bard-sidenav-container>bard-sidenav {

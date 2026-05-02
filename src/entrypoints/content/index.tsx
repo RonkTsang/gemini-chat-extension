@@ -17,6 +17,21 @@ export default defineContentScript({
     // Log context creation
     console.log('[ContentScript] Context created, isValid:', ctx.isValid)
 
+    if (import.meta.env.FIREFOX) {
+      console.log('[WXTContextDemo] Registering invalidation listeners')
+      ctx.onInvalidated(() => {
+        console.log('[WXTContextDemo] Content script invalidated', {
+          isValid: ctx.isValid,
+          isInvalid: ctx.isInvalid,
+          href: window.location.href,
+        })
+      })
+      // Ignore the startup event emitted by the current script instance.
+      // ctx.listenForNewerScripts({ ignoreFirstEvent: true })
+      // ctx.stopOldScripts()
+      console.log('[WXTContextDemo] Newer script detection enabled')
+    }
+
     // Initialize i18n cache ASAP (before context might be invalidated)
     i18nCache.initialize()
 

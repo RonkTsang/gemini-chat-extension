@@ -118,17 +118,25 @@ function isMainWorldThemeSyncReady(): boolean {
 function dispatchMainWorldAppearanceApply(
   detail: ThemeAppearanceApplyEventDetail,
 ): boolean {
-  if (typeof window === 'undefined' || !isMainWorldThemeSyncReady()) {
+  const ready = isMainWorldThemeSyncReady()
+  console.log('[ThemeAppearanceDebug] dispatchMainWorldAppearanceApply', {
+    pageOrigin: typeof location !== 'undefined' ? location.origin : null,
+    ready,
+    detail,
+  })
+  if (typeof window === 'undefined' || !ready) {
     return false
   }
 
   try {
-    window.dispatchEvent(
-      new CustomEvent<ThemeAppearanceApplyEventDetail>(
-        GEM_EXT_EVENTS.THEME_APPEARANCE_APPLY,
-        { detail },
-      ),
-    )
+    window.postMessage({
+      source: 'gpk-theme-sync',
+      type: 'apply',
+      detail,
+    }, window.location.origin)
+    console.log('[ThemeAppearanceDebug] dispatchMainWorldAppearanceApply postMessage sent', {
+      pageOrigin: typeof location !== 'undefined' ? location.origin : null,
+    })
     return true
   } catch {
     return false
@@ -139,6 +147,11 @@ function applyAppearanceLocally(
   theme: GeminiTheme,
   bardColorTheme: BardColorTheme,
 ): void {
+  console.log('[ThemeAppearanceDebug] applyAppearanceLocally', {
+    pageOrigin: typeof location !== 'undefined' ? location.origin : null,
+    theme,
+    bardColorTheme,
+  })
   applyBodyTheme(theme)
   safeSetLocalStorageItem(STORAGE_KEY_THEME, theme)
   if (bardColorTheme) {
@@ -165,6 +178,12 @@ export function setAppearanceMode(mode: AppearanceMode): AppearanceState {
       applyAppearanceLocally(mode, bardColorTheme)
     }
 
+    console.log('[ThemeAppearanceDebug] setAppearanceMode', {
+      pageOrigin: typeof location !== 'undefined' ? location.origin : null,
+      mode,
+      bridged,
+      effectiveTheme: mode,
+    })
     return {
       mode,
       effectiveTheme: mode,
@@ -182,6 +201,12 @@ export function setAppearanceMode(mode: AppearanceMode): AppearanceState {
     applyAppearanceLocally(systemTheme, null)
   }
 
+  console.log('[ThemeAppearanceDebug] setAppearanceMode', {
+    pageOrigin: typeof location !== 'undefined' ? location.origin : null,
+    mode: 'system',
+    bridged,
+    effectiveTheme: systemTheme,
+  })
   return {
     mode: 'system',
     effectiveTheme: systemTheme,
