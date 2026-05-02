@@ -1,6 +1,6 @@
 
-import { Container, createRoot, Root } from "react-dom/client"
-import { StrictMode, useEffect, useState } from "react"
+import { createRoot, Root } from "react-dom/client"
+import { StrictMode } from "react"
 import { PromptEntrance } from "@/components/prompt-entrance"
 
 // Pure native JS implementation - supports remounting
@@ -8,25 +8,102 @@ let root: Root | null = null
 let container: HTMLDivElement | null = null
 let observer: MutationObserver | null = null
 let remountTimeout: NodeJS.Timeout | null = null
+const PROMPT_CONTAINER_ID = 'gemini-prompt-button-container'
+
+type PromptContext = {
+  toolboxDrawer: HTMLElement
+  inputAreaRoot: HTMLElement | null
+  inputAreaV2: HTMLElement | null
+  textInputField: HTMLElement | null
+}
+
+const findPromptContext = (): PromptContext | null => {
+  const toolboxDrawer = document.querySelector('toolbox-drawer') as HTMLElement | null
+  if (!toolboxDrawer) return null
+
+  const inputAreaRoot = toolboxDrawer.closest<HTMLElement>('[data-node-type="input-area"]')
+  const inputAreaV2 = toolboxDrawer.closest<HTMLElement>('input-area-v2')
+  const textInputField = inputAreaRoot?.querySelector<HTMLElement>('.text-input-field') ?? null
+
+  return {
+    toolboxDrawer,
+    inputAreaRoot,
+    inputAreaV2,
+    textInputField,
+  }
+}
+
+const isSingleLineInputMode = (context: PromptContext) => {
+  const { inputAreaRoot, inputAreaV2, textInputField } = context
+  if (!inputAreaV2?.classList.contains('single-line-input')) return false
+
+  // Gemini's new single-line layout keeps `single-line-input` on the outer shell
+  // even after expanding. Pair it with inner state classes to avoid false positives.
+  if (inputAreaRoot?.querySelector('.single-line-format')) return true
+  return !textInputField?.classList.contains('height-expanded-past-single-line')
+}
+
+const isPromptContainerValid = (
+  existingContainer: HTMLElement,
+  toolboxDrawer: HTMLElement,
+) => {
+  return existingContainer.isConnected
+    && existingContainer.parentElement === toolboxDrawer.parentElement
+    && toolboxDrawer.nextElementSibling === existingContainer
+}
+
+const isRelevantElement = (element: Element) => {
+  if (element.id === PROMPT_CONTAINER_ID) return true
+  if (element.matches('toolbox-drawer, input-area-v2, [data-node-type="input-area"], .text-input-field, .single-line-format')) {
+    return true
+  }
+
+  return !!element.querySelector('toolbox-drawer, input-area-v2, [data-node-type="input-area"], .text-input-field, .single-line-format, #gemini-prompt-button-container')
+}
+
+const hasRelevantMutation = (mutation: MutationRecord) => {
+  if (mutation.type === 'attributes') {
+    return mutation.target instanceof Element && isRelevantElement(mutation.target)
+  }
+
+  if (mutation.type !== 'childList') return false
+
+  return [...mutation.addedNodes, ...mutation.removedNodes].some(node =>
+    node instanceof Element && isRelevantElement(node)
+  )
+}
+
+const scheduleEnsurePromptButton = () => {
+  if (remountTimeout) clearTimeout(remountTimeout)
+  remountTimeout = setTimeout(() => {
+    ensurePromptButton()
+    remountTimeout = null
+  }, 100)
+}
 
 const insertPromptButton = (forceRemount = false) => {
-  const toolboxDrawer = document.querySelector('toolbox-drawer')
-  if (!toolboxDrawer) return false
+  const context = findPromptContext()
+  if (!context) return false
+
+  if (isSingleLineInputMode(context)) {
+    cleanup()
+    return false
+  }
+
+  const { toolboxDrawer } = context
 
   // Check existing button status
-  const existingContainer = document.getElementById('gemini-prompt-button-container') as HTMLDivElement
+  const existingContainer = document.getElementById(PROMPT_CONTAINER_ID) as HTMLDivElement | null
   if (existingContainer && !forceRemount) {
-    // Check if button is still valid (in correct parent container)
-    if (existingContainer.isConnected && toolboxDrawer.parentNode?.contains(existingContainer)) {
+    if (isPromptContainerValid(existingContainer, toolboxDrawer)) {
       return true
     }
-    // Button exists but in wrong position, needs remounting
     cleanup()
   }
 
   // Create container
   container = document.createElement('div')
-  container.id = 'gemini-prompt-button-container'
+  container.id = PROMPT_CONTAINER_ID
   
   // Insert after toolbox-drawer
   toolboxDrawer.parentNode?.insertBefore(container, toolboxDrawer.nextSibling)
@@ -48,24 +125,33 @@ const cleanup = () => {
     root.unmount()
     root = null
   }
-  if (container) {
-    container.remove()
-    container = null
-  }
+
+  const mountedContainer = document.getElementById(PROMPT_CONTAINER_ID)
+  mountedContainer?.remove()
+  container = null
 }
 
 const ensurePromptButton = () => {
-  const toolboxDrawer = document.querySelector('toolbox-drawer')
-  if (!toolboxDrawer) return false
+  const context = findPromptContext()
+  if (!context) {
+    cleanup()
+    return false
+  }
+
+  if (isSingleLineInputMode(context)) {
+    cleanup()
+    return false
+  }
+
+  const { toolboxDrawer } = context
 
   // Check if remounting is needed
-  const existingContainer = document.getElementById('gemini-prompt-button-container')
+  const existingContainer = document.getElementById(PROMPT_CONTAINER_ID)
   if (!existingContainer || !existingContainer.isConnected) {
     return insertPromptButton(true)
   }
 
-  // Check if button is in the correct position
-  if (!toolboxDrawer.parentNode?.contains(existingContainer)) {
+  if (!isPromptContainerValid(existingContainer, toolboxDrawer)) {
     cleanup()
     return insertPromptButton(true)
   }
@@ -78,45 +164,17 @@ const startObserver = () => {
   if (observer) return
 
   observer = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
-      if (mutation.type === 'childList') {
-        const addedNodes = Array.from(mutation.addedNodes)
-        const removedNodes = Array.from(mutation.removedNodes)
-        
-        // Check if a new toolbox-drawer was added
-        const hasNewToolboxDrawer = addedNodes.some(node => 
-          node.nodeType === Node.ELEMENT_NODE && 
-          (node as Element).tagName?.toLowerCase() === 'toolbox-drawer'
-        )
-        
-        // Check if toolbox-drawer was removed
-        const hasRemovedToolboxDrawer = removedNodes.some(node => 
-          node.nodeType === Node.ELEMENT_NODE && 
-          (node as Element).tagName?.toLowerCase() === 'toolbox-drawer'
-        )
-
-        // Check if existing button was removed
-        const hasRemovedPromptButton = removedNodes.some(node => 
-          node.nodeType === Node.ELEMENT_NODE && 
-          (node as Element).id === 'gemini-prompt-button-container'
-        )
-        
-        if (hasNewToolboxDrawer || hasRemovedToolboxDrawer || hasRemovedPromptButton) {
-          // Debounce: avoid frequent remounting
-          if (remountTimeout) clearTimeout(remountTimeout)
-          remountTimeout = setTimeout(() => {
-            ensurePromptButton()
-            remountTimeout = null
-          }, 100)
-        }
-      }
-    })
+    if (mutations.some(hasRelevantMutation)) {
+      scheduleEnsurePromptButton()
+    }
   })
 
   // Start monitoring
   observer.observe(document.body, {
     childList: true,
-    subtree: true
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['class'],
   })
 }
 

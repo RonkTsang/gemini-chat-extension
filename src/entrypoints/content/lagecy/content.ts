@@ -47,6 +47,296 @@ requestIdleCallback(() => {
 
 
 let isQuickQuoteEnabled = quickFollowStore.getState().settings.enabled;
+const QUOTE_HIGHLIGHT_NAME = 'gemini-power-kit-quote-highlight'
+const QUOTE_CONTEXT_LENGTH = 48
+const QUOTE_HIGHLIGHT_DURATION = 2000
+
+let pendingQuoteAnchor = null
+let quoteHighlightTimeout = null
+
+function generateQuoteId() {
+  if (globalThis.crypto && typeof globalThis.crypto.randomUUID === 'function') {
+    return globalThis.crypto.randomUUID()
+  }
+
+  return `quote-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+}
+
+function getConversationId() {
+  const match = window.location.pathname.match(/^\/app\/([^/?#]+)/)
+  return match?.[1] ?? ''
+}
+
+function ensureMessageContentId(messageContent) {
+  if (messageContent.id) return messageContent.id
+
+  if (!messageContent.dataset.gpkQuoteSourceId) {
+    messageContent.dataset.gpkQuoteSourceId = `gpk-message-${generateQuoteId()}`
+  }
+
+  return messageContent.dataset.gpkQuoteSourceId
+}
+
+function clearPendingQuoteAnchor() {
+  pendingQuoteAnchor = null
+}
+
+function clearQuoteHighlight() {
+  if (quoteHighlightTimeout) {
+    clearTimeout(quoteHighlightTimeout)
+    quoteHighlightTimeout = null
+  }
+
+  if (globalThis.CSS?.highlights) {
+    globalThis.CSS.highlights.delete(QUOTE_HIGHLIGHT_NAME)
+  }
+
+  const selection = window.getSelection()
+  selection?.removeAllRanges()
+}
+
+function scheduleQuoteHighlightCleanup() {
+  if (quoteHighlightTimeout) {
+    clearTimeout(quoteHighlightTimeout)
+  }
+
+  quoteHighlightTimeout = setTimeout(() => {
+    clearQuoteHighlight()
+  }, QUOTE_HIGHLIGHT_DURATION)
+}
+
+function serializeQuoteAnchor(range, messageContent, selectedText) {
+  if (!messageContent?.contains(range.commonAncestorContainer)) {
+    return null
+  }
+
+  const rootRange = document.createRange()
+  rootRange.selectNodeContents(messageContent)
+  rootRange.setEnd(range.startContainer, range.startOffset)
+
+  const startOffset = rootRange.toString().length
+  const selectedLength = range.toString().length
+  const endOffset = startOffset + selectedLength
+  const messageText = messageContent.textContent || ''
+
+  return {
+    quoteId: generateQuoteId(),
+    conversationId: getConversationId(),
+    sourceMessageId: ensureMessageContentId(messageContent),
+    selectedText,
+    startOffset,
+    endOffset,
+    prefix: messageText.slice(Math.max(0, startOffset - QUOTE_CONTEXT_LENGTH), startOffset),
+    suffix: messageText.slice(endOffset, endOffset + QUOTE_CONTEXT_LENGTH),
+  }
+}
+
+function createRangeFromOffsets(root, startOffset, endOffset) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+  const range = document.createRange()
+  let currentOffset = 0
+  let startNode = null
+  let endNode = null
+  let startNodeOffset = 0
+  let endNodeOffset = 0
+  let lastTextNode = null
+
+  while (walker.nextNode()) {
+    const node = walker.currentNode
+    const textLength = node.textContent?.length || 0
+    lastTextNode = node
+
+    if (!startNode && startOffset <= currentOffset + textLength) {
+      startNode = node
+      startNodeOffset = Math.max(0, startOffset - currentOffset)
+    }
+
+    if (!endNode && endOffset <= currentOffset + textLength) {
+      endNode = node
+      endNodeOffset = Math.max(0, endOffset - currentOffset)
+      break
+    }
+
+    currentOffset += textLength
+  }
+
+  if (!startNode && lastTextNode) {
+    startNode = lastTextNode
+    startNodeOffset = lastTextNode.textContent?.length || 0
+  }
+
+  if (!endNode && lastTextNode) {
+    endNode = lastTextNode
+    endNodeOffset = lastTextNode.textContent?.length || 0
+  }
+
+  if (!startNode || !endNode) {
+    return null
+  }
+
+  range.setStart(startNode, startNodeOffset)
+  range.setEnd(endNode, endNodeOffset)
+  return range
+}
+
+function findQuoteRangeByText(root, anchor) {
+  const messageText = root.textContent || ''
+  if (!anchor?.selectedText) return null
+
+  let searchIndex = -1
+  let bestScore = -1
+  let fromIndex = 0
+
+  while (fromIndex < messageText.length) {
+    const foundIndex = messageText.indexOf(anchor.selectedText, fromIndex)
+    if (foundIndex === -1) break
+
+    const prefix = messageText.slice(Math.max(0, foundIndex - anchor.prefix.length), foundIndex)
+    const suffix = messageText.slice(foundIndex + anchor.selectedText.length, foundIndex + anchor.selectedText.length + anchor.suffix.length)
+    const score = Number(prefix === anchor.prefix) + Number(suffix === anchor.suffix)
+
+    if (score > bestScore) {
+      bestScore = score
+      searchIndex = foundIndex
+    }
+
+    fromIndex = foundIndex + 1
+  }
+
+  if (searchIndex === -1) {
+    return null
+  }
+
+  return createRangeFromOffsets(
+    root,
+    searchIndex,
+    searchIndex + anchor.selectedText.length,
+  )
+}
+
+function readQuoteAnchorFromDataset(userQueryElement) {
+  const {
+    quoteId,
+    quoteSourceMessageId,
+    quoteConversationId,
+    quoteSelectedText,
+    quoteStartOffset,
+    quoteEndOffset,
+    quotePrefix,
+    quoteSuffix,
+  } = userQueryElement.dataset
+
+  if (!quoteId || !quoteSourceMessageId || !quoteConversationId || !quoteSelectedText) {
+    return null
+  }
+
+  return {
+    quoteId,
+    conversationId: quoteConversationId,
+    sourceMessageId: quoteSourceMessageId,
+    selectedText: quoteSelectedText,
+    startOffset: Number(quoteStartOffset),
+    endOffset: Number(quoteEndOffset),
+    prefix: quotePrefix || '',
+    suffix: quoteSuffix || '',
+  }
+}
+
+function attachQuoteAnchorToQuery(userQueryElement, anchor) {
+  userQueryElement.dataset.quoteId = anchor.quoteId
+  userQueryElement.dataset.quoteSourceMessageId = anchor.sourceMessageId
+  userQueryElement.dataset.quoteConversationId = anchor.conversationId
+  userQueryElement.dataset.quoteSelectedText = anchor.selectedText
+  userQueryElement.dataset.quoteStartOffset = String(anchor.startOffset)
+  userQueryElement.dataset.quoteEndOffset = String(anchor.endOffset)
+  userQueryElement.dataset.quotePrefix = anchor.prefix
+  userQueryElement.dataset.quoteSuffix = anchor.suffix
+}
+
+function resolveQuoteSourceMessage(anchor) {
+  if (!anchor?.sourceMessageId) return null
+
+  return document.getElementById(anchor.sourceMessageId)
+    || document.querySelector(`[data-gpk-quote-source-id="${anchor.sourceMessageId}"]`)
+}
+
+function highlightQuoteRange(range) {
+  clearQuoteHighlight()
+
+  if (globalThis.Highlight && globalThis.CSS?.highlights) {
+    globalThis.CSS.highlights.set(QUOTE_HIGHLIGHT_NAME, new Highlight(range))
+  } else {
+    const selection = window.getSelection()
+    selection?.removeAllRanges()
+    selection?.addRange(range)
+  }
+
+  scheduleQuoteHighlightCleanup()
+}
+
+function jumpToQuoteSource(userQueryElement) {
+  const anchor = readQuoteAnchorFromDataset(userQueryElement)
+  if (!anchor || anchor.conversationId !== getConversationId()) {
+    return
+  }
+
+  const sourceMessage = resolveQuoteSourceMessage(anchor)
+  if (!sourceMessage) {
+    return
+  }
+
+  let range = createRangeFromOffsets(sourceMessage, anchor.startOffset, anchor.endOffset)
+  if (!range || range.toString() !== anchor.selectedText) {
+    range = findQuoteRangeByText(sourceMessage, anchor)
+  }
+
+  sourceMessage.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+  if (!range) {
+    return
+  }
+
+  const focusTarget = range.startContainer.nodeType === Node.TEXT_NODE
+    ? range.startContainer.parentElement
+    : range.startContainer
+
+  focusTarget?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
+  highlightQuoteRange(range)
+}
+
+function jumpToPendingQuoteSource() {
+  if (!pendingQuoteAnchor || pendingQuoteAnchor.conversationId !== getConversationId()) {
+    return
+  }
+
+  const sourceMessage = resolveQuoteSourceMessage(pendingQuoteAnchor)
+  if (!sourceMessage) {
+    return
+  }
+
+  let range = createRangeFromOffsets(
+    sourceMessage,
+    pendingQuoteAnchor.startOffset,
+    pendingQuoteAnchor.endOffset,
+  )
+
+  if (!range || range.toString() !== pendingQuoteAnchor.selectedText) {
+    range = findQuoteRangeByText(sourceMessage, pendingQuoteAnchor)
+  }
+
+  sourceMessage.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+  if (!range) {
+    return
+  }
+
+  const focusTarget = range.startContainer.nodeType === Node.TEXT_NODE
+    ? range.startContainer.parentElement
+    : range.startContainer
+
+  focusTarget?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
+  highlightQuoteRange(range)
+}
 
 quickFollowStore.getState().hydrate().catch((error) => {
   console.error('Failed to hydrate quick follow store:', error)
@@ -730,13 +1020,16 @@ function handleMouseUp(event) {
         const selection = window.getSelection();
         const selectedText = selection.toString().trim();
 
-        if (selectedText && event.target.closest('message-content') && selection.rangeCount > 0) {
+        const sourceMessage = event.target.closest('message-content');
+
+        if (selectedText && sourceMessage && selection.rangeCount > 0) {
             if (event.target.closest('#gemini-toc-popover')) {
                 eventBus.emit(EVENTS.QUICK_FOLLOW_UP_HIDE);
                 return;
             }
 
             const range = selection.getRangeAt(0);
+            pendingQuoteAnchor = serializeQuoteAnchor(range, sourceMessage, selectedText);
             const selectionRect = range.getBoundingClientRect();
             const clampedX = Math.max(selectionRect.left, Math.min(event.clientX, selectionRect.right));
             const clampedY = Math.max(selectionRect.top, Math.min(event.clientY, selectionRect.bottom));
@@ -755,6 +1048,9 @@ function handleMouseUp(event) {
               },
             });
         } else {
+            if (!document.getElementById('gemini-quote-ui')) {
+              clearPendingQuoteAnchor();
+            }
             eventBus.emit(EVENTS.QUICK_FOLLOW_UP_HIDE);
         }
     }, 100);
@@ -770,9 +1066,11 @@ function initializeQuoteFeature(chatWindow) {
 function destroyQuoteFeature(chatWindow) {
     chatWindow.removeEventListener('mouseup', handleMouseUp);
     chatWindow._geminiQuoteInitialized = false;
+    removeQuoteUI();
 }
 
-function removeQuoteUI() {
+function removeQuoteUI(options = {}) {
+  const { keepPendingAnchor = false } = options;
   const quoteUI = document.getElementById('gemini-quote-ui');
   if (quoteUI) {
     if (quoteUI.observer) {
@@ -789,6 +1087,10 @@ function removeQuoteUI() {
 
   const sentinel = document.getElementById('gemini-quote-sentinel');
   if (sentinel) sentinel.remove();
+
+  if (!keepPendingAnchor) {
+    clearPendingQuoteAnchor();
+  }
 }
 
 function addQuoteUI(selectedText) {
@@ -804,7 +1106,7 @@ function addQuoteUI(selectedText) {
   const HIDDEN_END_SNIPPET = 900;
 
   // --- Robust Cleanup ---
-  removeQuoteUI();
+  removeQuoteUI({ keepPendingAnchor: true });
 
   // --- Prepare Text Versions ---
   let displayText = selectedText;
@@ -825,6 +1127,15 @@ function addQuoteUI(selectedText) {
   // --- Secure UI Construction ---
   const quoteUI = document.createElement('div');
   quoteUI.id = 'gemini-quote-ui';
+  if (pendingQuoteAnchor?.quoteId) {
+    quoteUI.dataset.quoteId = pendingQuoteAnchor.quoteId;
+  }
+  if (pendingQuoteAnchor) {
+    quoteUI.classList.add('is-clickable');
+    quoteUI.onclick = () => {
+      jumpToPendingQuoteSource();
+    }
+  }
 
   const iconSpan = document.createElement('span');
   iconSpan.className = 'quote-icon';
@@ -886,7 +1197,7 @@ function addQuoteUI(selectedText) {
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         if (Array.from(mutation.removedNodes).includes(sentinel)) {
-          removeQuoteUI();
+          removeQuoteUI({ keepPendingAnchor: true });
           return;
         }
       }
@@ -896,7 +1207,10 @@ function addQuoteUI(selectedText) {
     quoteUI.observer = observer;
   }
 
-  closeButton.onclick = removeQuoteUI;
+  closeButton.onclick = (event) => {
+    event.stopPropagation();
+    removeQuoteUI();
+  };
 }
 
 function transformQuoteInHistory(userQueryElement) {
@@ -942,10 +1256,24 @@ function transformQuoteInHistory(userQueryElement) {
   userQueryElement.dataset.isQuote = 'true';
   userQueryElement.dataset.quoteText = quotePart;
   userQueryElement.dataset.questionText = questionPart;
+
+  if (!userQueryElement.dataset.quoteId && pendingQuoteAnchor?.conversationId === getConversationId()) {
+    attachQuoteAnchorToQuery(userQueryElement, pendingQuoteAnchor)
+    clearPendingQuoteAnchor()
+  }
   
   // --- Create new UI ---
   const quoteDisplay = document.createElement('div');
   quoteDisplay.className = 'gemini-quote-display';
+
+  if (userQueryElement.dataset.quoteId) {
+    quoteDisplay.dataset.quoteId = userQueryElement.dataset.quoteId;
+    quoteDisplay.classList.add('is-clickable');
+    quoteDisplay.onclick = (event) => {
+      event.stopPropagation()
+      jumpToQuoteSource(userQueryElement)
+    }
+  }
 
   // Create and add the icon to align with gemini-quote-ui
   const iconSpan = document.createElement('span');

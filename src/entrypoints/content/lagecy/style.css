@@ -388,11 +388,33 @@ chat-window.immersives-mode #gemini-toc-popover {
   align-items: center;
   padding: 8px;
   margin-bottom: 8px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
   border-radius: 8px;
   background-color: var(--quote-ui-input-bg);
   color: var(--toc-text-color);
   font-size: 14px;
   text-align: left;
+}
+
+#gemini-quote-ui.is-clickable {
+  cursor: pointer;
+}
+
+#gemini-quote-ui.is-clickable:hover {
+  background-color: color(from var(--toc-text-color) srgb r g b / 0.12);
+}
+
+.single-line-format:has(#gemini-quote-ui),
+.text-input-field-main-area:has(#gemini-quote-ui),
+.text-input-field_textarea-inner:has(#gemini-quote-ui),
+rich-textarea:has(#gemini-quote-ui) {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .quote-icon {
@@ -411,7 +433,8 @@ chat-window.immersives-mode #gemini-toc-popover {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex-grow: 1;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 #gemini-quote-close-btn {
@@ -421,6 +444,7 @@ chat-window.immersives-mode #gemini-toc-popover {
   font-size: 20px;
   color: var(--toc-text-color);
   padding: 0 8px;
+  flex-shrink: 0;
 }
 
 .quote-ref-icon {
@@ -493,6 +517,14 @@ chat-window.immersives-mode #gemini-toc-popover {
   cursor: default;
 }
 
+.gemini-quote-display.is-clickable {
+  cursor: pointer;
+}
+
+.gemini-quote-display.is-clickable:hover {
+  background-color: color(from var(--toc-text-color) srgb r g b / 0.12);
+}
+
 .gemini-quote-display .quote-icon {
   margin-top: 4px;
   margin-right: 0;
@@ -507,6 +539,10 @@ chat-window.immersives-mode #gemini-toc-popover {
 .tippy-box[data-animation="slide-up-subtle"][data-state="hidden"] {
   opacity: 0;
   transform: translateY(8px);
+}
+
+::highlight(gemini-power-kit-quote-highlight) {
+  background: rgba(255, 214, 102, 0.55);
 }
 
 .tippy-box[data-animation="slide-up-subtle"] {
