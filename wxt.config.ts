@@ -1,7 +1,10 @@
 import { defineConfig } from 'wxt';
+import type { WxtViteConfig } from 'wxt';
 import svgr from 'vite-plugin-svgr';
 import removeConsole from 'vite-plugin-remove-console';
 import { visualizer } from 'rollup-plugin-visualizer';
+
+type WxtVitePlugin = NonNullable<WxtViteConfig['plugins']>[number]
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
@@ -12,15 +15,15 @@ export default defineConfig({
       global: 'globalThis',
     },
     plugins: [
-      svgr(),
-      configEnv.mode === 'production' ? removeConsole({ includes: ['log'] }) : undefined,
+      svgr() as unknown as WxtVitePlugin,
+      configEnv.mode === 'production' ? removeConsole({ includes: ['log'] }) as unknown as WxtVitePlugin : undefined,
       process.env.ANALYZE === 'true' ? visualizer({
         open: true,
         filename: '.output/stats.html',
         gzipSize: true,
         brotliSize: true,
-      }) : undefined,
-    ].filter(Boolean),
+      }) as unknown as WxtVitePlugin : undefined,
+    ].filter((plugin): plugin is WxtVitePlugin => Boolean(plugin)),
     esbuild: {
       charset: 'ascii',
     },

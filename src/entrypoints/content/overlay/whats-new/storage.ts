@@ -12,7 +12,8 @@ const STORAGE_KEY = 'lastSeenVersion'
 export async function getLastSeenVersion(): Promise<string | null> {
   try {
     const result = await browser.storage.local.get(STORAGE_KEY)
-    return result[STORAGE_KEY] || null
+    const lastSeenVersion = result[STORAGE_KEY]
+    return typeof lastSeenVersion === 'string' ? lastSeenVersion : null
   } catch (error) {
     console.error('Failed to get last seen version:', error)
     return null
