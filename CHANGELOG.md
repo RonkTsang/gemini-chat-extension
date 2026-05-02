@@ -1,3 +1,10 @@
+## [0.6.3](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.6.2...v0.6.3) (2026-05-02)
+
+
+### Bug Fixes
+
+* restore tab title on blank chat ([6695afc](https://github.com/RonkTsang/gemini-chat-extension/commit/6695afc949b1d47324f5d03d893aed8d86143d43))
+
 ## [0.6.2](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.6.1...v0.6.2) (2026-05-02)
 
 
