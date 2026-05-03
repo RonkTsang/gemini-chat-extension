@@ -62,6 +62,8 @@ function revokeObjectUrl(url: string | null): void {
 
 let activeAssetId: string | null = null
 let activeObjectUrl: string | null = null
+let panelPreviewAssetId: string | null = null
+let panelPreviewUrl: string | null = null
 
 interface PersistAndApplyOptions {
   readabilityAsset?: ThemeAssetRow | null
@@ -131,6 +133,14 @@ function resetActiveObjectUrl(nextAssetId: string | null, nextUrl: string | null
   }
   activeAssetId = nextAssetId
   activeObjectUrl = nextUrl
+}
+
+function resetPanelPreviewUrl(nextAssetId: string | null, nextUrl: string | null): void {
+  if (panelPreviewUrl && panelPreviewUrl !== nextUrl) {
+    revokeObjectUrl(panelPreviewUrl)
+  }
+  panelPreviewAssetId = nextAssetId
+  panelPreviewUrl = nextUrl
 }
 
 async function resolveBackgroundUrlFromSettings(
@@ -383,8 +393,41 @@ export async function resolveThemeBackgroundPreviewUrl(
   return await resolveBackgroundUrlFromSettings(normalized)
 }
 
+export async function resolveThemeBackgroundPreviewUrlForPanel(
+  settings: ThemeBackgroundSettings,
+): Promise<string | null> {
+  const normalized = normalizeThemeBackgroundSettings(settings)
+  if (!import.meta.env.FIREFOX) {
+    return await resolveBackgroundUrlFromSettings(normalized)
+  }
+
+  if (normalized.imageRef.kind !== 'asset') {
+    resetPanelPreviewUrl(null, null)
+    return null
+  }
+
+  if (panelPreviewAssetId === normalized.imageRef.assetId && panelPreviewUrl) {
+    return panelPreviewUrl
+  }
+
+  const asset = await getThemeAssetById(normalized.imageRef.assetId)
+  if (!asset) {
+    resetPanelPreviewUrl(null, null)
+    return null
+  }
+
+  const buffer = await asset.blob.arrayBuffer()
+  const clonedBlob = new Blob([buffer], {
+    type: asset.blob.type || 'application/octet-stream',
+  })
+  const objectUrl = URL.createObjectURL(clonedBlob)
+  resetPanelPreviewUrl(normalized.imageRef.assetId, objectUrl)
+  return objectUrl
+}
+
 export function __resetThemeBackgroundServiceForTests(): void {
   resetActiveObjectUrl(null, null)
+  resetPanelPreviewUrl(null, null)
   clearThemeBackgroundStyle()
   __resetWelcomeGreetingReadabilityServiceForTests()
 }

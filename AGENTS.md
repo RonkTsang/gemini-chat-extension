@@ -125,6 +125,10 @@ Verifies all locale files against English base.
 - Store translation keys in `src/locales/*.json`
 - English (`en.json`) is the base; keep keys aligned in other locales
 
+### Multi-Platform Differences
+- Before changing Chrome/Firefox-specific behavior, check [`docs/platforms.md`](docs/platforms.md).
+- Keep browser-specific code isolated with WXT `include`/`exclude` or `import.meta.env.FIREFOX`.
+
 ---
 
 ## Error Handling

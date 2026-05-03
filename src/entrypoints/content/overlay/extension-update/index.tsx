@@ -4,6 +4,7 @@ import { useEvent } from '@/hooks/useEventBus'
 import { ReloadDialog } from './ReloadDialog'
 import { toaster } from '@/components/ui/toaster'
 import { i18nCache, CACHE_KEYS } from '@/utils/i18nCache'
+import { isFirefoxReloadRequired } from '@/utils/firefoxReloadNotice'
 
 const RELOAD_TOAST_ID = 'extension-reload-toast'
 
@@ -48,13 +49,25 @@ function ExtensionUpdate() {
 
   // Listen for context invalidation via polling
   useEffect(() => {
+    let frameId: number | null = null
+    if (import.meta.env.FIREFOX && isFirefoxReloadRequired()) {
+      frameId = requestAnimationFrame(() => {
+        showReloadToast()
+      })
+    }
+
     const stopMonitoring = monitorExtensionContext(() => {
       // Show reload toast (non-blocking notification)
       showReloadToast()
     })
     
     // Clean up monitoring on unmount
-    return stopMonitoring
+    return () => {
+      if (frameId !== null) {
+        cancelAnimationFrame(frameId)
+      }
+      stopMonitoring()
+    }
   }, [])
 
   // Listen for SettingPanel state changes

@@ -1,6 +1,6 @@
 import { storage } from '#imports';
 
-// Define storage items using WXT storage API - direct keys like original chrome.storage.sync
+// Define storage items using WXT storage API.
 export const enableChatOutline = storage.defineItem<boolean>(
   'sync:enableChatOutline',
   {

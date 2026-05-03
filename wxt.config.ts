@@ -11,6 +11,9 @@ export default defineConfig({
   modules: ['@wxt-dev/module-react', '@wxt-dev/i18n/module'],
   srcDir: 'src',
   vite: (configEnv) => ({
+    define: {
+      global: 'globalThis',
+    },
     plugins: [
       svgr() as unknown as WxtVitePlugin,
       configEnv.mode === 'production' ? removeConsole({ includes: ['log'] }) as unknown as WxtVitePlugin : undefined,
@@ -32,7 +35,7 @@ export default defineConfig({
     // Falls back to package.json version for local development
     const version = process.env.RELEASE_VERSION || require('./package.json').version;
 
-    const manifest = {
+    const manifest: any = {
       name: "Gemini Power Kit: Your Essential Companion",
       version: version,
       default_locale: "en",
@@ -46,6 +49,24 @@ export default defineConfig({
         }
       ]
     };
+
+    if (env.browser === 'firefox') {
+      manifest.permissions.push(
+        'webRequest',
+        'webRequestBlocking',
+        '*://gemini.google.com/*',
+      )
+      manifest.browser_specific_settings = {
+        gecko: {
+          id: 'gemini-power-kit@ronktsang.com',
+          strict_min_version: '140.0',
+          data_collection_permissions: {
+            required: ['none'],
+            optional: [],
+          },
+        },
+      }
+    }
 
     if (!isProduction) {
       manifest.name = `🔴 ${manifest.name}`
