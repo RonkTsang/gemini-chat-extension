@@ -58,10 +58,10 @@ export default defineConfig({
       )
       manifest.browser_specific_settings = {
         gecko: {
-          id: 'gemini-power-kit@temporary.local',
-          strict_min_version: '128.0',
+          id: 'gemini-power-kit@ronktsang.com',
+          strict_min_version: '148.0',
           data_collection_permissions: {
-            required: [],
+            required: ['none'],
             optional: [],
           },
         },

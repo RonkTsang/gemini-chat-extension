@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { GEM_EXT_EVENTS } from '@/common/event'
 import {
   getAppearanceState,
   setAppearanceMode,
@@ -146,18 +145,25 @@ describe('appearance service', () => {
     expect(document.body.classList.contains('dark-theme')).toBe(true)
   })
 
-  it('uses main-world bridge when ready and dispatches apply event', () => {
+  it('uses main-world bridge when ready and posts apply message', () => {
     document.documentElement.setAttribute('data-gpk-theme-sync-ready', 'true')
-    const dispatchSpy = vi.spyOn(window, 'dispatchEvent')
+    const postMessageSpy = vi.spyOn(window, 'postMessage')
     const setItemSpy = vi.spyOn(Storage.prototype, 'setItem')
 
     const state = setAppearanceMode('dark')
 
     expect(state).toEqual({ mode: 'dark', effectiveTheme: 'dark' })
-    expect(dispatchSpy).toHaveBeenCalledWith(
+    expect(postMessageSpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        type: GEM_EXT_EVENTS.THEME_APPEARANCE_APPLY,
+        source: 'gpk-theme-sync',
+        type: 'apply',
+        detail: expect.objectContaining({
+          mode: 'dark',
+          theme: 'dark',
+          bardColorTheme: 'Bard-Dark-Theme',
+        }),
       }),
+      window.location.origin,
     )
     expect(setItemSpy).not.toHaveBeenCalled()
   })

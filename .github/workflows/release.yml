@@ -60,14 +60,16 @@ jobs:
             echo "skip=false" >> $GITHUB_OUTPUT
           fi
 
-      # Step 2: Build and Package extension with the predicted version
-      # 'pnpm run zip' (wxt zip) automatically runs build before packaging.
+      # Step 2: Build and package both browser targets with the predicted version.
+      # 'pnpm run zip' commands automatically run WXT build before packaging.
       # The RELEASE_VERSION env var is read by wxt.config.ts for both build and zip.
       - name: Build and Package
         if: steps.version.outputs.skip == 'false'
         env:
           RELEASE_VERSION: ${{ steps.version.outputs.version }}
-        run: pnpm run zip
+        run: |
+          pnpm run zip
+          pnpm run zip:firefox
 
       # Step 3: Execute actual release
       # semantic-release will update version, create changelog, commit, tag, and publish
