@@ -1,12 +1,16 @@
 import { browser } from 'wxt/browser'
 import { isStuffMediaRequest, parseMediaResponse } from '@/utils/stuffMediaParser'
 import {
+  FIREFOX_GET_INSTANCE_ID_MESSAGE,
   OPEN_IN_NEW_TAB_MESSAGE,
   STUFF_MEDIA_DATA_RECEIVED_MESSAGE,
+  isFirefoxGetInstanceIdMessage,
   isOpenInNewTabMessage,
 } from '@/types/runtime-messages'
 
 let hasStarted = false
+const firefoxInstanceId = globalThis.crypto?.randomUUID?.()
+  ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`
 
 type OnBeforeRequestListener = Parameters<typeof browser.webRequest.onBeforeRequest.addListener>[0]
 type OnBeforeRequestDetails = Parameters<OnBeforeRequestListener>[0]
@@ -318,6 +322,10 @@ export function startFirefoxBackground(): void {
   )
 
   browser.runtime.onMessage.addListener((message) => {
+    if (isFirefoxGetInstanceIdMessage(message)) {
+      return Promise.resolve({ instanceId: firefoxInstanceId })
+    }
+
     if (!isOpenInNewTabMessage(message)) {
       return
     }

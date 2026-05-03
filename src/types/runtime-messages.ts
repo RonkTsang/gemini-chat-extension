@@ -2,6 +2,7 @@ import type { StuffMediaDataEvent } from '@/common/event'
 
 export const STUFF_MEDIA_DATA_RECEIVED_MESSAGE = 'stuff-media:data-received' as const
 export const OPEN_IN_NEW_TAB_MESSAGE = 'stuff-page:open-in-new-tab' as const
+export const FIREFOX_GET_INSTANCE_ID_MESSAGE = 'firefox:get-instance-id' as const
 
 export interface StuffMediaDataReceivedMessage {
   type: typeof STUFF_MEDIA_DATA_RECEIVED_MESSAGE
@@ -13,6 +14,14 @@ export interface OpenInNewTabMessage {
   payload: {
     url: string
   }
+}
+
+export interface FirefoxGetInstanceIdMessage {
+  type: typeof FIREFOX_GET_INSTANCE_ID_MESSAGE
+}
+
+export interface FirefoxGetInstanceIdResponse {
+  instanceId: string
 }
 
 export function isStuffMediaDataReceivedMessage(
@@ -40,4 +49,15 @@ export function isOpenInNewTabMessage(
     && !!candidate.payload
     && typeof candidate.payload === 'object'
     && typeof candidate.payload.url === 'string'
+}
+
+export function isFirefoxGetInstanceIdMessage(
+  message: unknown,
+): message is FirefoxGetInstanceIdMessage {
+  if (!message || typeof message !== 'object') {
+    return false
+  }
+
+  const candidate = message as Partial<FirefoxGetInstanceIdMessage>
+  return candidate.type === FIREFOX_GET_INSTANCE_ID_MESSAGE
 }
