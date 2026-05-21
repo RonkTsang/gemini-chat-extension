@@ -48,7 +48,7 @@
   --gem-sys-color--on-surface: var(--theme-1000);
 
   /* welcome 页面的背景色 */
-  --bard-color-surface-dim-tmp: color-mix(in srgb, var(--theme-25), #ffffff 50%);
+  --bard-color-surface-dim-tmp: color-mix(in srgb, var(--theme-25), #ffffff 80%);
   --gem-sys-color--secondary-container: var(--theme-50);
   --gem-sys-color--on-secondary-container: var(--theme-800);
   --gem-sys-color--surface-container-low: var(--theme-25);
@@ -59,6 +59,15 @@
 
   /* 按钮边框颜色 */
   /* --gem-sys-color--outline-variant: var(--theme-300); */
+
+  --lumi-sys-color-acc-color--accent: var(--gem-sys-color--surface-container-high);
+  --lumi-sys-color--surface-accent: var(--gem-sys-color--surface-container-high);
+
+  --lumi-sys-color-acc-color--accent-container: var(--gem-sys-color--surface-container);
+
+  --lumi-sys-color--surface: var(--bard-color-surface-dim-tmp);
+
+  --lumi-sys-color--surface-dim: var(--bard-color-surface-dim-tmp);
 }
 
 :where(.theme-host):where(.light-theme) input-area-v2 button.send-button mat-icon.send-button-icon {
@@ -89,6 +98,12 @@
   --gem-sys-color--outline-variant: var(--theme-900);
   --gem-sys-color--secondary-container: var(--theme-700);
   --gem-sys-color--on-secondary-container: var(--theme-100);
+
+  /* NEW UI */
+  --lumi-sys-color-acc-color--accent: var(--gem-sys-color--surface-container-high);
+  --lumi-sys-color--surface-accent: var(--gem-sys-color--surface-container-high);
+  --lumi-sys-color-acc-color--accent-container: var(--gem-sys-color--surface-container);
+  --lumi-sys-color--surface: var(--bard-color-surface-dim-tmp);
 }
 
 :where(.theme-host):where(.dark-theme)::selection {

@@ -47,6 +47,14 @@
 
   /* 按钮边框颜色 */
   /* --gem-sys-color--outline-variant: var(--theme-300); */
+
+  --lumi-sys-color-acc-color--accent: var(--gem-sys-color--surface-container-high);
+  /* --lumi-sys-color--surface-accent: #9dd2ff; */
+  --lumi-sys-color--surface-accent: var(--gem-sys-color--surface-container-high);
+
+  --lumi-sys-color-acc-color--accent-container: var(--gem-sys-color--surface-container);
+
+  --lumi-sys-color--surface: var(--bard-color-surface-dim-tmp);
 }
 
 :where(.theme-host)::selection {

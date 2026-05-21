@@ -4,7 +4,7 @@
 该模块会在 Gemini 左侧导航中，`Settings & help` 上方注入一个 `Gemini Power kit` 入口。
 
 支持两类结构：
-- 桌面侧边栏（`side-nav-action-button`）
+- 桌面侧边栏（`sidenav-mavatar-footer`，并保留旧 `side-nav-action-button` fallback）
 - 移动端/抽屉控制区（`.mobile-controls` 下的 `button`）
 
 点击入口后，通过 `eventBus` 打开插件主题设置面板。
@@ -56,7 +56,8 @@ tooltip 生命周期防护：
 
 ## 关键选择器 / Test ID
 - 桌面设置锚点：
-  - `side-nav-action-button[data-test-id="settings-and-help-button"]`
+  - `button[data-test-id="mavatar-footer-settings-button"]`
+  - 旧版 fallback：`side-nav-action-button[data-test-id="settings-and-help-button"]`
 - 移动端设置锚点：
   - `button[data-test-id="mobile-settings-and-help-control"]`
 - 注入的桌面入口：
@@ -69,6 +70,7 @@ tooltip 生命周期防护：
 - 折叠态图标尺寸需与 Material Icon Button 对齐（当前为 `20px`）。
 - 点击事件绑定使用 `data-gpk-bound` 防止重复绑定。
 - 如果 Gemini DOM 结构变动，先更新锚点选择器再看其他逻辑。
+- 当前桌面布局使用 `.mavatar-footer-row.collapsed` 判断收起态，去掉 `collapsed` 后为展开态。
 
 ## 快速验收清单
 1. 桌面收起态：入口出现在 `Settings & help` 上方。

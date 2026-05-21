@@ -4,7 +4,7 @@
 This module injects a `Gemini Power kit` entry into Gemini's side navigation, right above `Settings & help`.
 
 It supports:
-- Desktop side nav (`side-nav-action-button`)
+- Desktop side nav (`sidenav-mavatar-footer`, with legacy `side-nav-action-button` fallback)
 - Mobile/drawer controls (`button` list in `.mobile-controls`)
 
 Clicking the entry opens the extension theme settings panel via `eventBus`.
@@ -56,7 +56,8 @@ Tooltip lifecycle safety:
 
 ## Key Selectors / Test IDs
 - Desktop settings anchor:
-  - `side-nav-action-button[data-test-id="settings-and-help-button"]`
+  - `button[data-test-id="mavatar-footer-settings-button"]`
+  - Legacy fallback: `side-nav-action-button[data-test-id="settings-and-help-button"]`
 - Mobile settings anchor:
   - `button[data-test-id="mobile-settings-and-help-control"]`
 - Injected desktop entry:
@@ -69,6 +70,7 @@ Tooltip lifecycle safety:
 - Keep icon size aligned with Material icon button sizing (`20px` in collapsed desktop).
 - Avoid re-binding click listeners: guarded by `data-gpk-bound`.
 - If Gemini updates DOM structure, update anchor selectors first.
+- Current desktop layout uses `.mavatar-footer-row.collapsed` for the rail state and a non-collapsed footer row for expanded state.
 
 ## Quick Verification Checklist
 1. Desktop collapsed: entry appears above `Settings & help`.
