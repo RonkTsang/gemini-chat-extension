@@ -47,11 +47,63 @@ export function getContentEditor(chatWindow?: Element): HTMLElement | null {
  */
 export function getSendButton(chatWindow?: Element): HTMLElement | null {
   const container = chatWindow || document;
-  
-  // Find send button (could be in send or stop state)
-  const sendButton = container.querySelector('.send-button') as HTMLElement;
-  
-  return sendButton;
+
+  const selectors = [
+    '[data-node-type="input-area"] [data-test-id="send-button-container"] .send-button',
+    'input-area-v2 [data-test-id="send-button-container"] .send-button',
+    '[data-test-id="send-button-container"] .send-button',
+    '.send-button'
+  ];
+
+  for (const selector of selectors) {
+    const sendButton = container.querySelector<HTMLElement>(selector);
+    if (sendButton) {
+      return sendButton;
+    }
+  }
+
+  return null;
+}
+
+function getSendButtonStateHost(sendButton: HTMLElement): HTMLElement {
+  return sendButton.matches('.send-button')
+    ? sendButton
+    : sendButton.closest<HTMLElement>('.send-button') ?? sendButton;
+}
+
+function getInteractiveSendButton(sendButton: HTMLElement): HTMLElement {
+  return sendButton.matches('button')
+    ? sendButton
+    : sendButton.querySelector<HTMLElement>('button[aria-label], button') ?? sendButton;
+}
+
+function getSendButtonAriaLabel(sendButton: HTMLElement): string | null {
+  return sendButton.getAttribute('aria-label')
+    ?? getInteractiveSendButton(sendButton).getAttribute('aria-label');
+}
+
+function isSendButtonDisabled(sendButton: HTMLElement): boolean {
+  const host = getSendButtonStateHost(sendButton);
+  const interactiveButton = getInteractiveSendButton(sendButton);
+  const nativeButton = interactiveButton instanceof HTMLButtonElement ? interactiveButton : null;
+
+  return host.getAttribute('aria-disabled') === 'true'
+    || interactiveButton.getAttribute('aria-disabled') === 'true'
+    || host.hasAttribute('disabled')
+    || interactiveButton.hasAttribute('disabled')
+    || nativeButton?.disabled === true;
+}
+
+function isSendLabel(label: string | null): boolean {
+  if (!label) return false;
+
+  return /send message|发送|傳送|提交/i.test(label);
+}
+
+function isStopLabel(label: string | null): boolean {
+  if (!label) return false;
+
+  return /stop response|停止/i.test(label);
 }
 
 /**
@@ -60,9 +112,10 @@ export function getSendButton(chatWindow?: Element): HTMLElement | null {
  * @returns True if model is responding, false otherwise
  */
 export function isResponding(sendButton: HTMLElement): boolean {
-  const hasStopClass = sendButton.classList.contains('stop');
-  const hasStopLabel = sendButton.getAttribute('aria-label') === 'Stop response';
-  return hasStopClass && hasStopLabel;
+  const stateHost = getSendButtonStateHost(sendButton);
+  const hasStopClass = stateHost.classList.contains('stop');
+  const hasStopLabel = isStopLabel(getSendButtonAriaLabel(sendButton));
+  return hasStopClass || hasStopLabel;
 }
 
 /**
@@ -71,9 +124,10 @@ export function isResponding(sendButton: HTMLElement): boolean {
  * @returns True if ready to send, false otherwise
  */
 export function isReadyToSend(sendButton: HTMLElement): boolean {
-  const hasSubmitClass = sendButton.classList.contains('submit');
-  const hasSendLabel = sendButton.getAttribute('aria-label') === 'Send message';
-  return hasSubmitClass && hasSendLabel;
+  const stateHost = getSendButtonStateHost(sendButton);
+  const hasSubmitClass = stateHost.classList.contains('submit');
+  const hasSendLabel = isSendLabel(getSendButtonAriaLabel(sendButton));
+  return hasSubmitClass && hasSendLabel && !isSendButtonDisabled(sendButton);
 }
 
 /**
@@ -237,8 +291,8 @@ export function sendMessage(chatWindow?: Element): SendMessageResult {
       };
     }
 
-    // Simulate click on send button
-    sendButton.click();
+    // Simulate click on the native button inside Gemini's gem-icon-button host
+    getInteractiveSendButton(sendButton).click();
     return {
       success: true,
       reason: 'success'
@@ -271,8 +325,8 @@ export function stopModelResponse(chatWindow?: Element): boolean {
       return false;
     }
 
-    // Simulate click on stop button
-    sendButton.click();
+    // Simulate click on the native button inside Gemini's gem-icon-button host
+    getInteractiveSendButton(sendButton).click();
     return true;
   } catch (error) {
     console.error('Failed to stop model response:', error);
@@ -322,11 +376,12 @@ export function getDetailedButtonStatus(chatWindow?: Element): DetailedButtonSta
     };
   }
 
-  const ariaLabel = sendButton.getAttribute('aria-label');
-  const hasSubmitClass = sendButton.classList.contains('submit');
-  const hasStopClass = sendButton.classList.contains('stop');
-  const hasSendLabel = ariaLabel === 'Send message';
-  const hasStopLabel = ariaLabel === 'Stop response';
+  const stateHost = getSendButtonStateHost(sendButton);
+  const ariaLabel = getSendButtonAriaLabel(sendButton);
+  const hasSubmitClass = stateHost.classList.contains('submit');
+  const hasStopClass = stateHost.classList.contains('stop');
+  const hasSendLabel = isSendLabel(ariaLabel);
+  const hasStopLabel = isStopLabel(ariaLabel);
   
   // Validate state consistency (using utility functions)
   const isValidSendState = isReadyToSend(sendButton);

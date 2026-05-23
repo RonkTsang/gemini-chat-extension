@@ -1,9 +1,9 @@
 import './lagecy/content';
 import './prompt';
-import './power-kit-entry';
 
 import { browser } from 'wxt/browser'
 import { renderOverlay } from "./overlay"
+import { startPowerKitEntry, stopPowerKitEntry } from './power-kit-entry'
 import { chatChangeDetector } from '@/services/chatChangeDetector'
 import { urlMonitor } from '@/services/urlMonitor'
 import { tabTitleSync } from '@/services/tabTitleSync'
@@ -18,6 +18,31 @@ import {
   FIREFOX_GET_INSTANCE_ID_MESSAGE,
   type FirefoxGetInstanceIdResponse,
 } from '@/types/runtime-messages'
+
+type PageScriptPath = '/url-monitor-main-world.js' | '/theme-sync-main-world.js'
+
+async function injectPageScript(path: PageScriptPath): Promise<void> {
+  const url = browser.runtime.getURL(path)
+  const script = document.createElement('script')
+  const mountTarget = document.head ?? document.documentElement
+
+  if (browser.runtime.getManifest().manifest_version === 2) {
+    const response = await fetch(url)
+    if (!response.ok) {
+      throw new Error(`Failed to fetch script: ${path}`)
+    }
+    script.textContent = await response.text()
+    mountTarget.append(script)
+    return
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    script.src = url
+    script.addEventListener('load', () => resolve(), { once: true })
+    script.addEventListener('error', () => reject(new Error(`Failed to load script: ${path}`)), { once: true })
+    mountTarget.append(script)
+  })
+}
 
 async function checkFirefoxExtensionInstance(): Promise<void> {
   if (!import.meta.env.FIREFOX || typeof document === 'undefined') {
@@ -67,16 +92,12 @@ export default defineContentScript({
 
     // 1. First inject the main world script
     console.log('[ContentScript] Injecting main world script...')
-    await injectScript('/url-monitor-main-world.js', {
-      keepInDom: true,
-    })
+    await injectPageScript('/url-monitor-main-world.js')
     console.log('[ContentScript] Main world script injected')
 
     // 1.1 Inject theme sync bridge script (main world)
     console.log('[ContentScript] Injecting theme sync main world script...')
-    await injectScript('/theme-sync-main-world.js', {
-      keepInDom: true,
-    })
+    await injectPageScript('/theme-sync-main-world.js')
     console.log('[ContentScript] Theme sync main world script injected')
 
     // 2. Start URL monitor (now listening to events from main world)
@@ -117,6 +138,8 @@ export default defineContentScript({
     });
 
     ui.mount();
+    startPowerKitEntry()
+    ctx.onInvalidated(stopPowerKitEntry)
     console.log('[ContentScript] UI mounted, context still valid:', ctx.isValid)
   },
 });

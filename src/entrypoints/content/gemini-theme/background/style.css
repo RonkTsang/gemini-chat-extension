@@ -247,6 +247,23 @@
   visibility: hidden !important;
 }
 
+:root[data-gpk-bg-enabled="true"] :where(.lm-component-theme) input-container.input-gradient {
+  background: none !important;
+}
+
+:root[data-gpk-bg-enabled="true"] chat-window.show-lm-background::before {
+  display: none !important;
+}
+
+:root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] chat-window-content>div.chat-history-scroll-container.lm {
+  mask-image: none !important;
+  -webkit-mask-image: none !important;
+}
+
+:root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] .enable-luminous-prompt-bubble .luminous-expand-fade {
+  background: none !important;
+}
+
 :root[data-gpk-bg-enabled="true"] input-area-v2>div>auto-suggest>div {
   border-radius: 24px;
   background: var(--gem-sys-color--surface-bright);

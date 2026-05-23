@@ -165,6 +165,7 @@ let observedDesktopSettingsHost: Element | null = null
 let observedMobileControls: Element | null = null
 
 const desktopTooltipInstances = new Set<Instance>()
+let isStarted = false
 
 const getDesktopSettingsHost = (): HTMLElement | null =>
   document.querySelector(
@@ -846,22 +847,42 @@ const stopObservers = () => {
   destroyAllDesktopTooltips()
 }
 
-declare global {
-  interface Window {
-    __geminiPowerKitEntryBootstrapped?: boolean
-  }
+const removeInjectedEntries = () => {
+  document.querySelectorAll([
+    POWER_KIT_ENTRY_SELECTOR,
+    `div[data-test-id="${DESKTOP_MAVATAR_POWER_KIT_CONTAINER_TEST_ID}"]`,
+  ].join(',')).forEach((element) => {
+    element.remove()
+  })
+  removeAllBadgeDots()
 }
 
-if (!window.__geminiPowerKitEntryBootstrapped) {
-  window.__geminiPowerKitEntryBootstrapped = true
+export const stopPowerKitEntry = () => {
+  if (!isStarted) return
+  isStarted = false
+  badgeVisible = false
+  window.removeEventListener('beforeunload', stopPowerKitEntry)
+  stopObservers()
+  removeInjectedEntries()
+}
+
+export const startPowerKitEntry = () => {
+  if (isStarted) {
+    return
+  }
+
+  isStarted = true
+  badgeVisible = false
+  removeInjectedEntries()
   ensureObserverBindings()
   syncEntries()
   void shouldShowBadge().then((show) => {
+    if (!isStarted) return
     badgeVisible = show
     if (show) {
       injectBadgeStyle()
       syncEntries()
     }
   })
-  window.addEventListener('beforeunload', stopObservers)
+  window.addEventListener('beforeunload', stopPowerKitEntry)
 }

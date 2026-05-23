@@ -386,7 +386,7 @@ chat-window.immersives-mode #gemini-toc-popover {
 #gemini-quote-ui {
   display: flex;
   align-items: center;
-  padding: 8px;
+  padding: 8px 16px;
   margin-bottom: 8px;
   width: 100%;
   max-width: 100%;
@@ -438,13 +438,24 @@ rich-textarea:has(#gemini-quote-ui) {
 }
 
 #gemini-quote-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
   background: none;
   border: none;
   cursor: pointer;
   font-size: 20px;
+  line-height: 1;
   color: var(--toc-text-color);
-  padding: 0 8px;
+  padding: 0;
   flex-shrink: 0;
+  border-radius: 50%;
+}
+
+#gemini-quote-close-btn:hover {
+  background-color: color(from var(--toc-text-color) srgb r g b / 0.12);
 }
 
 .quote-ref-icon {
@@ -525,14 +536,25 @@ rich-textarea:has(#gemini-quote-ui) {
   background-color: color(from var(--toc-text-color) srgb r g b / 0.12);
 }
 
+.query-text.collapsed > .gemini-quote-display {
+  margin-bottom: -8px;
+}
+
 .gemini-quote-display .quote-icon {
   margin-top: 4px;
   margin-right: 0;
 }
 
 .gemini-quote-display-text {
-  white-space: pre-wrap;
-  word-wrap: break-word;
+  display: -webkit-box;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  text-overflow: ellipsis;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 /* --- Animation for Quick Follow-up Button --- */
