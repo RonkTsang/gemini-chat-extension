@@ -1306,13 +1306,7 @@ function transformQuoteInHistory(userQueryElement) {
 
   const quoteDisplayText = document.createElement('span');
   quoteDisplayText.className = 'gemini-quote-display-text';
-  
-  const MAX_HISTORY_DISPLAY_LENGTH = 120;
-  if (quotePart.length > MAX_HISTORY_DISPLAY_LENGTH) {
-    quoteDisplayText.textContent = quotePart.substring(0, MAX_HISTORY_DISPLAY_LENGTH).trim() + '...';
-  } else {
-    quoteDisplayText.textContent = quotePart;
-  }
+  quoteDisplayText.textContent = quotePart;
   quoteDisplay.title = quotePart; // Full quote on hover
   
   quoteDisplay.appendChild(quoteDisplayText);
@@ -1329,6 +1323,22 @@ function transformQuoteInHistory(userQueryElement) {
   queryTextEl.appendChild(newQuestionLine);
 
   queryTextEl.dataset.transformed = 'true';
+}
+
+function scheduleQuoteHistoryTransform(userQueryElement) {
+  if (!userQueryElement?.matches?.('user-query')) return
+
+  if (!window.geminiQuoteHistoryTransformQueue) {
+    window.geminiQuoteHistoryTransformQueue = new Set()
+  }
+
+  window.geminiQuoteHistoryTransformQueue.add(userQueryElement)
+  clearTimeout(window.geminiQuoteHistoryTransformTimer)
+  window.geminiQuoteHistoryTransformTimer = setTimeout(() => {
+    const queuedUserQueries = Array.from(window.geminiQuoteHistoryTransformQueue || [])
+    window.geminiQuoteHistoryTransformQueue?.clear()
+    queuedUserQueries.forEach(transformQuoteInHistory)
+  }, 50)
 }
 
 
@@ -1383,11 +1393,16 @@ async function initializeLegacyMainExecution(): Promise<void> {
           // Initialize main features if a chat-window is added
           findAndInitialize(addedNode)
 
-          // Also, check if a user-query was added to transform it
+          // Also, check if a user-query was added or updated to transform it
           if (addedNode.matches('user-query')) {
-            transformQuoteInHistory(addedNode)
+            scheduleQuoteHistoryTransform(addedNode)
           }
-          addedNode.querySelectorAll('user-query').forEach(transformQuoteInHistory)
+          addedNode.querySelectorAll('user-query').forEach(scheduleQuoteHistoryTransform)
+
+          const parentUserQuery = addedNode.closest?.('user-query')
+          if (parentUserQuery) {
+            scheduleQuoteHistoryTransform(parentUserQuery)
+          }
         }
       }
     })
