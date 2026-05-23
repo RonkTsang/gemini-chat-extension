@@ -1,3 +1,10 @@
+## [0.6.4](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.6.3...v0.6.4) (2026-05-23)
+
+
+### Bug Fixes
+
+* adapt to latest Gemini page ([#27](https://github.com/RonkTsang/gemini-chat-extension/issues/27)) ([3134ba7](https://github.com/RonkTsang/gemini-chat-extension/commit/3134ba7dfc2f51f56c585d9d83609319ee63ad2e))
+
 ## [0.6.3](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.6.2...v0.6.3) (2026-05-02)
 
 
