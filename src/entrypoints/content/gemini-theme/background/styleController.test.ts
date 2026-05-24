@@ -14,6 +14,10 @@ function createState(
       backgroundImageEnabled: false,
       backgroundBlurPx: 5,
       messageGlassEnabled: false,
+      messageGlassTransparency: 40,
+      messageGlassBlurPx: 20,
+      messageGlassTransparencyCustomized: false,
+      messageGlassBlurCustomized: false,
       sidebarScrimEnabled: true,
       sidebarScrimIntensity: 20,
       welcomeGreetingReadabilityMode: 'auto',
@@ -48,6 +52,10 @@ describe('styleController', () => {
           backgroundImageEnabled: true,
           backgroundBlurPx: 12,
           messageGlassEnabled: true,
+          messageGlassTransparency: 72,
+          messageGlassBlurPx: 8,
+          messageGlassTransparencyCustomized: true,
+          messageGlassBlurCustomized: true,
           sidebarScrimEnabled: true,
           sidebarScrimIntensity: 50,
           imageRef: { kind: 'asset', assetId: 'asset-1' },
@@ -59,10 +67,36 @@ describe('styleController', () => {
 
     expect(document.documentElement.getAttribute('data-gpk-bg-enabled')).toBe('true')
     expect(document.documentElement.getAttribute('data-gpk-msg-glass')).toBe('true')
+    expect(
+      document.documentElement.getAttribute(
+        'data-gpk-msg-glass-transparency-customized',
+      ),
+    ).toBe('true')
+    expect(
+      document.documentElement.getAttribute('data-gpk-msg-glass-blur-customized'),
+    ).toBe('true')
     expect(document.documentElement.getAttribute('data-gpk-sidebar-scrim-enabled')).toBe(
       'true',
     )
     expect(document.documentElement.style.getPropertyValue('--gpk-bg-blur')).toBe('12px')
+    expect(
+      document.documentElement.style.getPropertyValue(
+        '--gpk-msg-glass-transparency',
+      ),
+    ).toBe('72%')
+    expect(document.documentElement.style.getPropertyValue('--gpk-msg-glass-blur')).toBe(
+      '8px',
+    )
+    expect(
+      document.documentElement.style.getPropertyValue(
+        '--gpk-msg-glass-transparency-customized',
+      ),
+    ).toBe('1')
+    expect(
+      document.documentElement.style.getPropertyValue(
+        '--gpk-msg-glass-blur-customized',
+      ),
+    ).toBe('1')
     expect(document.documentElement.style.getPropertyValue('--gpk-sidebar-scrim-alpha')).toBe(
       '0.50',
     )
@@ -84,6 +118,10 @@ describe('styleController', () => {
           backgroundImageEnabled: true,
           backgroundBlurPx: 5,
           messageGlassEnabled: false,
+          messageGlassTransparency: 40,
+          messageGlassBlurPx: 20,
+          messageGlassTransparencyCustomized: false,
+          messageGlassBlurCustomized: false,
           sidebarScrimEnabled: false,
           sidebarScrimIntensity: 0,
           imageRef: { kind: 'none' },
@@ -116,9 +154,31 @@ describe('styleController', () => {
     expect(document.getElementById('gpk-theme-bg-layer')).toBeNull()
     expect(document.documentElement.getAttribute('data-gpk-bg-enabled')).toBeNull()
     expect(document.documentElement.getAttribute('data-gpk-msg-glass')).toBeNull()
+    expect(
+      document.documentElement.getAttribute(
+        'data-gpk-msg-glass-transparency-customized',
+      ),
+    ).toBeNull()
+    expect(
+      document.documentElement.getAttribute('data-gpk-msg-glass-blur-customized'),
+    ).toBeNull()
     expect(document.documentElement.getAttribute('data-gpk-sidebar-scrim-enabled')).toBeNull()
     expect(document.documentElement.style.getPropertyValue('--gpk-bg-image')).toBe('')
     expect(document.documentElement.style.getPropertyValue('--gpk-bg-blur')).toBe('')
+    expect(document.documentElement.style.getPropertyValue('--gpk-msg-glass-transparency')).toBe(
+      '',
+    )
+    expect(document.documentElement.style.getPropertyValue('--gpk-msg-glass-blur')).toBe('')
+    expect(
+      document.documentElement.style.getPropertyValue(
+        '--gpk-msg-glass-transparency-customized',
+      ),
+    ).toBe('')
+    expect(
+      document.documentElement.style.getPropertyValue(
+        '--gpk-msg-glass-blur-customized',
+      ),
+    ).toBe('')
     expect(document.documentElement.style.getPropertyValue('--gpk-sidebar-scrim-alpha')).toBe(
       '',
     )

@@ -32,6 +32,9 @@ interface CustomBackgroundProps {
   onToggleSidebarScrim: (enabled: boolean) => Promise<void>
   onSidebarScrimIntensityChange: (value: number) => Promise<void>
   onToggleMessageGlass: (enabled: boolean) => Promise<void>
+  onMessageGlassTransparencyChange: (value: number) => Promise<void>
+  onMessageGlassBlurChange: (value: number) => Promise<void>
+  onResetGlassSettings: () => Promise<void>
   onWelcomeGreetingReadabilityModeChange: (
     mode: WelcomeGreetingReadabilityMode,
   ) => Promise<void>
@@ -48,6 +51,9 @@ export function CustomBackground(props: CustomBackgroundProps) {
   const previewUrl = props.state?.resolvedBackgroundUrl ?? null
   const isBackgroundEnabled = settings?.backgroundImageEnabled ?? false
   const blurValue = settings?.backgroundBlurPx ?? 5
+  const messageGlassEnabled = settings?.messageGlassEnabled ?? false
+  const messageGlassTransparency = settings?.messageGlassTransparency ?? 40
+  const messageGlassBlurPx = settings?.messageGlassBlurPx ?? 20
   const sidebarScrimEnabled = settings?.sidebarScrimEnabled ?? true
   const sidebarScrimIntensity = settings?.sidebarScrimIntensity ?? 20
   const welcomeGreetingReadabilityMode
@@ -57,6 +63,12 @@ export function CustomBackground(props: CustomBackgroundProps) {
   const [localSidebarScrimValue, setLocalSidebarScrimValue] = useState(
     sidebarScrimIntensity,
   )
+  const [localGlassTransparencyValue, setLocalGlassTransparencyValue] = useState(
+    messageGlassTransparency,
+  )
+  const [localGlassBlurValue, setLocalGlassBlurValue] = useState(
+    messageGlassBlurPx,
+  )
 
   useEffect(() => {
     setLocalBlurValue(blurValue)
@@ -65,6 +77,14 @@ export function CustomBackground(props: CustomBackgroundProps) {
   useEffect(() => {
     setLocalSidebarScrimValue(sidebarScrimIntensity)
   }, [sidebarScrimIntensity])
+
+  useEffect(() => {
+    setLocalGlassTransparencyValue(messageGlassTransparency)
+  }, [messageGlassTransparency])
+
+  useEffect(() => {
+    setLocalGlassBlurValue(messageGlassBlurPx)
+  }, [messageGlassBlurPx])
 
   const hasImage = settings?.imageRef.kind === 'asset' && Boolean(previewUrl)
   const primaryTextColor = hasImage ? 'whiteAlpha.900' : 'gemOnSurface'
@@ -314,7 +334,7 @@ export function CustomBackground(props: CustomBackgroundProps) {
             </HStack>
 
             <Switch.Root
-              checked={settings?.messageGlassEnabled ?? false}
+              checked={messageGlassEnabled}
               onCheckedChange={(details) => void props.onToggleMessageGlass(details.checked)}
               disabled={props.isLoading || isFilePending}
             >
@@ -324,6 +344,123 @@ export function CustomBackground(props: CustomBackgroundProps) {
               </Switch.Control>
             </Switch.Root>
           </HStack>
+
+          {messageGlassEnabled && (
+            <VStack
+              align="stretch"
+              gap={4}
+              mb={5}
+              pl={3}
+              borderLeft="1px solid"
+              borderColor="border"
+            >
+              <HStack justify="space-between" align="center" gap={4}>
+                <Text fontSize="sm" color="gemOnSurface">
+                  {tt('settingPanel.theme.glassTransparency', 'Glass transparency')}
+                </Text>
+                <HStack gap={3} flexShrink={0}>
+                  <Slider.Root
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={[localGlassTransparencyValue]}
+                    onValueChange={(details) => setLocalGlassTransparencyValue(details.value[0] ?? 0)}
+                    onValueChangeEnd={(details) => void props.onMessageGlassTransparencyChange(details.value[0] ?? 0)}
+                    disabled={props.isLoading || isFilePending}
+                    width={{ base: '132px', md: '180px' }}
+                  >
+                    <Slider.Control>
+                      <Slider.Track>
+                        <Slider.Range />
+                      </Slider.Track>
+                      <Slider.Thumb index={0}>
+                        <Slider.DraggingIndicator
+                          layerStyle="fill.solid"
+                          top="6"
+                          rounded="sm"
+                          px="1.5"
+                          fontSize="xs"
+                          zIndex={2}
+                        >
+                          <HStack gap="0.5">
+                            <Slider.ValueText />
+                            <Box as="span">%</Box>
+                          </HStack>
+                        </Slider.DraggingIndicator>
+                      </Slider.Thumb>
+                    </Slider.Control>
+                  </Slider.Root>
+                  <Text
+                    as="output"
+                    fontSize="sm"
+                    color="gemOnSurface"
+                    minW="38px"
+                    textAlign="right"
+                  >
+                    {localGlassTransparencyValue}%
+                  </Text>
+                </HStack>
+              </HStack>
+
+              <HStack justify="space-between" align="center" gap={4}>
+                <Text fontSize="sm" color="gemOnSurface">
+                  {tt('settingPanel.theme.glassBlur', 'Glass blur')}
+                </Text>
+                <HStack gap={3} flexShrink={0}>
+                  <Slider.Root
+                    min={0}
+                    max={20}
+                    step={1}
+                    value={[localGlassBlurValue]}
+                    onValueChange={(details) => setLocalGlassBlurValue(details.value[0] ?? 0)}
+                    onValueChangeEnd={(details) => void props.onMessageGlassBlurChange(details.value[0] ?? 0)}
+                    disabled={props.isLoading || isFilePending}
+                    width={{ base: '132px', md: '180px' }}
+                  >
+                    <Slider.Control>
+                      <Slider.Track>
+                        <Slider.Range />
+                      </Slider.Track>
+                      <Slider.Thumb index={0}>
+                        <Slider.DraggingIndicator
+                          layerStyle="fill.solid"
+                          top="6"
+                          rounded="sm"
+                          px="1.5"
+                          fontSize="xs"
+                          zIndex={2}
+                        >
+                          <HStack gap="0.5">
+                            <Slider.ValueText />
+                            <Box as="span">px</Box>
+                          </HStack>
+                        </Slider.DraggingIndicator>
+                      </Slider.Thumb>
+                    </Slider.Control>
+                  </Slider.Root>
+                  <Text
+                    as="output"
+                    fontSize="sm"
+                    color="gemOnSurface"
+                    minW="38px"
+                    textAlign="right"
+                  >
+                    {localGlassBlurValue}px
+                  </Text>
+                </HStack>
+              </HStack>
+
+              <Button
+                size="xs"
+                variant="ghost"
+                alignSelf="flex-end"
+                onClick={() => void props.onResetGlassSettings()}
+                disabled={props.isLoading || isFilePending}
+              >
+                {tt('settingPanel.theme.resetGlassSettings', 'Reset glass settings')}
+              </Button>
+            </VStack>
+          )}
 
           <HStack justify="space-between" mt={5} mb={4}>
             <HStack gap={1}>

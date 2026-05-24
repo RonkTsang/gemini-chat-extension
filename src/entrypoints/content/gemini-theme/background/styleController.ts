@@ -5,10 +5,20 @@ const STYLE_ID = 'gemini-extension-theme-background-override'
 const BACKGROUND_LAYER_ID = 'gpk-theme-bg-layer'
 const ROOT_BG_ENABLED_ATTR = 'data-gpk-bg-enabled'
 const ROOT_MSG_GLASS_ATTR = 'data-gpk-msg-glass'
+const ROOT_MSG_GLASS_TRANSPARENCY_CUSTOMIZED_ATTR
+  = 'data-gpk-msg-glass-transparency-customized'
+const ROOT_MSG_GLASS_BLUR_CUSTOMIZED_ATTR
+  = 'data-gpk-msg-glass-blur-customized'
 const ROOT_SIDEBAR_SCRIM_ENABLED_ATTR = 'data-gpk-sidebar-scrim-enabled'
 const ROOT_FIREFOX_ATTR = 'data-gpk-firefox'
 const ROOT_BG_IMAGE_VAR = '--gpk-bg-image'
 const ROOT_BG_BLUR_VAR = '--gpk-bg-blur'
+const ROOT_MSG_GLASS_TRANSPARENCY_VAR = '--gpk-msg-glass-transparency'
+const ROOT_MSG_GLASS_BLUR_VAR = '--gpk-msg-glass-blur'
+const ROOT_MSG_GLASS_TRANSPARENCY_CUSTOMIZED_VAR
+  = '--gpk-msg-glass-transparency-customized'
+const ROOT_MSG_GLASS_BLUR_CUSTOMIZED_VAR
+  = '--gpk-msg-glass-blur-customized'
 const ROOT_SIDEBAR_SCRIM_ALPHA_VAR = '--gpk-sidebar-scrim-alpha'
 
 function ensureStyleElement(): HTMLStyleElement | null {
@@ -64,6 +74,14 @@ export function applyThemeBackgroundStyle(
     state.settings.messageGlassEnabled ? 'true' : 'false',
   )
   root.setAttribute(
+    ROOT_MSG_GLASS_TRANSPARENCY_CUSTOMIZED_ATTR,
+    state.settings.messageGlassTransparencyCustomized ? 'true' : 'false',
+  )
+  root.setAttribute(
+    ROOT_MSG_GLASS_BLUR_CUSTOMIZED_ATTR,
+    state.settings.messageGlassBlurCustomized ? 'true' : 'false',
+  )
+  root.setAttribute(
     ROOT_SIDEBAR_SCRIM_ENABLED_ATTR,
     state.settings.sidebarScrimEnabled ? 'true' : 'false',
   )
@@ -74,6 +92,22 @@ export function applyThemeBackgroundStyle(
   root.style.setProperty(
     ROOT_BG_BLUR_VAR,
     `${state.settings.backgroundBlurPx}px`,
+  )
+  root.style.setProperty(
+    ROOT_MSG_GLASS_TRANSPARENCY_VAR,
+    `${state.settings.messageGlassTransparency}%`,
+  )
+  root.style.setProperty(
+    ROOT_MSG_GLASS_BLUR_VAR,
+    `${state.settings.messageGlassBlurPx}px`,
+  )
+  root.style.setProperty(
+    ROOT_MSG_GLASS_TRANSPARENCY_CUSTOMIZED_VAR,
+    state.settings.messageGlassTransparencyCustomized ? '1' : '0',
+  )
+  root.style.setProperty(
+    ROOT_MSG_GLASS_BLUR_CUSTOMIZED_VAR,
+    state.settings.messageGlassBlurCustomized ? '1' : '0',
   )
   root.style.setProperty(
     ROOT_SIDEBAR_SCRIM_ALPHA_VAR,
@@ -93,10 +127,16 @@ export function clearThemeBackgroundStyle(): void {
   const root = document.documentElement
   root.removeAttribute(ROOT_BG_ENABLED_ATTR)
   root.removeAttribute(ROOT_MSG_GLASS_ATTR)
+  root.removeAttribute(ROOT_MSG_GLASS_TRANSPARENCY_CUSTOMIZED_ATTR)
+  root.removeAttribute(ROOT_MSG_GLASS_BLUR_CUSTOMIZED_ATTR)
   root.removeAttribute(ROOT_SIDEBAR_SCRIM_ENABLED_ATTR)
   root.removeAttribute(ROOT_FIREFOX_ATTR)
   root.style.removeProperty(ROOT_BG_IMAGE_VAR)
   root.style.removeProperty(ROOT_BG_BLUR_VAR)
+  root.style.removeProperty(ROOT_MSG_GLASS_TRANSPARENCY_VAR)
+  root.style.removeProperty(ROOT_MSG_GLASS_BLUR_VAR)
+  root.style.removeProperty(ROOT_MSG_GLASS_TRANSPARENCY_CUSTOMIZED_VAR)
+  root.style.removeProperty(ROOT_MSG_GLASS_BLUR_CUSTOMIZED_VAR)
   root.style.removeProperty(ROOT_SIDEBAR_SCRIM_ALPHA_VAR)
 
   const styleEl = document.getElementById(STYLE_ID)

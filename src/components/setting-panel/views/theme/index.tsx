@@ -175,6 +175,45 @@ export function ThemeSettingsView() {
     }
   }, [])
 
+  const handleMessageGlassTransparencyChange = useCallback(async (value: number) => {
+    try {
+      const state = await updateThemeBackgroundSettings({
+        messageGlassTransparency: value,
+        messageGlassTransparencyCustomized: true,
+      })
+      setBackgroundState(state)
+    } catch (error) {
+      toaster.create({ type: 'error', title: getBackgroundErrorMessage(error) })
+    }
+  }, [])
+
+  const handleMessageGlassBlurChange = useCallback(async (value: number) => {
+    try {
+      const state = await updateThemeBackgroundSettings({
+        messageGlassBlurPx: value,
+        messageGlassBlurCustomized: true,
+      })
+      setBackgroundState(state)
+    } catch (error) {
+      toaster.create({ type: 'error', title: getBackgroundErrorMessage(error) })
+    }
+  }, [])
+
+  const handleResetGlassSettings = useCallback(async () => {
+    try {
+      const state = await updateThemeBackgroundSettings({
+        messageGlassTransparency:
+          DEFAULT_THEME_BACKGROUND_SETTINGS.messageGlassTransparency,
+        messageGlassBlurPx: DEFAULT_THEME_BACKGROUND_SETTINGS.messageGlassBlurPx,
+        messageGlassTransparencyCustomized: false,
+        messageGlassBlurCustomized: false,
+      })
+      setBackgroundState(state)
+    } catch (error) {
+      toaster.create({ type: 'error', title: getBackgroundErrorMessage(error) })
+    }
+  }, [])
+
   const handleWelcomeGreetingReadabilityModeChange = useCallback(
     async (mode: WelcomeGreetingReadabilityMode) => {
       try {
@@ -258,6 +297,11 @@ export function ThemeSettingsView() {
               onToggleSidebarScrim={handleToggleSidebarScrim}
               onSidebarScrimIntensityChange={handleSidebarScrimIntensityChange}
               onToggleMessageGlass={handleToggleMessageGlass}
+              onMessageGlassTransparencyChange={
+                handleMessageGlassTransparencyChange
+              }
+              onMessageGlassBlurChange={handleMessageGlassBlurChange}
+              onResetGlassSettings={handleResetGlassSettings}
               onWelcomeGreetingReadabilityModeChange={
                 handleWelcomeGreetingReadabilityModeChange
               }
@@ -282,6 +326,16 @@ export function ThemeSettingsView() {
               sidebarScrimEnabled={previewState.settings.sidebarScrimEnabled}
               sidebarScrimIntensity={previewState.settings.sidebarScrimIntensity}
               messageGlassEnabled={previewState.settings.messageGlassEnabled}
+              messageGlassTransparency={
+                previewState.settings.messageGlassTransparency
+              }
+              messageGlassBlurPx={previewState.settings.messageGlassBlurPx}
+              messageGlassTransparencyCustomized={
+                previewState.settings.messageGlassTransparencyCustomized
+              }
+              messageGlassBlurCustomized={
+                previewState.settings.messageGlassBlurCustomized
+              }
             />
           </Box>
         </Flex>
