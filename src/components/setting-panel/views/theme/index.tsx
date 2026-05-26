@@ -1,262 +1,26 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Box, Flex } from '@chakra-ui/react'
-import {
-  applyTheme,
-  getAppearanceState,
-  DEFAULT_THEME_BACKGROUND_SETTINGS,
-  getThemeBackgroundSettings,
-  normalizeThemeBackgroundSettings,
-  removeThemeBackground,
-  resolveThemeBackgroundPreviewUrl,
-  resolveThemeBackgroundPreviewUrlForPanel,
-  setAppearanceMode,
-  subscribeSystemThemeChange,
-  themeBackgroundSettingsStorage,
-  ThemeBackgroundError,
-  updateThemeBackgroundSettings,
-  uploadThemeBackground,
-  type AppearanceMode,
-  type AppearanceState,
-  type ThemeBackgroundResolvedState,
-  type ThemeBackgroundSettings,
-  type WelcomeGreetingReadabilityMode,
-} from '@/entrypoints/content/gemini-theme'
-import { useEvent } from '@/hooks/useEventBus'
-import { AppearanceSelector } from './AppearanceSelector'
-import { ColorPresets } from './ColorPresets'
-import { CustomBackground } from './CustomBackground'
+import { Box, Flex, VStack } from '@chakra-ui/react'
+import { useEventEmitter } from '@/hooks/useEventBus'
 import { LivePreview } from './LivePreview'
-import { tt } from '@/utils/i18n'
-import { useColorPalette } from '@/hooks/useThemeColorPalette'
-import { toaster } from '@/components/ui/toaster'
-
-function toResolvedState(
-  settings: ThemeBackgroundSettings,
-  previewUrl: string | null,
-): ThemeBackgroundResolvedState {
-  return {
-    settings,
-    resolvedBackgroundUrl: previewUrl,
-    isBackgroundRenderable: settings.backgroundImageEnabled && Boolean(previewUrl),
-  }
-}
-
-function getBackgroundErrorMessage(error: unknown): string {
-  if (error instanceof ThemeBackgroundError) {
-    if (error.code === 'invalid-file-type') {
-      return tt('settingPanel.theme.invalidFileType', 'Only PNG/JPG/WebP is supported')
-    }
-    if (error.code === 'file-too-large') {
-      return tt('settingPanel.theme.fileTooLarge', 'Image size must be 5MB or less')
-    }
-    if (error.code === 'image-load-failed') {
-      return tt('settingPanel.theme.imageLoadFailed', 'Image loading failed, please try again')
-    }
-  }
-
-  if (error instanceof Error && error.message) return error.message
-  return tt('settingPanel.theme.imageLoadFailed', 'Image loading failed, please try again')
-}
+import { OpenThemeStudioButton } from './OpenThemeStudioButton'
+import { ThemeSettingsControls } from './ThemeSettingsControls'
+import { useThemeSettingsController } from './useThemeSettingsController'
 
 export function ThemeSettingsView() {
-  const { palette, setPalette } = useColorPalette()
-  const [appearanceState, setAppearanceState] = useState<AppearanceState>(() => getAppearanceState())
-  const [isPanelOpen, setIsPanelOpen] = useState(true)
-  const [backgroundState, setBackgroundState] = useState<ThemeBackgroundResolvedState | null>(null)
-  const [isBackgroundLoading, setIsBackgroundLoading] = useState(true)
+  const controller = useThemeSettingsController()
+  const { emitSync } = useEventEmitter()
+  const previewState = controller.previewState
 
-  useEvent('settings:state-changed', (data) => {
-    setIsPanelOpen(data.open)
-  })
-
-  const loadBackgroundState = useCallback(async () => {
-    setIsBackgroundLoading(true)
-    try {
-      const settings = await getThemeBackgroundSettings()
-      const previewUrl = await resolveThemeBackgroundPreviewUrlForPanel(settings)
-      setBackgroundState(toResolvedState(settings, previewUrl))
-    } catch (error) {
-      toaster.create({ type: 'error', title: getBackgroundErrorMessage(error) })
-    } finally {
-      setIsBackgroundLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    void loadBackgroundState()
-  }, [loadBackgroundState])
-
-  useEffect(() => {
-    const unwatch = themeBackgroundSettingsStorage.watch(async (newSettings) => {
-      if (!newSettings) return
-      try {
-        const normalizedSettings = normalizeThemeBackgroundSettings(newSettings)
-        const previewUrl = await resolveThemeBackgroundPreviewUrlForPanel(normalizedSettings)
-        setBackgroundState(toResolvedState(normalizedSettings, previewUrl))
-      } catch {
-        // silently ignore watcher-triggered errors; initial load already handles error state
-      }
+  const handleOpenThemeStudio = () => {
+    emitSync('settings:close', {
+      from: 'theme-floating-panel',
+      reason: 'open-theme-studio',
     })
-    return unwatch
-  }, [])
-
-  useEffect(() => {
-    if (!isPanelOpen || appearanceState.mode !== 'system') {
-      return
-    }
-
-    const unsubscribe = subscribeSystemThemeChange(() => {
-      setAppearanceState(setAppearanceMode('system'))
+    emitSync('theme-floating-panel:open', {
+      source: 'setting-panel',
+      returnToSettings: true,
     })
-
-    return unsubscribe
-  }, [appearanceState.mode, isPanelOpen])
-
-  const handleSelect = async (key: string) => {
-    await applyTheme(key)
-    setPalette(key || 'blue')
   }
 
-  const handleAppearanceChange = useCallback((mode: AppearanceMode) => {
-    const state = setAppearanceMode(mode)
-    setAppearanceState(state)
-  }, [])
-
-  const handleToggleBackground = useCallback(async (enabled: boolean) => {
-    try {
-      const state = await updateThemeBackgroundSettings({
-        backgroundImageEnabled: enabled,
-      })
-      setBackgroundState(state)
-    } catch (error) {
-      toaster.create({ type: 'error', title: getBackgroundErrorMessage(error) })
-    }
-  }, [])
-
-  const handleBlurChange = useCallback(async (value: number) => {
-    try {
-      const state = await updateThemeBackgroundSettings({ backgroundBlurPx: value })
-      setBackgroundState(state)
-    } catch (error) {
-      toaster.create({ type: 'error', title: getBackgroundErrorMessage(error) })
-    }
-  }, [])
-
-  const handleToggleSidebarScrim = useCallback(async (enabled: boolean) => {
-    try {
-      const state = await updateThemeBackgroundSettings({
-        sidebarScrimEnabled: enabled,
-      })
-      setBackgroundState(state)
-    } catch (error) {
-      toaster.create({ type: 'error', title: getBackgroundErrorMessage(error) })
-    }
-  }, [])
-
-  const handleSidebarScrimIntensityChange = useCallback(async (value: number) => {
-    try {
-      const state = await updateThemeBackgroundSettings({
-        sidebarScrimIntensity: value,
-      })
-      setBackgroundState(state)
-    } catch (error) {
-      toaster.create({ type: 'error', title: getBackgroundErrorMessage(error) })
-    }
-  }, [])
-
-  const handleToggleMessageGlass = useCallback(async (enabled: boolean) => {
-    try {
-      const state = await updateThemeBackgroundSettings({
-        messageGlassEnabled: enabled,
-      })
-      setBackgroundState(state)
-    } catch (error) {
-      toaster.create({ type: 'error', title: getBackgroundErrorMessage(error) })
-    }
-  }, [])
-
-  const handleMessageGlassTransparencyChange = useCallback(async (value: number) => {
-    try {
-      const state = await updateThemeBackgroundSettings({
-        messageGlassTransparency: value,
-        messageGlassTransparencyCustomized: true,
-      })
-      setBackgroundState(state)
-    } catch (error) {
-      toaster.create({ type: 'error', title: getBackgroundErrorMessage(error) })
-    }
-  }, [])
-
-  const handleMessageGlassBlurChange = useCallback(async (value: number) => {
-    try {
-      const state = await updateThemeBackgroundSettings({
-        messageGlassBlurPx: value,
-        messageGlassBlurCustomized: true,
-      })
-      setBackgroundState(state)
-    } catch (error) {
-      toaster.create({ type: 'error', title: getBackgroundErrorMessage(error) })
-    }
-  }, [])
-
-  const handleResetGlassSettings = useCallback(async () => {
-    try {
-      const state = await updateThemeBackgroundSettings({
-        messageGlassTransparency:
-          DEFAULT_THEME_BACKGROUND_SETTINGS.messageGlassTransparency,
-        messageGlassBlurPx: DEFAULT_THEME_BACKGROUND_SETTINGS.messageGlassBlurPx,
-        messageGlassTransparencyCustomized: false,
-        messageGlassBlurCustomized: false,
-      })
-      setBackgroundState(state)
-    } catch (error) {
-      toaster.create({ type: 'error', title: getBackgroundErrorMessage(error) })
-    }
-  }, [])
-
-  const handleWelcomeGreetingReadabilityModeChange = useCallback(
-    async (mode: WelcomeGreetingReadabilityMode) => {
-      try {
-        const state = await updateThemeBackgroundSettings({
-          welcomeGreetingReadabilityMode: mode,
-        })
-        setBackgroundState(state)
-      } catch (error) {
-        toaster.create({ type: 'error', title: getBackgroundErrorMessage(error) })
-      }
-    },
-    [],
-  )
-
-  const handleUploadFile = useCallback(async (file: File) => {
-    try {
-      const state = await uploadThemeBackground(file)
-      setBackgroundState(state)
-    } catch (error) {
-      toaster.create({ type: 'error', title: getBackgroundErrorMessage(error) })
-      throw error
-    }
-  }, [])
-
-  const handleRemoveImage = useCallback(async () => {
-    try {
-      const state = await removeThemeBackground()
-      setBackgroundState(state)
-    } catch (error) {
-      toaster.create({ type: 'error', title: getBackgroundErrorMessage(error) })
-      throw error
-    }
-  }, [])
-
-  const activeKey = palette || 'blue'
-  const previewState = useMemo(
-    () => backgroundState ?? {
-      settings: DEFAULT_THEME_BACKGROUND_SETTINGS,
-      resolvedBackgroundUrl: null,
-      isBackgroundRenderable: false,
-    },
-    [backgroundState],
-  )
   return (
     <Box
       position="relative"
@@ -279,44 +43,18 @@ export function ThemeSettingsView() {
             overflowY="auto"
             pr={{ base: 0, lg: 2 }}
           >
-            <AppearanceSelector
-              value={appearanceState.mode}
-              onChange={handleAppearanceChange}
-              isLoading={false}
-            />
-            <ColorPresets
-              activeKey={activeKey}
-              onSelect={handleSelect}
-              isLoading={false}
-            />
-            <CustomBackground
-              state={backgroundState}
-              isLoading={isBackgroundLoading}
-              onToggleBackground={handleToggleBackground}
-              onBlurChange={handleBlurChange}
-              onToggleSidebarScrim={handleToggleSidebarScrim}
-              onSidebarScrimIntensityChange={handleSidebarScrimIntensityChange}
-              onToggleMessageGlass={handleToggleMessageGlass}
-              onMessageGlassTransparencyChange={
-                handleMessageGlassTransparencyChange
-              }
-              onMessageGlassBlurChange={handleMessageGlassBlurChange}
-              onResetGlassSettings={handleResetGlassSettings}
-              onWelcomeGreetingReadabilityModeChange={
-                handleWelcomeGreetingReadabilityModeChange
-              }
-              onUploadFile={handleUploadFile}
-              onRemoveImage={handleRemoveImage}
-            />
+            <ThemeSettingsControls controller={controller} />
           </Box>
 
-          <Box
+          <VStack
             width="340px"
             flexShrink={0}
-            display={{ base: 'none', lg: 'block' }}
+            display={{ base: 'none', lg: 'flex' }}
             position="sticky"
             top={0}
             alignSelf="flex-start"
+            align="stretch"
+            gap={4}
             pt={1}
           >
             <LivePreview
@@ -337,10 +75,10 @@ export function ThemeSettingsView() {
                 previewState.settings.messageGlassBlurCustomized
               }
             />
-          </Box>
+            <OpenThemeStudioButton onClick={handleOpenThemeStudio} />
+          </VStack>
         </Flex>
       </Box>
-
     </Box>
   )
 }

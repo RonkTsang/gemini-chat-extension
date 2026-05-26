@@ -5,6 +5,7 @@ import {
   Heading,
   VStack,
   HStack,
+  Stack,
   Button,
   IconButton,
   Image,
@@ -25,6 +26,7 @@ import { Tooltip } from '@/components/ui/tooltip'
 import { tt } from '@/utils/i18n'
 
 interface CustomBackgroundProps {
+  variant?: 'default' | 'compact'
   state: ThemeBackgroundResolvedState | null
   isLoading: boolean
   onToggleBackground: (enabled: boolean) => Promise<void>
@@ -46,6 +48,13 @@ export function CustomBackground(props: CustomBackgroundProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [isFilePending, setIsFilePending] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
+  const isCompact = props.variant === 'compact'
+  const sectionGap = isCompact ? 3 : 5
+  const headingMarginBottom = isCompact ? 2 : 3
+  const uploadPaddingY = isCompact ? 3 : 6
+  const uploadPaddingX = isCompact ? 3 : 4
+  const wideControlWidth = isCompact ? '100%' : { base: '170px', md: '220px' }
+  const narrowControlWidth = isCompact ? '100%' : { base: '132px', md: '180px' }
 
   const settings = props.state?.settings
   const previewUrl = props.state?.resolvedBackgroundUrl ?? null
@@ -162,12 +171,12 @@ export function CustomBackground(props: CustomBackgroundProps) {
 
   return (
     <Box>
-      <Heading size="sm" mb={3}>
+      <Heading size="sm" mb={headingMarginBottom}>
         {tt('settingPanel.theme.customBackground', 'Wallpaper')}
       </Heading>
 
-      <HStack justify="space-between" mb={4}>
-        <Text fontSize="sm" color="gemOnSurface">
+      <HStack justify="space-between" mb={4} gap={3}>
+        <Text fontSize="sm" color="gemOnSurface" minW={0}>
           {tt('settingPanel.theme.enableBackgroundImage', 'Enable wallpaper')}
         </Text>
         <Switch.Root
@@ -186,11 +195,11 @@ export function CustomBackground(props: CustomBackgroundProps) {
         border="2px dashed"
         borderColor={isDragging ? 'blue.400' : 'border'}
         borderRadius="xl"
-        py={6}
-        px={4}
+        py={uploadPaddingY}
+        px={uploadPaddingX}
         textAlign="center"
         position="relative"
-        mb={5}
+        mb={sectionGap}
         transition="border-color 0.2s ease, background-color 0.2s ease"
         bg={isDragging ? 'blue.subtle' : undefined}
         onDragEnter={handleDragEnter}
@@ -226,19 +235,19 @@ export function CustomBackground(props: CustomBackgroundProps) {
           />
         )}
 
-        <VStack gap={3} position="relative" zIndex={1}>
-          <Box color={uploadIconColor} fontSize="2xl">
-            <HiOutlineCloudUpload size={32} />
+        <VStack gap={isCompact ? 2 : 3} position="relative" zIndex={1}>
+          <Box color={uploadIconColor} fontSize={isCompact ? 'xl' : '2xl'}>
+            <HiOutlineCloudUpload size={isCompact ? 24 : 32} />
           </Box>
-          <Text fontSize="sm" color={primaryTextColor}>
+          <Text fontSize={isCompact ? 'xs' : 'sm'} color={primaryTextColor}>
             {tt('settingPanel.theme.dropBackground', 'Drop your image here')}
           </Text>
-          <Text fontSize="xs" color={secondaryTextColor}>
+          <Text fontSize={isCompact ? '2xs' : 'xs'} color={secondaryTextColor}>
             {tt('settingPanel.theme.fileTypes', 'PNG, JPG or WebP up to 5MB')}
           </Text>
-          <HStack>
+          <HStack gap={isCompact ? 1.5 : 2}>
             <Button
-              size="sm"
+              size={isCompact ? 'xs' : 'sm'}
               variant="outline"
               onClick={handleSelectFile}
               disabled={props.isLoading || isFilePending}
@@ -252,7 +261,7 @@ export function CustomBackground(props: CustomBackgroundProps) {
             {hasImage && (
               <IconButton
                 aria-label={tt('settingPanel.theme.removeBackgroundImage', 'Remove Background Image')}
-                size="sm"
+                size={isCompact ? 'xs' : 'sm'}
                 variant="ghost"
                 onClick={() => void handleRemoveImage()}
                 disabled={props.isLoading || isFilePending}
@@ -276,8 +285,14 @@ export function CustomBackground(props: CustomBackgroundProps) {
 
       {isBackgroundEnabled && (
         <>
-          <HStack justify="space-between" align="center" mb={5} gap={4}>
-            <Text fontSize="sm" color="gemOnSurface">
+          <Stack
+            direction={isCompact ? 'column' : 'row'}
+            justify="space-between"
+            align={isCompact ? 'stretch' : 'center'}
+            mb={sectionGap}
+            gap={isCompact ? 2 : 4}
+          >
+            <Text fontSize="sm" color="gemOnSurface" minW={0}>
               {tt('settingPanel.theme.blurIntensity', 'Blur')}
             </Text>
             <Slider.Root
@@ -288,7 +303,7 @@ export function CustomBackground(props: CustomBackgroundProps) {
               onValueChange={(details) => setLocalBlurValue(details.value[0] ?? 0)}
               onValueChangeEnd={(details) => void props.onBlurChange(details.value[0] ?? 0)}
               disabled={props.isLoading || isFilePending}
-              width={{ base: '170px', md: '220px' }}
+              width={wideControlWidth}
             >
               <Slider.Control>
                 <Slider.Track>
@@ -310,11 +325,11 @@ export function CustomBackground(props: CustomBackgroundProps) {
                 </Slider.Thumb>
               </Slider.Control>
             </Slider.Root>
-          </HStack>
+          </Stack>
 
-          <HStack justify="space-between" mb={4}>
-            <HStack gap={1}>
-              <Text fontSize="sm" color="gemOnSurface">
+          <HStack justify="space-between" mb={4} gap={3}>
+            <HStack gap={1} minW={0} flex="1">
+              <Text fontSize="sm" color="gemOnSurface" minW={0}>
                 {tt('settingPanel.theme.messageGlassEffect', 'Message Glass Effect')}
               </Text>
               <Tooltip
@@ -349,16 +364,21 @@ export function CustomBackground(props: CustomBackgroundProps) {
             <VStack
               align="stretch"
               gap={4}
-              mb={5}
+              mb={sectionGap}
               pl={3}
               borderLeft="1px solid"
               borderColor="border"
             >
-              <HStack justify="space-between" align="center" gap={4}>
-                <Text fontSize="sm" color="gemOnSurface">
+              <Stack
+                direction={isCompact ? 'column' : 'row'}
+                justify="space-between"
+                align={isCompact ? 'stretch' : 'center'}
+                gap={isCompact ? 2 : 4}
+              >
+                <Text fontSize="sm" color="gemOnSurface" minW={0}>
                   {tt('settingPanel.theme.glassTransparency', 'Glass transparency')}
                 </Text>
-                <HStack gap={3} flexShrink={0}>
+                <HStack gap={3} flexShrink={0} width={isCompact ? '100%' : undefined}>
                   <Slider.Root
                     min={0}
                     max={100}
@@ -367,7 +387,7 @@ export function CustomBackground(props: CustomBackgroundProps) {
                     onValueChange={(details) => setLocalGlassTransparencyValue(details.value[0] ?? 0)}
                     onValueChangeEnd={(details) => void props.onMessageGlassTransparencyChange(details.value[0] ?? 0)}
                     disabled={props.isLoading || isFilePending}
-                    width={{ base: '132px', md: '180px' }}
+                    width={narrowControlWidth}
                   >
                     <Slider.Control>
                       <Slider.Track>
@@ -400,13 +420,18 @@ export function CustomBackground(props: CustomBackgroundProps) {
                     {localGlassTransparencyValue}%
                   </Text>
                 </HStack>
-              </HStack>
+              </Stack>
 
-              <HStack justify="space-between" align="center" gap={4}>
-                <Text fontSize="sm" color="gemOnSurface">
+              <Stack
+                direction={isCompact ? 'column' : 'row'}
+                justify="space-between"
+                align={isCompact ? 'stretch' : 'center'}
+                gap={isCompact ? 2 : 4}
+              >
+                <Text fontSize="sm" color="gemOnSurface" minW={0}>
                   {tt('settingPanel.theme.glassBlur', 'Glass blur')}
                 </Text>
-                <HStack gap={3} flexShrink={0}>
+                <HStack gap={3} flexShrink={0} width={isCompact ? '100%' : undefined}>
                   <Slider.Root
                     min={0}
                     max={20}
@@ -415,7 +440,7 @@ export function CustomBackground(props: CustomBackgroundProps) {
                     onValueChange={(details) => setLocalGlassBlurValue(details.value[0] ?? 0)}
                     onValueChangeEnd={(details) => void props.onMessageGlassBlurChange(details.value[0] ?? 0)}
                     disabled={props.isLoading || isFilePending}
-                    width={{ base: '132px', md: '180px' }}
+                    width={narrowControlWidth}
                   >
                     <Slider.Control>
                       <Slider.Track>
@@ -448,7 +473,7 @@ export function CustomBackground(props: CustomBackgroundProps) {
                     {localGlassBlurValue}px
                   </Text>
                 </HStack>
-              </HStack>
+              </Stack>
 
               <Button
                 size="xs"
@@ -462,9 +487,9 @@ export function CustomBackground(props: CustomBackgroundProps) {
             </VStack>
           )}
 
-          <HStack justify="space-between" mt={5} mb={4}>
-            <HStack gap={1}>
-              <Text fontSize="sm" color="gemOnSurface">
+          <HStack justify="space-between" mt={sectionGap} mb={4} gap={3}>
+            <HStack gap={1} minW={0} flex="1">
+              <Text fontSize="sm" color="gemOnSurface" minW={0}>
                 {tt('settingPanel.theme.sidebarScrim', 'Sidebar readability scrim')}
               </Text>
               <Tooltip
@@ -495,8 +520,16 @@ export function CustomBackground(props: CustomBackgroundProps) {
           </HStack>
 
           {sidebarScrimEnabled && (
-            <HStack justify="space-between" align="center" mb={5} gap={4} position="relative" zIndex={1}>
-              <Text fontSize="sm" color="gemOnSurface">
+            <Stack
+              direction={isCompact ? 'column' : 'row'}
+              justify="space-between"
+              align={isCompact ? 'stretch' : 'center'}
+              mb={sectionGap}
+              gap={isCompact ? 2 : 4}
+              position="relative"
+              zIndex={1}
+            >
+              <Text fontSize="sm" color="gemOnSurface" minW={0}>
                 {tt('settingPanel.theme.sidebarScrimIntensity', 'Scrim intensity')}
               </Text>
               <Slider.Root
@@ -507,7 +540,7 @@ export function CustomBackground(props: CustomBackgroundProps) {
                 onValueChange={(details) => setLocalSidebarScrimValue(details.value[0] ?? 0)}
                 onValueChangeEnd={(details) => void props.onSidebarScrimIntensityChange(details.value[0] ?? 0)}
                 disabled={props.isLoading || isFilePending}
-                width={{ base: '170px', md: '220px' }}
+                width={wideControlWidth}
               >
                 <Slider.Control>
                   <Slider.Track>
@@ -530,12 +563,18 @@ export function CustomBackground(props: CustomBackgroundProps) {
                   </Slider.Thumb>
                 </Slider.Control>
               </Slider.Root>
-            </HStack>
+            </Stack>
           )}
 
-          <HStack justify="space-between" align="center" mb={5} gap={4}>
-            <HStack gap={1}>
-              <Text fontSize="sm" color="gemOnSurface">
+          <Stack
+            direction={isCompact ? 'column' : 'row'}
+            justify="space-between"
+            align={isCompact ? 'stretch' : 'center'}
+            mb={sectionGap}
+            gap={isCompact ? 2 : 4}
+          >
+            <HStack gap={1} minW={0}>
+              <Text fontSize="sm" color="gemOnSurface" minW={0}>
                 {tt('settingPanel.theme.welcomeGreetingReadability', 'Welcome greeting readability')}
               </Text>
               <Tooltip
@@ -558,7 +597,7 @@ export function CustomBackground(props: CustomBackgroundProps) {
             </HStack>
             <NativeSelect.Root
               size="sm"
-              width={{ base: '170px', md: '220px' }}
+              width={wideControlWidth}
               disabled={props.isLoading || isFilePending}
             >
               <NativeSelect.Field
@@ -587,7 +626,7 @@ export function CustomBackground(props: CustomBackgroundProps) {
               </NativeSelect.Field>
               <NativeSelect.Indicator />
             </NativeSelect.Root>
-          </HStack>
+          </Stack>
         </>
       )}
     </Box>
