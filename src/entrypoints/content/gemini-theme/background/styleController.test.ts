@@ -10,17 +10,19 @@ function createState(
 ): ThemeBackgroundResolvedState {
   const base: ThemeBackgroundResolvedState = {
     settings: {
-      version: 3,
+      version: 4,
       backgroundImageEnabled: false,
       backgroundBlurPx: 5,
       messageGlassEnabled: false,
       messageGlassTransparency: 40,
       messageGlassLightTransparency: 40,
       messageGlassDarkTransparency: 90,
+      messageGlassBackgroundVisibility: 5,
       messageGlassBlurPx: 20,
       messageGlassTransparencyCustomized: false,
       messageGlassLightTransparencyCustomized: false,
       messageGlassDarkTransparencyCustomized: false,
+      messageGlassBackgroundVisibilityCustomized: false,
       messageGlassBlurCustomized: false,
       sidebarScrimEnabled: true,
       sidebarScrimIntensity: 20,
@@ -57,8 +59,10 @@ describe('styleController', () => {
           backgroundBlurPx: 12,
           messageGlassEnabled: true,
           messageGlassTransparency: 72,
+          messageGlassBackgroundVisibility: 4,
           messageGlassBlurPx: 8,
           messageGlassTransparencyCustomized: true,
+          messageGlassBackgroundVisibilityCustomized: true,
           messageGlassBlurCustomized: true,
           sidebarScrimEnabled: true,
           sidebarScrimIntensity: 50,
@@ -75,7 +79,7 @@ describe('styleController', () => {
       document.documentElement.getAttribute(
         'data-gpk-msg-glass-transparency-customized',
       ),
-    ).toBe('true')
+    ).toBeNull()
     expect(
       document.documentElement.getAttribute('data-gpk-msg-glass-blur-customized'),
     ).toBe('true')
@@ -85,9 +89,54 @@ describe('styleController', () => {
     expect(document.documentElement.style.getPropertyValue('--gpk-bg-blur')).toBe('12px')
     expect(
       document.documentElement.style.getPropertyValue(
-        '--gpk-msg-glass-transparency',
+        '--gpk-msg-glass-user-dark-surface-legacy-mix',
+      ),
+    ).toBe('64%')
+    expect(
+      document.documentElement.style.getPropertyValue(
+        '--gpk-msg-glass-user-light-transparency',
+      ),
+    ).toBe('32%')
+    expect(
+      document.documentElement.style.getPropertyValue(
+        '--gpk-msg-glass-user-dark-transparency',
+      ),
+    ).toBe('32%')
+    expect(
+      document.documentElement.style.getPropertyValue(
+        '--gpk-msg-glass-model-dark-surface-legacy-mix',
+      ),
+    ).toBe('64%')
+    expect(
+      document.documentElement.style.getPropertyValue(
+        '--gpk-msg-glass-model-light-transparency',
+      ),
+    ).toBe('32%')
+    expect(
+      document.documentElement.style.getPropertyValue(
+        '--gpk-msg-glass-model-dark-transparency',
       ),
     ).toBe('72%')
+    expect(
+      document.documentElement.style.getPropertyValue(
+        '--gpk-msg-glass-dual-dark-surface-legacy-mix',
+      ),
+    ).toBe('64%')
+    expect(
+      document.documentElement.style.getPropertyValue(
+        '--gpk-msg-glass-dual-light-transparency',
+      ),
+    ).toBe('32%')
+    expect(
+      document.documentElement.style.getPropertyValue(
+        '--gpk-msg-glass-dual-dark-transparency',
+      ),
+    ).toBe('48%')
+    expect(
+      document.documentElement.style.getPropertyValue(
+        '--gpk-msg-glass-transparency',
+      ),
+    ).toBe('')
     expect(document.documentElement.style.getPropertyValue('--gpk-msg-glass-blur')).toBe(
       '8px',
     )
@@ -95,7 +144,7 @@ describe('styleController', () => {
       document.documentElement.style.getPropertyValue(
         '--gpk-msg-glass-transparency-customized',
       ),
-    ).toBe('1')
+    ).toBe('')
     expect(
       document.documentElement.style.getPropertyValue(
         '--gpk-msg-glass-blur-customized',
@@ -107,7 +156,8 @@ describe('styleController', () => {
     expect(document.documentElement.style.getPropertyValue('--gpk-bg-image')).toContain(
       'blob:preview',
     )
-    expect(document.getElementById('gemini-extension-theme-background-override')).toBeTruthy()
+    const styleEl = document.getElementById('gemini-extension-theme-background-override')
+    expect(styleEl).toBeTruthy()
 
     const bgLayer = document.getElementById('gpk-theme-bg-layer')
     expect(bgLayer).toBeTruthy()
@@ -123,8 +173,10 @@ describe('styleController', () => {
           backgroundBlurPx: 5,
           messageGlassEnabled: false,
           messageGlassTransparency: 40,
+          messageGlassBackgroundVisibility: 5,
           messageGlassBlurPx: 20,
           messageGlassTransparencyCustomized: false,
+          messageGlassBackgroundVisibilityCustomized: false,
           messageGlassBlurCustomized: false,
           sidebarScrimEnabled: false,
           sidebarScrimIntensity: 0,
@@ -172,6 +224,51 @@ describe('styleController', () => {
     expect(document.documentElement.style.getPropertyValue('--gpk-msg-glass-transparency')).toBe(
       '',
     )
+    expect(
+      document.documentElement.style.getPropertyValue(
+        '--gpk-msg-glass-user-dark-surface-legacy-mix',
+      ),
+    ).toBe('')
+    expect(
+      document.documentElement.style.getPropertyValue(
+        '--gpk-msg-glass-user-light-transparency',
+      ),
+    ).toBe('')
+    expect(
+      document.documentElement.style.getPropertyValue(
+        '--gpk-msg-glass-user-dark-transparency',
+      ),
+    ).toBe('')
+    expect(
+      document.documentElement.style.getPropertyValue(
+        '--gpk-msg-glass-model-dark-surface-legacy-mix',
+      ),
+    ).toBe('')
+    expect(
+      document.documentElement.style.getPropertyValue(
+        '--gpk-msg-glass-model-light-transparency',
+      ),
+    ).toBe('')
+    expect(
+      document.documentElement.style.getPropertyValue(
+        '--gpk-msg-glass-model-dark-transparency',
+      ),
+    ).toBe('')
+    expect(
+      document.documentElement.style.getPropertyValue(
+        '--gpk-msg-glass-dual-dark-surface-legacy-mix',
+      ),
+    ).toBe('')
+    expect(
+      document.documentElement.style.getPropertyValue(
+        '--gpk-msg-glass-dual-light-transparency',
+      ),
+    ).toBe('')
+    expect(
+      document.documentElement.style.getPropertyValue(
+        '--gpk-msg-glass-dual-dark-transparency',
+      ),
+    ).toBe('')
     expect(document.documentElement.style.getPropertyValue('--gpk-msg-glass-blur')).toBe('')
     expect(
       document.documentElement.style.getPropertyValue(

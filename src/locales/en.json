@@ -88,6 +88,7 @@
       "welcomeGreetingReadabilityForceLight": "Force light text",
       "messageGlassEffect": "Message Glass Effect",
       "messageGlassEffectInfo": "Enabling this adds a glass effect. It may impact performance on low-end devices.",
+      "messageGlassBackgroundVisibility": "Background visibility",
       "glassTransparency": "Glass transparency",
       "glassBlur": "Glass blur",
       "resetGlassSettings": "Reset glass settings",

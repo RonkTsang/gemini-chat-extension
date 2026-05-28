@@ -1,4 +1,5 @@
 import type { ThemeBackgroundResolvedState } from './types'
+import { resolveMessageGlassSurfaces } from './messageGlassVisibility'
 import backgroundStyleCss from './style.css?raw'
 
 const STYLE_ID = 'gemini-extension-theme-background-override'
@@ -14,6 +15,24 @@ const ROOT_FIREFOX_ATTR = 'data-gpk-firefox'
 const ROOT_BG_IMAGE_VAR = '--gpk-bg-image'
 const ROOT_BG_BLUR_VAR = '--gpk-bg-blur'
 const ROOT_MSG_GLASS_TRANSPARENCY_VAR = '--gpk-msg-glass-transparency'
+const ROOT_MSG_GLASS_USER_DARK_SURFACE_LEGACY_MIX_VAR
+  = '--gpk-msg-glass-user-dark-surface-legacy-mix'
+const ROOT_MSG_GLASS_USER_LIGHT_TRANSPARENCY_VAR
+  = '--gpk-msg-glass-user-light-transparency'
+const ROOT_MSG_GLASS_USER_DARK_TRANSPARENCY_VAR
+  = '--gpk-msg-glass-user-dark-transparency'
+const ROOT_MSG_GLASS_MODEL_DARK_SURFACE_LEGACY_MIX_VAR
+  = '--gpk-msg-glass-model-dark-surface-legacy-mix'
+const ROOT_MSG_GLASS_MODEL_LIGHT_TRANSPARENCY_VAR
+  = '--gpk-msg-glass-model-light-transparency'
+const ROOT_MSG_GLASS_MODEL_DARK_TRANSPARENCY_VAR
+  = '--gpk-msg-glass-model-dark-transparency'
+const ROOT_MSG_GLASS_DUAL_DARK_SURFACE_LEGACY_MIX_VAR
+  = '--gpk-msg-glass-dual-dark-surface-legacy-mix'
+const ROOT_MSG_GLASS_DUAL_LIGHT_TRANSPARENCY_VAR
+  = '--gpk-msg-glass-dual-light-transparency'
+const ROOT_MSG_GLASS_DUAL_DARK_TRANSPARENCY_VAR
+  = '--gpk-msg-glass-dual-dark-transparency'
 const ROOT_MSG_GLASS_BLUR_VAR = '--gpk-msg-glass-blur'
 const ROOT_MSG_GLASS_TRANSPARENCY_CUSTOMIZED_VAR
   = '--gpk-msg-glass-transparency-customized'
@@ -73,10 +92,7 @@ export function applyThemeBackgroundStyle(
     ROOT_MSG_GLASS_ATTR,
     state.settings.messageGlassEnabled ? 'true' : 'false',
   )
-  root.setAttribute(
-    ROOT_MSG_GLASS_TRANSPARENCY_CUSTOMIZED_ATTR,
-    state.settings.messageGlassTransparencyCustomized ? 'true' : 'false',
-  )
+  root.removeAttribute(ROOT_MSG_GLASS_TRANSPARENCY_CUSTOMIZED_ATTR)
   root.setAttribute(
     ROOT_MSG_GLASS_BLUR_CUSTOMIZED_ATTR,
     state.settings.messageGlassBlurCustomized ? 'true' : 'false',
@@ -93,18 +109,51 @@ export function applyThemeBackgroundStyle(
     ROOT_BG_BLUR_VAR,
     `${state.settings.backgroundBlurPx}px`,
   )
+  const surfaces = resolveMessageGlassSurfaces(
+    state.settings.messageGlassBackgroundVisibility,
+  )
   root.style.setProperty(
-    ROOT_MSG_GLASS_TRANSPARENCY_VAR,
-    `${state.settings.messageGlassTransparency}%`,
+    ROOT_MSG_GLASS_USER_DARK_SURFACE_LEGACY_MIX_VAR,
+    `${surfaces.userDark.legacySurfaceMixPercentage}%`,
+  )
+  root.style.setProperty(
+    ROOT_MSG_GLASS_USER_LIGHT_TRANSPARENCY_VAR,
+    `${surfaces.userLight.transparency}%`,
+  )
+  root.style.setProperty(
+    ROOT_MSG_GLASS_USER_DARK_TRANSPARENCY_VAR,
+    `${surfaces.userDark.transparency}%`,
+  )
+  root.style.setProperty(
+    ROOT_MSG_GLASS_MODEL_DARK_SURFACE_LEGACY_MIX_VAR,
+    `${surfaces.modelDark.legacySurfaceMixPercentage}%`,
+  )
+  root.style.setProperty(
+    ROOT_MSG_GLASS_MODEL_LIGHT_TRANSPARENCY_VAR,
+    `${surfaces.modelLight.transparency}%`,
+  )
+  root.style.setProperty(
+    ROOT_MSG_GLASS_MODEL_DARK_TRANSPARENCY_VAR,
+    `${surfaces.modelDark.transparency}%`,
+  )
+  root.style.setProperty(
+    ROOT_MSG_GLASS_DUAL_DARK_SURFACE_LEGACY_MIX_VAR,
+    `${surfaces.dualDark.legacySurfaceMixPercentage}%`,
+  )
+  root.style.setProperty(
+    ROOT_MSG_GLASS_DUAL_LIGHT_TRANSPARENCY_VAR,
+    `${surfaces.dualLight.transparency}%`,
+  )
+  root.style.setProperty(
+    ROOT_MSG_GLASS_DUAL_DARK_TRANSPARENCY_VAR,
+    `${surfaces.dualDark.transparency}%`,
   )
   root.style.setProperty(
     ROOT_MSG_GLASS_BLUR_VAR,
     `${state.settings.messageGlassBlurPx}px`,
   )
-  root.style.setProperty(
-    ROOT_MSG_GLASS_TRANSPARENCY_CUSTOMIZED_VAR,
-    state.settings.messageGlassTransparencyCustomized ? '1' : '0',
-  )
+  root.style.removeProperty(ROOT_MSG_GLASS_TRANSPARENCY_VAR)
+  root.style.removeProperty(ROOT_MSG_GLASS_TRANSPARENCY_CUSTOMIZED_VAR)
   root.style.setProperty(
     ROOT_MSG_GLASS_BLUR_CUSTOMIZED_VAR,
     state.settings.messageGlassBlurCustomized ? '1' : '0',
@@ -134,6 +183,15 @@ export function clearThemeBackgroundStyle(): void {
   root.style.removeProperty(ROOT_BG_IMAGE_VAR)
   root.style.removeProperty(ROOT_BG_BLUR_VAR)
   root.style.removeProperty(ROOT_MSG_GLASS_TRANSPARENCY_VAR)
+  root.style.removeProperty(ROOT_MSG_GLASS_USER_DARK_SURFACE_LEGACY_MIX_VAR)
+  root.style.removeProperty(ROOT_MSG_GLASS_USER_LIGHT_TRANSPARENCY_VAR)
+  root.style.removeProperty(ROOT_MSG_GLASS_USER_DARK_TRANSPARENCY_VAR)
+  root.style.removeProperty(ROOT_MSG_GLASS_MODEL_DARK_SURFACE_LEGACY_MIX_VAR)
+  root.style.removeProperty(ROOT_MSG_GLASS_MODEL_LIGHT_TRANSPARENCY_VAR)
+  root.style.removeProperty(ROOT_MSG_GLASS_MODEL_DARK_TRANSPARENCY_VAR)
+  root.style.removeProperty(ROOT_MSG_GLASS_DUAL_DARK_SURFACE_LEGACY_MIX_VAR)
+  root.style.removeProperty(ROOT_MSG_GLASS_DUAL_LIGHT_TRANSPARENCY_VAR)
+  root.style.removeProperty(ROOT_MSG_GLASS_DUAL_DARK_TRANSPARENCY_VAR)
   root.style.removeProperty(ROOT_MSG_GLASS_BLUR_VAR)
   root.style.removeProperty(ROOT_MSG_GLASS_TRANSPARENCY_CUSTOMIZED_VAR)
   root.style.removeProperty(ROOT_MSG_GLASS_BLUR_CUSTOMIZED_VAR)

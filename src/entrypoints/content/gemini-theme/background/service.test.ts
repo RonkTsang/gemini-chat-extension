@@ -73,17 +73,19 @@ import { BACKGROUND_FILE_SIZE_LIMIT } from './types'
 
 function createSettings(overrides: Partial<ThemeBackgroundSettings> = {}): ThemeBackgroundSettings {
   return {
-    version: 3,
+    version: 4,
     backgroundImageEnabled: false,
     backgroundBlurPx: 5,
     messageGlassEnabled: false,
     messageGlassTransparency: 40,
     messageGlassLightTransparency: 40,
     messageGlassDarkTransparency: 90,
+    messageGlassBackgroundVisibility: 5,
     messageGlassBlurPx: 20,
     messageGlassTransparencyCustomized: false,
     messageGlassLightTransparencyCustomized: false,
     messageGlassDarkTransparencyCustomized: false,
+    messageGlassBackgroundVisibilityCustomized: false,
     messageGlassBlurCustomized: false,
     sidebarScrimEnabled: true,
     sidebarScrimIntensity: 20,

@@ -88,6 +88,7 @@
       "welcomeGreetingReadabilityForceLight": "Hellen Text erzwingen",
       "messageGlassEffect": "Nachrichten-Glaseffekt",
       "messageGlassEffectInfo": "Aktiviert einen Glaseffekt. Dies kann die Leistung auf schwächeren Geräten beeinträchtigen.",
+      "messageGlassBackgroundVisibility": "Hintergrundsichtbarkeit",
       "glassTransparency": "Glas-Transparenz",
       "glassBlur": "Glas-Unschärfe",
       "resetGlassSettings": "Glaseinstellungen zurücksetzen",

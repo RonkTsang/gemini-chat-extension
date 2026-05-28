@@ -35,8 +35,8 @@ export function ThemeSettingsControls({
         onToggleSidebarScrim={controller.handleToggleSidebarScrim}
         onSidebarScrimIntensityChange={controller.handleSidebarScrimIntensityChange}
         onToggleMessageGlass={controller.handleToggleMessageGlass}
-        onMessageGlassTransparencyChange={
-          controller.handleMessageGlassTransparencyChange
+        onMessageGlassBackgroundVisibilityChange={
+          controller.handleMessageGlassBackgroundVisibilityChange
         }
         onMessageGlassBlurChange={controller.handleMessageGlassBlurChange}
         onResetGlassSettings={controller.handleResetGlassSettings}

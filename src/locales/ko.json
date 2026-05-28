@@ -88,6 +88,7 @@
       "welcomeGreetingReadabilityForceLight": "밝은 텍스트 강제",
       "messageGlassEffect": "메시지 유리 효과",
       "messageGlassEffectInfo": "이 기능을 활성화하면 유리 효과가 추가됩니다. 저사양 기기에서는 성능에 영향을 줄 수 있습니다.",
+      "messageGlassBackgroundVisibility": "배경 보임 정도",
       "glassTransparency": "유리 투명도",
       "glassBlur": "유리 흐림",
       "resetGlassSettings": "유리 설정 초기화",

@@ -64,13 +64,10 @@ export function ThemeSettingsView() {
               sidebarScrimEnabled={previewState.settings.sidebarScrimEnabled}
               sidebarScrimIntensity={previewState.settings.sidebarScrimIntensity}
               messageGlassEnabled={previewState.settings.messageGlassEnabled}
-              messageGlassTransparency={
-                previewState.settings.messageGlassTransparency
+              messageGlassBackgroundVisibility={
+                previewState.settings.messageGlassBackgroundVisibility
               }
               messageGlassBlurPx={previewState.settings.messageGlassBlurPx}
-              messageGlassTransparencyCustomized={
-                previewState.settings.messageGlassTransparencyCustomized
-              }
               messageGlassBlurCustomized={
                 previewState.settings.messageGlassBlurCustomized
               }

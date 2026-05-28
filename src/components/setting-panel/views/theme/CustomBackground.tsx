@@ -22,6 +22,7 @@ import type {
   ThemeBackgroundResolvedState,
   WelcomeGreetingReadabilityMode,
 } from '@/entrypoints/content/gemini-theme'
+import { MESSAGE_GLASS_BACKGROUND_VISIBILITY_DEFAULT } from '@/entrypoints/content/gemini-theme'
 import { Tooltip } from '@/components/ui/tooltip'
 import { tt } from '@/utils/i18n'
 
@@ -34,7 +35,7 @@ interface CustomBackgroundProps {
   onToggleSidebarScrim: (enabled: boolean) => Promise<void>
   onSidebarScrimIntensityChange: (value: number) => Promise<void>
   onToggleMessageGlass: (enabled: boolean) => Promise<void>
-  onMessageGlassTransparencyChange: (value: number) => Promise<void>
+  onMessageGlassBackgroundVisibilityChange: (value: number) => Promise<void>
   onMessageGlassBlurChange: (value: number) => Promise<void>
   onResetGlassSettings: () => Promise<void>
   onWelcomeGreetingReadabilityModeChange: (
@@ -61,7 +62,9 @@ export function CustomBackground(props: CustomBackgroundProps) {
   const isBackgroundEnabled = settings?.backgroundImageEnabled ?? false
   const blurValue = settings?.backgroundBlurPx ?? 5
   const messageGlassEnabled = settings?.messageGlassEnabled ?? false
-  const messageGlassTransparency = settings?.messageGlassTransparency ?? 40
+  const messageGlassBackgroundVisibility =
+    settings?.messageGlassBackgroundVisibility
+    ?? MESSAGE_GLASS_BACKGROUND_VISIBILITY_DEFAULT
   const messageGlassBlurPx = settings?.messageGlassBlurPx ?? 20
   const sidebarScrimEnabled = settings?.sidebarScrimEnabled ?? true
   const sidebarScrimIntensity = settings?.sidebarScrimIntensity ?? 20
@@ -72,9 +75,10 @@ export function CustomBackground(props: CustomBackgroundProps) {
   const [localSidebarScrimValue, setLocalSidebarScrimValue] = useState(
     sidebarScrimIntensity,
   )
-  const [localGlassTransparencyValue, setLocalGlassTransparencyValue] = useState(
-    messageGlassTransparency,
-  )
+  const [
+    localGlassBackgroundVisibilityValue,
+    setLocalGlassBackgroundVisibilityValue,
+  ] = useState(messageGlassBackgroundVisibility)
   const [localGlassBlurValue, setLocalGlassBlurValue] = useState(
     messageGlassBlurPx,
   )
@@ -88,8 +92,8 @@ export function CustomBackground(props: CustomBackgroundProps) {
   }, [sidebarScrimIntensity])
 
   useEffect(() => {
-    setLocalGlassTransparencyValue(messageGlassTransparency)
-  }, [messageGlassTransparency])
+    setLocalGlassBackgroundVisibilityValue(messageGlassBackgroundVisibility)
+  }, [messageGlassBackgroundVisibility])
 
   useEffect(() => {
     setLocalGlassBlurValue(messageGlassBlurPx)
@@ -376,16 +380,16 @@ export function CustomBackground(props: CustomBackgroundProps) {
                 gap={isCompact ? 2 : 4}
               >
                 <Text fontSize="sm" color="gemOnSurface" minW={0}>
-                  {tt('settingPanel.theme.glassTransparency', 'Glass transparency')}
+                  {tt('settingPanel.theme.messageGlassBackgroundVisibility', 'Background visibility')}
                 </Text>
                 <HStack gap={3} flexShrink={0} width={isCompact ? '100%' : undefined}>
                   <Slider.Root
                     min={0}
-                    max={100}
+                    max={10}
                     step={1}
-                    value={[localGlassTransparencyValue]}
-                    onValueChange={(details) => setLocalGlassTransparencyValue(details.value[0] ?? 0)}
-                    onValueChangeEnd={(details) => void props.onMessageGlassTransparencyChange(details.value[0] ?? 0)}
+                    value={[localGlassBackgroundVisibilityValue]}
+                    onValueChange={(details) => setLocalGlassBackgroundVisibilityValue(details.value[0] ?? 0)}
+                    onValueChangeEnd={(details) => void props.onMessageGlassBackgroundVisibilityChange(details.value[0] ?? 0)}
                     disabled={props.isLoading || isFilePending}
                     width={narrowControlWidth}
                   >
@@ -402,10 +406,7 @@ export function CustomBackground(props: CustomBackgroundProps) {
                           fontSize="xs"
                           zIndex={2}
                         >
-                          <HStack gap="0.5">
-                            <Slider.ValueText />
-                            <Box as="span">%</Box>
-                          </HStack>
+                          <Slider.ValueText />
                         </Slider.DraggingIndicator>
                       </Slider.Thumb>
                     </Slider.Control>
@@ -417,7 +418,7 @@ export function CustomBackground(props: CustomBackgroundProps) {
                     minW="38px"
                     textAlign="right"
                   >
-                    {localGlassTransparencyValue}%
+                    {localGlassBackgroundVisibilityValue}
                   </Text>
                 </HStack>
               </Stack>

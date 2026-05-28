@@ -88,6 +88,7 @@
       "welcomeGreetingReadabilityForceLight": "Forcer le texte clair",
       "messageGlassEffect": "Effet de verre sur les messages",
       "messageGlassEffectInfo": "L'activation de cette option ajoute un effet de verre. Cela peut affecter les performances sur les appareils bas de gamme.",
+      "messageGlassBackgroundVisibility": "Visibilité de l’arrière-plan",
       "glassTransparency": "Transparence du verre",
       "glassBlur": "Flou du verre",
       "resetGlassSettings": "Réinitialiser les réglages du verre",

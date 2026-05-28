@@ -1,5 +1,6 @@
 import { Box, Heading, VStack, HStack } from '@chakra-ui/react'
 import { useColorMode } from '@/components/ui/color-mode'
+import { resolveMessageGlassSurface } from '@/entrypoints/content/gemini-theme'
 import { t } from '@/utils/i18n'
 
 interface LivePreviewProps {
@@ -9,9 +10,8 @@ interface LivePreviewProps {
   sidebarScrimEnabled: boolean
   sidebarScrimIntensity: number
   messageGlassEnabled: boolean
-  messageGlassTransparency: number
+  messageGlassBackgroundVisibility: number
   messageGlassBlurPx: number
-  messageGlassTransparencyCustomized: boolean
   messageGlassBlurCustomized: boolean
 }
 
@@ -73,9 +73,8 @@ export function LivePreview({
   sidebarScrimEnabled,
   sidebarScrimIntensity,
   messageGlassEnabled,
-  messageGlassTransparency,
+  messageGlassBackgroundVisibility,
   messageGlassBlurPx,
-  messageGlassTransparencyCustomized,
   messageGlassBlurCustomized,
 }: LivePreviewProps) {
   const { colorMode } = useColorMode()
@@ -89,21 +88,24 @@ export function LivePreview({
     && sidebarScrimIntensity > 0
   const sidebarScrimAlpha = (Math.min(100, Math.max(0, sidebarScrimIntensity)) / 100)
     .toFixed(2)
-  const glassTransparency = clampInteger(messageGlassTransparency, 0, 100)
   const glassBlurPx = clampInteger(messageGlassBlurPx, 0, 20)
-  const userGlassTransparency = messageGlassTransparencyCustomized
-    ? glassTransparency
-    : 40
+  const previewMode = isDark ? 'dark' : 'light'
+  const userGlassSurface = resolveMessageGlassSurface({
+    backgroundVisibility: messageGlassBackgroundVisibility,
+    surface: 'user',
+    mode: previewMode,
+  })
   const userGlassBlurPx = messageGlassBlurCustomized
     ? glassBlurPx
     : isDark ? 10 : 20
-  const modelGlassTransparency = messageGlassTransparencyCustomized
-    ? glassTransparency
-    : isDark ? 90 : 40
+  const modelGlassSurface = resolveMessageGlassSurface({
+    backgroundVisibility: messageGlassBackgroundVisibility,
+    surface: 'model',
+    mode: previewMode,
+  })
   const modelGlassBlurPx = messageGlassBlurCustomized ? glassBlurPx : 20
-  const userGlassBackground = `color-mix(in srgb, var(--gem-sys-color--surface-container-high), transparent ${userGlassTransparency}%)`
-  const modelGlassSurface = isDark ? 'var(--theme-200)' : 'var(--theme-50)'
-  const modelGlassBackground = `color-mix(in srgb, ${modelGlassSurface}, transparent ${modelGlassTransparency}%)`
+  const userGlassBackground = `color-mix(in srgb, ${userGlassSurface.surfaceColor}, transparent ${userGlassSurface.transparency}%)`
+  const modelGlassBackground = `color-mix(in srgb, ${modelGlassSurface.surfaceColor}, transparent ${modelGlassSurface.transparency}%)`
   const previewTitle = t('settingPanel.theme.livePreview')
 
   return (

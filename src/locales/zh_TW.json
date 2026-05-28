@@ -88,6 +88,7 @@
       "welcomeGreetingReadabilityForceLight": "強制淺色文字",
       "messageGlassEffect": "訊息毛玻璃效果",
       "messageGlassEffectInfo": "開啟後可獲得毛玻璃視覺效果。對於低效能設備，可能會影響流暢度。",
+      "messageGlassBackgroundVisibility": "背景透出",
       "glassTransparency": "玻璃透明度",
       "glassBlur": "玻璃模糊",
       "resetGlassSettings": "重設玻璃設定",

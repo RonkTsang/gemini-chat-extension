@@ -88,6 +88,7 @@
       "welcomeGreetingReadabilityForceLight": "明るい文字を強制",
       "messageGlassEffect": "メッセージのグラスエフェクト",
       "messageGlassEffectInfo": "これを有効にするとグラスエフェクトが追加されます。低スペックのデバイスではパフォーマンスに影響する場合があります。",
+      "messageGlassBackgroundVisibility": "背景の見え方",
       "glassTransparency": "ガラスの透明度",
       "glassBlur": "ガラスのぼかし",
       "resetGlassSettings": "ガラス設定をリセット",

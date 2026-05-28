@@ -37,7 +37,7 @@ export interface ThemeSettingsController {
   handleToggleSidebarScrim: (enabled: boolean) => Promise<void>
   handleSidebarScrimIntensityChange: (value: number) => Promise<void>
   handleToggleMessageGlass: (enabled: boolean) => Promise<void>
-  handleMessageGlassTransparencyChange: (value: number) => Promise<void>
+  handleMessageGlassBackgroundVisibilityChange: (value: number) => Promise<void>
   handleMessageGlassBlurChange: (value: number) => Promise<void>
   handleResetGlassSettings: () => Promise<void>
   handleWelcomeGreetingReadabilityModeChange: (
@@ -204,11 +204,11 @@ export function useThemeSettingsController(
     }
   }, [])
 
-  const handleMessageGlassTransparencyChange = useCallback(async (value: number) => {
+  const handleMessageGlassBackgroundVisibilityChange = useCallback(async (value: number) => {
     try {
       const state = await updateThemeBackgroundSettings({
-        messageGlassTransparency: value,
-        messageGlassTransparencyCustomized: true,
+        messageGlassBackgroundVisibility: value,
+        messageGlassBackgroundVisibilityCustomized: true,
       })
       setBackgroundState(state)
     } catch (error) {
@@ -231,10 +231,15 @@ export function useThemeSettingsController(
   const handleResetGlassSettings = useCallback(async () => {
     try {
       const state = await updateThemeBackgroundSettings({
+        messageGlassBackgroundVisibility:
+          DEFAULT_THEME_BACKGROUND_SETTINGS.messageGlassBackgroundVisibility,
         messageGlassTransparency:
           DEFAULT_THEME_BACKGROUND_SETTINGS.messageGlassTransparency,
         messageGlassBlurPx: DEFAULT_THEME_BACKGROUND_SETTINGS.messageGlassBlurPx,
+        messageGlassBackgroundVisibilityCustomized: false,
         messageGlassTransparencyCustomized: false,
+        messageGlassLightTransparencyCustomized: false,
+        messageGlassDarkTransparencyCustomized: false,
         messageGlassBlurCustomized: false,
       })
       setBackgroundState(state)
@@ -300,7 +305,7 @@ export function useThemeSettingsController(
     handleToggleSidebarScrim,
     handleSidebarScrimIntensityChange,
     handleToggleMessageGlass,
-    handleMessageGlassTransparencyChange,
+    handleMessageGlassBackgroundVisibilityChange,
     handleMessageGlassBlurChange,
     handleResetGlassSettings,
     handleWelcomeGreetingReadabilityModeChange,

@@ -5,6 +5,9 @@ import {
   DEFAULT_THEME_BACKGROUND_SETTINGS,
   MESSAGE_GLASS_BLUR_MAX,
   MESSAGE_GLASS_BLUR_MIN,
+  MESSAGE_GLASS_BACKGROUND_VISIBILITY_DEFAULT,
+  MESSAGE_GLASS_BACKGROUND_VISIBILITY_MAX,
+  MESSAGE_GLASS_BACKGROUND_VISIBILITY_MIN,
   MESSAGE_GLASS_TRANSPARENCY_MAX,
   MESSAGE_GLASS_TRANSPARENCY_MIN,
   SIDEBAR_SCRIM_INTENSITY_MAX,
@@ -22,10 +25,14 @@ describe('theme background settings normalize', () => {
     expect(result.messageGlassTransparency).toBe(
       DEFAULT_THEME_BACKGROUND_SETTINGS.messageGlassTransparency,
     )
+    expect(result.messageGlassBackgroundVisibility).toBe(
+      DEFAULT_THEME_BACKGROUND_SETTINGS.messageGlassBackgroundVisibility,
+    )
     expect(result.messageGlassBlurPx).toBe(
       DEFAULT_THEME_BACKGROUND_SETTINGS.messageGlassBlurPx,
     )
     expect(result.messageGlassTransparencyCustomized).toBe(false)
+    expect(result.messageGlassBackgroundVisibilityCustomized).toBe(false)
     expect(result.messageGlassBlurCustomized).toBe(false)
     expect(result.sidebarScrimEnabled).toBe(
       DEFAULT_THEME_BACKGROUND_SETTINGS.sidebarScrimEnabled,
@@ -71,23 +78,35 @@ describe('theme background settings normalize', () => {
   it('clamps message glass controls to valid ranges', () => {
     const low = normalizeThemeBackgroundSettings({
       messageGlassTransparency: -100,
+      messageGlassBackgroundVisibility: -100,
       messageGlassBlurPx: -100,
     })
     const high = normalizeThemeBackgroundSettings({
       messageGlassTransparency: 999,
+      messageGlassBackgroundVisibility: 999,
       messageGlassBlurPx: 999,
     })
     const invalid = normalizeThemeBackgroundSettings({
       messageGlassTransparency: Number.NaN,
+      messageGlassBackgroundVisibility: Number.NaN,
       messageGlassBlurPx: Number.NaN,
     })
 
     expect(low.messageGlassTransparency).toBe(MESSAGE_GLASS_TRANSPARENCY_MIN)
+    expect(low.messageGlassBackgroundVisibility).toBe(
+      MESSAGE_GLASS_BACKGROUND_VISIBILITY_MIN,
+    )
     expect(low.messageGlassBlurPx).toBe(MESSAGE_GLASS_BLUR_MIN)
     expect(high.messageGlassTransparency).toBe(MESSAGE_GLASS_TRANSPARENCY_MAX)
+    expect(high.messageGlassBackgroundVisibility).toBe(
+      MESSAGE_GLASS_BACKGROUND_VISIBILITY_MAX,
+    )
     expect(high.messageGlassBlurPx).toBe(MESSAGE_GLASS_BLUR_MAX)
     expect(invalid.messageGlassTransparency).toBe(
       DEFAULT_THEME_BACKGROUND_SETTINGS.messageGlassTransparency,
+    )
+    expect(invalid.messageGlassBackgroundVisibility).toBe(
+      MESSAGE_GLASS_BACKGROUND_VISIBILITY_DEFAULT,
     )
     expect(invalid.messageGlassBlurPx).toBe(
       DEFAULT_THEME_BACKGROUND_SETTINGS.messageGlassBlurPx,
@@ -97,16 +116,20 @@ describe('theme background settings normalize', () => {
   it('normalizes message glass customization flags', () => {
     const result = normalizeThemeBackgroundSettings({
       messageGlassTransparencyCustomized: true,
+      messageGlassBackgroundVisibilityCustomized: true,
       messageGlassBlurCustomized: true,
     })
     const invalid = normalizeThemeBackgroundSettings({
       messageGlassTransparencyCustomized: 'false',
+      messageGlassBackgroundVisibilityCustomized: 1,
       messageGlassBlurCustomized: 1,
     })
 
     expect(result.messageGlassTransparencyCustomized).toBe(true)
+    expect(result.messageGlassBackgroundVisibilityCustomized).toBe(true)
     expect(result.messageGlassBlurCustomized).toBe(true)
     expect(invalid.messageGlassTransparencyCustomized).toBe(false)
+    expect(invalid.messageGlassBackgroundVisibilityCustomized).toBe(false)
     expect(invalid.messageGlassBlurCustomized).toBe(false)
   })
 
