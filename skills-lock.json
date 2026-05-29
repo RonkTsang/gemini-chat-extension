@@ -5,6 +5,13 @@
       "source": "vercel-labs/agent-browser",
       "sourceType": "github",
       "computedHash": "1c40cac8fc7b0f3e4187881b256525ffc6b19fa4859f5f7847c9a87448ccf56a"
+    },
+    "chakra-ui-builder": {
+      "source": "chakra-ui/chakra-ui",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "skills/chakra-ui-builder/SKILL.md",
+      "computedHash": "b60b9f098afb4464df10f625bb8635e9567969d99f8b10012e1305ca988906bb"
     }
   }
 }

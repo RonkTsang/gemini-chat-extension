@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gemini Power Kit Verify"
+  short_description: "Verify Gemini Power Kit in live Chrome"
+  default_prompt: "Use $gemini-power-kit-verify to verify a Gemini Power Kit feature on gemini.google.com."
