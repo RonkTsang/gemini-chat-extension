@@ -85,7 +85,7 @@ export interface AppEvents {
 
   // Theme floating panel
   'theme-floating-panel:open': {
-    source: 'setting-panel'
+    source: 'setting-panel' | 'whats-new'
     returnToSettings?: boolean
   };
   'theme-floating-panel:close': {

@@ -69,7 +69,10 @@
       "colorPresets": "Colores",
       "customBackground": "Fondo de pantalla",
       "livePreview": "Vista previa en vivo",
-      "customizeOnPage": "Personalizar en la página",
+      "customizeOnPage": "Editar en la página de Gemini",
+      "editOnGeminiHint": {
+        "description": "Ajusta el tema viendo la página real de Gemini."
+      },
       "backToSettings": "Volver a la configuración",
       "closeThemePanel": "Cerrar panel de tema",
       "enableBackgroundImage": "Habilitar fondo de pantalla",
@@ -380,9 +383,10 @@
   "whatsnew": {
     "title": "Novedades",
     "releaseNotes": "Notas de la versión",
-    "feature1": {
-      "title": "Personaliza tu Gemini",
-      "description": "Transforma tu espacio de trabajo con impresionantes ajustes de color y fondos de pantalla personalizados."
+    "glassEffect": {
+      "title": "Deja el vidrio de mensajes perfecto",
+      "description": "Ajusta la visibilidad del fondo y el desenfoque hasta que cada chat se sienta más claro, ligero y conectado con tu fondo.",
+      "action": "Ajustar ahora"
     }
   }
 }

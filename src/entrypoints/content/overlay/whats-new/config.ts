@@ -3,7 +3,7 @@
  * Defines the release notes for the current version
  */
 
-import themeImagePath from '@/assets/whatsnew/theme.webp'
+import glassEffectControlsImagePath from '@/assets/whatsnew/glass-effect-controls.webp'
 import type { NavigationSection } from '@/components/setting-panel/config'
 
 export interface SettingPanelPromoAction {
@@ -13,11 +13,18 @@ export interface SettingPanelPromoAction {
   }
 }
 
-export type ReleaseNotePromoAction = SettingPanelPromoAction
+export interface ThemeFloatingPanelPromoAction {
+  action: 'theme-floating-panel'
+}
+
+export type ReleaseNotePromoAction =
+  | SettingPanelPromoAction
+  | ThemeFloatingPanelPromoAction
 
 export interface ReleaseNote {
   titleKey: string // i18n key for feature title
   descriptionKey: string // i18n key for feature description
+  actionLabelKey?: string // optional i18n key for feature CTA
   promoImagePath?: string // optional promo image path
   promoAction?: ReleaseNotePromoAction // optional action when promo image is clicked
 }
@@ -29,14 +36,12 @@ export interface ReleaseNote {
  */
 export const CURRENT_RELEASE_NOTES: ReleaseNote[] = [
   {
-    titleKey: 'whatsnew.feature1.title',
-    descriptionKey: 'whatsnew.feature1.description',
-    promoImagePath: themeImagePath,
+    titleKey: 'whatsnew.glassEffect.title',
+    descriptionKey: 'whatsnew.glassEffect.description',
+    actionLabelKey: 'whatsnew.glassEffect.action',
+    promoImagePath: glassEffectControlsImagePath,
     promoAction: {
-      action: 'setting-panel',
-      params: {
-        tab: 'theme'
-      }
+      action: 'theme-floating-panel'
     }
   }
 ]

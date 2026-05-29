@@ -69,7 +69,10 @@
       "colorPresets": "顏色",
       "customBackground": "桌布",
       "livePreview": "即時預覽",
-      "customizeOnPage": "在頁面上自訂",
+      "customizeOnPage": "在 Gemini 頁面上編輯",
+      "editOnGeminiHint": {
+        "description": "在真實 Gemini 頁面中邊看邊調整主題。"
+      },
       "backToSettings": "返回設定",
       "closeThemePanel": "關閉主題面板",
       "enableBackgroundImage": "啟用桌布",
@@ -380,9 +383,10 @@
   "whatsnew": {
     "title": "更新內容",
     "releaseNotes": "完整更新說明",
-    "feature1": {
-      "title": "打造您的專屬 Gemini",
-      "description": "多款精美主題與自訂背景，讓 Gemini 煥然一新，工作心情更悅目。"
+    "glassEffect": {
+      "title": "讓訊息毛玻璃剛剛好",
+      "description": "自由調整背景透出與毛玻璃模糊，讓每段對話都更清爽、更通透，也更貼合您的桌布。",
+      "action": "立即調整"
     }
   }
 }

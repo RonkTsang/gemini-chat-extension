@@ -1,5 +1,7 @@
 import { Box, Flex, VStack } from '@chakra-ui/react'
+import { FeatureHintBubble } from '@/components/feature-hint'
 import { useEventEmitter } from '@/hooks/useEventBus'
+import { tt } from '@/utils/i18n'
 import { LivePreview } from './LivePreview'
 import { OpenThemeStudioButton } from './OpenThemeStudioButton'
 import { ThemeSettingsControls } from './ThemeSettingsControls'
@@ -72,7 +74,25 @@ export function ThemeSettingsView() {
                 previewState.settings.messageGlassBlurCustomized
               }
             />
-            <OpenThemeStudioButton onClick={handleOpenThemeStudio} />
+            <FeatureHintBubble
+              id="theme-studio-entry"
+              version="7"
+              emoji="✨"
+              autoDismissMs={0}
+              description={tt(
+                'settingPanel.theme.editOnGeminiHint.description',
+                'Adjust the theme while seeing the real page.',
+              )}
+            >
+              {({ markSeen }) => (
+                <OpenThemeStudioButton
+                  onClick={() => {
+                    markSeen()
+                    handleOpenThemeStudio()
+                  }}
+                />
+              )}
+            </FeatureHintBubble>
           </VStack>
         </Flex>
       </Box>

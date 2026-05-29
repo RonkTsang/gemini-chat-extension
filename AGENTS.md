@@ -116,6 +116,7 @@ Verifies all locale files against English base.
 - Mount UI inside Shadow DOM using `Provider` from `src/components/ui/provider-shadow-dom.tsx`
 - Use Chakra components and the configured system theme from `src/components/ui/theme`
 - Keep UI rendering within the Shadow DOM subtree
+- When using Chakra overlay anchors such as `Popover.Trigger asChild`, the direct child must be a DOM element or a component that forwards `ref` and trigger props to the underlying Chakra/DOM element. If a custom trigger component does not use `forwardRef` and prop passthrough, Popover positioning can fall back to the viewport origin and appear in the top-left corner.
 - Common modules:
   - Settings panel: `src/components/setting-panel`
   - Toaster: `src/components/ui/toaster.tsx`
