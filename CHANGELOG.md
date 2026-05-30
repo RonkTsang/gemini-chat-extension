@@ -1,3 +1,10 @@
+# [0.7.0](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.6.4...v0.7.0) (2026-05-30)
+
+
+### Features
+
+* add glass effect controls ([#28](https://github.com/RonkTsang/gemini-chat-extension/issues/28)) ([1911d4f](https://github.com/RonkTsang/gemini-chat-extension/commit/1911d4ffef3641c9eea9746fb10a3a2b0ed193f6))
+
 ## [0.6.4](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.6.3...v0.6.4) (2026-05-23)
 
 
