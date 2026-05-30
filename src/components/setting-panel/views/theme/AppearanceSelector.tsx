@@ -7,6 +7,7 @@ interface AppearanceSelectorProps {
   value: AppearanceMode
   onChange: (mode: AppearanceMode) => void
   isLoading?: boolean
+  variant?: 'default' | 'compact'
 }
 
 const APPEARANCE_ITEMS: { value: AppearanceMode; icon: React.ElementType; labelKey: string; labelFallback: string }[] = [
@@ -19,10 +20,13 @@ export function AppearanceSelector({
   value,
   onChange,
   isLoading,
+  variant = 'default',
 }: AppearanceSelectorProps) {
+  const isCompact = variant === 'compact'
+
   return (
-    <Box mb={5} overflow="visible">
-      <Heading size="sm" mb={3}>
+    <Box mb={isCompact ? 3 : 5} overflow="visible">
+      <Heading size="sm" mb={isCompact ? 2 : 3}>
         {tt('settingPanel.theme.appearance', 'Appearance')}
       </Heading>
 
@@ -56,8 +60,8 @@ export function AppearanceSelector({
               key={itemValue}
               value={itemValue}
               borderRadius="lg"
-              px={3}
-              py={1.5}
+              px={isCompact ? 2 : 3}
+              py={isCompact ? 1 : 1.5}
               color="gemOnSurfaceVariant"
               fontWeight="medium"
               transition="color 0.15s ease"
@@ -72,9 +76,11 @@ export function AppearanceSelector({
               opacity={isLoading ? 0.5 : 1}
             >
               <SegmentGroup.ItemText asChild>
-                <HStack gap={1.5}>
-                  <Icon as={icon} boxSize={4} />
-                  <Text fontSize="sm">{tt(labelKey, labelFallback)}</Text>
+                <HStack gap={isCompact ? 1 : 1.5}>
+                  <Icon as={icon} boxSize={isCompact ? 3.5 : 4} />
+                  <Text fontSize={isCompact ? 'xs' : 'sm'}>
+                    {tt(labelKey, labelFallback)}
+                  </Text>
                 </HStack>
               </SegmentGroup.ItemText>
               <SegmentGroup.ItemHiddenInput />
@@ -85,4 +91,3 @@ export function AppearanceSelector({
     </Box>
   )
 }
-

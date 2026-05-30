@@ -1,5 +1,6 @@
 import { Box, Heading, VStack, HStack } from '@chakra-ui/react'
 import { useColorMode } from '@/components/ui/color-mode'
+import { resolveMessageGlassSurface } from '@/entrypoints/content/gemini-theme'
 import { t } from '@/utils/i18n'
 
 interface LivePreviewProps {
@@ -9,6 +10,13 @@ interface LivePreviewProps {
   sidebarScrimEnabled: boolean
   sidebarScrimIntensity: number
   messageGlassEnabled: boolean
+  messageGlassBackgroundVisibility: number
+  messageGlassBlurPx: number
+  messageGlassBlurCustomized: boolean
+}
+
+function clampInteger(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, Math.round(value)))
 }
 
 function PreviewGeminiIcon() {
@@ -65,6 +73,9 @@ export function LivePreview({
   sidebarScrimEnabled,
   sidebarScrimIntensity,
   messageGlassEnabled,
+  messageGlassBackgroundVisibility,
+  messageGlassBlurPx,
+  messageGlassBlurCustomized,
 }: LivePreviewProps) {
   const { colorMode } = useColorMode()
   const isDark = colorMode === 'dark'
@@ -77,6 +88,24 @@ export function LivePreview({
     && sidebarScrimIntensity > 0
   const sidebarScrimAlpha = (Math.min(100, Math.max(0, sidebarScrimIntensity)) / 100)
     .toFixed(2)
+  const glassBlurPx = clampInteger(messageGlassBlurPx, 0, 20)
+  const previewMode = isDark ? 'dark' : 'light'
+  const userGlassSurface = resolveMessageGlassSurface({
+    backgroundVisibility: messageGlassBackgroundVisibility,
+    surface: 'user',
+    mode: previewMode,
+  })
+  const userGlassBlurPx = messageGlassBlurCustomized
+    ? glassBlurPx
+    : isDark ? 10 : 20
+  const modelGlassSurface = resolveMessageGlassSurface({
+    backgroundVisibility: messageGlassBackgroundVisibility,
+    surface: 'model',
+    mode: previewMode,
+  })
+  const modelGlassBlurPx = messageGlassBlurCustomized ? glassBlurPx : 20
+  const userGlassBackground = `color-mix(in srgb, ${userGlassSurface.surfaceColor}, transparent ${userGlassSurface.transparency}%)`
+  const modelGlassBackground = `color-mix(in srgb, ${modelGlassSurface.surfaceColor}, transparent ${modelGlassSurface.transparency}%)`
   const previewTitle = t('settingPanel.theme.livePreview')
 
   return (
@@ -217,13 +246,15 @@ export function LivePreview({
                 borderRadius="xl"
                 borderBottomRightRadius="sm"
                 bg={messageGlassEnabled
-                  ? 'color-mix(in srgb, var(--gem-sys-color--surface-container-high), transparent 60%)'
+                  ? userGlassBackground
                   : 'var(--gem-sys-color--surface-container-high, var(--gem-sys-color--surface-container, #eef2ef))'}
-                backdropFilter={messageGlassEnabled ? 'blur(20px)' : undefined}
-                border={messageGlassEnabled ? '1px solid #f2f2f2' : undefined}
+                backdropFilter={messageGlassEnabled ? `blur(${userGlassBlurPx}px)` : undefined}
+                border={messageGlassEnabled && !isDark ? '1px solid #f2f2f2' : undefined}
+                boxShadow={messageGlassEnabled ? 'inset 0 0 1px 0 #ffffff' : undefined}
                 color="gemOnSurface"
                 fontSize="xs"
                 lineHeight="1.4"
+                transition="background-color 0.16s ease, backdrop-filter 0.16s ease"
               >
                 Summarize Gemini Power Kit updates.
               </Box>
@@ -242,18 +273,17 @@ export function LivePreview({
                 py={2}
                 borderRadius="xl"
                 bg={messageGlassEnabled
-                  ? isDark
-                    ? 'color-mix(in srgb, var(--theme-600), transparent 60%)'
-                    : 'color-mix(in srgb, var(--theme-50), transparent 80%)'
+                  ? modelGlassBackground
                   : isDark
                     ? 'transparent'
                     : 'var(--theme-25, color-mix(in srgb, var(--gem-sys-color--surface-container), #ffffff 35%))'}
-                backdropFilter={messageGlassEnabled ? 'blur(20px)' : undefined}
+                backdropFilter={messageGlassEnabled ? `blur(${modelGlassBlurPx}px)` : undefined}
                 border={messageGlassEnabled && !isDark ? '1px solid #f2f2f2' : undefined}
                 boxShadow={messageGlassEnabled && isDark ? '0 0 1px 0 #ffffff' : undefined}
                 color="gemOnSurface"
                 fontSize="xs"
                 lineHeight="1.45"
+                transition="background-color 0.16s ease, backdrop-filter 0.16s ease"
               >
                 Added chat outline, quick follow-up, and prompt chaining support.
               </Box>

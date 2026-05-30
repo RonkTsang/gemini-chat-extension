@@ -69,6 +69,12 @@
       "colorPresets": "カラー",
       "customBackground": "壁紙",
       "livePreview": "ライブプレビュー",
+      "customizeOnPage": "Gemini ページで編集",
+      "editOnGeminiHint": {
+        "description": "実際の Gemini ページを見ながらテーマを調整できます。"
+      },
+      "backToSettings": "設定に戻る",
+      "closeThemePanel": "テーマパネルを閉じる",
       "enableBackgroundImage": "壁紙を有効にする",
       "backgroundImageUpload": "背景画像のアップロード",
       "dropBackground": "ここに画像をドロップ",
@@ -85,6 +91,10 @@
       "welcomeGreetingReadabilityForceLight": "明るい文字を強制",
       "messageGlassEffect": "メッセージのグラスエフェクト",
       "messageGlassEffectInfo": "これを有効にするとグラスエフェクトが追加されます。低スペックのデバイスではパフォーマンスに影響する場合があります。",
+      "messageGlassBackgroundVisibility": "背景の見え方",
+      "glassTransparency": "ガラスの透明度",
+      "glassBlur": "ガラスのぼかし",
+      "resetGlassSettings": "ガラス設定をリセット",
       "invalidFileType": "PNG/JPG/WebPのみサポートされています",
       "fileTooLarge": "画像サイズは5MB以下である必要があります",
       "imageLoadFailed": "画像の読み込みに失敗しました。もう一度お試しください",
@@ -373,9 +383,10 @@
   "whatsnew": {
     "title": "新機能",
     "releaseNotes": "リリースノート",
-    "feature1": {
-      "title": "Gemini をパーソナライズ",
-      "description": "美しいカラープリセットとカスタム壁紙で、ワークスペースを自分好みに変えましょう。"
+    "glassEffect": {
+      "title": "メッセージのグラス効果を心地よく",
+      "description": "背景の見え方とグラスぼかしを調整して、壁紙になじむ、すっきり軽やかなチャット画面にできます。",
+      "action": "今すぐ調整"
     }
   }
 }

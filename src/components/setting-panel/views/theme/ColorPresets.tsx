@@ -7,29 +7,37 @@ interface ColorPresetsProps {
   activeKey: string
   onSelect: (key: string) => void
   isLoading?: boolean
+  variant?: 'default' | 'compact'
 }
 
-export function ColorPresets({ activeKey, onSelect, isLoading }: ColorPresetsProps) {
+export function ColorPresets({
+  activeKey,
+  onSelect,
+  isLoading,
+  variant = 'default',
+}: ColorPresetsProps) {
   const title = t('settingPanel.theme.colorPresets')
+  const isCompact = variant === 'compact'
+  const swatchSize = isCompact ? '34px' : '44px'
 
   return (
-    <Box mb={5} overflow="visible">
-      <Heading size="sm" mb={3}>
+    <Box mb={isCompact ? 3 : 5} overflow="visible">
+      <Heading size="sm" mb={isCompact ? 2 : 3}>
         {title === 'settingPanel.theme.colorPresets' ? 'Colors' : title}
       </Heading>
 
       <Box
         width="fit-content"
         maxWidth="100%"
-        p={3}
+        p={isCompact ? 2 : 3}
         borderRadius="xl"
         bg="color-mix(in srgb, var(--gem-sys-color--surface-container) 72%, transparent)"
         border="1px solid"
         borderColor="border.muted"
       >
         <SimpleGrid
-          templateColumns="repeat(5, 44px)"
-          gap={3}
+          templateColumns={`repeat(5, ${swatchSize})`}
+          gap={isCompact ? 2 : 3}
           overflow="visible"
         >
           {themePresets.map((preset) => {
@@ -40,8 +48,8 @@ export function ColorPresets({ activeKey, onSelect, isLoading }: ColorPresetsPro
                 as="button"
                 onClick={() => !isLoading && onSelect(preset.key)}
                 position="relative"
-                width="44px"
-                height="44px"
+                width={swatchSize}
+                height={swatchSize}
                 borderRadius="lg"
                 bg={preset.primary}
                 cursor={isLoading ? 'not-allowed' : 'pointer'}
@@ -71,7 +79,7 @@ export function ColorPresets({ activeKey, onSelect, isLoading }: ColorPresetsPro
                     justifyContent="center"
                     color="white"
                   >
-                    <HiCheck size={14} />
+                    <HiCheck size={isCompact ? 12 : 14} />
                   </Box>
                 )}
               </Box>

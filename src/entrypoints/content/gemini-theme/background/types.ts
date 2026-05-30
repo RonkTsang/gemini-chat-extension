@@ -2,12 +2,29 @@ import type {
   WelcomeGreetingReadabilityMode,
   WelcomeGreetingResolved,
 } from './welcome-greeting/types'
+import {
+  clampMessageGlassBackgroundVisibility,
+  MESSAGE_GLASS_BACKGROUND_VISIBILITY_DEFAULT,
+  MESSAGE_GLASS_BACKGROUND_VISIBILITY_MAX,
+  MESSAGE_GLASS_BACKGROUND_VISIBILITY_MIN,
+} from './messageGlassVisibility'
 
-export const THEME_BACKGROUND_VERSION = 3 as const
+export const THEME_BACKGROUND_VERSION = 4 as const
 
 export const BACKGROUND_BLUR_MIN = 0
 export const BACKGROUND_BLUR_MAX = 20
 export const BACKGROUND_FILE_SIZE_LIMIT = 5 * 1024 * 1024
+export {
+  MESSAGE_GLASS_BACKGROUND_VISIBILITY_DEFAULT,
+  MESSAGE_GLASS_BACKGROUND_VISIBILITY_MAX,
+  MESSAGE_GLASS_BACKGROUND_VISIBILITY_MIN,
+}
+export const MESSAGE_GLASS_TRANSPARENCY_MIN = 0
+export const MESSAGE_GLASS_TRANSPARENCY_MAX = 100
+export const MESSAGE_GLASS_LIGHT_TRANSPARENCY_DEFAULT = 40
+export const MESSAGE_GLASS_DARK_TRANSPARENCY_DEFAULT = 90
+export const MESSAGE_GLASS_BLUR_MIN = 0
+export const MESSAGE_GLASS_BLUR_MAX = 20
 export const SIDEBAR_SCRIM_INTENSITY_MIN = 0
 export const SIDEBAR_SCRIM_INTENSITY_MAX = 100
 
@@ -29,6 +46,16 @@ export interface ThemeBackgroundSettings {
   backgroundImageEnabled: boolean
   backgroundBlurPx: number
   messageGlassEnabled: boolean
+  messageGlassTransparency: number
+  messageGlassLightTransparency: number
+  messageGlassDarkTransparency: number
+  messageGlassBackgroundVisibility: number
+  messageGlassBlurPx: number
+  messageGlassTransparencyCustomized: boolean
+  messageGlassLightTransparencyCustomized: boolean
+  messageGlassDarkTransparencyCustomized: boolean
+  messageGlassBackgroundVisibilityCustomized: boolean
+  messageGlassBlurCustomized: boolean
   sidebarScrimEnabled: boolean
   sidebarScrimIntensity: number
   welcomeGreetingReadabilityMode: WelcomeGreetingReadabilityMode
@@ -42,6 +69,16 @@ export interface ThemeBackgroundPatch {
   backgroundImageEnabled?: boolean
   backgroundBlurPx?: number
   messageGlassEnabled?: boolean
+  messageGlassTransparency?: number
+  messageGlassLightTransparency?: number
+  messageGlassDarkTransparency?: number
+  messageGlassBackgroundVisibility?: number
+  messageGlassBlurPx?: number
+  messageGlassTransparencyCustomized?: boolean
+  messageGlassLightTransparencyCustomized?: boolean
+  messageGlassDarkTransparencyCustomized?: boolean
+  messageGlassBackgroundVisibilityCustomized?: boolean
+  messageGlassBlurCustomized?: boolean
   sidebarScrimEnabled?: boolean
   sidebarScrimIntensity?: number
   welcomeGreetingReadabilityMode?: WelcomeGreetingReadabilityMode
@@ -74,6 +111,16 @@ export const DEFAULT_THEME_BACKGROUND_SETTINGS: ThemeBackgroundSettings = {
   backgroundImageEnabled: false,
   backgroundBlurPx: 5,
   messageGlassEnabled: false,
+  messageGlassTransparency: MESSAGE_GLASS_LIGHT_TRANSPARENCY_DEFAULT,
+  messageGlassLightTransparency: MESSAGE_GLASS_LIGHT_TRANSPARENCY_DEFAULT,
+  messageGlassDarkTransparency: MESSAGE_GLASS_DARK_TRANSPARENCY_DEFAULT,
+  messageGlassBackgroundVisibility: MESSAGE_GLASS_BACKGROUND_VISIBILITY_DEFAULT,
+  messageGlassBlurPx: 20,
+  messageGlassTransparencyCustomized: false,
+  messageGlassLightTransparencyCustomized: false,
+  messageGlassDarkTransparencyCustomized: false,
+  messageGlassBackgroundVisibilityCustomized: false,
+  messageGlassBlurCustomized: false,
   sidebarScrimEnabled: true,
   sidebarScrimIntensity: 20,
   welcomeGreetingReadabilityMode: 'auto',
@@ -87,6 +134,20 @@ function clampBlur(value: number): number {
   return Math.min(
     BACKGROUND_BLUR_MAX,
     Math.max(BACKGROUND_BLUR_MIN, Math.round(value)),
+  )
+}
+
+function clampMessageGlassTransparency(value: number): number {
+  return Math.min(
+    MESSAGE_GLASS_TRANSPARENCY_MAX,
+    Math.max(MESSAGE_GLASS_TRANSPARENCY_MIN, Math.round(value)),
+  )
+}
+
+function clampMessageGlassBlur(value: number): number {
+  return Math.min(
+    MESSAGE_GLASS_BLUR_MAX,
+    Math.max(MESSAGE_GLASS_BLUR_MIN, Math.round(value)),
   )
 }
 
@@ -157,6 +218,50 @@ export function normalizeThemeBackgroundSettings(
     ? clampBlur(blurCandidate)
     : DEFAULT_THEME_BACKGROUND_SETTINGS.backgroundBlurPx
 
+  const glassTransparencyCandidate = Number(source.messageGlassTransparency)
+  const messageGlassTransparency = Number.isFinite(glassTransparencyCandidate)
+    ? clampMessageGlassTransparency(glassTransparencyCandidate)
+    : DEFAULT_THEME_BACKGROUND_SETTINGS.messageGlassTransparency
+
+  const globalTransparencyCustomized =
+    source.messageGlassTransparencyCustomized === true
+
+  const lightGlassTransparencyCandidate = Number(
+    source.messageGlassLightTransparency,
+  )
+  const messageGlassLightTransparency = Number.isFinite(
+    lightGlassTransparencyCandidate,
+  )
+    ? clampMessageGlassTransparency(lightGlassTransparencyCandidate)
+    : globalTransparencyCustomized
+      ? messageGlassTransparency
+      : DEFAULT_THEME_BACKGROUND_SETTINGS.messageGlassLightTransparency
+
+  const darkGlassTransparencyCandidate = Number(
+    source.messageGlassDarkTransparency,
+  )
+  const messageGlassDarkTransparency = Number.isFinite(
+    darkGlassTransparencyCandidate,
+  )
+    ? clampMessageGlassTransparency(darkGlassTransparencyCandidate)
+    : globalTransparencyCustomized
+      ? messageGlassTransparency
+      : DEFAULT_THEME_BACKGROUND_SETTINGS.messageGlassDarkTransparency
+
+  const backgroundVisibilityCandidate = Number(
+    source.messageGlassBackgroundVisibility,
+  )
+  const messageGlassBackgroundVisibility = Number.isFinite(
+    backgroundVisibilityCandidate,
+  )
+    ? clampMessageGlassBackgroundVisibility(backgroundVisibilityCandidate)
+    : DEFAULT_THEME_BACKGROUND_SETTINGS.messageGlassBackgroundVisibility
+
+  const glassBlurCandidate = Number(source.messageGlassBlurPx)
+  const messageGlassBlurPx = Number.isFinite(glassBlurCandidate)
+    ? clampMessageGlassBlur(glassBlurCandidate)
+    : DEFAULT_THEME_BACKGROUND_SETTINGS.messageGlassBlurPx
+
   const scrimIntensityCandidate = Number(source.sidebarScrimIntensity)
   const sidebarScrimIntensity = Number.isFinite(scrimIntensityCandidate)
     ? clampSidebarScrimIntensity(scrimIntensityCandidate)
@@ -190,6 +295,28 @@ export function normalizeThemeBackgroundSettings(
     backgroundImageEnabled: enabled,
     backgroundBlurPx: blur,
     messageGlassEnabled: Boolean(source.messageGlassEnabled),
+    messageGlassTransparency,
+    messageGlassLightTransparency,
+    messageGlassDarkTransparency,
+    messageGlassBackgroundVisibility,
+    messageGlassBlurPx,
+    messageGlassTransparencyCustomized:
+      globalTransparencyCustomized,
+    messageGlassLightTransparencyCustomized:
+      source.messageGlassLightTransparencyCustomized === true
+      || (
+        source.messageGlassLightTransparencyCustomized === undefined
+        && globalTransparencyCustomized
+      ),
+    messageGlassDarkTransparencyCustomized:
+      source.messageGlassDarkTransparencyCustomized === true
+      || (
+        source.messageGlassDarkTransparencyCustomized === undefined
+        && globalTransparencyCustomized
+      ),
+    messageGlassBackgroundVisibilityCustomized:
+      source.messageGlassBackgroundVisibilityCustomized === true,
+    messageGlassBlurCustomized: source.messageGlassBlurCustomized === true,
     sidebarScrimEnabled,
     sidebarScrimIntensity,
     welcomeGreetingReadabilityMode,

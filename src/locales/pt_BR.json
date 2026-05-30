@@ -69,6 +69,12 @@
       "colorPresets": "Cores",
       "customBackground": "Papel de parede",
       "livePreview": "Visualização ao vivo",
+      "customizeOnPage": "Editar na página do Gemini",
+      "editOnGeminiHint": {
+        "description": "Ajuste o tema enquanto vê a página real do Gemini."
+      },
+      "backToSettings": "Voltar às configurações",
+      "closeThemePanel": "Fechar painel de tema",
       "enableBackgroundImage": "Habilitar papel de parede",
       "backgroundImageUpload": "Upload de imagem de fundo",
       "dropBackground": "Solte sua imagem aqui",
@@ -85,6 +91,10 @@
       "welcomeGreetingReadabilityForceLight": "Forçar texto claro",
       "messageGlassEffect": "Efeito de vidro nas mensagens",
       "messageGlassEffectInfo": "Ativar isso adiciona um efeito de vidro. Pode impactar o desempenho em dispositivos de baixo custo.",
+      "messageGlassBackgroundVisibility": "Visibilidade do fundo",
+      "glassTransparency": "Transparência do vidro",
+      "glassBlur": "Desfoque do vidro",
+      "resetGlassSettings": "Redefinir configurações de vidro",
       "invalidFileType": "Apenas PNG/JPG/WebP são suportados",
       "fileTooLarge": "O tamanho da imagem deve ser de 5MB ou menos",
       "imageLoadFailed": "Falha ao carregar a imagem, tente novamente",
@@ -373,9 +383,10 @@
   "whatsnew": {
     "title": "O que há de novo",
     "releaseNotes": "Notas de lançamento",
-    "feature1": {
-      "title": "Personalize o seu Gemini",
-      "description": "Transforme seu espaço de trabalho com predefinições de cores incríveis e papéis de parede personalizados."
+    "glassEffect": {
+      "title": "Deixe o vidro das mensagens no ponto",
+      "description": "Ajuste a visibilidade do fundo e o desfoque do vidro para deixar cada conversa mais nítida, leve e combinando com seu papel de parede.",
+      "action": "Ajustar agora"
     }
   }
 }

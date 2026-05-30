@@ -69,6 +69,12 @@
       "colorPresets": "색상",
       "customBackground": "배경화면",
       "livePreview": "실시간 미리보기",
+      "customizeOnPage": "Gemini 페이지에서 편집",
+      "editOnGeminiHint": {
+        "description": "실제 Gemini 페이지를 보면서 테마를 조정하세요."
+      },
+      "backToSettings": "설정으로 돌아가기",
+      "closeThemePanel": "테마 패널 닫기",
       "enableBackgroundImage": "배경화면 활성화",
       "backgroundImageUpload": "배경 이미지 업로드",
       "dropBackground": "여기에 이미지 드롭",
@@ -85,6 +91,10 @@
       "welcomeGreetingReadabilityForceLight": "밝은 텍스트 강제",
       "messageGlassEffect": "메시지 유리 효과",
       "messageGlassEffectInfo": "이 기능을 활성화하면 유리 효과가 추가됩니다. 저사양 기기에서는 성능에 영향을 줄 수 있습니다.",
+      "messageGlassBackgroundVisibility": "배경 보임 정도",
+      "glassTransparency": "유리 투명도",
+      "glassBlur": "유리 흐림",
+      "resetGlassSettings": "유리 설정 초기화",
       "invalidFileType": "PNG/JPG/WebP만 지원됩니다",
       "fileTooLarge": "이미지 크기는 5MB 이하여야 합니다",
       "imageLoadFailed": "이미지 로드 실패, 다시 시도해 주세요",
@@ -373,9 +383,10 @@
   "whatsnew": {
     "title": "새로운 기능",
     "releaseNotes": "릴리스 노트",
-    "feature1": {
-      "title": "나만의 Gemini 꾸미기",
-      "description": "다양한 색상 프리셋과 사용자 지정 배경으로 작업 공간을 더욱 아름답게 변화시켜 보세요."
+    "glassEffect": {
+      "title": "메시지 유리 효과를 딱 맞게",
+      "description": "배경 보임 정도와 유리 흐림을 조절해 모든 대화를 더 선명하고 산뜻하게, 내 배경과 잘 어울리게 만들어 보세요.",
+      "action": "지금 조정하기"
     }
   }
 }

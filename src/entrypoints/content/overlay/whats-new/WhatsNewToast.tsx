@@ -5,6 +5,7 @@
 
 import { Box, Badge, Button, Card, HStack, Portal, Text, VStack, CloseButton, Image } from '@chakra-ui/react'
 import { useState } from 'react'
+import { HiOutlineAdjustments } from 'react-icons/hi'
 import { t } from '@/utils/i18n'
 import { EXTERNAL_LINKS } from '@/common/config'
 import { useEventEmitter } from '@/hooks/useEventBus'
@@ -45,6 +46,14 @@ export function WhatsNewToast({ version, features, onClose }: WhatsNewToastProps
         from: 'whats-new',
         open: true,
         module: action.params.tab,
+      })
+      onClose()
+      return
+    }
+
+    if (action.action === 'theme-floating-panel') {
+      emitSync('theme-floating-panel:open', {
+        source: 'whats-new',
       })
       onClose()
     }
@@ -131,6 +140,17 @@ export function WhatsNewToast({ version, features, onClose }: WhatsNewToastProps
                     <Text fontSize="sm" color="fg.muted" lineHeight="1.6">
                       {t(feature.descriptionKey)}
                     </Text>
+                    {feature.actionLabelKey && feature.promoAction && (
+                      <Button
+                        size="2xs"
+                        variant="solid"
+                        mt="2"
+                        onClick={() => handlePromoActionClick(feature.promoAction)}
+                      >
+                        <HiOutlineAdjustments />
+                        {t(feature.actionLabelKey)}
+                      </Button>
+                    )}
                   </Box>
                 )
               })}

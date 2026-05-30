@@ -69,6 +69,12 @@
       "colorPresets": "Colors",
       "customBackground": "Wallpaper",
       "livePreview": "Live Preview",
+      "customizeOnPage": "Edit on Gemini page",
+      "editOnGeminiHint": {
+        "description": "Adjust the theme while seeing the real page."
+      },
+      "backToSettings": "Back to settings",
+      "closeThemePanel": "Close theme panel",
       "enableBackgroundImage": "Enable wallpaper",
       "backgroundImageUpload": "Background Image Upload",
       "dropBackground": "Drop your image here",
@@ -85,6 +91,10 @@
       "welcomeGreetingReadabilityForceLight": "Force light text",
       "messageGlassEffect": "Message Glass Effect",
       "messageGlassEffectInfo": "Enabling this adds a glass effect. It may impact performance on low-end devices.",
+      "messageGlassBackgroundVisibility": "Background visibility",
+      "glassTransparency": "Glass transparency",
+      "glassBlur": "Glass blur",
+      "resetGlassSettings": "Reset glass settings",
       "invalidFileType": "Only PNG/JPG/WebP is supported",
       "fileTooLarge": "Image size must be 5MB or less",
       "imageLoadFailed": "Image loading failed, please try again",
@@ -369,9 +379,10 @@
   "whatsnew": {
     "title": "What's New",
     "releaseNotes": "Release Notes",
-    "feature1": {
-      "title": "Personalize Your Gemini",
-      "description": "Transform your workspace with stunning color presets and custom wallpapers. Make Gemini truly yours."
+    "glassEffect": {
+      "title": "Make message glass feel just right",
+      "description": "Dial in background visibility and glass blur until every chat feels crisp, airy, and perfectly tuned to your wallpaper.",
+      "action": "Tune glass now"
     }
   }
 }

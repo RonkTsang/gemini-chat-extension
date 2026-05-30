@@ -69,6 +69,12 @@
       "colorPresets": "顏色",
       "customBackground": "桌布",
       "livePreview": "即時預覽",
+      "customizeOnPage": "在 Gemini 頁面上編輯",
+      "editOnGeminiHint": {
+        "description": "在真實 Gemini 頁面中邊看邊調整主題。"
+      },
+      "backToSettings": "返回設定",
+      "closeThemePanel": "關閉主題面板",
       "enableBackgroundImage": "啟用桌布",
       "backgroundImageUpload": "背景圖上傳",
       "dropBackground": "將圖片拖放到這裡",
@@ -85,6 +91,10 @@
       "welcomeGreetingReadabilityForceLight": "強制淺色文字",
       "messageGlassEffect": "訊息毛玻璃效果",
       "messageGlassEffectInfo": "開啟後可獲得毛玻璃視覺效果。對於低效能設備，可能會影響流暢度。",
+      "messageGlassBackgroundVisibility": "背景透出",
+      "glassTransparency": "玻璃透明度",
+      "glassBlur": "玻璃模糊",
+      "resetGlassSettings": "重設玻璃設定",
       "invalidFileType": "僅支援 PNG/JPG/WebP",
       "fileTooLarge": "圖片大小不能超過 5MB",
       "imageLoadFailed": "圖片載入失敗，請重試",
@@ -373,9 +383,10 @@
   "whatsnew": {
     "title": "更新內容",
     "releaseNotes": "完整更新說明",
-    "feature1": {
-      "title": "打造您的專屬 Gemini",
-      "description": "多款精美主題與自訂背景，讓 Gemini 煥然一新，工作心情更悅目。"
+    "glassEffect": {
+      "title": "讓訊息毛玻璃剛剛好",
+      "description": "自由調整背景透出與毛玻璃模糊，讓每段對話都更清爽、更通透，也更貼合您的桌布。",
+      "action": "立即調整"
     }
   }
 }

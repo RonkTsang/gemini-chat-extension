@@ -1,6 +1,17 @@
 import { NavigationSection } from "@/components/setting-panel/config";
 import type { MediaItem } from "@/utils/stuffMediaParser";
 
+type SettingsOpenSource =
+  | 'prompt-entrance'
+  | 'popup'
+  | 'whats-new'
+  | 'theme-floating-panel'
+
+type SettingsCloseSource =
+  | 'run-modal'
+  | 'manual'
+  | 'theme-floating-panel'
+
 export const GEM_EXT_EVENTS = {
   URL_CHANGE: 'gem-ext:urlchange',
   STUFF_MEDIA_DATA: 'gem-ext:stuff-media-data',
@@ -56,12 +67,12 @@ export interface AppEvents {
 
   // settings panel
   'settings:open': {
-    from: 'prompt-entrance' | 'popup' | 'whats-new',
+    from: SettingsOpenSource,
     open: boolean
     module?: NavigationSection
   };
   'settings:close': {
-    from: 'run-modal' | 'manual',
+    from: SettingsCloseSource,
     reason?: string
   };
   /**
@@ -70,6 +81,16 @@ export interface AppEvents {
    */
   'settings:state-changed': {
     open: boolean
+  };
+
+  // Theme floating panel
+  'theme-floating-panel:open': {
+    source: 'setting-panel' | 'whats-new'
+    returnToSettings?: boolean
+  };
+  'theme-floating-panel:close': {
+    source: 'back-to-settings' | 'escape' | 'manual'
+    reopenSettings?: boolean
   };
 
   // Chain Prompt

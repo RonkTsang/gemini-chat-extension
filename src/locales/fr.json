@@ -69,6 +69,12 @@
       "colorPresets": "Couleurs",
       "customBackground": "Fond d'écran",
       "livePreview": "Aperçu en direct",
+      "customizeOnPage": "Modifier sur la page Gemini",
+      "editOnGeminiHint": {
+        "description": "Ajustez le thème tout en voyant la vraie page Gemini."
+      },
+      "backToSettings": "Retour aux paramètres",
+      "closeThemePanel": "Fermer le panneau de thème",
       "enableBackgroundImage": "Activer le fond d'écran",
       "backgroundImageUpload": "Téléchargement de l'image de fond",
       "dropBackground": "Déposez votre image ici",
@@ -85,6 +91,10 @@
       "welcomeGreetingReadabilityForceLight": "Forcer le texte clair",
       "messageGlassEffect": "Effet de verre sur les messages",
       "messageGlassEffectInfo": "L'activation de cette option ajoute un effet de verre. Cela peut affecter les performances sur les appareils bas de gamme.",
+      "messageGlassBackgroundVisibility": "Visibilité de l’arrière-plan",
+      "glassTransparency": "Transparence du verre",
+      "glassBlur": "Flou du verre",
+      "resetGlassSettings": "Réinitialiser les réglages du verre",
       "invalidFileType": "Seuls les formats PNG/JPG/WebP sont pris en charge",
       "fileTooLarge": "La taille de l'image doit être de 5 Mo ou moins",
       "imageLoadFailed": "Échec du chargement de l'image, veuillez réessayer",
@@ -373,9 +383,10 @@
   "whatsnew": {
     "title": "Quoi de neuf",
     "releaseNotes": "Notes de version",
-    "feature1": {
-      "title": "Personnalisez votre Gemini",
-      "description": "Transformez votre espace de travail avec de superbes préréglages de couleurs et des fonds d'écran personnalisés."
+    "glassEffect": {
+      "title": "Un verre de messages parfaitement dosé",
+      "description": "Réglez la visibilité de l'arrière-plan et le flou du verre pour des discussions plus nettes, légères et accordées à votre fond.",
+      "action": "Ajuster maintenant"
     }
   }
 }
