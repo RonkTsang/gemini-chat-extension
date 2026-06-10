@@ -12,6 +12,18 @@
   "settingsDescription": "Customize your $1 experience",
   "chatOutlineDescription": "Generate clickable outline for easy navigation",
   "quickQuoteDescription": "Select text to quickly quote and ask questions",
+  "responseNotificationLabel": "Notify when Gemini finishes replying",
+  "responseNotificationDescription": "Show the chat title and a short response preview when Gemini finishes replying.",
+  "responseNotificationPermissionDenied": "Notification permission was not granted.",
+  "responseNotificationBlocked": "Notifications are blocked by your browser settings.",
+  "responseNotificationSystemUnknown": "Notifications may still depend on your system settings.",
+  "responseNotificationMissingPermission": "Turn this on again to grant notification permission.",
+  "responseNotificationTest": "Send test notification",
+  "responseNotificationTroubleshooting": "Notifications not showing? Check notification settings",
+  "responseNotificationTestTitle": "Gemini Power Kit notification test",
+  "responseNotificationTestMessage": "Notifications are working.",
+  "responseNotificationTitle": "Gemini finished replying",
+  "responseNotificationMessage": "Your response is ready.",
   "quickFollow": {
     "more": "More",
     "moreAriaLabel": "Show more prompts"
@@ -300,6 +312,15 @@
           "detail": {
             "title": "Chat Outline Detail",
             "description": "Detailed configuration for chat outlines."
+          }
+        }
+      },
+      "notification": {
+        "title": "Notifications",
+        "views": {
+          "index": {
+            "title": "Notifications",
+            "description": "Get notified when Gemini finishes replying."
           }
         }
       },

@@ -12,6 +12,18 @@
   "settingsDescription": "$1体験をカスタマイズ",
   "chatOutlineDescription": "簡単なナビゲーションのためのクリック可能なアウトラインを生成",
   "quickQuoteDescription": "テキストを選択して素早く引用し質問する",
+  "responseNotificationLabel": "Gemini の返信が完了したら通知する",
+  "responseNotificationDescription": "Gemini の返信が完了したら、チャットのタイトルと短い返信プレビューを表示します。",
+  "responseNotificationPermissionDenied": "通知権限が許可されていません。",
+  "responseNotificationBlocked": "ブラウザ設定で通知がブロックされています。",
+  "responseNotificationSystemUnknown": "通知はシステム設定にも依存する場合があります。",
+  "responseNotificationMissingPermission": "通知権限を許可するには、もう一度オンにしてください。",
+  "responseNotificationTest": "テスト通知を送信",
+  "responseNotificationTroubleshooting": "通知が表示されませんか？通知設定を確認",
+  "responseNotificationTestTitle": "Gemini Power Kit 通知テスト",
+  "responseNotificationTestMessage": "通知は正常に動作しています。",
+  "responseNotificationTitle": "Gemini の返信が完了しました",
+  "responseNotificationMessage": "返信の準備ができました。",
   "quickFollow": {
     "more": "もっと見る",
     "moreAriaLabel": "さらにプロンプトを表示"
@@ -300,6 +312,15 @@
           "detail": {
             "title": "チャットアウトラインの詳細",
             "description": "チャットアウトラインの詳細設定。"
+          }
+        }
+      },
+      "notification": {
+        "title": "通知",
+        "views": {
+          "index": {
+            "title": "通知",
+            "description": "Gemini の返信が完了したときに通知を受け取ります。"
           }
         }
       },

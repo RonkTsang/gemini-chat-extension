@@ -1,0 +1,407 @@
+import { browser } from 'wxt/browser'
+import type { Browser } from 'wxt/browser'
+import {
+  getResponseCompleteNotificationReadiness,
+  type NotificationReadiness,
+} from '@/services/responseCompleteNotificationSettings'
+import {
+  isResponseCompleteNotificationCreateMessage,
+  isResponseCompleteNotificationGetReadinessMessage,
+  isResponseCompleteNotificationRequestPermissionMessage,
+  isResponseCompleteNotificationTestMessage,
+  type ResponseCompleteNotificationResponse,
+  type ResponseNotificationContentType,
+} from '@/types/runtime-messages'
+
+const MAX_NOTIFICATION_TITLE_LENGTH = 120
+const MAX_NOTIFICATION_MESSAGE_LENGTH = 200
+const FALLBACK_NOTIFICATION_TITLE = 'Gemini finished replying'
+const FALLBACK_NOTIFICATION_MESSAGE = 'Your response is ready.'
+const TEST_NOTIFICATION_TITLE = 'Gemini Power Kit notification test'
+const TEST_NOTIFICATION_MESSAGE = 'Notifications are working.'
+const IMAGE_DATA_URL_PREFIX = 'data:image/jpeg;base64,'
+const MAX_IMAGE_DATA_URL_LENGTH = 750_000
+
+let hasStarted = false
+let notificationEventListenersStarted = false
+
+const notificationTargets = new Map<string, {
+  tabId: number
+  windowId?: number
+}>()
+
+type NotificationsApi = typeof browser.notifications
+
+type BrowserWithOptionalNotifications = typeof browser & {
+  notifications?: NotificationsApi
+}
+
+type RuntimeMessageSender = Parameters<
+  Parameters<typeof browser.runtime.onMessage.addListener>[0]
+>[1]
+
+type NotificationSource = 'response-complete' | 'test'
+type ImageNotificationPresentation = 'basic-icon' | 'image-template'
+
+interface ImageNotificationPresentationResult {
+  presentation: ImageNotificationPresentation
+  platformOs: string
+}
+
+interface NotificationTarget {
+  tabId?: number
+  windowId?: number
+  title: string
+  message: string
+  timestamp: number
+  source: NotificationSource
+  responseType: ResponseNotificationContentType
+  imageDataUrl?: string
+}
+
+function logBackgroundEvent(
+  event: string,
+  details: Record<string, unknown> = {},
+): void {
+  console.info('[ResponseCompleteNotificationBackground]', JSON.stringify({
+    timestamp: new Date().toISOString(),
+    event,
+    ...details,
+  }))
+}
+
+export function normalizeNotificationTitle(title: string): string {
+  return normalizeNotificationText(title, MAX_NOTIFICATION_TITLE_LENGTH, FALLBACK_NOTIFICATION_TITLE)
+}
+
+export function normalizeNotificationMessage(message: string): string {
+  return normalizeNotificationText(message, MAX_NOTIFICATION_MESSAGE_LENGTH, FALLBACK_NOTIFICATION_MESSAGE)
+}
+
+function normalizeNotificationText(text: string, maxLength: number, fallback: string): string {
+  const normalized = text.replace(/\s+/g, ' ').trim()
+  const value = normalized || fallback
+  return value.slice(0, maxLength)
+}
+
+function isSendableReadiness(readiness: NotificationReadiness): boolean {
+  return readiness === 'allowed' || readiness === 'allowed-but-system-unknown'
+}
+
+export function startResponseCompleteNotificationBackground(): void {
+  if (hasStarted) {
+    return
+  }
+
+  hasStarted = true
+  browser.runtime.onMessage.addListener(handleRuntimeMessage)
+  ensureNotificationEventListeners()
+  logBackgroundEvent('started', {
+    notificationApiAvailable: Boolean(getNotificationsApi()),
+  })
+}
+
+function getNotificationsApi(): NotificationsApi | undefined {
+  return (browser as BrowserWithOptionalNotifications).notifications
+}
+
+function ensureNotificationEventListeners(): void {
+  if (notificationEventListenersStarted) {
+    return
+  }
+
+  const notificationsApi = getNotificationsApi()
+  if (!notificationsApi?.onClicked || !notificationsApi.onClosed) {
+    logBackgroundEvent('notification-event-listeners-unavailable')
+    return
+  }
+
+  notificationEventListenersStarted = true
+  notificationsApi.onClicked.addListener(handleNotificationClicked)
+  notificationsApi.onClosed.addListener(handleNotificationClosed)
+  logBackgroundEvent('notification-event-listeners-started')
+}
+
+function handleRuntimeMessage(
+  message: unknown,
+  sender: RuntimeMessageSender,
+): Promise<ResponseCompleteNotificationResponse> | undefined {
+  if (isResponseCompleteNotificationGetReadinessMessage(message)) {
+    return getReadinessResponse()
+  }
+
+  if (isResponseCompleteNotificationRequestPermissionMessage(message)) {
+    return requestPermission()
+  }
+
+  if (isResponseCompleteNotificationCreateMessage(message)) {
+    logBackgroundEvent('create-message-received', {
+      tabId: sender.tab?.id,
+      windowId: sender.tab?.windowId,
+      title: message.payload.title,
+      messageLength: message.payload.message.length,
+      responseType: message.payload.responseType,
+      hasImageDataUrl: Boolean(message.payload.imageDataUrl),
+      eventTimestamp: message.payload.timestamp,
+    })
+    return handleCreateNotification({
+      tabId: sender.tab?.id,
+      windowId: sender.tab?.windowId,
+      title: message.payload.title,
+      message: message.payload.message,
+      timestamp: message.payload.timestamp,
+      source: 'response-complete',
+      responseType: message.payload.responseType,
+      imageDataUrl: message.payload.imageDataUrl,
+    })
+  }
+
+  if (isResponseCompleteNotificationTestMessage(message)) {
+    logBackgroundEvent('test-message-received', {
+      eventTimestamp: message.payload.timestamp,
+    })
+    return handleCreateNotification({
+      tabId: sender.tab?.id,
+      windowId: sender.tab?.windowId,
+      title: TEST_NOTIFICATION_TITLE,
+      message: TEST_NOTIFICATION_MESSAGE,
+      timestamp: message.payload.timestamp,
+      source: 'test',
+      responseType: 'text',
+    })
+  }
+
+  return undefined
+}
+
+async function requestPermission(): Promise<ResponseCompleteNotificationResponse> {
+  try {
+    const granted = await browser.permissions.request({
+      permissions: ['notifications'],
+    })
+
+    return granted
+      ? { ok: true }
+      : { ok: false, error: 'permission-denied' }
+  } catch (error) {
+    console.warn('[ResponseCompleteNotification] Failed to request permission:', error)
+    return {
+      ok: false,
+      error: 'permission-denied',
+    }
+  }
+}
+
+async function getReadinessResponse(): Promise<ResponseCompleteNotificationResponse> {
+  const readiness = await getResponseCompleteNotificationReadiness()
+  return {
+    ok: isSendableReadiness(readiness),
+    readiness,
+  }
+}
+
+async function handleCreateNotification(
+  target: NotificationTarget,
+): Promise<ResponseCompleteNotificationResponse> {
+  if (target.source === 'response-complete' && typeof target.tabId !== 'number') {
+    return {
+      ok: false,
+      error: 'missing-tab',
+    }
+  }
+
+  const readiness = await getResponseCompleteNotificationReadiness()
+  logBackgroundEvent('create-readiness-checked', {
+    source: target.source,
+    readiness,
+    tabId: target.tabId,
+    eventTimestamp: target.timestamp,
+  })
+  if (!isSendableReadiness(readiness)) {
+    return {
+      ok: false,
+      readiness,
+      error: 'permission-denied',
+    }
+  }
+
+  try {
+    const notificationId = await createResponseCompleteNotification(target)
+    logBackgroundEvent('notification-created', {
+      notificationId,
+      source: target.source,
+      tabId: target.tabId,
+      eventTimestamp: target.timestamp,
+    })
+    return {
+      ok: true,
+      readiness,
+    }
+  } catch (error) {
+    console.warn('[ResponseCompleteNotificationBackground]', JSON.stringify({
+      timestamp: new Date().toISOString(),
+      event: 'notification-create-failed',
+      source: target.source,
+      tabId: target.tabId,
+      eventTimestamp: target.timestamp,
+      error: error instanceof Error ? error.message : String(error),
+    }))
+    return {
+      ok: false,
+      readiness,
+      error: 'notification-failed',
+    }
+  }
+}
+
+async function createResponseCompleteNotification(target: NotificationTarget): Promise<string> {
+  const notificationsApi = getNotificationsApi()
+  if (!notificationsApi) {
+    throw new Error('Notifications API is unavailable')
+  }
+
+  ensureNotificationEventListeners()
+  const notificationId = `${target.source}:${target.tabId ?? 'popup'}:${target.timestamp}`
+  if (typeof target.tabId === 'number') {
+    notificationTargets.set(notificationId, {
+      tabId: target.tabId,
+      windowId: target.windowId,
+    })
+  }
+
+  const basicOptions: Browser.notifications.NotificationCreateOptions = {
+    type: 'basic',
+    iconUrl: browser.runtime.getURL('/icon/512.png'),
+    title: normalizeNotificationTitle(target.title),
+    message: normalizeNotificationMessage(target.message),
+  }
+  const imageDataUrl = getValidImageDataUrl(target)
+  if (imageDataUrl) {
+    const imagePresentation = await getImageNotificationPresentation()
+    const imageOptions: Browser.notifications.NotificationCreateOptions = imagePresentation.presentation === 'basic-icon'
+      ? {
+          ...basicOptions,
+          type: 'basic',
+          iconUrl: imageDataUrl,
+        }
+      : {
+          ...basicOptions,
+          type: 'image',
+          imageUrl: imageDataUrl,
+        }
+
+    try {
+      await notificationsApi.create(notificationId, imageOptions)
+      logBackgroundEvent('notification-template-selected', {
+        notificationId,
+        source: target.source,
+        templateType: imageOptions.type,
+        imagePresentation: imagePresentation.presentation,
+        platformOs: imagePresentation.platformOs,
+      })
+      return notificationId
+    } catch (error) {
+      logBackgroundEvent('image-notification-fallback-basic', {
+        notificationId,
+        source: target.source,
+        imagePresentation: imagePresentation.presentation,
+        platformOs: imagePresentation.platformOs,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
+  }
+
+  await notificationsApi.create(notificationId, basicOptions)
+  logBackgroundEvent('notification-template-selected', {
+    notificationId,
+    source: target.source,
+    templateType: 'basic',
+  })
+
+  return notificationId
+}
+
+async function getImageNotificationPresentation(): Promise<ImageNotificationPresentationResult> {
+  try {
+    const platformInfo = await browser.runtime.getPlatformInfo()
+    return {
+      presentation: platformInfo.os === 'mac'
+        ? 'basic-icon'
+        : 'image-template',
+      platformOs: platformInfo.os,
+    }
+  } catch (error) {
+    logBackgroundEvent('notification-platform-info-unavailable', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return {
+      presentation: 'image-template',
+      platformOs: 'unknown',
+    }
+  }
+}
+
+function getValidImageDataUrl(target: NotificationTarget): string | null {
+  if (
+    import.meta.env.FIREFOX
+    || target.responseType !== 'image'
+    || typeof target.imageDataUrl !== 'string'
+    || !target.imageDataUrl.startsWith(IMAGE_DATA_URL_PREFIX)
+    || target.imageDataUrl.length > MAX_IMAGE_DATA_URL_LENGTH
+  ) {
+    return null
+  }
+
+  return target.imageDataUrl
+}
+
+function handleNotificationClicked(notificationId: string): void {
+  void handleNotificationClick(notificationId)
+}
+
+async function handleNotificationClick(notificationId: string): Promise<void> {
+  const clearPromise = clearNotification(notificationId)
+  await focusNotificationTarget(notificationId)
+  await clearPromise
+}
+
+async function clearNotification(notificationId: string): Promise<void> {
+  const notificationsApi = getNotificationsApi()
+  if (!notificationsApi?.clear) {
+    return
+  }
+
+  try {
+    await notificationsApi.clear(notificationId)
+  } catch (error) {
+    console.warn('[ResponseCompleteNotification] Failed to clear notification:', error)
+  }
+}
+
+async function focusNotificationTarget(notificationId: string): Promise<void> {
+  const target = notificationTargets.get(notificationId)
+  if (!target) {
+    return
+  }
+
+  try {
+    if (typeof target.windowId === 'number') {
+      await browser.windows.update(target.windowId, { focused: true })
+    }
+    await browser.tabs.update(target.tabId, { active: true })
+  } catch (error) {
+    console.warn('[ResponseCompleteNotification] Failed to focus notification target:', error)
+  } finally {
+    notificationTargets.delete(notificationId)
+  }
+}
+
+function handleNotificationClosed(notificationId: string): void {
+  notificationTargets.delete(notificationId)
+}
+
+export function resetResponseCompleteNotificationBackgroundForTest(): void {
+  hasStarted = false
+  notificationEventListenersStarted = false
+  notificationTargets.clear()
+}

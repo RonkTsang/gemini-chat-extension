@@ -1,4 +1,5 @@
 import {
+  HiOutlineBell,
   HiOutlineColorSwatch,
   HiOutlineDocumentText,
   HiOutlineInformationCircle,
@@ -20,6 +21,7 @@ export type NavigationSection =
   | 'quickFollowup'
   | 'imagePrompt'
   | 'chatOutline'
+  | 'notification'
   | 'theme'
   | 'about'
 
@@ -86,6 +88,21 @@ export const settingSectionDefinitions: SettingSectionDefinition<NavigationSecti
         title: t('settingPanel.config.chatOutline.views.index.title'),
         description: t('settingPanel.config.chatOutline.views.index.description'),
         componentId: 'chat-outline/index'
+      }
+    ]
+  },
+  {
+    id: 'notification',
+    label: t('settingPanel.config.notification.title'),
+    group: 'tools',
+    icon: HiOutlineBell,
+    title: t('settingPanel.config.notification.title'),
+    views: [
+      {
+        id: 'index',
+        title: t('settingPanel.config.notification.views.index.title'),
+        description: t('settingPanel.config.notification.views.index.description'),
+        componentId: 'notification/index'
       }
     ]
   },
@@ -172,4 +189,3 @@ export function getViewDefinition(
 export function listViewComponentIds(): string[] {
   return settingSectionDefinitions.flatMap((section) => section.views.map((view) => view.componentId))
 }
-

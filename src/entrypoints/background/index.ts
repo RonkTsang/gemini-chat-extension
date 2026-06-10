@@ -1,17 +1,18 @@
 import { startFirefoxBackground } from './firefox'
+import { startResponseCompleteNotificationBackground } from './responseCompleteNotification'
 
 const includeBrowsers = import.meta.env.COMMAND === 'serve'
   ? [import.meta.env.BROWSER]
-  : ['firefox']
+  : ['chrome', 'firefox']
 
 export default defineBackground({
   include: includeBrowsers,
-  persistent: true,
+  persistent: import.meta.env.FIREFOX,
   main() {
-    if (!import.meta.env.FIREFOX) {
-      return
-    }
+    startResponseCompleteNotificationBackground()
 
-    startFirefoxBackground()
+    if (import.meta.env.FIREFOX) {
+      startFirefoxBackground()
+    }
   },
 })

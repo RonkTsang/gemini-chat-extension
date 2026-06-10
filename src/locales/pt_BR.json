@@ -12,6 +12,18 @@
   "settingsDescription": "Personalize sua experiência com o $1",
   "chatOutlineDescription": "Gerar esboço clicável para navegação fácil",
   "quickQuoteDescription": "Selecionar texto para citar rapidamente e fazer perguntas",
+  "responseNotificationLabel": "Notificar quando o Gemini terminar de responder",
+  "responseNotificationDescription": "Mostra o título do chat e uma prévia curta da resposta quando o Gemini terminar de responder.",
+  "responseNotificationPermissionDenied": "A permissão de notificação não foi concedida.",
+  "responseNotificationBlocked": "As notificações estão bloqueadas pelas configurações do seu navegador.",
+  "responseNotificationSystemUnknown": "As notificações ainda podem depender das configurações do sistema.",
+  "responseNotificationMissingPermission": "Ative isto novamente para conceder permissão de notificação.",
+  "responseNotificationTest": "Enviar notificação de teste",
+  "responseNotificationTroubleshooting": "As notificações não aparecem? Confira as configurações de notificação",
+  "responseNotificationTestTitle": "Teste de notificação do Gemini Power Kit",
+  "responseNotificationTestMessage": "As notificações estão funcionando.",
+  "responseNotificationTitle": "O Gemini terminou de responder",
+  "responseNotificationMessage": "Sua resposta está pronta.",
   "quickFollow": {
     "more": "Mais",
     "moreAriaLabel": "Mostrar mais prompts"
@@ -300,6 +312,15 @@
           "detail": {
             "title": "Detalhe do esboço de chat",
             "description": "Configuração detalhada do esboço de chat."
+          }
+        }
+      },
+      "notification": {
+        "title": "Notificações",
+        "views": {
+          "index": {
+            "title": "Notificações",
+            "description": "Receba uma notificação quando o Gemini terminar de responder."
           }
         }
       },

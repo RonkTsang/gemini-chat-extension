@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { browser } from 'wxt/browser';
 
 import { 
   Box, 
@@ -21,8 +22,9 @@ import {
   getAllSettings,
   setChatOutlineEnabled,
 } from './storage';
-import { ChatOutlineIcon, QuickQuoteIcon, ExternalLinkIcon } from '@/components/icons';
+import { ChatOutlineIcon, QuickQuoteIcon, ExternalLinkIcon, NotificationIcon } from '@/components/icons';
 import { quickFollowStore } from '@/stores/quickFollowStore'
+import { useResponseCompleteNotificationSettings } from '@/hooks/useResponseCompleteNotificationSettings';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -30,6 +32,7 @@ function App() {
     enableChatOutline: true,
     enableQuickQuote: true,
   });
+  const notificationSettings = useResponseCompleteNotificationSettings();
   // Theme responsive colors
   const textColor = useColorModeValue('gray.900', 'gray.100');
   const secondaryTextColor = useColorModeValue('gray.600', 'gray.400');
@@ -98,7 +101,7 @@ function App() {
     });
   };
 
-  if (isLoading) {
+  if (isLoading || notificationSettings.isLoading) {
     return (
       <Box width="320px" p={3}>
         <Flex justify="center" align="center" h="100px">
@@ -189,6 +192,82 @@ function App() {
                 <Switch.Control />
               </Switch.Root>
             </Flex>
+
+            {/* Response Complete Notification Setting */}
+            <Box>
+              <Flex align="center" justify="space-between" gap={3}>
+                <Flex align="center" gap={2}>
+                  <Box
+                    w="32px"
+                    h="32px"
+                    borderRadius="6px"
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                    flexShrink={0}
+                    bg="#64748b"
+                  >
+                    <NotificationIcon />
+                  </Box>
+                  <Box>
+                    <Text fontSize="sm" fontWeight="medium" mb={0.5}>
+                      {t('responseNotificationLabel') || "Notify when Gemini finishes replying"}
+                    </Text>
+                    <Text fontSize="xs" color={mutedTextColor}>
+                      {t('responseNotificationDescription') || "Show the chat title and a short response preview when Gemini finishes replying."}
+                    </Text>
+                  </Box>
+                </Flex>
+                <Switch.Root
+                  checked={notificationSettings.enabled}
+                  disabled={notificationSettings.isPending}
+                  onCheckedChange={(e) => void notificationSettings.toggleEnabled(e.checked)}
+                >
+                  <Switch.HiddenInput />
+                  <Switch.Control />
+                </Switch.Root>
+              </Flex>
+
+              {notificationSettings.notice || notificationSettings.statusText ? (
+                <Text fontSize="xs" color={mutedTextColor} mt={2} pl="40px">
+                  {notificationSettings.notice || notificationSettings.statusText}
+                </Text>
+              ) : null}
+
+              {notificationSettings.enabled ? (
+                <Stack gap={1} mt={2} pl="40px">
+                  <Button
+                    variant="ghost"
+                    justifyContent="flex-start"
+                    color={mutedTextColor}
+                    _hover={{ color: textColor, bg: hoverBg }}
+                    disabled={!notificationSettings.canSendTest || notificationSettings.isPending}
+                    onClick={() => void notificationSettings.sendTestNotification()}
+                    fontWeight="normal"
+                    fontSize="xs"
+                    h="auto"
+                    px={0}
+                    py={1}
+                  >
+                    {t('responseNotificationTest') || "Send test notification"}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    justifyContent="flex-start"
+                    color={mutedTextColor}
+                    _hover={{ color: textColor, bg: hoverBg }}
+                    onClick={notificationSettings.openTroubleshooting}
+                    fontWeight="normal"
+                    fontSize="xs"
+                    h="auto"
+                    px={0}
+                    py={1}
+                  >
+                    {t('responseNotificationTroubleshooting') || "Notifications not showing? Check notification settings"}
+                  </Button>
+                </Stack>
+              ) : null}
+            </Box>
 
             {/* Separator */}
             <Separator />

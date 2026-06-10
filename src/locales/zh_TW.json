@@ -12,6 +12,18 @@
   "settingsDescription": "自訂您的 $1 體驗",
   "chatOutlineDescription": "生成可點擊大綱，便於導航",
   "quickQuoteDescription": "選擇文字快速引用並提問",
+  "responseNotificationLabel": "Gemini 回覆完成時通知我",
+  "responseNotificationDescription": "Gemini 回覆完成時，顯示聊天標題和簡短回覆預覽。",
+  "responseNotificationPermissionDenied": "未取得通知權限。",
+  "responseNotificationBlocked": "瀏覽器設定已封鎖通知。",
+  "responseNotificationSystemUnknown": "通知可能仍取決於您的系統設定。",
+  "responseNotificationMissingPermission": "請再次開啟以授予通知權限。",
+  "responseNotificationTest": "傳送測試通知",
+  "responseNotificationTroubleshooting": "沒有顯示通知？檢查通知設定",
+  "responseNotificationTestTitle": "Gemini Power Kit 通知測試",
+  "responseNotificationTestMessage": "通知已正常運作。",
+  "responseNotificationTitle": "Gemini 已完成回覆",
+  "responseNotificationMessage": "您的回覆已準備好。",
   "quickFollow": {
     "more": "更多",
     "moreAriaLabel": "顯示更多提示"
@@ -300,6 +312,15 @@
           "detail": {
             "title": "聊天大綱詳情",
             "description": "聊天大綱的詳細設定。"
+          }
+        }
+      },
+      "notification": {
+        "title": "通知",
+        "views": {
+          "index": {
+            "title": "通知",
+            "description": "在 Gemini 完成回覆時接收通知。"
           }
         }
       },

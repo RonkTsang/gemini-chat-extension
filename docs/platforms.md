@@ -21,8 +21,16 @@ This project builds separate Chrome and Firefox extension variants with WXT. Kee
 
 ## Background Runtime
 
+- Chrome has an MV3 background service worker for shared notification message handling.
 - Firefox has a persistent MV2 background entrypoint at `src/entrypoints/background/index.ts`.
-- Chrome currently has no equivalent production background path for the Firefox-only webRequest flow.
+- Firefox-only webRequest flow still stays behind `import.meta.env.FIREFOX` and must not be included in Chrome builds.
+
+## Notifications
+
+- Chrome and Firefox both declare `notifications` only in `optional_permissions`.
+- The response complete notification feature does not request `tabs`; notification click handling only uses stored `sender.tab.id` and `sender.tab.windowId`.
+- Notification title and message are extracted by the Gemini content script and passed to background; background must not read tab `url`, `title`, or `favIconUrl`.
+- Image response notifications are platform-specific: Chrome macOS uses a `basic` notification with the generated image thumbnail in `iconUrl`; Chrome on other platforms uses the `image` template with `imageUrl`; Firefox always uses `basic`.
 
 ## Opening Tabs
 

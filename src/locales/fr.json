@@ -12,6 +12,18 @@
   "settingsDescription": "Personnalisez votre expérience $1",
   "chatOutlineDescription": "Générer un plan cliquable pour une navigation facile",
   "quickQuoteDescription": "Sélectionner du texte pour citer rapidement et poser des questions",
+  "responseNotificationLabel": "Notifier lorsque Gemini a fini de répondre",
+  "responseNotificationDescription": "Affiche le titre du chat et un court aperçu de la réponse lorsque Gemini a fini de répondre.",
+  "responseNotificationPermissionDenied": "L'autorisation de notification n'a pas été accordée.",
+  "responseNotificationBlocked": "Les notifications sont bloquées par les paramètres de votre navigateur.",
+  "responseNotificationSystemUnknown": "Les notifications peuvent aussi dépendre de vos paramètres système.",
+  "responseNotificationMissingPermission": "Activez cette option à nouveau pour accorder l'autorisation de notification.",
+  "responseNotificationTest": "Envoyer une notification de test",
+  "responseNotificationTroubleshooting": "Les notifications ne s'affichent pas ? Vérifiez les paramètres de notification",
+  "responseNotificationTestTitle": "Test de notification Gemini Power Kit",
+  "responseNotificationTestMessage": "Les notifications fonctionnent.",
+  "responseNotificationTitle": "Gemini a fini de répondre",
+  "responseNotificationMessage": "Votre réponse est prête.",
   "quickFollow": {
     "more": "Plus",
     "moreAriaLabel": "Afficher plus de prompts"
@@ -300,6 +312,15 @@
           "detail": {
             "title": "Détail du plan de chat",
             "description": "Configuration détaillée du plan de chat."
+          }
+        }
+      },
+      "notification": {
+        "title": "Notifications",
+        "views": {
+          "index": {
+            "title": "Notifications",
+            "description": "Recevez une notification lorsque Gemini a terminé de répondre."
           }
         }
       },

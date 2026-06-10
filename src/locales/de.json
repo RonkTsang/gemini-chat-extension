@@ -12,6 +12,18 @@
   "settingsDescription": "Passen Sie Ihre $1 Erfahrung an",
   "chatOutlineDescription": "Klickbare Gliederung für einfache Navigation generieren",
   "quickQuoteDescription": "Text auswählen, um schnell zu zitieren und Fragen zu stellen",
+  "responseNotificationLabel": "Benachrichtigen, wenn Gemini fertig geantwortet hat",
+  "responseNotificationDescription": "Zeigt den Chat-Titel und eine kurze Antwortvorschau, wenn Gemini fertig geantwortet hat.",
+  "responseNotificationPermissionDenied": "Die Benachrichtigungsberechtigung wurde nicht erteilt.",
+  "responseNotificationBlocked": "Benachrichtigungen sind in Ihren Browsereinstellungen blockiert.",
+  "responseNotificationSystemUnknown": "Benachrichtigungen können weiterhin von Ihren Systemeinstellungen abhängen.",
+  "responseNotificationMissingPermission": "Aktivieren Sie dies erneut, um die Benachrichtigungsberechtigung zu erteilen.",
+  "responseNotificationTest": "Testbenachrichtigung senden",
+  "responseNotificationTroubleshooting": "Benachrichtigungen werden nicht angezeigt? Benachrichtigungseinstellungen prüfen",
+  "responseNotificationTestTitle": "Gemini Power Kit-Benachrichtigungstest",
+  "responseNotificationTestMessage": "Benachrichtigungen funktionieren.",
+  "responseNotificationTitle": "Gemini hat fertig geantwortet",
+  "responseNotificationMessage": "Ihre Antwort ist bereit.",
   "quickFollow": {
     "more": "Mehr",
     "moreAriaLabel": "Weitere Prompts anzeigen"
@@ -300,6 +312,15 @@
           "detail": {
             "title": "Chat-Gliederung Details",
             "description": "Detaillierte Konfiguration für Chat-Gliederungen."
+          }
+        }
+      },
+      "notification": {
+        "title": "Benachrichtigungen",
+        "views": {
+          "index": {
+            "title": "Benachrichtigungen",
+            "description": "Lassen Sie sich benachrichtigen, wenn Gemini seine Antwort abgeschlossen hat."
           }
         }
       },

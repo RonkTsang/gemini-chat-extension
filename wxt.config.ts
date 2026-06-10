@@ -42,6 +42,9 @@ export default defineConfig({
       permissions: [
         "storage"
       ],
+      optional_permissions: [
+        "notifications"
+      ],
       web_accessible_resources: [
         {
           resources: ["url-monitor-main-world.js", "theme-sync-main-world.js", "icon/512.png"],
