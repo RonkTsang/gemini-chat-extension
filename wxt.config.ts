@@ -43,7 +43,8 @@ export default defineConfig({
         "storage"
       ],
       optional_permissions: [
-        "notifications"
+        "notifications",
+        "webRequest"
       ],
       web_accessible_resources: [
         {
@@ -54,6 +55,7 @@ export default defineConfig({
     };
 
     if (env.browser === 'firefox') {
+      manifest.optional_permissions = ['notifications']
       manifest.permissions.push(
         'webRequest',
         'webRequestBlocking',

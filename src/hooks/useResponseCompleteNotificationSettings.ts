@@ -2,8 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { browser } from 'wxt/browser'
 import {
   enableResponseCompleteNotification,
+  getResponseCompleteNotificationPermissionRequest,
   getResponseCompleteNotificationEnabled,
-  RESPONSE_COMPLETE_NOTIFICATION_PERMISSION,
   setResponseCompleteNotificationEnabled,
   type NotificationReadiness,
 } from '@/services/responseCompleteNotificationSettings'
@@ -41,7 +41,7 @@ async function requestPermission(): Promise<boolean> {
 
   if (isExtensionPage && permissionsApi?.request) {
     return permissionsApi.request({
-      permissions: [RESPONSE_COMPLETE_NOTIFICATION_PERMISSION],
+      ...getResponseCompleteNotificationPermissionRequest(),
     })
   }
 
@@ -122,7 +122,7 @@ export function useResponseCompleteNotificationSettings() {
         await setResponseCompleteNotificationEnabled(false)
         setEnabled(false)
         setReadiness('missing-extension-permission')
-        setNotice(t('responseNotificationPermissionDenied') || 'Notification permission was not granted.')
+        setNotice(t('responseNotificationPermissionDenied') || 'Required permissions were not granted.')
         return
       }
 
@@ -134,7 +134,7 @@ export function useResponseCompleteNotificationSettings() {
       await setResponseCompleteNotificationEnabled(false)
       setEnabled(false)
       setReadiness('missing-extension-permission')
-      setNotice(t('responseNotificationPermissionDenied') || 'Notification permission was not granted.')
+      setNotice(t('responseNotificationPermissionDenied') || 'Required permissions were not granted.')
     } finally {
       setIsPending(false)
     }
@@ -166,7 +166,7 @@ export function useResponseCompleteNotificationSettings() {
       return null
     }
     if (readiness === 'missing-extension-permission') {
-      return t('responseNotificationMissingPermission') || 'Turn this on again to grant notification permission.'
+      return t('responseNotificationMissingPermission') || 'Turn this on again to grant the required permissions.'
     }
     if (readiness === 'blocked-by-browser') {
       return t('responseNotificationBlocked') || 'Notifications are blocked by your browser settings.'

@@ -7,7 +7,7 @@ import { startPowerKitEntry, stopPowerKitEntry } from './power-kit-entry'
 import { chatChangeDetector } from '@/services/chatChangeDetector'
 import { urlMonitor } from '@/services/urlMonitor'
 import { tabTitleSync } from '@/services/tabTitleSync'
-import { responseCompleteNotificationDetector } from '@/services/responseCompleteNotificationDetector'
+import { startResponseCompleteNotificationContentProvider } from '@/services/responseCompleteNotificationContent'
 import { i18nCache } from '@/utils/i18nCache'
 import { stuffPageModule } from './stuff-page'
 import { initTheme, initThemeBackground } from './gemini-theme'
@@ -113,9 +113,9 @@ export default defineContentScript({
     tabTitleSync.start()
     console.log('[ContentScript] Tab Title Sync started')
 
-    // 4.1 Start response complete notification detector settings watcher
-    void responseCompleteNotificationDetector.start()
-    console.log('[ContentScript] Response Complete Notification Detector started')
+    // 4.1 Register response notification content provider
+    startResponseCompleteNotificationContentProvider()
+    console.log('[ContentScript] Response Complete Notification Content Provider started')
 
     // 5. Start stuff page module
     stuffPageModule.start()
@@ -145,7 +145,6 @@ export default defineContentScript({
     ui.mount();
     startPowerKitEntry()
     ctx.onInvalidated(() => {
-      responseCompleteNotificationDetector.stop()
       stopPowerKitEntry()
     })
     console.log('[ContentScript] UI mounted, context still valid:', ctx.isValid)

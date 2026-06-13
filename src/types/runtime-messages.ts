@@ -4,7 +4,7 @@ import type { NotificationReadiness } from '@/services/responseCompleteNotificat
 export const STUFF_MEDIA_DATA_RECEIVED_MESSAGE = 'stuff-media:data-received' as const
 export const OPEN_IN_NEW_TAB_MESSAGE = 'stuff-page:open-in-new-tab' as const
 export const FIREFOX_GET_INSTANCE_ID_MESSAGE = 'firefox:get-instance-id' as const
-export const RESPONSE_COMPLETE_NOTIFICATION_CREATE_MESSAGE = 'response-complete-notification:create' as const
+export const RESPONSE_COMPLETE_NOTIFICATION_GET_CONTENT_MESSAGE = 'response-complete-notification:get-content' as const
 export const RESPONSE_COMPLETE_NOTIFICATION_TEST_MESSAGE = 'response-complete-notification:test' as const
 export const RESPONSE_COMPLETE_NOTIFICATION_GET_READINESS_MESSAGE = 'response-complete-notification:get-readiness' as const
 export const RESPONSE_COMPLETE_NOTIFICATION_REQUEST_PERMISSION_MESSAGE = 'response-complete-notification:request-permission' as const
@@ -31,15 +31,16 @@ export interface FirefoxGetInstanceIdResponse {
   instanceId: string
 }
 
-export interface ResponseCompleteNotificationCreateMessage {
-  type: typeof RESPONSE_COMPLETE_NOTIFICATION_CREATE_MESSAGE
-  payload: {
-    title: string
-    message: string
-    timestamp: number
-    responseType: ResponseNotificationContentType
-    imageDataUrl?: string
-  }
+export interface ResponseCompleteNotificationGetContentMessage {
+  type: typeof RESPONSE_COMPLETE_NOTIFICATION_GET_CONTENT_MESSAGE
+}
+
+export interface ResponseCompleteNotificationContent {
+  suppressed: boolean
+  title: string
+  message: string
+  responseType: ResponseNotificationContentType
+  imageDataUrl?: string
 }
 
 export interface ResponseCompleteNotificationTestMessage {
@@ -101,25 +102,15 @@ export function isFirefoxGetInstanceIdMessage(
   return candidate.type === FIREFOX_GET_INSTANCE_ID_MESSAGE
 }
 
-export function isResponseCompleteNotificationCreateMessage(
+export function isResponseCompleteNotificationGetContentMessage(
   message: unknown,
-): message is ResponseCompleteNotificationCreateMessage {
+): message is ResponseCompleteNotificationGetContentMessage {
   if (!message || typeof message !== 'object') {
     return false
   }
 
-  const candidate = message as Partial<ResponseCompleteNotificationCreateMessage>
-  return candidate.type === RESPONSE_COMPLETE_NOTIFICATION_CREATE_MESSAGE
-    && !!candidate.payload
-    && typeof candidate.payload === 'object'
-    && typeof candidate.payload.title === 'string'
-    && typeof candidate.payload.message === 'string'
-    && typeof candidate.payload.timestamp === 'number'
-    && (candidate.payload.responseType === 'text' || candidate.payload.responseType === 'image')
-    && (
-      candidate.payload.imageDataUrl === undefined
-      || typeof candidate.payload.imageDataUrl === 'string'
-    )
+  const candidate = message as Partial<ResponseCompleteNotificationGetContentMessage>
+  return candidate.type === RESPONSE_COMPLETE_NOTIFICATION_GET_CONTENT_MESSAGE
 }
 
 export function isResponseCompleteNotificationTestMessage(

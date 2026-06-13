@@ -1,14 +1,18 @@
 import { browser } from 'wxt/browser'
 import type { Browser } from 'wxt/browser'
 import {
+  enableResponseCompleteNotification,
+  getResponseCompleteNotificationEnabled,
+  getResponseCompleteNotificationPermissionRequest,
   getResponseCompleteNotificationReadiness,
   type NotificationReadiness,
 } from '@/services/responseCompleteNotificationSettings'
 import {
-  isResponseCompleteNotificationCreateMessage,
   isResponseCompleteNotificationGetReadinessMessage,
   isResponseCompleteNotificationRequestPermissionMessage,
   isResponseCompleteNotificationTestMessage,
+  RESPONSE_COMPLETE_NOTIFICATION_GET_CONTENT_MESSAGE,
+  type ResponseCompleteNotificationContent,
   type ResponseCompleteNotificationResponse,
   type ResponseNotificationContentType,
 } from '@/types/runtime-messages'
@@ -21,9 +25,15 @@ const TEST_NOTIFICATION_TITLE = 'Gemini Power Kit notification test'
 const TEST_NOTIFICATION_MESSAGE = 'Notifications are working.'
 const IMAGE_DATA_URL_PREFIX = 'data:image/jpeg;base64,'
 const MAX_IMAGE_DATA_URL_LENGTH = 750_000
+const STREAM_GENERATE_URL = '*://gemini.google.com/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate*'
+const CONTENT_REQUEST_TIMEOUT_MS = 2_000
 
 let hasStarted = false
 let notificationEventListenersStarted = false
+let webRequestListenerStarted = false
+let permissionEventListenersStarted = false
+let unwatchNotificationSetting: (() => void) | null = null
+let webRequestSyncPromise: Promise<void> = Promise.resolve()
 
 const notificationTargets = new Map<string, {
   tabId: number
@@ -39,6 +49,8 @@ type BrowserWithOptionalNotifications = typeof browser & {
 type RuntimeMessageSender = Parameters<
   Parameters<typeof browser.runtime.onMessage.addListener>[0]
 >[1]
+type WebRequestCompletedListener = Parameters<typeof browser.webRequest.onCompleted.addListener>[0]
+type WebRequestCompletedDetails = Parameters<WebRequestCompletedListener>[0]
 
 type NotificationSource = 'response-complete' | 'test'
 type ImageNotificationPresentation = 'basic-icon' | 'image-template'
@@ -96,9 +108,128 @@ export function startResponseCompleteNotificationBackground(): void {
   hasStarted = true
   browser.runtime.onMessage.addListener(handleRuntimeMessage)
   ensureNotificationEventListeners()
+  ensurePermissionEventListeners()
+  unwatchNotificationSetting = enableResponseCompleteNotification.watch(() => {
+    void scheduleWebRequestListenerSync()
+  })
+  void scheduleWebRequestListenerSync()
   logBackgroundEvent('started', {
     notificationApiAvailable: Boolean(getNotificationsApi()),
   })
+}
+
+function ensurePermissionEventListeners(): void {
+  if (permissionEventListenersStarted) {
+    return
+  }
+
+  permissionEventListenersStarted = true
+  browser.permissions.onAdded.addListener(handlePermissionChanged)
+  browser.permissions.onRemoved.addListener(handlePermissionChanged)
+}
+
+function handlePermissionChanged(): void {
+  void scheduleWebRequestListenerSync()
+}
+
+function scheduleWebRequestListenerSync(): Promise<void> {
+  webRequestSyncPromise = webRequestSyncPromise.then(
+    syncWebRequestListener,
+    syncWebRequestListener,
+  )
+  return webRequestSyncPromise
+}
+
+async function syncWebRequestListener(): Promise<void> {
+  const enabled = await getResponseCompleteNotificationEnabled()
+  const readiness = enabled
+    ? await getResponseCompleteNotificationReadiness()
+    : 'off'
+  const shouldListen = enabled && isSendableReadiness(readiness)
+
+  if (shouldListen && !webRequestListenerStarted) {
+    browser.webRequest.onCompleted.addListener(
+      handleStreamGenerateCompleted,
+      { urls: [STREAM_GENERATE_URL] },
+    )
+    webRequestListenerStarted = true
+    logBackgroundEvent('web-request-listener-started')
+    return
+  }
+
+  if (!shouldListen && webRequestListenerStarted) {
+    browser.webRequest.onCompleted.removeListener(handleStreamGenerateCompleted)
+    webRequestListenerStarted = false
+    logBackgroundEvent('web-request-listener-stopped', { readiness })
+  }
+}
+
+function handleStreamGenerateCompleted(details: WebRequestCompletedDetails): void {
+  void processStreamGenerateCompleted(details)
+}
+
+async function processStreamGenerateCompleted(details: WebRequestCompletedDetails): Promise<void> {
+  if (details.tabId < 0 || details.statusCode !== 200) {
+    return
+  }
+
+  const readiness = await getResponseCompleteNotificationReadiness()
+  if (!isSendableReadiness(readiness)) {
+    await scheduleWebRequestListenerSync()
+    return
+  }
+
+  const content = await requestNotificationContent(details.tabId)
+  if (content?.suppressed) {
+    logBackgroundEvent('stream-complete-suppressed-foreground', {
+      tabId: details.tabId,
+      requestId: details.requestId,
+    })
+    return
+  }
+
+  const tab = await getTab(details.tabId)
+  await handleCreateNotification({
+    tabId: details.tabId,
+    windowId: tab?.windowId,
+    title: content?.title ?? FALLBACK_NOTIFICATION_TITLE,
+    message: content?.message ?? FALLBACK_NOTIFICATION_MESSAGE,
+    timestamp: Math.round(details.timeStamp || Date.now()),
+    source: 'response-complete',
+    responseType: content?.responseType ?? 'text',
+    imageDataUrl: content?.imageDataUrl,
+  })
+}
+
+async function requestNotificationContent(
+  tabId: number,
+): Promise<ResponseCompleteNotificationContent | null> {
+  try {
+    return await Promise.race([
+      browser.tabs.sendMessage(tabId, {
+        type: RESPONSE_COMPLETE_NOTIFICATION_GET_CONTENT_MESSAGE,
+      }) as Promise<ResponseCompleteNotificationContent>,
+      new Promise<null>(resolve => setTimeout(() => resolve(null), CONTENT_REQUEST_TIMEOUT_MS)),
+    ])
+  } catch (error) {
+    logBackgroundEvent('notification-content-unavailable', {
+      tabId,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return null
+  }
+}
+
+async function getTab(tabId: number): Promise<Browser.tabs.Tab | null> {
+  try {
+    return await browser.tabs.get(tabId)
+  } catch (error) {
+    logBackgroundEvent('notification-tab-unavailable', {
+      tabId,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return null
+  }
 }
 
 function getNotificationsApi(): NotificationsApi | undefined {
@@ -134,28 +265,6 @@ function handleRuntimeMessage(
     return requestPermission()
   }
 
-  if (isResponseCompleteNotificationCreateMessage(message)) {
-    logBackgroundEvent('create-message-received', {
-      tabId: sender.tab?.id,
-      windowId: sender.tab?.windowId,
-      title: message.payload.title,
-      messageLength: message.payload.message.length,
-      responseType: message.payload.responseType,
-      hasImageDataUrl: Boolean(message.payload.imageDataUrl),
-      eventTimestamp: message.payload.timestamp,
-    })
-    return handleCreateNotification({
-      tabId: sender.tab?.id,
-      windowId: sender.tab?.windowId,
-      title: message.payload.title,
-      message: message.payload.message,
-      timestamp: message.payload.timestamp,
-      source: 'response-complete',
-      responseType: message.payload.responseType,
-      imageDataUrl: message.payload.imageDataUrl,
-    })
-  }
-
   if (isResponseCompleteNotificationTestMessage(message)) {
     logBackgroundEvent('test-message-received', {
       eventTimestamp: message.payload.timestamp,
@@ -177,12 +286,14 @@ function handleRuntimeMessage(
 async function requestPermission(): Promise<ResponseCompleteNotificationResponse> {
   try {
     const granted = await browser.permissions.request({
-      permissions: ['notifications'],
+      ...getResponseCompleteNotificationPermissionRequest(),
     })
 
-    return granted
-      ? { ok: true }
-      : { ok: false, error: 'permission-denied' }
+    if (granted) {
+      await scheduleWebRequestListenerSync()
+      return { ok: true }
+    }
+    return { ok: false, error: 'permission-denied' }
   } catch (error) {
     console.warn('[ResponseCompleteNotification] Failed to request permission:', error)
     return {
@@ -401,7 +512,15 @@ function handleNotificationClosed(notificationId: string): void {
 }
 
 export function resetResponseCompleteNotificationBackgroundForTest(): void {
+  if (webRequestListenerStarted) {
+    browser.webRequest.onCompleted.removeListener(handleStreamGenerateCompleted)
+  }
+  unwatchNotificationSetting?.()
+  unwatchNotificationSetting = null
   hasStarted = false
   notificationEventListenersStarted = false
+  permissionEventListenersStarted = false
+  webRequestListenerStarted = false
+  webRequestSyncPromise = Promise.resolve()
   notificationTargets.clear()
 }

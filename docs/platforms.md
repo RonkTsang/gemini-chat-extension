@@ -17,19 +17,20 @@ This project builds separate Chrome and Firefox extension variants with WXT. Kee
 
 - Base manifest keeps shared permissions minimal, mainly `storage`.
 - Firefox adds `webRequest`, `webRequestBlocking`, `*://gemini.google.com/*`, and `browser_specific_settings.gecko` in `wxt.config.ts`.
-- Chrome builds must not include Gecko settings or Firefox webRequest logic.
+- Chrome builds must not include Gecko settings or Firefox-only response interception logic. Response-complete notifications may use optional `webRequest`.
 
 ## Background Runtime
 
 - Chrome has an MV3 background service worker for shared notification message handling.
 - Firefox has a persistent MV2 background entrypoint at `src/entrypoints/background/index.ts`.
-- Firefox-only webRequest flow still stays behind `import.meta.env.FIREFOX` and must not be included in Chrome builds.
+- Firefox-only response interception with `filterResponseData` stays behind `import.meta.env.FIREFOX`. The shared response-complete notification monitor uses `webRequest.onCompleted` on both browsers.
 
 ## Notifications
 
-- Chrome and Firefox both declare `notifications` only in `optional_permissions`.
+- Chrome declares `notifications` and `webRequest` as optional permissions. Existing Gemini content-script matches already provide required Gemini host access.
+- Firefox keeps required WebRequest and Gemini host permissions and declares only `notifications` as optional for this feature.
 - The response complete notification feature does not request `tabs`; notification click handling only uses stored `sender.tab.id` and `sender.tab.windowId`.
-- Notification title and message are extracted by the Gemini content script and passed to background; background must not read tab `url`, `title`, or `favIconUrl`.
+- `StreamGenerate` completion is detected by shared background WebRequest monitoring. Notification title and message are requested from the Gemini content script; background must not read tab `url`, `title`, or `favIconUrl`.
 - Image response notifications are platform-specific: Chrome macOS uses a `basic` notification with the generated image thumbnail in `iconUrl`; Chrome on other platforms uses the `image` template with `imageUrl`; Firefox always uses `basic`.
 
 ## Opening Tabs

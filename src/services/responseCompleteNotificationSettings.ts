@@ -1,7 +1,9 @@
 import { browser } from 'wxt/browser'
+import type { Browser } from 'wxt/browser'
 import { storage } from '#imports'
 
 export const RESPONSE_COMPLETE_NOTIFICATION_PERMISSION = 'notifications' as const
+export const RESPONSE_COMPLETE_NOTIFICATION_WEB_REQUEST_PERMISSION = 'webRequest' as const
 
 export type NotificationReadiness =
   | 'off'
@@ -34,9 +36,22 @@ export const setResponseCompleteNotificationEnabled = (enabled: boolean) =>
   enableResponseCompleteNotification.setValue(enabled)
 
 export async function hasResponseCompleteNotificationPermission(): Promise<boolean> {
-  return browser.permissions.contains({
-    permissions: [RESPONSE_COMPLETE_NOTIFICATION_PERMISSION],
-  })
+  return browser.permissions.contains(getResponseCompleteNotificationPermissionRequest())
+}
+
+export function getResponseCompleteNotificationPermissionRequest(): Browser.permissions.Permissions {
+  if (import.meta.env.FIREFOX) {
+    return {
+      permissions: [RESPONSE_COMPLETE_NOTIFICATION_PERMISSION],
+    }
+  }
+
+  return {
+    permissions: [
+      RESPONSE_COMPLETE_NOTIFICATION_PERMISSION,
+      RESPONSE_COMPLETE_NOTIFICATION_WEB_REQUEST_PERMISSION,
+    ],
+  }
 }
 
 export async function getResponseCompleteNotificationReadiness(): Promise<NotificationReadiness> {

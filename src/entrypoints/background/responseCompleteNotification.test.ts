@@ -1,17 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { browser } from 'wxt/browser'
-import type { Browser } from 'wxt/browser'
 
 import { setResponseCompleteNotificationEnabled } from '@/services/responseCompleteNotificationSettings'
 import {
-  RESPONSE_COMPLETE_NOTIFICATION_CREATE_MESSAGE,
   RESPONSE_COMPLETE_NOTIFICATION_GET_READINESS_MESSAGE,
   RESPONSE_COMPLETE_NOTIFICATION_REQUEST_PERMISSION_MESSAGE,
   RESPONSE_COMPLETE_NOTIFICATION_TEST_MESSAGE,
 } from '@/types/runtime-messages'
 import {
-  normalizeNotificationMessage,
-  normalizeNotificationTitle,
   resetResponseCompleteNotificationBackgroundForTest,
   startResponseCompleteNotificationBackground,
 } from './responseCompleteNotification'
@@ -20,15 +16,21 @@ type RuntimeMessageListener = (message: unknown, sender: {
   tab?: {
     id?: number
     windowId?: number
-    url?: string
-    title?: string
-    favIconUrl?: string
   }
 }) => unknown
 
+type WebRequestCompletedListener = (details: {
+  requestId: string
+  tabId: number
+  statusCode: number
+  timeStamp: number
+}) => void
+
 let runtimeMessageListener: RuntimeMessageListener | null = null
+let webRequestCompletedListener: WebRequestCompletedListener | null = null
+let permissionAddedListener: (() => void) | null = null
+let permissionRemovedListener: (() => void) | null = null
 let notificationClickListener: ((notificationId: string) => void) | null = null
-let notificationClosedListener: ((notificationId: string) => void) | null = null
 
 vi.mock('wxt/browser', () => ({
   browser: {
@@ -48,6 +50,16 @@ vi.mock('wxt/browser', () => ({
     permissions: {
       contains: vi.fn(),
       request: vi.fn(),
+      onAdded: {
+        addListener: vi.fn((listener: () => void) => {
+          permissionAddedListener = listener
+        }),
+      },
+      onRemoved: {
+        addListener: vi.fn((listener: () => void) => {
+          permissionRemovedListener = listener
+        }),
+      },
     },
     notifications: {
       create: vi.fn(() => Promise.resolve('')),
@@ -59,8 +71,18 @@ vi.mock('wxt/browser', () => ({
         }),
       },
       onClosed: {
-        addListener: vi.fn((listener: (notificationId: string) => void) => {
-          notificationClosedListener = listener
+        addListener: vi.fn(),
+      },
+    },
+    webRequest: {
+      onCompleted: {
+        addListener: vi.fn((listener: WebRequestCompletedListener) => {
+          webRequestCompletedListener = listener
+        }),
+        removeListener: vi.fn((listener: WebRequestCompletedListener) => {
+          if (webRequestCompletedListener === listener) {
+            webRequestCompletedListener = null
+          }
         }),
       },
     },
@@ -68,6 +90,8 @@ vi.mock('wxt/browser', () => ({
       update: vi.fn(() => Promise.resolve()),
     },
     tabs: {
+      get: vi.fn(() => Promise.resolve({ id: 7, windowId: 9 })),
+      sendMessage: vi.fn(),
       update: vi.fn(() => Promise.resolve()),
     },
   },
@@ -82,86 +106,86 @@ const permissionsRequestMock = vi.mocked(
 const getPermissionLevelMock = vi.mocked(
   browser.notifications.getPermissionLevel as unknown as () => Promise<'granted' | 'denied'>,
 )
-const getPlatformInfoMock = vi.mocked(
-  browser.runtime.getPlatformInfo as unknown as () => Promise<Browser.runtime.PlatformInfo>,
-)
 const createNotificationMock = vi.mocked(browser.notifications.create)
 const clearNotificationMock = vi.mocked(browser.notifications.clear)
-const windowsUpdateMock = vi.mocked(browser.windows.update)
+const webRequestAddListenerMock = vi.mocked(browser.webRequest.onCompleted.addListener)
+const webRequestRemoveListenerMock = vi.mocked(browser.webRequest.onCompleted.removeListener)
+const tabsSendMessageMock = vi.mocked(
+  browser.tabs.sendMessage as unknown as (tabId: number, message: unknown) => Promise<unknown>,
+)
+const tabsGetMock = vi.mocked(
+  browser.tabs.get as unknown as (tabId: number) => Promise<{ id: number; windowId: number }>,
+)
 const tabsUpdateMock = vi.mocked(browser.tabs.update)
+const windowsUpdateMock = vi.mocked(browser.windows.update)
 
-async function sendRuntimeMessage(message: unknown, sender: Parameters<RuntimeMessageListener>[1]) {
+async function sendRuntimeMessage(message: unknown, sender: Parameters<RuntimeMessageListener>[1] = {}) {
   if (!runtimeMessageListener) {
     throw new Error('runtime message listener was not registered')
   }
-
   return runtimeMessageListener(message, sender)
 }
 
 async function flushPromises(): Promise<void> {
   await Promise.resolve()
-  await new Promise((resolve) => setTimeout(resolve, 0))
+  await new Promise(resolve => setTimeout(resolve, 0))
 }
 
-describe('responseCompleteNotification background', () => {
-  const originalNotificationsApi = browser.notifications
+function completeStream(overrides: Partial<Parameters<WebRequestCompletedListener>[0]> = {}): void {
+  webRequestCompletedListener?.({
+    requestId: 'request-1',
+    tabId: 7,
+    statusCode: 200,
+    timeStamp: 123,
+    ...overrides,
+  })
+}
 
+describe('responseCompleteNotification background V2', () => {
   beforeEach(async () => {
-    ;(browser as unknown as { notifications?: typeof browser.notifications }).notifications = originalNotificationsApi
     resetResponseCompleteNotificationBackgroundForTest()
     runtimeMessageListener = null
+    webRequestCompletedListener = null
+    permissionAddedListener = null
+    permissionRemovedListener = null
     notificationClickListener = null
-    notificationClosedListener = null
+    vi.clearAllMocks()
     await setResponseCompleteNotificationEnabled(false)
-    permissionsContainsMock.mockReset()
-    permissionsRequestMock.mockReset()
-    getPermissionLevelMock.mockReset()
-    getPlatformInfoMock.mockReset()
-    createNotificationMock.mockClear()
-    clearNotificationMock.mockClear()
-    windowsUpdateMock.mockClear()
-    tabsUpdateMock.mockClear()
+    permissionsContainsMock.mockResolvedValue(true)
+    permissionsRequestMock.mockResolvedValue(true)
     getPermissionLevelMock.mockResolvedValue('granted')
-    getPlatformInfoMock.mockResolvedValue({
-      os: 'win',
-      arch: 'x86-64',
-      nacl_arch: 'x86-64',
+    tabsGetMock.mockResolvedValue({ id: 7, windowId: 9 })
+    tabsSendMessageMock.mockResolvedValue({
+      suppressed: false,
+      title: 'Chat title',
+      message: 'Response summary',
+      responseType: 'text',
     })
     startResponseCompleteNotificationBackground()
+    await flushPromises()
   })
 
   afterEach(() => {
     vi.unstubAllEnvs()
   })
 
-  it('reports missing permission readiness without creating a notification', async () => {
-    await setResponseCompleteNotificationEnabled(true)
-    permissionsContainsMock.mockResolvedValue(false)
-
+  it('requests all optional Chrome permissions together', async () => {
     const response = await sendRuntimeMessage({
-      type: RESPONSE_COMPLETE_NOTIFICATION_CREATE_MESSAGE,
-      payload: {
-        title: 'Chat title',
-        message: 'Response summary',
-        timestamp: 123,
-        responseType: 'text',
-      },
-    }, { tab: { id: 7, windowId: 9 } })
-
-    expect(response).toEqual({
-      ok: false,
-      readiness: 'missing-extension-permission',
-      error: 'permission-denied',
+      type: RESPONSE_COMPLETE_NOTIFICATION_REQUEST_PERMISSION_MESSAGE,
     })
-    expect(createNotificationMock).not.toHaveBeenCalled()
+
+    expect(permissionsRequestMock).toHaveBeenCalledWith({
+      permissions: ['notifications', 'webRequest'],
+    })
+    expect(response).toEqual({ ok: true })
   })
 
-  it('requests optional notification permission from a setting panel message', async () => {
-    permissionsRequestMock.mockResolvedValue(true)
+  it('requests only notification permission on Firefox', async () => {
+    vi.stubEnv('FIREFOX', 'true')
 
     const response = await sendRuntimeMessage({
       type: RESPONSE_COMPLETE_NOTIFICATION_REQUEST_PERMISSION_MESSAGE,
-    }, {})
+    })
 
     expect(permissionsRequestMock).toHaveBeenCalledWith({
       permissions: ['notifications'],
@@ -169,39 +193,31 @@ describe('responseCompleteNotification background', () => {
     expect(response).toEqual({ ok: true })
   })
 
-  it('reports blocked browser readiness without creating a notification', async () => {
+  it('registers and removes one listener as the setting changes', async () => {
     await setResponseCompleteNotificationEnabled(true)
-    permissionsContainsMock.mockResolvedValue(true)
-    getPermissionLevelMock.mockResolvedValue('denied')
+    await flushPromises()
+    await setResponseCompleteNotificationEnabled(true)
+    await flushPromises()
 
-    const response = await sendRuntimeMessage({
-      type: RESPONSE_COMPLETE_NOTIFICATION_GET_READINESS_MESSAGE,
-    }, {})
+    expect(webRequestAddListenerMock).toHaveBeenCalledTimes(1)
+    expect(webRequestCompletedListener).not.toBeNull()
 
-    expect(response).toEqual({
-      ok: false,
-      readiness: 'blocked-by-browser',
-    })
+    await setResponseCompleteNotificationEnabled(false)
+    await flushPromises()
+
+    expect(webRequestRemoveListenerMock).toHaveBeenCalledTimes(1)
+    expect(webRequestCompletedListener).toBeNull()
   })
 
-  it('creates notification from payload and focuses the original tab when clicked', async () => {
+  it('creates a rich notification when StreamGenerate completes successfully', async () => {
     await setResponseCompleteNotificationEnabled(true)
-    permissionsContainsMock.mockResolvedValue(true)
-    getPermissionLevelMock.mockResolvedValue('granted')
+    await flushPromises()
 
-    const response = await sendRuntimeMessage({
-      type: RESPONSE_COMPLETE_NOTIFICATION_CREATE_MESSAGE,
-      payload: {
-        title: 'Chat title',
-        message: 'Response summary',
-        timestamp: 123,
-        responseType: 'text',
-      },
-    }, { tab: { id: 7, windowId: 9 } })
+    completeStream()
+    await flushPromises()
 
-    expect(response).toEqual({
-      ok: true,
-      readiness: 'allowed',
+    expect(tabsSendMessageMock).toHaveBeenCalledWith(7, {
+      type: 'response-complete-notification:get-content',
     })
     expect(createNotificationMock).toHaveBeenCalledWith('response-complete:7:123', {
       type: 'basic',
@@ -209,333 +225,106 @@ describe('responseCompleteNotification background', () => {
       title: 'Chat title',
       message: 'Response summary',
     })
+  })
 
-    notificationClickListener?.('response-complete:7:123')
+  it('ignores unsuccessful requests and requests without a tab', async () => {
+    await setResponseCompleteNotificationEnabled(true)
+    await flushPromises()
+
+    completeStream({ statusCode: 500 })
+    completeStream({ tabId: -1 })
+    await flushPromises()
+
+    expect(tabsSendMessageMock).not.toHaveBeenCalled()
+    expect(createNotificationMock).not.toHaveBeenCalled()
+  })
+
+  it('suppresses notification while the Gemini page is foregrounded', async () => {
+    await setResponseCompleteNotificationEnabled(true)
+    await flushPromises()
+    tabsSendMessageMock.mockResolvedValue({
+      suppressed: true,
+      title: 'Chat title',
+      message: 'Response summary',
+      responseType: 'text',
+    })
+
+    completeStream()
+    await flushPromises()
+
+    expect(createNotificationMock).not.toHaveBeenCalled()
+  })
+
+  it('creates a fallback notification when content is unavailable', async () => {
+    await setResponseCompleteNotificationEnabled(true)
+    await flushPromises()
+    tabsSendMessageMock.mockRejectedValue(new Error('content script unavailable'))
+
+    completeStream()
+    await flushPromises()
+
+    expect(createNotificationMock).toHaveBeenCalledWith('response-complete:7:123', {
+      type: 'basic',
+      iconUrl: 'extension:///icon/512.png',
+      title: 'Gemini finished replying',
+      message: 'Your response is ready.',
+    })
+  })
+
+  it('stops listening when required permissions are revoked', async () => {
+    await setResponseCompleteNotificationEnabled(true)
+    await flushPromises()
+    permissionsContainsMock.mockResolvedValue(false)
+
+    permissionRemovedListener?.()
+    await flushPromises()
+
+    expect(webRequestRemoveListenerMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('reports missing required permissions', async () => {
+    await setResponseCompleteNotificationEnabled(true)
+    permissionsContainsMock.mockResolvedValue(false)
+
+    const response = await sendRuntimeMessage({
+      type: RESPONSE_COMPLETE_NOTIFICATION_GET_READINESS_MESSAGE,
+    })
+
+    expect(response).toEqual({
+      ok: false,
+      readiness: 'missing-extension-permission',
+    })
+  })
+
+  it('keeps test notifications and click-to-focus behavior', async () => {
+    await setResponseCompleteNotificationEnabled(true)
+    await sendRuntimeMessage({
+      type: RESPONSE_COMPLETE_NOTIFICATION_TEST_MESSAGE,
+      payload: { timestamp: 789 },
+    }, { tab: { id: 7, windowId: 9 } })
+
+    expect(createNotificationMock).toHaveBeenCalledWith('test:7:789', expect.objectContaining({
+      title: 'Gemini Power Kit notification test',
+    }))
+
+    notificationClickListener?.('test:7:789')
     await flushPromises()
 
     expect(windowsUpdateMock).toHaveBeenCalledWith(9, { focused: true })
     expect(tabsUpdateMock).toHaveBeenCalledWith(7, { active: true })
-    expect(clearNotificationMock).toHaveBeenCalledWith('response-complete:7:123')
+    expect(clearNotificationMock).toHaveBeenCalledWith('test:7:789')
   })
 
-  it('creates an image notification for a valid Chrome image payload', async () => {
+  it('reacts when required permissions are added', async () => {
     await setResponseCompleteNotificationEnabled(true)
-    permissionsContainsMock.mockResolvedValue(true)
-    getPermissionLevelMock.mockResolvedValue('granted')
-    const imageDataUrl = `data:image/jpeg;base64,${'a'.repeat(128)}`
-
-    const response = await sendRuntimeMessage({
-      type: RESPONSE_COMPLETE_NOTIFICATION_CREATE_MESSAGE,
-      payload: {
-        title: 'Chat title',
-        message: 'Your image is ready.',
-        timestamp: 321,
-        responseType: 'image',
-        imageDataUrl,
-      },
-    }, { tab: { id: 7, windowId: 9 } })
-
-    expect(response).toEqual({
-      ok: true,
-      readiness: 'allowed',
-    })
-    expect(createNotificationMock).toHaveBeenCalledWith('response-complete:7:321', {
-      type: 'image',
-      iconUrl: 'extension:///icon/512.png',
-      title: 'Chat title',
-      message: 'Your image is ready.',
-      imageUrl: imageDataUrl,
-    })
-  })
-
-  it('uses the generated image as the basic icon on Chrome macOS', async () => {
-    await setResponseCompleteNotificationEnabled(true)
-    permissionsContainsMock.mockResolvedValue(true)
-    getPermissionLevelMock.mockResolvedValue('granted')
-    getPlatformInfoMock.mockResolvedValue({
-      os: 'mac',
-      arch: 'x86-64',
-      nacl_arch: 'x86-64',
-    })
-    const imageDataUrl = `data:image/jpeg;base64,${'a'.repeat(128)}`
-
-    const response = await sendRuntimeMessage({
-      type: RESPONSE_COMPLETE_NOTIFICATION_CREATE_MESSAGE,
-      payload: {
-        title: 'Chat title',
-        message: 'Your image is ready.',
-        timestamp: 3211,
-        responseType: 'image',
-        imageDataUrl,
-      },
-    }, { tab: { id: 7, windowId: 9 } })
-
-    expect(response).toEqual({
-      ok: true,
-      readiness: 'allowed',
-    })
-    expect(createNotificationMock).toHaveBeenCalledWith('response-complete:7:3211', {
-      type: 'basic',
-      iconUrl: imageDataUrl,
-      title: 'Chat title',
-      message: 'Your image is ready.',
-    })
-  })
-
-  it('falls back to a basic notification for invalid image payload data', async () => {
-    await setResponseCompleteNotificationEnabled(true)
-    permissionsContainsMock.mockResolvedValue(true)
-    getPermissionLevelMock.mockResolvedValue('granted')
-
-    await sendRuntimeMessage({
-      type: RESPONSE_COMPLETE_NOTIFICATION_CREATE_MESSAGE,
-      payload: {
-        title: 'Chat title',
-        message: 'Your image is ready.',
-        timestamp: 322,
-        responseType: 'image',
-        imageDataUrl: 'data:image/png;base64,abc',
-      },
-    }, { tab: { id: 7, windowId: 9 } })
-
-    expect(createNotificationMock).toHaveBeenCalledWith('response-complete:7:322', {
-      type: 'basic',
-      iconUrl: 'extension:///icon/512.png',
-      title: 'Chat title',
-      message: 'Your image is ready.',
-    })
-  })
-
-  it('falls back to a basic notification for oversized image payload data', async () => {
-    await setResponseCompleteNotificationEnabled(true)
-    permissionsContainsMock.mockResolvedValue(true)
-    getPermissionLevelMock.mockResolvedValue('granted')
-
-    await sendRuntimeMessage({
-      type: RESPONSE_COMPLETE_NOTIFICATION_CREATE_MESSAGE,
-      payload: {
-        title: 'Chat title',
-        message: 'Your image is ready.',
-        timestamp: 323,
-        responseType: 'image',
-        imageDataUrl: `data:image/jpeg;base64,${'a'.repeat(750_000)}`,
-      },
-    }, { tab: { id: 7, windowId: 9 } })
-
-    expect(createNotificationMock).toHaveBeenCalledWith('response-complete:7:323', {
-      type: 'basic',
-      iconUrl: 'extension:///icon/512.png',
-      title: 'Chat title',
-      message: 'Your image is ready.',
-    })
-  })
-
-  it('falls back to a basic notification when Firefox receives image payload data', async () => {
-    vi.stubEnv('FIREFOX', 'true')
-    await setResponseCompleteNotificationEnabled(true)
-    permissionsContainsMock.mockResolvedValue(true)
-    getPermissionLevelMock.mockResolvedValue('granted')
-
-    await sendRuntimeMessage({
-      type: RESPONSE_COMPLETE_NOTIFICATION_CREATE_MESSAGE,
-      payload: {
-        title: 'Chat title',
-        message: 'Your image is ready.',
-        timestamp: 324,
-        responseType: 'image',
-        imageDataUrl: `data:image/jpeg;base64,${'a'.repeat(128)}`,
-      },
-    }, { tab: { id: 7, windowId: 9 } })
-
-    expect(createNotificationMock).toHaveBeenCalledWith('response-complete:7:324', {
-      type: 'basic',
-      iconUrl: 'extension:///icon/512.png',
-      title: 'Chat title',
-      message: 'Your image is ready.',
-    })
-    expect(getPlatformInfoMock).not.toHaveBeenCalled()
-  })
-
-  it('retries a basic notification when image notification creation fails', async () => {
-    await setResponseCompleteNotificationEnabled(true)
-    permissionsContainsMock.mockResolvedValue(true)
-    getPermissionLevelMock.mockResolvedValue('granted')
-    createNotificationMock.mockRejectedValueOnce(new Error('image template failed'))
-
-    const response = await sendRuntimeMessage({
-      type: RESPONSE_COMPLETE_NOTIFICATION_CREATE_MESSAGE,
-      payload: {
-        title: 'Chat title',
-        message: 'Your image is ready.',
-        timestamp: 325,
-        responseType: 'image',
-        imageDataUrl: `data:image/jpeg;base64,${'a'.repeat(128)}`,
-      },
-    }, { tab: { id: 7, windowId: 9 } })
-
-    expect(response).toEqual({
-      ok: true,
-      readiness: 'allowed',
-    })
-    expect(createNotificationMock).toHaveBeenCalledTimes(2)
-    expect(createNotificationMock).toHaveBeenNthCalledWith(2, 'response-complete:7:325', {
-      type: 'basic',
-      iconUrl: 'extension:///icon/512.png',
-      title: 'Chat title',
-      message: 'Your image is ready.',
-    })
-  })
-
-  it('retries with the extension icon when the Chrome macOS image icon notification fails', async () => {
-    await setResponseCompleteNotificationEnabled(true)
-    permissionsContainsMock.mockResolvedValue(true)
-    getPermissionLevelMock.mockResolvedValue('granted')
-    getPlatformInfoMock.mockResolvedValue({
-      os: 'mac',
-      arch: 'x86-64',
-      nacl_arch: 'x86-64',
-    })
-    createNotificationMock.mockRejectedValueOnce(new Error('image icon failed'))
-    const imageDataUrl = `data:image/jpeg;base64,${'a'.repeat(128)}`
-
-    const response = await sendRuntimeMessage({
-      type: RESPONSE_COMPLETE_NOTIFICATION_CREATE_MESSAGE,
-      payload: {
-        title: 'Chat title',
-        message: 'Your image is ready.',
-        timestamp: 3251,
-        responseType: 'image',
-        imageDataUrl,
-      },
-    }, { tab: { id: 7, windowId: 9 } })
-
-    expect(response).toEqual({
-      ok: true,
-      readiness: 'allowed',
-    })
-    expect(createNotificationMock).toHaveBeenCalledTimes(2)
-    expect(createNotificationMock).toHaveBeenNthCalledWith(1, 'response-complete:7:3251', {
-      type: 'basic',
-      iconUrl: imageDataUrl,
-      title: 'Chat title',
-      message: 'Your image is ready.',
-    })
-    expect(createNotificationMock).toHaveBeenNthCalledWith(2, 'response-complete:7:3251', {
-      type: 'basic',
-      iconUrl: 'extension:///icon/512.png',
-      title: 'Chat title',
-      message: 'Your image is ready.',
-    })
-  })
-
-  it('reports notification failure when image and basic notification creation fail', async () => {
-    await setResponseCompleteNotificationEnabled(true)
-    permissionsContainsMock.mockResolvedValue(true)
-    getPermissionLevelMock.mockResolvedValue('granted')
-    createNotificationMock
-      .mockRejectedValueOnce(new Error('image template failed'))
-      .mockRejectedValueOnce(new Error('basic template failed'))
-
-    const response = await sendRuntimeMessage({
-      type: RESPONSE_COMPLETE_NOTIFICATION_CREATE_MESSAGE,
-      payload: {
-        title: 'Chat title',
-        message: 'Your image is ready.',
-        timestamp: 326,
-        responseType: 'image',
-        imageDataUrl: `data:image/jpeg;base64,${'a'.repeat(128)}`,
-      },
-    }, { tab: { id: 7, windowId: 9 } })
-
-    expect(response).toEqual({
-      ok: false,
-      readiness: 'allowed',
-      error: 'notification-failed',
-    })
-  })
-
-  it('normalizes and protects notification title and message', () => {
-    expect(normalizeNotificationTitle('  ')).toBe('Gemini finished replying')
-    expect(normalizeNotificationMessage('  ')).toBe('Your response is ready.')
-    expect(normalizeNotificationMessage(` ${'word '.repeat(80)}`)).toHaveLength(200)
-  })
-
-  it('does not read tab url, title, or favicon fields', async () => {
-    await setResponseCompleteNotificationEnabled(true)
-    permissionsContainsMock.mockResolvedValue(true)
-    getPermissionLevelMock.mockResolvedValue('granted')
-
-    const sensitiveTab = {
-      id: 7,
-      windowId: 9,
-      get url(): string {
-        throw new Error('url should not be read')
-      },
-      get title(): string {
-        throw new Error('title should not be read')
-      },
-      get favIconUrl(): string {
-        throw new Error('favIconUrl should not be read')
-      },
-    }
-
-    await expect(sendRuntimeMessage({
-      type: RESPONSE_COMPLETE_NOTIFICATION_CREATE_MESSAGE,
-      payload: {
-        title: 'Safe title',
-        message: 'Safe message',
-        timestamp: 456,
-        responseType: 'text',
-      },
-    }, { tab: sensitiveTab })).resolves.toMatchObject({
-      ok: true,
-    })
-  })
-
-  it('creates a test notification without chat content', async () => {
-    await setResponseCompleteNotificationEnabled(true)
-    permissionsContainsMock.mockResolvedValue(true)
-    getPermissionLevelMock.mockResolvedValue('granted')
-
-    await sendRuntimeMessage({
-      type: RESPONSE_COMPLETE_NOTIFICATION_TEST_MESSAGE,
-      payload: {
-        timestamp: 789,
-      },
-    }, {})
-
-    expect(createNotificationMock).toHaveBeenCalledWith('test:popup:789', expect.objectContaining({
-      title: 'Gemini Power Kit notification test',
-      message: 'Notifications are working.',
-    }))
-
-    notificationClosedListener?.('test:popup:789')
-  })
-
-  it('does not crash on startup when optional notifications API is unavailable', async () => {
-    ;(browser as unknown as { notifications?: typeof browser.notifications }).notifications = undefined
-    resetResponseCompleteNotificationBackgroundForTest()
-    runtimeMessageListener = null
-    notificationClickListener = null
-    notificationClosedListener = null
-    await setResponseCompleteNotificationEnabled(true)
+    permissionsContainsMock.mockResolvedValue(false)
+    permissionRemovedListener?.()
+    await flushPromises()
     permissionsContainsMock.mockResolvedValue(true)
 
-    expect(() => startResponseCompleteNotificationBackground()).not.toThrow()
-    expect(notificationClickListener).toBeNull()
+    permissionAddedListener?.()
+    await flushPromises()
 
-    await expect(sendRuntimeMessage({
-      type: RESPONSE_COMPLETE_NOTIFICATION_CREATE_MESSAGE,
-      payload: {
-        title: 'Safe title',
-        message: 'Safe message',
-        timestamp: 999,
-        responseType: 'text',
-      },
-    }, { tab: { id: 7, windowId: 9 } })).resolves.toEqual({
-      ok: false,
-      readiness: 'allowed-but-system-unknown',
-      error: 'notification-failed',
-    })
+    expect(webRequestCompletedListener).not.toBeNull()
   })
 })
