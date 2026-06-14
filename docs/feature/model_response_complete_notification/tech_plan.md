@@ -9,9 +9,19 @@ StreamGenerate onCompleted
   -> content provider reports foreground state and extracts final DOM content
   -> background suppresses or creates platform-compatible system notification
   -> Chromium optionally plays bundled audio through an Offscreen Document
+
+Deep Research:
+
+kwDCne onBeforeRequest
+  -> persist active conversation and arm one StreamGenerate suppression
+matching hNvQHb onCompleted
+  -> consume the active conversation
+  -> reuse the shared content, suppression, notification, and audio path
 ```
 
-`webRequest.onCompleted` is the only completion signal. The previous send-button, active-turn, MutationObserver, inactivity timer, and final-turn grace-window detector is removed.
+Network request lifecycle is the only completion signal. The previous
+send-button, active-turn, MutationObserver, inactivity timer, and final-turn
+grace-window detector is removed.
 
 ## Manifest And Permissions
 
@@ -31,8 +41,13 @@ Readiness checks the complete permission request for the current browser. Backgr
 
 The shared response notification background owns:
 
-- one filtered `webRequest.onCompleted` listener for `StreamGenerate*`;
+- one filtered `webRequest.onBeforeRequest` listener for Deep Research
+  `batchexecute*` polling;
+- one filtered `webRequest.onCompleted` listener for `StreamGenerate*` and
+  Deep Research `batchexecute*` report retrieval;
 - listener registration and removal;
+- ephemeral Deep Research task persistence in `storage.session`;
+- initialization suppression and at-most-once final report consumption;
 - successful request validation;
 - content request timeout and generic fallback;
 - notification permission checks, creation, click focus, and click clear.
@@ -40,6 +55,11 @@ The shared response notification background owns:
   playback when enabled; Firefox omits the unreliable `silent` option.
 
 The request is ignored when `tabId < 0`, status is not `200`, the feature is disabled, or required permissions are missing.
+
+Deep Research request URLs are classified by exact pathname, `rpcids`, and
+`source-path=/app/<conversationId>`. The background never parses request or
+response bodies. See `deep_research_notification_plan.md` for the complete
+state lifecycle and test matrix.
 
 Background sends `response-complete-notification:get-content` to the request tab. It uses `tabs.get(tabId).windowId` only for notification click targeting.
 
@@ -49,8 +69,11 @@ The content provider registers one runtime message listener. On request it:
 
 1. Returns `suppressed: true` immediately when the page is visible and focused.
 2. Briefly retries while waiting for the final response DOM.
-3. Extracts current title, latest response summary, response type, and optional image data.
-4. Returns fallback content when the final DOM is unavailable.
+3. Extracts current chat title and either the latest standard-response summary
+   or the final Deep Research processing-card Title from
+   `immersive-entry-chip gem-processing-card .card-title`.
+4. Extracts response type and optional image data.
+5. Returns fallback content when the final DOM is unavailable.
 
 The provider never sends a completion message and never observes DOM mutations to decide completion.
 
@@ -61,6 +84,9 @@ Request:
 ```ts
 {
   type: 'response-complete-notification:get-content'
+  payload: {
+    completionKind: 'standard-response' | 'deep-research'
+  }
 }
 ```
 

@@ -11,6 +11,18 @@ import {
   type NotificationReadiness,
 } from '@/services/responseCompleteNotificationSettings'
 import {
+  clearAllDeepResearchTasks,
+  clearDeepResearchTasksForTab,
+  consumeDeepResearchReport,
+  consumeDeepResearchStreamSuppression,
+  registerDeepResearchPoll,
+  type DeepResearchTask,
+} from './deepResearchNotificationState'
+import {
+  classifyGeminiResponseRequest,
+  type GeminiResponseRequest,
+} from './geminiResponseRequest'
+import {
   isResponseCompleteNotificationAudioRequestPermissionMessage,
   isResponseCompleteNotificationGetReadinessMessage,
   isResponseCompleteNotificationRequestPermissionMessage,
@@ -32,12 +44,14 @@ const TEST_NOTIFICATION_DURATION_MS = 5_000
 const IMAGE_DATA_URL_PREFIX = 'data:image/jpeg;base64,'
 const MAX_IMAGE_DATA_URL_LENGTH = 750_000
 const STREAM_GENERATE_URL = '*://gemini.google.com/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate*'
+const BATCH_EXECUTE_URL = '*://gemini.google.com/_/BardChatUi/data/batchexecute*'
 const CONTENT_REQUEST_TIMEOUT_MS = 2_000
 
 let hasStarted = false
 let notificationEventListenersStarted = false
 let webRequestListenerStarted = false
 let permissionEventListenersStarted = false
+let tabEventListenersStarted = false
 let unwatchNotificationSetting: (() => void) | null = null
 let webRequestSyncPromise: Promise<void> = Promise.resolve()
 
@@ -58,8 +72,11 @@ type RuntimeMessageSender = Parameters<
 >[1]
 type WebRequestCompletedListener = Parameters<typeof browser.webRequest.onCompleted.addListener>[0]
 type WebRequestCompletedDetails = Parameters<WebRequestCompletedListener>[0]
+type WebRequestBeforeRequestListener = Parameters<typeof browser.webRequest.onBeforeRequest.addListener>[0]
+type WebRequestBeforeRequestDetails = Parameters<WebRequestBeforeRequestListener>[0]
 
 type NotificationSource = 'response-complete' | 'test'
+type CompletionKind = 'standard-response' | 'deep-research'
 type ImageNotificationPresentation = 'basic-icon' | 'image-template'
 
 interface ImageNotificationPresentationResult {
@@ -74,6 +91,7 @@ interface NotificationTarget {
   message: string
   timestamp: number
   source: NotificationSource
+  completionKind?: CompletionKind
   responseType: ResponseNotificationContentType
   imageDataUrl?: string
 }
@@ -116,6 +134,7 @@ export function startResponseCompleteNotificationBackground(): void {
   browser.runtime.onMessage.addListener(handleRuntimeMessage)
   ensureNotificationEventListeners()
   ensurePermissionEventListeners()
+  ensureTabEventListeners()
   unwatchNotificationSetting = enableResponseCompleteNotification.watch(() => {
     void scheduleWebRequestListenerSync()
   })
@@ -139,6 +158,21 @@ function handlePermissionChanged(): void {
   void scheduleWebRequestListenerSync()
 }
 
+function ensureTabEventListeners(): void {
+  if (tabEventListenersStarted) {
+    return
+  }
+
+  tabEventListenersStarted = true
+  browser.tabs.onRemoved.addListener(handleTabRemoved)
+}
+
+function handleTabRemoved(tabId: number): void {
+  void clearDeepResearchTasksForTab(tabId)
+    .then(tasks => logClearedDeepResearchTasks(tasks, 'tab-removed'))
+    .catch(error => logDeepResearchStateError('deep-research-tab-clear-failed', error, { tabId }))
+}
+
 function scheduleWebRequestListenerSync(): Promise<void> {
   webRequestSyncPromise = webRequestSyncPromise.then(
     syncWebRequestListener,
@@ -155,40 +189,195 @@ async function syncWebRequestListener(): Promise<void> {
   const shouldListen = enabled && isSendableReadiness(readiness)
 
   if (shouldListen && !webRequestListenerStarted) {
+    browser.webRequest.onBeforeRequest.addListener(
+      handleGeminiRequestStarted,
+      { urls: [BATCH_EXECUTE_URL] },
+    )
     browser.webRequest.onCompleted.addListener(
-      handleStreamGenerateCompleted,
-      { urls: [STREAM_GENERATE_URL] },
+      handleGeminiRequestCompleted,
+      { urls: [STREAM_GENERATE_URL, BATCH_EXECUTE_URL] },
     )
     webRequestListenerStarted = true
-    logBackgroundEvent('web-request-listener-started')
+    logBackgroundEvent('web-request-listener-started', {
+      beforeRequestUrls: [BATCH_EXECUTE_URL],
+      completedUrls: [STREAM_GENERATE_URL, BATCH_EXECUTE_URL],
+    })
     return
   }
 
   if (!shouldListen && webRequestListenerStarted) {
-    browser.webRequest.onCompleted.removeListener(handleStreamGenerateCompleted)
+    browser.webRequest.onBeforeRequest.removeListener(handleGeminiRequestStarted)
+    browser.webRequest.onCompleted.removeListener(handleGeminiRequestCompleted)
     webRequestListenerStarted = false
     logBackgroundEvent('web-request-listener-stopped', { readiness })
   }
+
+  if (!shouldListen) {
+    const tasks = await clearAllDeepResearchTasks()
+    logClearedDeepResearchTasks(tasks, readiness === 'off' ? 'feature-disabled' : 'permission-unavailable')
+  }
 }
 
-function handleStreamGenerateCompleted(details: WebRequestCompletedDetails): void {
-  void processStreamGenerateCompleted(details)
+function handleGeminiRequestStarted(
+  details: WebRequestBeforeRequestDetails,
+): ReturnType<WebRequestBeforeRequestListener> {
+  const request = classifyGeminiResponseRequest(details.url)
+  if (request.kind !== 'deep-research-poll' || details.tabId < 0) {
+    return undefined
+  }
+
+  const eventTimestamp = Math.round(details.timeStamp || Date.now())
+  void registerDeepResearchPoll(details.tabId, request.conversationId, eventTimestamp)
+    .then((result) => {
+      logExpiredDeepResearchTasks(result.expiredTasks)
+      logBackgroundEvent(result.created ? 'deep-research-started' : 'deep-research-poll-observed', {
+        tabId: details.tabId,
+        conversationId: request.conversationId,
+        requestId: details.requestId,
+        eventTimestamp,
+        startedAt: result.value.startedAt,
+        lastPollAt: result.value.lastPollAt,
+        suppressNextStreamGenerate: result.value.suppressNextStreamGenerate,
+      })
+    })
+    .catch(error => logDeepResearchStateError('deep-research-poll-track-failed', error, {
+      tabId: details.tabId,
+      conversationId: request.conversationId,
+      requestId: details.requestId,
+      eventTimestamp,
+    }))
+  return undefined
+}
+
+function handleGeminiRequestCompleted(details: WebRequestCompletedDetails): void {
+  const request = classifyGeminiResponseRequest(details.url)
+  if (request.kind === 'stream-generate') {
+    void processStreamGenerateCompleted(details)
+    return
+  }
+
+  if (request.kind === 'deep-research-report') {
+    void processDeepResearchReportCompleted(details, request)
+  }
 }
 
 async function processStreamGenerateCompleted(details: WebRequestCompletedDetails): Promise<void> {
   if (details.tabId < 0 || details.statusCode !== 200) {
+    logBackgroundEvent('stream-complete-ignored', {
+      tabId: details.tabId,
+      requestId: details.requestId,
+      statusCode: details.statusCode,
+    })
     return
   }
 
+  try {
+    const result = await consumeDeepResearchStreamSuppression(
+      details.tabId,
+      Math.round(details.timeStamp || Date.now()),
+    )
+    logExpiredDeepResearchTasks(result.expiredTasks)
+    if (result.value) {
+      logBackgroundEvent('deep-research-stream-suppressed', {
+        tabId: details.tabId,
+        conversationId: result.value.conversationId,
+        requestId: details.requestId,
+        eventTimestamp: Math.round(details.timeStamp || Date.now()),
+        startedAt: result.value.startedAt,
+        lastPollAt: result.value.lastPollAt,
+      })
+      return
+    }
+  } catch (error) {
+    logDeepResearchStateError('deep-research-stream-suppression-check-failed', error, {
+      tabId: details.tabId,
+      requestId: details.requestId,
+    })
+  }
+
+  logBackgroundEvent('standard-response-completed', {
+    tabId: details.tabId,
+    requestId: details.requestId,
+    eventTimestamp: Math.round(details.timeStamp || Date.now()),
+  })
+  await processResponseCompleted(details, 'standard-response')
+}
+
+async function processDeepResearchReportCompleted(
+  details: WebRequestCompletedDetails,
+  request: Extract<GeminiResponseRequest, { kind: 'deep-research-report' }>,
+): Promise<void> {
+  const eventTimestamp = Math.round(details.timeStamp || Date.now())
+  if (details.tabId < 0 || details.statusCode !== 200) {
+    logBackgroundEvent('deep-research-report-ignored-invalid', {
+      tabId: details.tabId,
+      conversationId: request.conversationId,
+      requestId: details.requestId,
+      statusCode: details.statusCode,
+      eventTimestamp,
+    })
+    return
+  }
+
+  try {
+    const result = await consumeDeepResearchReport(
+      details.tabId,
+      request.conversationId,
+      eventTimestamp,
+    )
+    logExpiredDeepResearchTasks(result.expiredTasks)
+    if (!result.value) {
+      logBackgroundEvent('deep-research-report-ignored-untracked', {
+        tabId: details.tabId,
+        conversationId: request.conversationId,
+        requestId: details.requestId,
+        eventTimestamp,
+      })
+      return
+    }
+
+    logBackgroundEvent('deep-research-report-completed', {
+      tabId: details.tabId,
+      conversationId: request.conversationId,
+      requestId: details.requestId,
+      eventTimestamp,
+      startedAt: result.value.startedAt,
+      lastPollAt: result.value.lastPollAt,
+      taskAgeMs: eventTimestamp - result.value.startedAt,
+    })
+  } catch (error) {
+    logDeepResearchStateError('deep-research-report-consume-failed', error, {
+      tabId: details.tabId,
+      conversationId: request.conversationId,
+      requestId: details.requestId,
+      eventTimestamp,
+    })
+    return
+  }
+
+  await processResponseCompleted(details, 'deep-research')
+}
+
+async function processResponseCompleted(
+  details: WebRequestCompletedDetails,
+  completionKind: CompletionKind,
+): Promise<void> {
   const readiness = await getResponseCompleteNotificationReadiness()
   if (!isSendableReadiness(readiness)) {
+    logBackgroundEvent('response-complete-ignored-readiness', {
+      completionKind,
+      tabId: details.tabId,
+      requestId: details.requestId,
+      readiness,
+    })
     await scheduleWebRequestListenerSync()
     return
   }
 
-  const content = await requestNotificationContent(details.tabId)
+  const content = await requestNotificationContent(details.tabId, completionKind)
   if (content?.suppressed) {
-    logBackgroundEvent('stream-complete-suppressed-foreground', {
+    logBackgroundEvent('response-complete-suppressed-foreground', {
+      completionKind,
       tabId: details.tabId,
       requestId: details.requestId,
     })
@@ -203,24 +392,65 @@ async function processStreamGenerateCompleted(details: WebRequestCompletedDetail
     message: content?.message ?? FALLBACK_NOTIFICATION_MESSAGE,
     timestamp: Math.round(details.timeStamp || Date.now()),
     source: 'response-complete',
+    completionKind,
     responseType: content?.responseType ?? 'text',
     imageDataUrl: content?.imageDataUrl,
   })
 }
 
+function logExpiredDeepResearchTasks(tasks: DeepResearchTask[]): void {
+  for (const task of tasks) {
+    logBackgroundEvent('deep-research-task-expired', {
+      tabId: task.tabId,
+      conversationId: task.conversationId,
+      startedAt: task.startedAt,
+      lastPollAt: task.lastPollAt,
+      taskAgeMs: Date.now() - task.startedAt,
+    })
+  }
+}
+
+function logClearedDeepResearchTasks(tasks: DeepResearchTask[], reason: string): void {
+  for (const task of tasks) {
+    logBackgroundEvent('deep-research-task-cleared', {
+      tabId: task.tabId,
+      conversationId: task.conversationId,
+      startedAt: task.startedAt,
+      lastPollAt: task.lastPollAt,
+      reason,
+    })
+  }
+}
+
+function logDeepResearchStateError(
+  event: string,
+  error: unknown,
+  details: Record<string, unknown>,
+): void {
+  logBackgroundEvent(event, {
+    ...details,
+    error: error instanceof Error ? error.message : String(error),
+  })
+}
+
 async function requestNotificationContent(
   tabId: number,
+  completionKind: CompletionKind,
 ): Promise<ResponseCompleteNotificationContent | null> {
   try {
     return await Promise.race([
       browser.tabs.sendMessage(tabId, {
         type: RESPONSE_COMPLETE_NOTIFICATION_GET_CONTENT_MESSAGE,
+        payload: {
+          completionKind,
+        },
       }) as Promise<ResponseCompleteNotificationContent>,
       new Promise<null>(resolve => setTimeout(() => resolve(null), CONTENT_REQUEST_TIMEOUT_MS)),
     ])
   } catch (error) {
     logBackgroundEvent('notification-content-unavailable', {
       tabId,
+      completionKind,
       error: error instanceof Error ? error.message : String(error),
     })
     return null
@@ -372,6 +602,7 @@ async function handleCreateNotification(
   const readiness = await getResponseCompleteNotificationReadiness()
   logBackgroundEvent('create-readiness-checked', {
     source: target.source,
+    completionKind: target.completionKind,
     readiness,
     tabId: target.tabId,
     eventTimestamp: target.timestamp,
@@ -393,6 +624,7 @@ async function handleCreateNotification(
     logBackgroundEvent('notification-created', {
       notificationId,
       source: target.source,
+      completionKind: target.completionKind,
       tabId: target.tabId,
       eventTimestamp: target.timestamp,
     })
@@ -405,6 +637,7 @@ async function handleCreateNotification(
       timestamp: new Date().toISOString(),
       event: 'notification-create-failed',
       source: target.source,
+      completionKind: target.completionKind,
       tabId: target.tabId,
       eventTimestamp: target.timestamp,
       error: error instanceof Error ? error.message : String(error),
@@ -459,6 +692,7 @@ async function createResponseCompleteNotification(target: NotificationTarget): P
       logBackgroundEvent('notification-template-selected', {
         notificationId,
         source: target.source,
+        completionKind: target.completionKind,
         templateType: imageOptions.type,
         imagePresentation: imagePresentation.presentation,
         platformOs: imagePresentation.platformOs,
@@ -468,6 +702,7 @@ async function createResponseCompleteNotification(target: NotificationTarget): P
       logBackgroundEvent('image-notification-fallback-basic', {
         notificationId,
         source: target.source,
+        completionKind: target.completionKind,
         imagePresentation: imagePresentation.presentation,
         platformOs: imagePresentation.platformOs,
         error: error instanceof Error ? error.message : String(error),
@@ -478,12 +713,14 @@ async function createResponseCompleteNotification(target: NotificationTarget): P
   logBackgroundEvent('notification-create-requested', {
     notificationId,
     source: target.source,
+    completionKind: target.completionKind,
     templateType: 'basic',
   })
   await notificationsApi.create(notificationId, basicOptions)
   logBackgroundEvent('notification-template-selected', {
     notificationId,
     source: target.source,
+    completionKind: target.completionKind,
     templateType: 'basic',
   })
 
@@ -593,13 +830,15 @@ function handleNotificationClosed(notificationId: string): void {
 
 export function resetResponseCompleteNotificationBackgroundForTest(): void {
   if (webRequestListenerStarted) {
-    browser.webRequest.onCompleted.removeListener(handleStreamGenerateCompleted)
+    browser.webRequest.onBeforeRequest.removeListener(handleGeminiRequestStarted)
+    browser.webRequest.onCompleted.removeListener(handleGeminiRequestCompleted)
   }
   unwatchNotificationSetting?.()
   unwatchNotificationSetting = null
   hasStarted = false
   notificationEventListenersStarted = false
   permissionEventListenersStarted = false
+  tabEventListenersStarted = false
   webRequestListenerStarted = false
   webRequestSyncPromise = Promise.resolve()
   for (const timer of notificationClearTimers.values()) {

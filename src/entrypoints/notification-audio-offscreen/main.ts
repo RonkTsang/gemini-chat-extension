@@ -1,4 +1,4 @@
-import notificationAudioUrl from '@/assets/sound/notification-96k-hq.mp3?url'
+import notificationAudioUrl from '@/assets/sound/notification.mp3?url'
 import { browser } from 'wxt/browser'
 import { isResponseCompleteNotificationAudioPlayMessage } from '@/types/runtime-messages'
 

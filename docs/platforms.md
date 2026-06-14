@@ -23,7 +23,10 @@ This project builds separate Chrome and Firefox extension variants with WXT. Kee
 
 - Chrome has an MV3 background service worker for shared notification message handling.
 - Firefox has a persistent MV2 background entrypoint at `src/entrypoints/background/index.ts`.
-- Firefox-only response interception with `filterResponseData` stays behind `import.meta.env.FIREFOX`. The shared response-complete notification monitor uses `webRequest.onCompleted` on both browsers.
+- Firefox-only response interception with `filterResponseData` stays behind
+  `import.meta.env.FIREFOX`. The shared response-complete notification monitor
+  uses `webRequest.onBeforeRequest` and `webRequest.onCompleted` on both
+  browsers, without reading response bodies.
 
 ## Notifications
 
@@ -35,6 +38,10 @@ This project builds separate Chrome and Firefox extension variants with WXT. Kee
   permission prompt.
 - The response complete notification feature does not request `tabs`; notification click handling only uses stored `sender.tab.id` and `sender.tab.windowId`.
 - `StreamGenerate` completion is detected by shared background WebRequest monitoring. Notification title and message are requested from the Gemini content script; background must not read tab `url`, `title`, or `favIconUrl`.
+- Deep Research uses shared background WebRequest URL monitoring:
+  `kwDCne` marks an active conversation and suppresses its initialization
+  `StreamGenerate`; a matching successful `hNvQHb` completion creates the final
+  notification. Ephemeral task state is stored in `storage.session`.
 - Image response notifications are platform-specific: Chrome macOS uses a `basic` notification with the generated image thumbnail in `iconUrl`; Chrome on other platforms uses the `image` template with `imageUrl`; Firefox always uses `basic`.
 - Chromium system notifications use `silent: true` and can optionally play the
   bundled completion sound through a Chrome-only Offscreen Document after

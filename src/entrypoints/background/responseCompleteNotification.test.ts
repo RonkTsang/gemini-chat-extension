@@ -13,6 +13,9 @@ import {
   RESPONSE_COMPLETE_NOTIFICATION_TEST_MESSAGE,
 } from '@/types/runtime-messages'
 import {
+  resetDeepResearchNotificationStateForTest,
+} from './deepResearchNotificationState'
+import {
   resetResponseCompleteNotificationBackgroundForTest,
   startResponseCompleteNotificationBackground,
 } from './responseCompleteNotification'
@@ -30,13 +33,24 @@ type WebRequestCompletedListener = (details: {
   tabId: number
   statusCode: number
   timeStamp: number
+  url: string
+}) => void
+
+type WebRequestBeforeRequestListener = (details: {
+  requestId: string
+  tabId: number
+  timeStamp: number
+  url: string
 }) => void
 
 let runtimeMessageListener: RuntimeMessageListener | null = null
 let webRequestCompletedListener: WebRequestCompletedListener | null = null
+let webRequestBeforeRequestListener: WebRequestBeforeRequestListener | null = null
 let permissionAddedListener: (() => void) | null = null
 let permissionRemovedListener: (() => void) | null = null
 let notificationClickListener: ((notificationId: string) => void) | null = null
+let tabRemovedListener: ((tabId: number) => void) | null = null
+const sessionStorageData: Record<string, unknown> = {}
 
 vi.mock('wxt/browser', () => ({
   browser: {
@@ -86,6 +100,16 @@ vi.mock('wxt/browser', () => ({
       },
     },
     webRequest: {
+      onBeforeRequest: {
+        addListener: vi.fn((listener: WebRequestBeforeRequestListener) => {
+          webRequestBeforeRequestListener = listener
+        }),
+        removeListener: vi.fn((listener: WebRequestBeforeRequestListener) => {
+          if (webRequestBeforeRequestListener === listener) {
+            webRequestBeforeRequestListener = null
+          }
+        }),
+      },
       onCompleted: {
         addListener: vi.fn((listener: WebRequestCompletedListener) => {
           webRequestCompletedListener = listener
@@ -97,6 +121,16 @@ vi.mock('wxt/browser', () => ({
         }),
       },
     },
+    storage: {
+      session: {
+        get: vi.fn(async (key: string) => ({
+          [key]: sessionStorageData[key],
+        })),
+        set: vi.fn(async (items: Record<string, unknown>) => {
+          Object.assign(sessionStorageData, items)
+        }),
+      },
+    },
     windows: {
       update: vi.fn(() => Promise.resolve()),
     },
@@ -104,6 +138,11 @@ vi.mock('wxt/browser', () => ({
       get: vi.fn(() => Promise.resolve({ id: 7, windowId: 9 })),
       sendMessage: vi.fn(),
       update: vi.fn(() => Promise.resolve()),
+      onRemoved: {
+        addListener: vi.fn((listener: (tabId: number) => void) => {
+          tabRemovedListener = listener
+        }),
+      },
     },
   },
 }))
@@ -121,6 +160,8 @@ const createNotificationMock = vi.mocked(browser.notifications.create)
 const clearNotificationMock = vi.mocked(browser.notifications.clear)
 const webRequestAddListenerMock = vi.mocked(browser.webRequest.onCompleted.addListener)
 const webRequestRemoveListenerMock = vi.mocked(browser.webRequest.onCompleted.removeListener)
+const webRequestBeforeRequestAddListenerMock = vi.mocked(browser.webRequest.onBeforeRequest.addListener)
+const webRequestBeforeRequestRemoveListenerMock = vi.mocked(browser.webRequest.onBeforeRequest.removeListener)
 const tabsSendMessageMock = vi.mocked(
   browser.tabs.sendMessage as unknown as (tabId: number, message: unknown) => Promise<unknown>,
 )
@@ -150,6 +191,28 @@ function completeStream(overrides: Partial<Parameters<WebRequestCompletedListene
     tabId: 7,
     statusCode: 200,
     timeStamp: 123,
+    url: 'https://gemini.google.com/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate?rt=c',
+    ...overrides,
+  })
+}
+
+function startDeepResearchPoll(overrides: Partial<Parameters<WebRequestBeforeRequestListener>[0]> = {}): void {
+  webRequestBeforeRequestListener?.({
+    requestId: 'poll-1',
+    tabId: 7,
+    timeStamp: 100,
+    url: 'https://gemini.google.com/_/BardChatUi/data/batchexecute?rpcids=kwDCne&source-path=%2Fapp%2Fc_1',
+    ...overrides,
+  })
+}
+
+function completeDeepResearchReport(overrides: Partial<Parameters<WebRequestCompletedListener>[0]> = {}): void {
+  webRequestCompletedListener?.({
+    requestId: 'report-1',
+    tabId: 7,
+    statusCode: 200,
+    timeStamp: 500,
+    url: 'https://gemini.google.com/_/BardChatUi/data/batchexecute?rpcids=hNvQHb&source-path=%2Fapp%2Fc_1',
     ...overrides,
   })
 }
@@ -157,12 +220,18 @@ function completeStream(overrides: Partial<Parameters<WebRequestCompletedListene
 describe('responseCompleteNotification background V2', () => {
   beforeEach(async () => {
     resetResponseCompleteNotificationBackgroundForTest()
+    resetDeepResearchNotificationStateForTest()
     resetResponseCompleteNotificationAudioForTest()
     runtimeMessageListener = null
     webRequestCompletedListener = null
+    webRequestBeforeRequestListener = null
     permissionAddedListener = null
     permissionRemovedListener = null
     notificationClickListener = null
+    tabRemovedListener = null
+    for (const key of Object.keys(sessionStorageData)) {
+      delete sessionStorageData[key]
+    }
     vi.clearAllMocks()
     await setResponseCompleteNotificationEnabled(false)
     await setResponseCompleteNotificationAudioEnabled(false)
@@ -219,13 +288,17 @@ describe('responseCompleteNotification background V2', () => {
     await flushPromises()
 
     expect(webRequestAddListenerMock).toHaveBeenCalledTimes(1)
+    expect(webRequestBeforeRequestAddListenerMock).toHaveBeenCalledTimes(1)
     expect(webRequestCompletedListener).not.toBeNull()
+    expect(webRequestBeforeRequestListener).not.toBeNull()
 
     await setResponseCompleteNotificationEnabled(false)
     await flushPromises()
 
     expect(webRequestRemoveListenerMock).toHaveBeenCalledTimes(1)
+    expect(webRequestBeforeRequestRemoveListenerMock).toHaveBeenCalledTimes(1)
     expect(webRequestCompletedListener).toBeNull()
+    expect(webRequestBeforeRequestListener).toBeNull()
   })
 
   it('creates a rich notification when StreamGenerate completes successfully', async () => {
@@ -237,6 +310,9 @@ describe('responseCompleteNotification background V2', () => {
 
     expect(tabsSendMessageMock).toHaveBeenCalledWith(7, {
       type: 'response-complete-notification:get-content',
+      payload: {
+        completionKind: 'standard-response',
+      },
     })
     expect(createNotificationMock).toHaveBeenCalledWith('response-complete:7:123', {
       type: 'basic',
@@ -245,6 +321,77 @@ describe('responseCompleteNotification background V2', () => {
       message: 'Response summary',
       silent: true,
     })
+  })
+
+  it('suppresses Deep Research initialization and notifies on the final report', async () => {
+    await setResponseCompleteNotificationEnabled(true)
+    await flushPromises()
+
+    startDeepResearchPoll()
+    completeStream()
+    await flushPromises()
+
+    expect(createNotificationMock).not.toHaveBeenCalled()
+
+    completeDeepResearchReport()
+    await flushPromises()
+
+    expect(tabsSendMessageMock).toHaveBeenCalledWith(7, {
+      type: 'response-complete-notification:get-content',
+      payload: {
+        completionKind: 'deep-research',
+      },
+    })
+    expect(createNotificationMock).toHaveBeenCalledWith('response-complete:7:500', expect.objectContaining({
+      title: 'Chat title',
+      message: 'Response summary',
+    }))
+  })
+
+  it('ignores untracked and duplicate Deep Research report requests', async () => {
+    await setResponseCompleteNotificationEnabled(true)
+    await flushPromises()
+
+    completeDeepResearchReport()
+    await flushPromises()
+    expect(createNotificationMock).not.toHaveBeenCalled()
+
+    startDeepResearchPoll()
+    await flushPromises()
+    completeDeepResearchReport()
+    completeDeepResearchReport({ requestId: 'report-duplicate', timeStamp: 501 })
+    await flushPromises()
+
+    expect(createNotificationMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps a Deep Research task after a failed final report request', async () => {
+    await setResponseCompleteNotificationEnabled(true)
+    await flushPromises()
+    startDeepResearchPoll()
+    await flushPromises()
+
+    completeDeepResearchReport({ statusCode: 500 })
+    await flushPromises()
+    expect(createNotificationMock).not.toHaveBeenCalled()
+
+    completeDeepResearchReport()
+    await flushPromises()
+    expect(createNotificationMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('clears Deep Research tasks when the originating tab closes', async () => {
+    await setResponseCompleteNotificationEnabled(true)
+    await flushPromises()
+    startDeepResearchPoll()
+    await flushPromises()
+
+    tabRemovedListener?.(7)
+    await flushPromises()
+    completeDeepResearchReport()
+    await flushPromises()
+
+    expect(createNotificationMock).not.toHaveBeenCalled()
   })
 
   it('does not pass Chromium-only silent option to Firefox notifications', async () => {

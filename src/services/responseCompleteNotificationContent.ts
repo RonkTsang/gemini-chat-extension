@@ -1,6 +1,7 @@
 import { browser } from 'wxt/browser'
 import {
   isResponseCompleteNotificationGetContentMessage,
+  type ResponseCompletionKind,
   type ResponseCompleteNotificationContent,
   type ResponseNotificationContentType,
 } from '@/types/runtime-messages'
@@ -11,6 +12,7 @@ const STRUCTURED_CONTENT_SELECTOR = 'structured-content-container'
 const MODEL_RESPONSE_MESSAGE_CONTENT_SELECTOR = '[id*="model-response-message-content"]'
 const RESPONSE_CONTENT_SELECTOR = `${STRUCTURED_CONTENT_SELECTOR} ${MODEL_RESPONSE_MESSAGE_CONTENT_SELECTOR}`
 const FINAL_IMAGE_SELECTOR = 'generated-image > single-image > div > div > button.image-button > img'
+const DEEP_RESEARCH_TITLE_SELECTOR = 'immersive-entry-chip gem-processing-card .card-title'
 const MAX_NOTIFICATION_MESSAGE_LENGTH = 200
 const FALLBACK_NOTIFICATION_TITLE = 'Gemini finished replying'
 const FALLBACK_NOTIFICATION_MESSAGE = 'Your response is ready.'
@@ -48,17 +50,19 @@ export function startResponseCompleteNotificationContentProvider(): void {
       return undefined
     }
 
-    return getResponseCompleteNotificationContent()
+    return getResponseCompleteNotificationContent(message.payload.completionKind)
   })
 }
 
-export async function getResponseCompleteNotificationContent(): Promise<ResponseCompleteNotificationContent> {
+export async function getResponseCompleteNotificationContent(
+  completionKind: ResponseCompletionKind = 'standard-response',
+): Promise<ResponseCompleteNotificationContent> {
   if (document.visibilityState === 'visible' && document.hasFocus()) {
     return createFallbackContent(true)
   }
 
   for (let attempt = 0; attempt < CONTENT_RETRY_ATTEMPTS; attempt += 1) {
-    const content = await readNotificationContent()
+    const content = await readNotificationContent(completionKind)
     if (content) {
       return content
     }
@@ -96,7 +100,9 @@ export function getCompletedModelResponseSummary(
   return normalized.slice(0, MAX_NOTIFICATION_MESSAGE_LENGTH)
 }
 
-async function readNotificationContent(): Promise<ResponseCompleteNotificationContent | null> {
+async function readNotificationContent(
+  completionKind: ResponseCompletionKind,
+): Promise<ResponseCompleteNotificationContent | null> {
   const turn = getLastFinalTurn()
   if (!turn) {
     return null
@@ -106,6 +112,13 @@ async function readNotificationContent(): Promise<ResponseCompleteNotificationCo
   const modelResponse = getLastNonEmptyModelResponse(turn)
   const finalImage = findFinalImageWithSource(turn)
   if (!modelResponse && !finalImage) {
+    return null
+  }
+
+  const deepResearchTitle = completionKind === 'deep-research'
+    ? getDeepResearchTitle(turn)
+    : null
+  if (completionKind === 'deep-research' && !deepResearchTitle) {
     return null
   }
 
@@ -121,10 +134,21 @@ async function readNotificationContent(): Promise<ResponseCompleteNotificationCo
   return {
     suppressed: false,
     title: getCurrentChatNotificationTitle(),
-    message: getCompletedModelResponseSummary(modelResponse, responseType),
+    message: deepResearchTitle ?? getCompletedModelResponseSummary(modelResponse, responseType),
     responseType,
     ...(imageDataUrl ? { imageDataUrl } : {}),
   }
+}
+
+export function getDeepResearchTitle(turn: Element): string | null {
+  const titleElements = turn.querySelectorAll<HTMLElement>(DEEP_RESEARCH_TITLE_SELECTOR)
+  for (let index = titleElements.length - 1; index >= 0; index -= 1) {
+    const title = normalizeWhitespace(titleElements.item(index).textContent ?? '')
+    if (title) {
+      return title.slice(0, MAX_NOTIFICATION_MESSAGE_LENGTH)
+    }
+  }
+  return null
 }
 
 function createFallbackContent(suppressed: boolean): ResponseCompleteNotificationContent {

@@ -179,9 +179,9 @@ must remain successful even if audio cannot play.
   - listens only for the targeted playback message;
   - reuses one `HTMLAudioElement`;
   - restarts the short sound from `currentTime = 0`.
-- `src/assets/sound/notification-96k-hq.mp3`
+- `src/assets/sound/notification.mp3`
   - default bundled local audio asset;
-  - 96 kbps, 48 kHz stereo, approximately 24 KB;
+  - 192 kbps, 48 kHz stereo, approximately 25 KB;
   - not exposed through `web_accessible_resources`.
 
 ### Offscreen lifecycle
@@ -321,4 +321,4 @@ Generated manifests:
 - Adding optional `offscreen` permission changes the Chromium manifest and must
   be verified against Chrome Web Store review behavior.
 - The audio asset affects package size and should remain short and compressed.
-  The default asset is `src/assets/sound/notification-96k-hq.mp3`.
+  The default asset is `src/assets/sound/notification.mp3`.

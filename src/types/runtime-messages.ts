@@ -12,6 +12,7 @@ export const RESPONSE_COMPLETE_NOTIFICATION_AUDIO_REQUEST_PERMISSION_MESSAGE = '
 export const RESPONSE_COMPLETE_NOTIFICATION_AUDIO_PLAY_MESSAGE = 'response-complete-notification-audio:play' as const
 
 export type ResponseNotificationContentType = 'text' | 'image'
+export type ResponseCompletionKind = 'standard-response' | 'deep-research'
 
 export interface StuffMediaDataReceivedMessage {
   type: typeof STUFF_MEDIA_DATA_RECEIVED_MESSAGE
@@ -35,6 +36,9 @@ export interface FirefoxGetInstanceIdResponse {
 
 export interface ResponseCompleteNotificationGetContentMessage {
   type: typeof RESPONSE_COMPLETE_NOTIFICATION_GET_CONTENT_MESSAGE
+  payload: {
+    completionKind: ResponseCompletionKind
+  }
 }
 
 export interface ResponseCompleteNotificationContent {
@@ -123,6 +127,12 @@ export function isResponseCompleteNotificationGetContentMessage(
 
   const candidate = message as Partial<ResponseCompleteNotificationGetContentMessage>
   return candidate.type === RESPONSE_COMPLETE_NOTIFICATION_GET_CONTENT_MESSAGE
+    && !!candidate.payload
+    && typeof candidate.payload === 'object'
+    && (
+      candidate.payload.completionKind === 'standard-response'
+      || candidate.payload.completionKind === 'deep-research'
+    )
 }
 
 export function isResponseCompleteNotificationTestMessage(
