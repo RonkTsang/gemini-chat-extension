@@ -1,8 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { browser } from 'wxt/browser'
 
-import { setResponseCompleteNotificationEnabled } from '@/services/responseCompleteNotificationSettings'
 import {
+  getResponseCompleteNotificationEnabled,
+  setResponseCompleteNotificationAudioEnabled,
+  setResponseCompleteNotificationEnabled,
+} from '@/services/responseCompleteNotificationSettings'
+import {
+  RESPONSE_COMPLETE_NOTIFICATION_AUDIO_REQUEST_PERMISSION_MESSAGE,
   RESPONSE_COMPLETE_NOTIFICATION_GET_READINESS_MESSAGE,
   RESPONSE_COMPLETE_NOTIFICATION_REQUEST_PERMISSION_MESSAGE,
   RESPONSE_COMPLETE_NOTIFICATION_TEST_MESSAGE,
@@ -11,6 +16,7 @@ import {
   resetResponseCompleteNotificationBackgroundForTest,
   startResponseCompleteNotificationBackground,
 } from './responseCompleteNotification'
+import { resetResponseCompleteNotificationAudioForTest } from './responseCompleteNotificationAudio'
 
 type RuntimeMessageListener = (message: unknown, sender: {
   tab?: {
@@ -36,6 +42,8 @@ vi.mock('wxt/browser', () => ({
   browser: {
     runtime: {
       getURL: vi.fn((path: string) => `extension://${path}`),
+      getContexts: vi.fn(() => Promise.resolve([])),
+      sendMessage: vi.fn(() => Promise.resolve()),
       getPlatformInfo: vi.fn(() => Promise.resolve({
         os: 'win',
         arch: 'x86-64',
@@ -46,6 +54,9 @@ vi.mock('wxt/browser', () => ({
           runtimeMessageListener = listener
         }),
       },
+    },
+    offscreen: {
+      createDocument: vi.fn(() => Promise.resolve()),
     },
     permissions: {
       contains: vi.fn(),
@@ -118,6 +129,8 @@ const tabsGetMock = vi.mocked(
 )
 const tabsUpdateMock = vi.mocked(browser.tabs.update)
 const windowsUpdateMock = vi.mocked(browser.windows.update)
+const runtimeSendMessageMock = vi.mocked(browser.runtime.sendMessage)
+const offscreenCreateDocumentMock = vi.mocked(browser.offscreen.createDocument)
 
 async function sendRuntimeMessage(message: unknown, sender: Parameters<RuntimeMessageListener>[1] = {}) {
   if (!runtimeMessageListener) {
@@ -144,6 +157,7 @@ function completeStream(overrides: Partial<Parameters<WebRequestCompletedListene
 describe('responseCompleteNotification background V2', () => {
   beforeEach(async () => {
     resetResponseCompleteNotificationBackgroundForTest()
+    resetResponseCompleteNotificationAudioForTest()
     runtimeMessageListener = null
     webRequestCompletedListener = null
     permissionAddedListener = null
@@ -151,6 +165,7 @@ describe('responseCompleteNotification background V2', () => {
     notificationClickListener = null
     vi.clearAllMocks()
     await setResponseCompleteNotificationEnabled(false)
+    await setResponseCompleteNotificationAudioEnabled(false)
     permissionsContainsMock.mockResolvedValue(true)
     permissionsRequestMock.mockResolvedValue(true)
     getPermissionLevelMock.mockResolvedValue('granted')
@@ -166,10 +181,13 @@ describe('responseCompleteNotification background V2', () => {
   })
 
   afterEach(() => {
+    vi.useRealTimers()
     vi.unstubAllEnvs()
   })
 
   it('requests all optional Chrome permissions together', async () => {
+    permissionsContainsMock.mockResolvedValue(false)
+
     const response = await sendRuntimeMessage({
       type: RESPONSE_COMPLETE_NOTIFICATION_REQUEST_PERMISSION_MESSAGE,
     })
@@ -180,16 +198,17 @@ describe('responseCompleteNotification background V2', () => {
     expect(response).toEqual({ ok: true })
   })
 
-  it('requests only notification permission on Firefox', async () => {
+  it('uses the required Firefox notification permission without requesting it again', async () => {
     vi.stubEnv('FIREFOX', 'true')
 
     const response = await sendRuntimeMessage({
       type: RESPONSE_COMPLETE_NOTIFICATION_REQUEST_PERMISSION_MESSAGE,
     })
 
-    expect(permissionsRequestMock).toHaveBeenCalledWith({
+    expect(permissionsContainsMock).toHaveBeenCalledWith({
       permissions: ['notifications'],
     })
+    expect(permissionsRequestMock).not.toHaveBeenCalled()
     expect(response).toEqual({ ok: true })
   })
 
@@ -221,9 +240,27 @@ describe('responseCompleteNotification background V2', () => {
     })
     expect(createNotificationMock).toHaveBeenCalledWith('response-complete:7:123', {
       type: 'basic',
-      iconUrl: 'extension:///icon/512.png',
+      iconUrl: 'extension:///icon/gemini-sparkle-aurora.png',
       title: 'Chat title',
       message: 'Response summary',
+      silent: true,
+    })
+  })
+
+  it('does not pass Chromium-only silent option to Firefox notifications', async () => {
+    vi.stubEnv('FIREFOX', 'true')
+    await setResponseCompleteNotificationEnabled(true)
+
+    await sendRuntimeMessage({
+      type: RESPONSE_COMPLETE_NOTIFICATION_TEST_MESSAGE,
+      payload: { timestamp: 789 },
+    })
+
+    expect(createNotificationMock).toHaveBeenCalledWith('test:popup:789', {
+      type: 'basic',
+      iconUrl: 'extension:///icon/gemini-sparkle-aurora.png',
+      title: 'Gemini Power Kit notification test',
+      message: 'Notifications are working.',
     })
   })
 
@@ -265,9 +302,44 @@ describe('responseCompleteNotification background V2', () => {
 
     expect(createNotificationMock).toHaveBeenCalledWith('response-complete:7:123', {
       type: 'basic',
-      iconUrl: 'extension:///icon/512.png',
+      iconUrl: 'extension:///icon/gemini-sparkle-aurora.png',
       title: 'Gemini finished replying',
       message: 'Your response is ready.',
+      silent: true,
+    })
+  })
+
+  it('creates silent image notifications and a silent basic fallback', async () => {
+    await setResponseCompleteNotificationEnabled(true)
+    await flushPromises()
+    tabsSendMessageMock.mockResolvedValue({
+      suppressed: false,
+      title: 'Image chat',
+      message: 'Generated image',
+      responseType: 'image',
+      imageDataUrl: 'data:image/jpeg;base64,abc',
+    })
+    createNotificationMock
+      .mockRejectedValueOnce(new Error('image template failed'))
+      .mockResolvedValueOnce(undefined)
+
+    completeStream()
+    await flushPromises()
+
+    expect(createNotificationMock).toHaveBeenNthCalledWith(1, 'response-complete:7:123', {
+      type: 'image',
+      iconUrl: 'extension:///icon/gemini-sparkle-aurora.png',
+      title: 'Image chat',
+      message: 'Generated image',
+      silent: true,
+      imageUrl: 'data:image/jpeg;base64,abc',
+    })
+    expect(createNotificationMock).toHaveBeenNthCalledWith(2, 'response-complete:7:123', {
+      type: 'basic',
+      iconUrl: 'extension:///icon/gemini-sparkle-aurora.png',
+      title: 'Image chat',
+      message: 'Generated image',
+      silent: true,
     })
   })
 
@@ -293,10 +365,43 @@ describe('responseCompleteNotification background V2', () => {
     expect(response).toEqual({
       ok: false,
       readiness: 'missing-extension-permission',
+      audioPermissionAvailable: false,
     })
   })
 
-  it('keeps test notifications and click-to-focus behavior', async () => {
+  it('auto-clears test notifications after five seconds', async () => {
+    vi.useFakeTimers()
+    await setResponseCompleteNotificationEnabled(true)
+    await sendRuntimeMessage({
+      type: RESPONSE_COMPLETE_NOTIFICATION_TEST_MESSAGE,
+      payload: { timestamp: 789 },
+    })
+
+    expect(createNotificationMock).toHaveBeenCalledWith('test:popup:789', expect.anything())
+    expect(clearNotificationMock).not.toHaveBeenCalled()
+
+    await vi.advanceTimersByTimeAsync(4_999)
+    expect(clearNotificationMock).not.toHaveBeenCalled()
+
+    await vi.advanceTimersByTimeAsync(1)
+    expect(clearNotificationMock).toHaveBeenCalledWith('test:popup:789')
+  })
+
+  it('does not auto-clear response-complete notifications', async () => {
+    await setResponseCompleteNotificationEnabled(true)
+    await flushPromises()
+    completeStream()
+    await flushPromises()
+    clearNotificationMock.mockClear()
+    vi.useFakeTimers()
+
+    await vi.advanceTimersByTimeAsync(5_000)
+
+    expect(clearNotificationMock).not.toHaveBeenCalled()
+  })
+
+  it('keeps test notification click-to-focus behavior and cancels auto-clear', async () => {
+    vi.useFakeTimers()
     await setResponseCompleteNotificationEnabled(true)
     await sendRuntimeMessage({
       type: RESPONSE_COMPLETE_NOTIFICATION_TEST_MESSAGE,
@@ -305,14 +410,78 @@ describe('responseCompleteNotification background V2', () => {
 
     expect(createNotificationMock).toHaveBeenCalledWith('test:7:789', expect.objectContaining({
       title: 'Gemini Power Kit notification test',
+      silent: true,
     }))
 
     notificationClickListener?.('test:7:789')
-    await flushPromises()
+    await Promise.resolve()
+    await Promise.resolve()
 
     expect(windowsUpdateMock).toHaveBeenCalledWith(9, { focused: true })
     expect(tabsUpdateMock).toHaveBeenCalledWith(7, { active: true })
     expect(clearNotificationMock).toHaveBeenCalledWith('test:7:789')
+
+    await vi.advanceTimersByTimeAsync(5_000)
+    expect(clearNotificationMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('requests only offscreen permission when enabling audio', async () => {
+    const response = await sendRuntimeMessage({
+      type: RESPONSE_COMPLETE_NOTIFICATION_AUDIO_REQUEST_PERMISSION_MESSAGE,
+    })
+
+    expect(permissionsRequestMock).toHaveBeenCalledWith({
+      permissions: ['offscreen'],
+    })
+    expect(response).toEqual({
+      ok: true,
+      audioPermissionAvailable: true,
+    })
+  })
+
+  it('keeps visual notifications enabled when audio permission is denied', async () => {
+    await setResponseCompleteNotificationEnabled(true)
+    permissionsRequestMock.mockResolvedValue(false)
+
+    const response = await sendRuntimeMessage({
+      type: RESPONSE_COMPLETE_NOTIFICATION_AUDIO_REQUEST_PERMISSION_MESSAGE,
+    })
+
+    expect(response).toEqual({
+      ok: false,
+      audioPermissionAvailable: false,
+      error: 'permission-denied',
+    })
+    await expect(getResponseCompleteNotificationEnabled()).resolves.toBe(true)
+  })
+
+  it('plays custom audio only after a notification is created', async () => {
+    await setResponseCompleteNotificationEnabled(true)
+    await setResponseCompleteNotificationAudioEnabled(true)
+    await flushPromises()
+
+    completeStream()
+    await flushPromises()
+
+    expect(createNotificationMock).toHaveBeenCalled()
+    expect(offscreenCreateDocumentMock).toHaveBeenCalledTimes(1)
+    expect(runtimeSendMessageMock).toHaveBeenCalledWith({
+      type: 'response-complete-notification-audio:play',
+      target: 'offscreen',
+    })
+  })
+
+  it('does not play custom audio when notification creation fails', async () => {
+    await setResponseCompleteNotificationEnabled(true)
+    await setResponseCompleteNotificationAudioEnabled(true)
+    createNotificationMock.mockRejectedValue(new Error('notification failed'))
+    await flushPromises()
+
+    completeStream()
+    await flushPromises()
+
+    expect(offscreenCreateDocumentMock).not.toHaveBeenCalled()
+    expect(runtimeSendMessageMock).not.toHaveBeenCalled()
   })
 
   it('reacts when required permissions are added', async () => {

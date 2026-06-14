@@ -2,12 +2,16 @@ import { browser } from 'wxt/browser'
 import type { Browser } from 'wxt/browser'
 import {
   enableResponseCompleteNotification,
+  getResponseCompleteNotificationAudioPermissionRequest,
   getResponseCompleteNotificationEnabled,
   getResponseCompleteNotificationPermissionRequest,
   getResponseCompleteNotificationReadiness,
+  hasResponseCompleteNotificationAudioPermission,
+  hasResponseCompleteNotificationPermission,
   type NotificationReadiness,
 } from '@/services/responseCompleteNotificationSettings'
 import {
+  isResponseCompleteNotificationAudioRequestPermissionMessage,
   isResponseCompleteNotificationGetReadinessMessage,
   isResponseCompleteNotificationRequestPermissionMessage,
   isResponseCompleteNotificationTestMessage,
@@ -16,6 +20,7 @@ import {
   type ResponseCompleteNotificationResponse,
   type ResponseNotificationContentType,
 } from '@/types/runtime-messages'
+import { playResponseCompleteNotificationAudio } from './responseCompleteNotificationAudio'
 
 const MAX_NOTIFICATION_TITLE_LENGTH = 120
 const MAX_NOTIFICATION_MESSAGE_LENGTH = 200
@@ -23,6 +28,7 @@ const FALLBACK_NOTIFICATION_TITLE = 'Gemini finished replying'
 const FALLBACK_NOTIFICATION_MESSAGE = 'Your response is ready.'
 const TEST_NOTIFICATION_TITLE = 'Gemini Power Kit notification test'
 const TEST_NOTIFICATION_MESSAGE = 'Notifications are working.'
+const TEST_NOTIFICATION_DURATION_MS = 5_000
 const IMAGE_DATA_URL_PREFIX = 'data:image/jpeg;base64,'
 const MAX_IMAGE_DATA_URL_LENGTH = 750_000
 const STREAM_GENERATE_URL = '*://gemini.google.com/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate*'
@@ -39,6 +45,7 @@ const notificationTargets = new Map<string, {
   tabId: number
   windowId?: number
 }>()
+const notificationClearTimers = new Map<string, ReturnType<typeof setTimeout>>()
 
 type NotificationsApi = typeof browser.notifications
 
@@ -265,6 +272,10 @@ function handleRuntimeMessage(
     return requestPermission()
   }
 
+  if (isResponseCompleteNotificationAudioRequestPermissionMessage(message)) {
+    return requestAudioPermission()
+  }
+
   if (isResponseCompleteNotificationTestMessage(message)) {
     logBackgroundEvent('test-message-received', {
       eventTimestamp: message.payload.timestamp,
@@ -285,6 +296,11 @@ function handleRuntimeMessage(
 
 async function requestPermission(): Promise<ResponseCompleteNotificationResponse> {
   try {
+    if (await hasResponseCompleteNotificationPermission()) {
+      await scheduleWebRequestListenerSync()
+      return { ok: true }
+    }
+
     const granted = await browser.permissions.request({
       ...getResponseCompleteNotificationPermissionRequest(),
     })
@@ -303,11 +319,43 @@ async function requestPermission(): Promise<ResponseCompleteNotificationResponse
   }
 }
 
+async function requestAudioPermission(): Promise<ResponseCompleteNotificationResponse> {
+  if (import.meta.env.FIREFOX) {
+    return {
+      ok: false,
+      audioPermissionAvailable: false,
+      error: 'permission-denied',
+    }
+  }
+
+  try {
+    const granted = await browser.permissions.request({
+      ...getResponseCompleteNotificationAudioPermissionRequest(),
+    })
+    return {
+      ok: granted,
+      audioPermissionAvailable: granted,
+      ...(granted ? {} : { error: 'permission-denied' as const }),
+    }
+  } catch (error) {
+    console.warn('[ResponseCompleteNotification] Failed to request audio permission:', error)
+    return {
+      ok: false,
+      audioPermissionAvailable: false,
+      error: 'permission-denied',
+    }
+  }
+}
+
 async function getReadinessResponse(): Promise<ResponseCompleteNotificationResponse> {
-  const readiness = await getResponseCompleteNotificationReadiness()
+  const [readiness, audioPermissionAvailable] = await Promise.all([
+    getResponseCompleteNotificationReadiness(),
+    hasResponseCompleteNotificationAudioPermission(),
+  ])
   return {
     ok: isSendableReadiness(readiness),
     readiness,
+    audioPermissionAvailable,
   }
 }
 
@@ -338,6 +386,10 @@ async function handleCreateNotification(
 
   try {
     const notificationId = await createResponseCompleteNotification(target)
+    if (target.source === 'test') {
+      scheduleNotificationClear(notificationId, TEST_NOTIFICATION_DURATION_MS)
+    }
+    await playResponseCompleteNotificationAudio()
     logBackgroundEvent('notification-created', {
       notificationId,
       source: target.source,
@@ -382,9 +434,10 @@ async function createResponseCompleteNotification(target: NotificationTarget): P
 
   const basicOptions: Browser.notifications.NotificationCreateOptions = {
     type: 'basic',
-    iconUrl: browser.runtime.getURL('/icon/512.png'),
+    iconUrl: browser.runtime.getURL('/icon/gemini-sparkle-aurora.png'),
     title: normalizeNotificationTitle(target.title),
     message: normalizeNotificationMessage(target.message),
+    ...(import.meta.env.FIREFOX ? {} : { silent: true }),
   }
   const imageDataUrl = getValidImageDataUrl(target)
   if (imageDataUrl) {
@@ -422,6 +475,11 @@ async function createResponseCompleteNotification(target: NotificationTarget): P
     }
   }
 
+  logBackgroundEvent('notification-create-requested', {
+    notificationId,
+    source: target.source,
+    templateType: 'basic',
+  })
   await notificationsApi.create(notificationId, basicOptions)
   logBackgroundEvent('notification-template-selected', {
     notificationId,
@@ -467,6 +525,7 @@ function getValidImageDataUrl(target: NotificationTarget): string | null {
 }
 
 function handleNotificationClicked(notificationId: string): void {
+  cancelScheduledNotificationClear(notificationId)
   void handleNotificationClick(notificationId)
 }
 
@@ -489,6 +548,26 @@ async function clearNotification(notificationId: string): Promise<void> {
   }
 }
 
+function scheduleNotificationClear(notificationId: string, delayMs: number): void {
+  cancelScheduledNotificationClear(notificationId)
+  const timer = setTimeout(() => {
+    notificationClearTimers.delete(notificationId)
+    notificationTargets.delete(notificationId)
+    void clearNotification(notificationId)
+  }, delayMs)
+  notificationClearTimers.set(notificationId, timer)
+}
+
+function cancelScheduledNotificationClear(notificationId: string): void {
+  const timer = notificationClearTimers.get(notificationId)
+  if (!timer) {
+    return
+  }
+
+  clearTimeout(timer)
+  notificationClearTimers.delete(notificationId)
+}
+
 async function focusNotificationTarget(notificationId: string): Promise<void> {
   const target = notificationTargets.get(notificationId)
   if (!target) {
@@ -508,6 +587,7 @@ async function focusNotificationTarget(notificationId: string): Promise<void> {
 }
 
 function handleNotificationClosed(notificationId: string): void {
+  cancelScheduledNotificationClear(notificationId)
   notificationTargets.delete(notificationId)
 }
 
@@ -522,5 +602,9 @@ export function resetResponseCompleteNotificationBackgroundForTest(): void {
   permissionEventListenersStarted = false
   webRequestListenerStarted = false
   webRequestSyncPromise = Promise.resolve()
+  for (const timer of notificationClearTimers.values()) {
+    clearTimeout(timer)
+  }
+  notificationClearTimers.clear()
   notificationTargets.clear()
 }

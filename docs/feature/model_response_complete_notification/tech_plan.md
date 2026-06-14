@@ -7,7 +7,8 @@ StreamGenerate onCompleted
   -> shared background validates status, tab, setting, and permissions
   -> background requests content from originating tab
   -> content provider reports foreground state and extracts final DOM content
-  -> background suppresses or creates system notification
+  -> background suppresses or creates platform-compatible system notification
+  -> Chromium optionally plays bundled audio through an Offscreen Document
 ```
 
 `webRequest.onCompleted` is the only completion signal. The previous send-button, active-turn, MutationObserver, inactivity timer, and final-turn grace-window detector is removed.
@@ -15,12 +16,14 @@ StreamGenerate onCompleted
 ## Manifest And Permissions
 
 - Chrome:
-  - `optional_permissions`: `notifications`, `webRequest`
+  - `optional_permissions`: `notifications`, `webRequest`, `offscreen`
   - existing content-script matches provide required Gemini host access;
   - enabling the setting requests both optional API permissions together.
+  - enabling audio separately requests optional `offscreen`.
 - Firefox:
-  - keeps required `webRequest`, `webRequestBlocking`, and Gemini host access;
-  - requests only optional `notifications`.
+  - keeps required `notifications`, `webRequest`, `webRequestBlocking`, and Gemini host access;
+  - enables the setting without a runtime permission request because Firefox
+    cannot preserve the in-page SettingPanel user gesture through background.
 
 Readiness checks the complete permission request for the current browser. Background watches setting and permission changes and serializes listener synchronization so concurrent events cannot register duplicate listeners.
 
@@ -33,6 +36,8 @@ The shared response notification background owns:
 - successful request validation;
 - content request timeout and generic fallback;
 - notification permission checks, creation, click focus, and click clear.
+- silent Chromium notification creation followed by non-fatal Offscreen audio
+  playback when enabled; Firefox omits the unreliable `silent` option.
 
 The request is ignored when `tabId < 0`, status is not `200`, the feature is disabled, or required permissions are missing.
 
@@ -88,4 +93,6 @@ node scripts/check-i18n.js
 Inspect generated manifests:
 
 - Chrome contains optional `notifications` and optional `webRequest`, with no redundant optional Gemini origin declaration.
-- Firefox retains required WebRequest permissions and only optional `notifications`.
+- Firefox retains required `notifications` and WebRequest permissions.
+- Chrome contains optional `offscreen`; Firefox does not contain `offscreen` or
+  the audio Offscreen page.

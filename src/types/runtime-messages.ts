@@ -8,6 +8,8 @@ export const RESPONSE_COMPLETE_NOTIFICATION_GET_CONTENT_MESSAGE = 'response-comp
 export const RESPONSE_COMPLETE_NOTIFICATION_TEST_MESSAGE = 'response-complete-notification:test' as const
 export const RESPONSE_COMPLETE_NOTIFICATION_GET_READINESS_MESSAGE = 'response-complete-notification:get-readiness' as const
 export const RESPONSE_COMPLETE_NOTIFICATION_REQUEST_PERMISSION_MESSAGE = 'response-complete-notification:request-permission' as const
+export const RESPONSE_COMPLETE_NOTIFICATION_AUDIO_REQUEST_PERMISSION_MESSAGE = 'response-complete-notification-audio:request-permission' as const
+export const RESPONSE_COMPLETE_NOTIFICATION_AUDIO_PLAY_MESSAGE = 'response-complete-notification-audio:play' as const
 
 export type ResponseNotificationContentType = 'text' | 'image'
 
@@ -58,9 +60,19 @@ export interface ResponseCompleteNotificationRequestPermissionMessage {
   type: typeof RESPONSE_COMPLETE_NOTIFICATION_REQUEST_PERMISSION_MESSAGE
 }
 
+export interface ResponseCompleteNotificationAudioRequestPermissionMessage {
+  type: typeof RESPONSE_COMPLETE_NOTIFICATION_AUDIO_REQUEST_PERMISSION_MESSAGE
+}
+
+export interface ResponseCompleteNotificationAudioPlayMessage {
+  type: typeof RESPONSE_COMPLETE_NOTIFICATION_AUDIO_PLAY_MESSAGE
+  target: 'offscreen'
+}
+
 export interface ResponseCompleteNotificationResponse {
   ok: boolean
   readiness?: NotificationReadiness
+  audioPermissionAvailable?: boolean
   error?: 'missing-tab' | 'permission-denied' | 'notification-failed'
 }
 
@@ -147,4 +159,27 @@ export function isResponseCompleteNotificationRequestPermissionMessage(
 
   const candidate = message as Partial<ResponseCompleteNotificationRequestPermissionMessage>
   return candidate.type === RESPONSE_COMPLETE_NOTIFICATION_REQUEST_PERMISSION_MESSAGE
+}
+
+export function isResponseCompleteNotificationAudioRequestPermissionMessage(
+  message: unknown,
+): message is ResponseCompleteNotificationAudioRequestPermissionMessage {
+  if (!message || typeof message !== 'object') {
+    return false
+  }
+
+  const candidate = message as Partial<ResponseCompleteNotificationAudioRequestPermissionMessage>
+  return candidate.type === RESPONSE_COMPLETE_NOTIFICATION_AUDIO_REQUEST_PERMISSION_MESSAGE
+}
+
+export function isResponseCompleteNotificationAudioPlayMessage(
+  message: unknown,
+): message is ResponseCompleteNotificationAudioPlayMessage {
+  if (!message || typeof message !== 'object') {
+    return false
+  }
+
+  const candidate = message as Partial<ResponseCompleteNotificationAudioPlayMessage>
+  return candidate.type === RESPONSE_COMPLETE_NOTIFICATION_AUDIO_PLAY_MESSAGE
+    && candidate.target === 'offscreen'
 }

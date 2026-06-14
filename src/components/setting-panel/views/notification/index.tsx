@@ -38,9 +38,44 @@ export function NotificationSettingsView() {
               </Stack>
             </Container>
 
+            {notificationSettings.audioSupported ? (
+              <Container backgroundColor="gemSurfaceContainer" p={4} borderRadius="2xl">
+                <Stack direction="row" align="center" justify="space-between" gap={4}>
+                  <Stack gap={1}>
+                    <Text>{t('responseNotificationAudioLabel')}</Text>
+                    <Text fontSize="sm" color="fg.muted">
+                      {t('responseNotificationAudioDescription')}
+                    </Text>
+                  </Stack>
+                  <Switch.Root
+                    checked={notificationSettings.audioEnabled}
+                    disabled={
+                      !notificationSettings.enabled
+                      || notificationSettings.isLoading
+                      || notificationSettings.isPending
+                      || notificationSettings.isAudioPending
+                    }
+                    onCheckedChange={(details) => void notificationSettings.toggleAudioEnabled(details.checked)}
+                    flexShrink={0}
+                  >
+                    <Switch.HiddenInput />
+                    <Switch.Control>
+                      <Switch.Thumb />
+                    </Switch.Control>
+                  </Switch.Root>
+                </Stack>
+              </Container>
+            ) : null}
+
             {notificationSettings.notice || notificationSettings.statusText ? (
               <Text fontSize="sm" color="fg.muted">
                 {notificationSettings.notice || notificationSettings.statusText}
+              </Text>
+            ) : null}
+
+            {notificationSettings.audioNotice || notificationSettings.audioStatusText ? (
+              <Text fontSize="sm" color="fg.muted">
+                {notificationSettings.audioNotice || notificationSettings.audioStatusText}
               </Text>
             ) : null}
 

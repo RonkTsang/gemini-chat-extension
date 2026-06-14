@@ -27,11 +27,20 @@ This project builds separate Chrome and Firefox extension variants with WXT. Kee
 
 ## Notifications
 
-- Chrome declares `notifications` and `webRequest` as optional permissions. Existing Gemini content-script matches already provide required Gemini host access.
-- Firefox keeps required WebRequest and Gemini host permissions and declares only `notifications` as optional for this feature.
+- Chrome declares `notifications`, `webRequest`, and `offscreen` as optional permissions. Existing Gemini content-script matches already provide required Gemini host access.
+- Firefox keeps `notifications`, WebRequest, and Gemini host permissions
+  required. Firefox cannot preserve the user gesture when the in-page
+  SettingPanel sends a permission request to background, so making
+  `notifications` optional would cause the toggle to fail without showing a
+  permission prompt.
 - The response complete notification feature does not request `tabs`; notification click handling only uses stored `sender.tab.id` and `sender.tab.windowId`.
 - `StreamGenerate` completion is detected by shared background WebRequest monitoring. Notification title and message are requested from the Gemini content script; background must not read tab `url`, `title`, or `favIconUrl`.
 - Image response notifications are platform-specific: Chrome macOS uses a `basic` notification with the generated image thumbnail in `iconUrl`; Chrome on other platforms uses the `image` template with `imageUrl`; Firefox always uses `basic`.
+- Chromium system notifications use `silent: true` and can optionally play the
+  bundled completion sound through a Chrome-only Offscreen Document after
+  notification creation succeeds. Firefox omits the `silent` option because it
+  can prevent `notifications.create()` from completing on macOS; Firefox does
+  not expose the custom audio setting.
 
 ## Opening Tabs
 

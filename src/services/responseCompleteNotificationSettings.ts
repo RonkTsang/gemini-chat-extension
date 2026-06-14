@@ -4,6 +4,7 @@ import { storage } from '#imports'
 
 export const RESPONSE_COMPLETE_NOTIFICATION_PERMISSION = 'notifications' as const
 export const RESPONSE_COMPLETE_NOTIFICATION_WEB_REQUEST_PERMISSION = 'webRequest' as const
+export const RESPONSE_COMPLETE_NOTIFICATION_AUDIO_PERMISSION = 'offscreen' as const
 
 export type NotificationReadiness =
   | 'off'
@@ -29,11 +30,24 @@ export const enableResponseCompleteNotification = storage.defineItem<boolean>(
   },
 )
 
+export const enableResponseCompleteNotificationAudio = storage.defineItem<boolean>(
+  'sync:enableResponseCompleteNotificationAudio',
+  {
+    fallback: false,
+  },
+)
+
 export const getResponseCompleteNotificationEnabled = () =>
   enableResponseCompleteNotification.getValue()
 
 export const setResponseCompleteNotificationEnabled = (enabled: boolean) =>
   enableResponseCompleteNotification.setValue(enabled)
+
+export const getResponseCompleteNotificationAudioEnabled = () =>
+  enableResponseCompleteNotificationAudio.getValue()
+
+export const setResponseCompleteNotificationAudioEnabled = (enabled: boolean) =>
+  enableResponseCompleteNotificationAudio.setValue(enabled)
 
 export async function hasResponseCompleteNotificationPermission(): Promise<boolean> {
   return browser.permissions.contains(getResponseCompleteNotificationPermissionRequest())
@@ -52,6 +66,20 @@ export function getResponseCompleteNotificationPermissionRequest(): Browser.perm
       RESPONSE_COMPLETE_NOTIFICATION_WEB_REQUEST_PERMISSION,
     ],
   }
+}
+
+export function getResponseCompleteNotificationAudioPermissionRequest(): Browser.permissions.Permissions {
+  return {
+    permissions: [RESPONSE_COMPLETE_NOTIFICATION_AUDIO_PERMISSION],
+  }
+}
+
+export async function hasResponseCompleteNotificationAudioPermission(): Promise<boolean> {
+  if (import.meta.env.FIREFOX) {
+    return false
+  }
+
+  return browser.permissions.contains(getResponseCompleteNotificationAudioPermissionRequest())
 }
 
 export async function getResponseCompleteNotificationReadiness(): Promise<NotificationReadiness> {

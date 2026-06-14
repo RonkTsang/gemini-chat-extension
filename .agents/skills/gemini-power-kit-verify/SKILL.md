@@ -1,6 +1,6 @@
 ---
 name: gemini-power-kit-verify
-description: Live browser verification workflow for Gemini Power Kit on gemini.google.com. Use when Codex has completed a feature, fixed a UI/runtime issue, or the user asks to verify plugin behavior on the live Gemini page, including settingPanel, SideNav entry, chat flows, temporary chats, model selection, quick follow-up, user-query/model-response interactions, or Gemini DOM selector checks. Prefer the Chrome plugin/@chrome for logged-in live verification; fall back to agent-browser with --auto-connect when Chrome tooling is unavailable or explicitly requested.
+description: Live browser verification workflow for Gemini Power Kit on gemini.google.com using Codex's built-in chrome:control-chrome skill. Use when Codex has completed a feature, fixed a UI/runtime issue, or the user asks to verify plugin behavior on the live Gemini page, including settingPanel, SideNav entry, chat flows, temporary chats, model selection, quick follow-up, user-query/model-response interactions, or Gemini DOM selector checks.
 ---
 
 # Gemini Power Kit Verify
@@ -11,17 +11,9 @@ Verify Gemini Power Kit behavior on the live Gemini page with the user's logged-
 
 ## Tool Priority
 
-Prefer the Chrome plugin (`@chrome`) for live verification because it can use the user's real Chrome profile, Gemini login, and installed extension. If Chrome plugin capabilities are unavailable or the user explicitly asks for agent-browser, use the `agent-browser` skill with `--auto-connect` against the running Chrome instance.
+Use Codex's built-in `chrome:control-chrome` skill for all live browser verification. Follow that skill's bootstrap, interaction, safety, troubleshooting, and tab-finalization instructions. This path uses the user's real Chrome profile, Gemini login, and installed extension state.
 
-For the fallback path, keep commands connected to existing Chrome:
-
-```bash
-agent-browser --auto-connect open https://gemini.google.com/app
-agent-browser --auto-connect snapshot -i
-agent-browser --auto-connect eval --stdin
-```
-
-Do not replace an explicit `@chrome` request with a fresh headless browser. A clean browser usually lacks the logged-in Gemini session and extension context needed for this repo.
+Do not substitute another browser automation tool, a fresh browser profile, or a headless browser. If `chrome:control-chrome` is unavailable or cannot connect after following its required troubleshooting workflow, report that live verification is blocked.
 
 ## Safety Rules
 

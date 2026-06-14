@@ -44,7 +44,8 @@ export default defineConfig({
       ],
       optional_permissions: [
         "notifications",
-        "webRequest"
+        "webRequest",
+        "offscreen"
       ],
       web_accessible_resources: [
         {
@@ -55,8 +56,9 @@ export default defineConfig({
     };
 
     if (env.browser === 'firefox') {
-      manifest.optional_permissions = ['notifications']
+      delete manifest.optional_permissions
       manifest.permissions.push(
+        'notifications',
         'webRequest',
         'webRequestBlocking',
         '*://gemini.google.com/*',

@@ -60,6 +60,7 @@ export default defineConfig({
 						{ label: 'Chain Prompt', translations: { 'zh-CN': '链式提示词' }, slug: 'features/chain-prompt' },
 						{ label: 'Open in New Tab', translations: { 'zh-CN': '新标签页打开' }, slug: 'features/stuff-open-new-tab' },
 						{ label: 'Tab Title Sync', translations: { 'zh-CN': '标签页标题同步' }, slug: 'features/tab-title-sync' },
+						{ label: 'Notifications', translations: { 'zh-CN': '回复完成通知' }, slug: 'features/notifications' },
 						{ label: 'Theme', translations: { 'zh-CN': '主题个性化' }, slug: 'features/theme' },
 					],
 				},
@@ -68,6 +69,7 @@ export default defineConfig({
 					translations: { 'zh-CN': '支持' },
 					items: [
 						{ label: 'FAQ', translations: { 'zh-CN': '常见问题' }, slug: 'support/faq' },
+						{ label: 'Notification Troubleshooting', translations: { 'zh-CN': '通知问题排查' }, slug: 'support/notification-troubleshooting' },
 						{ label: 'Changelog', translations: { 'zh-CN': '更新日志' }, slug: 'support/changelog' },
 						{ label: 'Privacy Policy', translations: { 'zh-CN': '隐私政策' }, slug: 'privacy-policy' },
 					],

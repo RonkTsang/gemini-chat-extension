@@ -1,0 +1,90 @@
+---
+title: Notifications
+description: "Get notified when Gemini finishes replying, then return to the right conversation with one click."
+---
+
+import { Image } from 'astro:assets';
+import notificationSettingsImg from '../../../assets/features/notification/setting-panel.png';
+
+<Image
+  src={notificationSettingsImg}
+  alt="Notifications settings with reply completion alerts, sound, test notification, and troubleshooting link"
+  class="feature-image"
+/>
+
+## Overview
+
+Notifications let you leave a Gemini tab while a response is generating. When a standard Gemini reply finishes in a background tab, Gemini Power Kit sends a system notification with the chat title and a short response preview.
+
+Click the notification to return to the conversation that created it. The notification is then cleared from the notification center.
+
+## Why It Matters
+
+Long replies should not force you to keep watching one tab. Notifications help when you:
+
+- work across several Gemini conversations
+- switch to another app while waiting for a response
+- run a longer prompt and want to continue as soon as it finishes
+- need an audible cue instead of repeatedly checking the tab
+
+## Settings Guide
+
+<div class="settings-card-grid">
+  <article class="settings-card">
+    <div class="settings-label">Notify when Gemini finishes replying</div>
+    <p class="settings-detail">Shows a system notification with the chat title and a short response preview after Gemini finishes a standard reply.</p>
+    <p class="settings-when">Turn this on when you regularly leave Gemini running in a background tab.</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">Play a sound with notifications</div>
+    <p class="settings-detail">Plays a short completion sound after a notification is created. This separate sound option is available on Chromium browsers.</p>
+    <p class="settings-when">Use it when visual notifications are easy to miss or when Gemini is behind another app.</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">Send test notification</div>
+    <p class="settings-detail">Creates a test alert so you can confirm that browser and system notification settings are working.</p>
+    <p class="settings-when">Run this immediately after enabling notifications or after changing operating-system settings.</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">Notification troubleshooting</div>
+    <p class="settings-detail">Opens guidance for checking browser permissions and operating-system notification settings.</p>
+    <p class="settings-when">Use it when the feature is enabled but no alert appears.</p>
+  </article>
+</div>
+
+## Quick Workflow
+
+1. Open the Gemini Power Kit sidebar.
+2. Go to **Notifications**.
+3. Turn on **Notify when Gemini finishes replying** and approve the requested browser permissions.
+4. Optionally turn on **Play a sound with notifications**.
+5. Click **Send test notification** to verify your setup.
+6. Start a Gemini reply, then switch to another tab or app.
+7. Click the completion notification to return to the correct conversation.
+
+## Notification Behavior
+
+- Notifications are sent only when the Gemini page is hidden or does not have focus.
+- The alert uses the current chat title and a short preview when they are available.
+- If response details cannot be read, you still receive a generic completion alert.
+- Clicking an alert focuses its Gemini conversation and clears the alert.
+- The extension processes notification content locally and does not read the streaming response body.
+
+## Current Scope
+
+Notifications currently detect standard Gemini replies. Deep Research, Canvas, and other Gemini workflows that do not use the standard reply flow may not create a completion notification.
+
+## Troubleshooting
+
+If the test notification does not appear:
+
+1. Confirm the main notification switch is still enabled.
+2. Open [Notification Troubleshooting](/support/notification-troubleshooting/).
+3. Allow notifications for your browser in operating-system settings.
+4. Check Focus, Do Not Disturb, or other system modes that may hide alerts.
+5. Send another test notification.
+
+## Related Features
+
+- [Tab Title Sync](/features/tab-title-sync/)
+- [Chat Outline](/features/chat-outline/)

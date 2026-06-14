@@ -1,21 +1,24 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { browser } from 'wxt/browser'
+import { EXTERNAL_LINKS } from '@/common/config'
 import {
   enableResponseCompleteNotification,
+  enableResponseCompleteNotificationAudio,
+  getResponseCompleteNotificationAudioEnabled,
   getResponseCompleteNotificationPermissionRequest,
   getResponseCompleteNotificationEnabled,
+  setResponseCompleteNotificationAudioEnabled,
   setResponseCompleteNotificationEnabled,
   type NotificationReadiness,
 } from '@/services/responseCompleteNotificationSettings'
 import {
   RESPONSE_COMPLETE_NOTIFICATION_GET_READINESS_MESSAGE,
+  RESPONSE_COMPLETE_NOTIFICATION_AUDIO_REQUEST_PERMISSION_MESSAGE,
   RESPONSE_COMPLETE_NOTIFICATION_REQUEST_PERMISSION_MESSAGE,
   RESPONSE_COMPLETE_NOTIFICATION_TEST_MESSAGE,
   type ResponseCompleteNotificationResponse,
 } from '@/types/runtime-messages'
-import { t } from '@/utils/i18n'
-
-const TROUBLESHOOTING_URL = 'https://github.com/RonkTsang/gemini-chat-extension/blob/main/docs/feature/model_response_complete_notification/notification-permission-troubleshooting.md'
+import { getCurrentLocale, t } from '@/utils/i18n'
 
 type BrowserWithOptionalPermissions = typeof browser & {
   permissions?: typeof browser.permissions
@@ -34,15 +37,28 @@ async function getReadiness(): Promise<NotificationReadiness> {
   }
 }
 
+async function getReadinessResponse(): Promise<ResponseCompleteNotificationResponse | undefined> {
+  try {
+    return await browser.runtime.sendMessage({
+      type: RESPONSE_COMPLETE_NOTIFICATION_GET_READINESS_MESSAGE,
+    }) as ResponseCompleteNotificationResponse | undefined
+  } catch (error) {
+    console.error('Failed to read notification readiness:', error)
+    return undefined
+  }
+}
+
 async function requestPermission(): Promise<boolean> {
   const permissionsApi = (browser as BrowserWithOptionalPermissions).permissions
   const isExtensionPage = window.location.protocol === 'chrome-extension:'
     || window.location.protocol === 'moz-extension:'
 
   if (isExtensionPage && permissionsApi?.request) {
-    return permissionsApi.request({
-      ...getResponseCompleteNotificationPermissionRequest(),
-    })
+    const permissionRequest = getResponseCompleteNotificationPermissionRequest()
+    if (await permissionsApi.contains(permissionRequest)) {
+      return true
+    }
+    return permissionsApi.request(permissionRequest)
   }
 
   const response = await browser.runtime.sendMessage({
@@ -54,14 +70,21 @@ async function requestPermission(): Promise<boolean> {
 
 export function useResponseCompleteNotificationSettings() {
   const [enabled, setEnabled] = useState(false)
+  const [audioEnabled, setAudioEnabled] = useState(false)
+  const [audioPermissionAvailable, setAudioPermissionAvailable] = useState(false)
   const [readiness, setReadiness] = useState<NotificationReadiness>('off')
   const [notice, setNotice] = useState<string | null>(null)
+  const [audioNotice, setAudioNotice] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isPending, setIsPending] = useState(false)
+  const [isAudioPending, setIsAudioPending] = useState(false)
+  const audioSupported = !import.meta.env.FIREFOX
 
   const refreshReadiness = useCallback(async () => {
-    const nextReadiness = await getReadiness()
+    const response = await getReadinessResponse()
+    const nextReadiness = response?.readiness ?? await getReadiness()
     setReadiness(nextReadiness)
+    setAudioPermissionAvailable(response?.audioPermissionAvailable === true)
     return nextReadiness
   }, [])
 
@@ -70,12 +93,16 @@ export function useResponseCompleteNotificationSettings() {
 
     const load = async () => {
       try {
-        const storedEnabled = await getResponseCompleteNotificationEnabled()
+        const [storedEnabled, storedAudioEnabled] = await Promise.all([
+          getResponseCompleteNotificationEnabled(),
+          getResponseCompleteNotificationAudioEnabled(),
+        ])
         if (!active) {
           return
         }
 
         setEnabled(storedEnabled)
+        setAudioEnabled(storedAudioEnabled)
         if (storedEnabled) {
           await refreshReadiness()
         }
@@ -98,10 +125,20 @@ export function useResponseCompleteNotificationSettings() {
       }
       void refreshReadiness()
     })
+    const unwatchAudio = enableResponseCompleteNotificationAudio.watch((storedEnabled) => {
+      setAudioEnabled(storedEnabled)
+      if (!storedEnabled) {
+        setAudioNotice(null)
+      }
+      if (storedEnabled) {
+        void refreshReadiness()
+      }
+    })
 
     return () => {
       active = false
       unwatch()
+      unwatchAudio()
     }
   }, [refreshReadiness])
 
@@ -139,6 +176,43 @@ export function useResponseCompleteNotificationSettings() {
       setIsPending(false)
     }
   }, [refreshReadiness])
+
+  const toggleAudioEnabled = useCallback(async (nextEnabled: boolean) => {
+    setIsAudioPending(true)
+    try {
+      if (!nextEnabled) {
+        await setResponseCompleteNotificationAudioEnabled(false)
+        setAudioEnabled(false)
+        setAudioNotice(null)
+        return
+      }
+
+      setAudioNotice(null)
+      const response = await browser.runtime.sendMessage({
+        type: RESPONSE_COMPLETE_NOTIFICATION_AUDIO_REQUEST_PERMISSION_MESSAGE,
+      }) as ResponseCompleteNotificationResponse | undefined
+
+      if (response?.ok !== true) {
+        await setResponseCompleteNotificationAudioEnabled(false)
+        setAudioEnabled(false)
+        setAudioPermissionAvailable(false)
+        setAudioNotice(t('responseNotificationAudioPermissionDenied') || 'Audio permission was not granted.')
+        return
+      }
+
+      await setResponseCompleteNotificationAudioEnabled(true)
+      setAudioEnabled(true)
+      setAudioPermissionAvailable(true)
+    } catch (error) {
+      console.error('Failed to update response complete notification audio setting:', error)
+      await setResponseCompleteNotificationAudioEnabled(false)
+      setAudioEnabled(false)
+      setAudioPermissionAvailable(false)
+      setAudioNotice(t('responseNotificationAudioPermissionDenied') || 'Audio permission was not granted.')
+    } finally {
+      setIsAudioPending(false)
+    }
+  }, [])
 
   const sendTestNotification = useCallback(async () => {
     setIsPending(true)
@@ -179,20 +253,34 @@ export function useResponseCompleteNotificationSettings() {
 
   const canSendTest = enabled
     && (readiness === 'allowed' || readiness === 'allowed-but-system-unknown')
+  const audioStatusText = enabled && audioEnabled && !audioPermissionAvailable
+    ? t('responseNotificationAudioMissingPermission') || 'Turn audio on again to grant the required permission.'
+    : null
 
   const openTroubleshooting = useCallback(() => {
-    window.open(TROUBLESHOOTING_URL, '_blank', 'noopener,noreferrer')
+    const locale = getCurrentLocale().toLowerCase()
+    const troubleshootingUrl = locale.startsWith('zh')
+      ? EXTERNAL_LINKS.NOTIFICATION_TROUBLESHOOTING_ZH_CN
+      : EXTERNAL_LINKS.NOTIFICATION_TROUBLESHOOTING
+    window.open(troubleshootingUrl, '_blank', 'noopener,noreferrer')
   }, [])
 
   return {
     enabled,
+    audioSupported,
+    audioEnabled,
+    audioPermissionAvailable,
     readiness,
     notice,
+    audioNotice,
+    audioStatusText,
     isLoading,
     isPending,
+    isAudioPending,
     canSendTest,
     statusText,
     toggleEnabled,
+    toggleAudioEnabled,
     sendTestNotification,
     openTroubleshooting,
   }

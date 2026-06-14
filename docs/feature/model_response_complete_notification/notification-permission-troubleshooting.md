@@ -2,11 +2,16 @@
 
 This guide explains how to check notification settings when Gemini Power Kit is enabled but system notifications do not appear.
 
+The user-facing version of this guide is published at:
+
+- https://gpkit.ronktsang.com/support/notification-troubleshooting/
+- https://gpkit.ronktsang.com/zh-cn/support/notification-troubleshooting/
+
 ## 1. What The Extension Can Check
 
 Gemini Power Kit can reliably check these states:
 
-1. Whether the extension has the optional `notifications` permission.
+1. Whether the extension has the `notifications` permission.
 2. In Chrome, whether the browser reports extension notifications as `granted` or `denied` through `notifications.getPermissionLevel()`.
 
 Gemini Power Kit cannot reliably check every operating system setting that may suppress notifications.
@@ -85,7 +90,8 @@ Official guide:
 
 When the user enables response complete notifications, Gemini Power Kit should:
 
-1. Request the extension optional `notifications` permission.
+1. On Chrome, request the extension optional `notifications` permission. On
+   Firefox, use the required notification permission granted at installation.
 2. Check whether the extension has the permission.
 3. In Chrome, call `notifications.getPermissionLevel()` when available.
 4. If the browser reports notifications as denied, show a browser notification settings hint.
@@ -99,4 +105,8 @@ Even when all extension-level checks pass, the operating system may still suppre
 
 The extension should not use Web `Notification.permission` for this feature. That API checks the current website origin, such as `gemini.google.com`, not the extension's notification permission.
 
-The extension should not use custom Web Audio as a fallback for notification sounds. Notification sound behavior should remain controlled by the browser and operating system.
+Chromium system notifications are created with `silent: true`. Users can
+optionally enable the bundled completion sound, which plays through an
+Offscreen Document after notification creation succeeds. Firefox omits the
+`silent` option for macOS compatibility and uses the browser's default
+notification behavior.
