@@ -113,7 +113,7 @@ describe('responseCompleteNotificationContent', () => {
     renderTextResponse('Final response text')
 
     await expect(getResponseCompleteNotificationContent()).resolves.toEqual({
-      suppressed: false,
+      isForeground: false,
       title: 'Chat title',
       message: 'Final response text',
       responseType: 'text',
@@ -124,7 +124,7 @@ describe('responseCompleteNotificationContent', () => {
     renderDeepResearchResponse('拼多多深度研究报告')
 
     await expect(getResponseCompleteNotificationContent('deep-research')).resolves.toEqual({
-      suppressed: false,
+      isForeground: false,
       title: 'Chat title',
       message: '拼多多深度研究报告',
       responseType: 'text',
@@ -235,12 +235,23 @@ describe('responseCompleteNotificationContent', () => {
     })
   })
 
-  it('suppresses content while the page is visible and focused', async () => {
+  it('reports foreground state while the page is visible and focused', async () => {
     setPageState('visible', true)
     renderTextResponse('Final response text')
 
     await expect(getResponseCompleteNotificationContent()).resolves.toMatchObject({
-      suppressed: true,
+      isForeground: true,
+      message: 'Final response text',
+    })
+  })
+
+  it('reports non-foreground state while the page is visible but unfocused', async () => {
+    setPageState('visible', false)
+    renderTextResponse('Final response text')
+
+    await expect(getResponseCompleteNotificationContent()).resolves.toMatchObject({
+      isForeground: false,
+      message: 'Final response text',
     })
   })
 
@@ -276,7 +287,7 @@ describe('responseCompleteNotificationContent', () => {
     `
 
     await expect(getResponseCompleteNotificationContent()).resolves.toMatchObject({
-      suppressed: false,
+      isForeground: false,
       responseType: 'image',
     })
   })

@@ -6,10 +6,13 @@ import {
   enableResponseCompleteNotificationAudio,
   getResponseCompleteNotificationAudioEnabled,
   getResponseCompleteNotificationAudioPermissionRequest,
+  getResponseCompleteNotificationForegroundOnly,
   getResponseCompleteNotificationPermissionRequest,
   getResponseCompleteNotificationEnabled,
+  responseCompleteNotificationForegroundOnly,
   setResponseCompleteNotificationAudioEnabled,
   setResponseCompleteNotificationEnabled,
+  setResponseCompleteNotificationForegroundOnly,
   type NotificationReadiness,
 } from '@/services/responseCompleteNotificationSettings'
 import {
@@ -138,6 +141,7 @@ async function waitForPermissionPopupGrant(permissionKind: PermissionKind): Prom
 export function useResponseCompleteNotificationSettings() {
   const [enabled, setEnabled] = useState(false)
   const [audioEnabled, setAudioEnabled] = useState(false)
+  const [foregroundOnly, setForegroundOnly] = useState(true)
   const [audioPermissionAvailable, setAudioPermissionAvailable] = useState(false)
   const [readiness, setReadiness] = useState<NotificationReadiness>('off')
   const [notice, setNotice] = useState<string | null>(null)
@@ -160,9 +164,10 @@ export function useResponseCompleteNotificationSettings() {
 
     const load = async () => {
       try {
-        const [storedEnabled, storedAudioEnabled] = await Promise.all([
+        const [storedEnabled, storedAudioEnabled, storedForegroundOnly] = await Promise.all([
           getResponseCompleteNotificationEnabled(),
           getResponseCompleteNotificationAudioEnabled(),
+          getResponseCompleteNotificationForegroundOnly(),
         ])
         if (!active) {
           return
@@ -170,6 +175,7 @@ export function useResponseCompleteNotificationSettings() {
 
         setEnabled(storedEnabled)
         setAudioEnabled(storedAudioEnabled)
+        setForegroundOnly(storedForegroundOnly)
         if (storedEnabled) {
           await refreshReadiness()
         }
@@ -201,11 +207,15 @@ export function useResponseCompleteNotificationSettings() {
         void refreshReadiness()
       }
     })
+    const unwatchForegroundOnly = responseCompleteNotificationForegroundOnly.watch((storedEnabled) => {
+      setForegroundOnly(storedEnabled)
+    })
 
     return () => {
       active = false
       unwatch()
       unwatchAudio()
+      unwatchForegroundOnly()
     }
   }, [refreshReadiness])
 
@@ -301,6 +311,11 @@ export function useResponseCompleteNotificationSettings() {
     }
   }, [])
 
+  const toggleForegroundOnly = useCallback(async (nextEnabled: boolean) => {
+    await setResponseCompleteNotificationForegroundOnly(nextEnabled)
+    setForegroundOnly(nextEnabled)
+  }, [])
+
   const sendTestNotification = useCallback(async () => {
     setIsPending(true)
     try {
@@ -356,6 +371,7 @@ export function useResponseCompleteNotificationSettings() {
     enabled,
     audioSupported,
     audioEnabled,
+    foregroundOnly,
     audioPermissionAvailable,
     readiness,
     notice,
@@ -368,6 +384,7 @@ export function useResponseCompleteNotificationSettings() {
     statusText,
     toggleEnabled,
     toggleAudioEnabled,
+    toggleForegroundOnly,
     sendTestNotification,
     openTroubleshooting,
   }

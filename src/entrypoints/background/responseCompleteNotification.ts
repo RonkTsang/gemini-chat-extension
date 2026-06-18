@@ -2,6 +2,7 @@ import { browser } from 'wxt/browser'
 import type { Browser } from 'wxt/browser'
 import {
   enableResponseCompleteNotification,
+  getResponseCompleteNotificationForegroundOnly,
   getResponseCompleteNotificationAudioPermissionRequest,
   getResponseCompleteNotificationEnabled,
   getResponseCompleteNotificationPermissionRequest,
@@ -556,12 +557,19 @@ async function processResponseCompleted(
     return
   }
 
-  const content = providedContent ?? await requestNotificationContent(details.tabId, completionKind)
-  if (content?.suppressed) {
+  const [foregroundOnly, content] = await Promise.all([
+    getResponseCompleteNotificationForegroundOnly(),
+    providedContent
+      ? Promise.resolve(providedContent)
+      : requestNotificationContent(details.tabId, completionKind),
+  ])
+  const shouldSuppressNotification = foregroundOnly && content?.isForeground === true
+  if (shouldSuppressNotification) {
     logBackgroundEvent('response-complete-suppressed-foreground', {
       completionKind,
       tabId: details.tabId,
       requestId: details.requestId,
+      foregroundOnly,
     })
     return
   }

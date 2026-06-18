@@ -3,7 +3,8 @@
 ## 1. Summary
 
 Gemini Power Kit can notify users when a standard Gemini response or Deep
-Research report finishes while its tab is not visible or focused.
+Research report finishes. By default, it suppresses those notifications while
+the Gemini tab is visible and focused.
 
 V2 uses the browser network layer as the single completion signal. A successful completion of the following streaming request means the standard Gemini response is complete:
 
@@ -26,7 +27,7 @@ tracked hNvQHb successful completion + completed processing-card DOM -> Deep Res
 - Reliably detect standard Gemini response completion in background tabs.
 - Avoid completion logic tied to Gemini send-button or conversation DOM mutations.
 - Keep the feature default-off and request permissions only after explicit user action.
-- Preserve notification title, response summary, optional image preview, foreground suppression, test notification, and click-to-focus behavior.
+- Preserve notification title, response summary, optional image preview, configurable foreground suppression, test notification, and click-to-focus behavior.
 - Send a generic completion notification when page content cannot be read.
 - Keep system notifications silent and optionally play the bundled completion
   sound on Chromium through an Offscreen Document.
@@ -95,8 +96,9 @@ After completion, background asks the originating content script for:
 - optional image data.
 
 For Deep Research, the content provider briefly retries until the Title is
-rendered. If the page is visible and focused, notification is suppressed. If
-content extraction fails or times out, background sends a generic notification:
+rendered. If the user keeps the default foreground-only setting enabled and the
+page is visible and focused, notification is suppressed. If content extraction
+fails or times out, background sends a generic notification:
 
 ```text
 Gemini finished replying
@@ -125,7 +127,8 @@ on macOS and uses the browser's default notification behavior.
 2. Chrome requests `notifications` and `webRequest` only when the user enables the feature.
 3. Firefox has required `notifications` permission and enables the feature without making a runtime permission request.
 4. A successful standard `StreamGenerate` request in a background tab creates one notification.
-5. Foreground responses are suppressed.
+5. Foreground responses are suppressed by default and can be allowed from the
+   notification settings view.
 6. Content extraction failure still creates a generic notification.
 7. Disabling the setting or revoking permissions unregisters the WebRequest listener.
 8. Re-enabling or restoring permissions registers exactly one listener.

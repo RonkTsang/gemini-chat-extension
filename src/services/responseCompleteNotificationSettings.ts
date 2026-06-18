@@ -37,6 +37,13 @@ export const enableResponseCompleteNotificationAudio = storage.defineItem<boolea
   },
 )
 
+export const responseCompleteNotificationForegroundOnly = storage.defineItem<boolean>(
+  'sync:responseCompleteNotificationForegroundOnly',
+  {
+    fallback: true,
+  },
+)
+
 export const getResponseCompleteNotificationEnabled = () =>
   enableResponseCompleteNotification.getValue()
 
@@ -48,6 +55,12 @@ export const getResponseCompleteNotificationAudioEnabled = () =>
 
 export const setResponseCompleteNotificationAudioEnabled = (enabled: boolean) =>
   enableResponseCompleteNotificationAudio.setValue(enabled)
+
+export const getResponseCompleteNotificationForegroundOnly = () =>
+  responseCompleteNotificationForegroundOnly.getValue()
+
+export const setResponseCompleteNotificationForegroundOnly = (enabled: boolean) =>
+  responseCompleteNotificationForegroundOnly.setValue(enabled)
 
 export async function hasResponseCompleteNotificationPermission(): Promise<boolean> {
   return browser.permissions.contains(getResponseCompleteNotificationPermissionRequest())

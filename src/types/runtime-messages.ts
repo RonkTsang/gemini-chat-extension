@@ -45,7 +45,7 @@ export interface ResponseCompleteNotificationGetContentMessage {
 }
 
 export interface ResponseCompleteNotificationContent {
-  suppressed: boolean
+  isForeground: boolean
   title: string
   message: string
   responseType: ResponseNotificationContentType

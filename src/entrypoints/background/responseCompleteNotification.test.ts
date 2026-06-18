@@ -4,6 +4,7 @@ import { browser } from 'wxt/browser'
 import {
   getResponseCompleteNotificationEnabled,
   getResponseCompleteNotificationAudioEnabled,
+  setResponseCompleteNotificationForegroundOnly,
   setResponseCompleteNotificationAudioEnabled,
   setResponseCompleteNotificationEnabled,
 } from '@/services/responseCompleteNotificationSettings'
@@ -187,7 +188,7 @@ const runtimeSendMessageMock = vi.mocked(browser.runtime.sendMessage)
 const offscreenCreateDocumentMock = vi.mocked(browser.offscreen.createDocument)
 
 const DEFAULT_NOTIFICATION_CONTENT = {
-  suppressed: false,
+  isForeground: false,
   title: 'Chat title',
   message: 'Response summary',
   responseType: 'text',
@@ -295,6 +296,7 @@ describe('responseCompleteNotification background V2', () => {
     vi.clearAllMocks()
     await setResponseCompleteNotificationEnabled(false)
     await setResponseCompleteNotificationAudioEnabled(false)
+    await setResponseCompleteNotificationForegroundOnly(true)
     permissionsContainsMock.mockResolvedValue(true)
     getPermissionLevelMock.mockResolvedValue('granted')
     tabsGetMock.mockResolvedValue({ id: 7, windowId: 9 })
@@ -610,7 +612,7 @@ describe('responseCompleteNotification background V2', () => {
     startDeepResearchPoll()
     await flushPromises()
     tabsSendMessageMock.mockResolvedValueOnce({
-      suppressed: false,
+      isForeground: false,
       title: 'Chat title',
       message: 'Your response is ready.',
       responseType: 'text',
@@ -701,11 +703,11 @@ describe('responseCompleteNotification background V2', () => {
     expect(createNotificationMock).not.toHaveBeenCalled()
   })
 
-  it('suppresses notification while the Gemini page is foregrounded', async () => {
+  it('suppresses notification while the Gemini page is foregrounded by default', async () => {
     await setResponseCompleteNotificationEnabled(true)
     await flushPromises()
     tabsSendMessageMock.mockResolvedValue({
-      suppressed: true,
+      isForeground: true,
       title: 'Chat title',
       message: 'Response summary',
       responseType: 'text',
@@ -715,6 +717,29 @@ describe('responseCompleteNotification background V2', () => {
     await flushPromises()
 
     expect(createNotificationMock).not.toHaveBeenCalled()
+  })
+
+  it('creates a notification while foregrounded when foreground-only is disabled', async () => {
+    await setResponseCompleteNotificationEnabled(true)
+    await setResponseCompleteNotificationForegroundOnly(false)
+    await flushPromises()
+    tabsSendMessageMock.mockResolvedValue({
+      isForeground: true,
+      title: 'Chat title',
+      message: 'Response summary',
+      responseType: 'text',
+    })
+
+    completeStream()
+    await flushPromises()
+
+    expect(createNotificationMock).toHaveBeenCalledWith('response-complete:7:123', {
+      type: 'basic',
+      iconUrl: 'extension:///icon/gemini-sparkle-aurora.png',
+      title: 'Chat title',
+      message: 'Response summary',
+      silent: true,
+    })
   })
 
   it('creates a fallback notification when content is unavailable', async () => {
@@ -738,7 +763,7 @@ describe('responseCompleteNotification background V2', () => {
     await setResponseCompleteNotificationEnabled(true)
     await flushPromises()
     tabsSendMessageMock.mockResolvedValue({
-      suppressed: false,
+      isForeground: false,
       title: 'Image chat',
       message: 'Generated image',
       responseType: 'image',

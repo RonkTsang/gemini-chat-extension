@@ -88,7 +88,7 @@ Background sends `response-complete-notification:get-content` to the request tab
 
 The content provider registers one runtime message listener. On request it:
 
-1. Returns `suppressed: true` immediately when the page is visible and focused.
+1. Reports `isForeground: true` when the page is visible and focused.
 2. Briefly retries while waiting for the final response DOM.
 3. Extracts current chat title and either the latest standard-response summary
    or the final Deep Research processing-card Title from
@@ -96,7 +96,10 @@ The content provider registers one runtime message listener. On request it:
 4. Extracts response type and optional image data.
 5. Returns fallback content when the final DOM is unavailable.
 
-The provider never sends a completion message and never observes DOM mutations to decide completion.
+The provider never sends a completion message, never observes DOM mutations to
+decide completion, and does not apply the user foreground-suppression policy.
+Background applies that policy with
+`responseCompleteNotificationForegroundOnly && content.isForeground`.
 
 ## Runtime Contract
 
@@ -115,7 +118,7 @@ Response:
 
 ```ts
 {
-  suppressed: boolean
+  isForeground: boolean
   title: string
   message: string
   responseType: 'text' | 'image'

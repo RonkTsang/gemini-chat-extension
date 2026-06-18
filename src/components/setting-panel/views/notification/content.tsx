@@ -48,9 +48,6 @@ export function NotificationSettingsContent({ extensionPage = false }: Notificat
                 <Stack direction="row" align="center" justify="space-between" gap={4}>
                   <Stack gap={1}>
                     <Text>{t('responseNotificationAudioLabel')}</Text>
-                    <Text fontSize="sm" color="fg.muted">
-                      {t('responseNotificationAudioDescription')}
-                    </Text>
                   </Stack>
                   <Switch.Root
                     checked={notificationSettings.audioEnabled}
@@ -71,6 +68,32 @@ export function NotificationSettingsContent({ extensionPage = false }: Notificat
                 </Stack>
               </Container>
             ) : null}
+
+            <Container backgroundColor={containerBackground} p={4} borderRadius="2xl">
+              <Stack direction="row" align="center" justify="space-between" gap={4}>
+                <Stack gap={1}>
+                  <Text>{t('responseNotificationForegroundOnlyLabel')}</Text>
+                  <Text fontSize="sm" color="fg.muted">
+                    {t('responseNotificationForegroundOnlyDescription')}
+                  </Text>
+                </Stack>
+                <Switch.Root
+                  checked={notificationSettings.foregroundOnly}
+                  disabled={
+                    !notificationSettings.enabled
+                    || notificationSettings.isLoading
+                    || notificationSettings.isPending
+                  }
+                  onCheckedChange={(details) => void notificationSettings.toggleForegroundOnly(details.checked)}
+                  flexShrink={0}
+                >
+                  <Switch.HiddenInput />
+                  <Switch.Control>
+                    <Switch.Thumb />
+                  </Switch.Control>
+                </Switch.Root>
+              </Stack>
+            </Container>
 
             {notificationSettings.notice || notificationSettings.statusText ? (
               <Text fontSize="sm" color="fg.muted">

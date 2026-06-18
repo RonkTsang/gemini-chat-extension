@@ -94,20 +94,17 @@ export function getDeepResearchDomStatus(): ResponseCompleteNotificationDeepRese
 export async function getResponseCompleteNotificationContent(
   completionKind: ResponseCompletionKind = 'standard-response',
 ): Promise<ResponseCompleteNotificationContent> {
-  const suppressed = document.visibilityState === 'visible' && document.hasFocus()
-  if (completionKind === 'standard-response' && suppressed) {
-    return createFallbackContent(true)
-  }
+  const isForeground = document.visibilityState === 'visible' && document.hasFocus()
 
   for (let attempt = 0; attempt < CONTENT_RETRY_ATTEMPTS; attempt += 1) {
-    const content = await readNotificationContent(completionKind, suppressed)
+    const content = await readNotificationContent(completionKind, isForeground)
     if (content) {
       return content
     }
     await delay(CONTENT_RETRY_DELAY_MS)
   }
 
-  return createFallbackContent(suppressed, completionKind === 'deep-research' ? false : undefined)
+  return createFallbackContent(isForeground, completionKind === 'deep-research' ? false : undefined)
 }
 
 export function getCurrentChatNotificationTitle(): string {
@@ -140,7 +137,7 @@ export function getCompletedModelResponseSummary(
 
 async function readNotificationContent(
   completionKind: ResponseCompletionKind,
-  suppressed: boolean,
+  isForeground: boolean,
 ): Promise<ResponseCompleteNotificationContent | null> {
   const turn = getLastFinalTurn()
   if (!turn) {
@@ -171,7 +168,7 @@ async function readNotificationContent(
   }
 
   return {
-    suppressed,
+    isForeground,
     title: getCurrentChatNotificationTitle(),
     message: deepResearchTitle ?? getCompletedModelResponseSummary(modelResponse, responseType),
     responseType,
@@ -208,11 +205,11 @@ function getCurrentConversationId(): string | null {
 }
 
 function createFallbackContent(
-  suppressed: boolean,
+  isForeground: boolean,
   completionConfirmed?: boolean,
 ): ResponseCompleteNotificationContent {
   return {
-    suppressed,
+    isForeground,
     title: getCurrentChatNotificationTitle(),
     message: FALLBACK_NOTIFICATION_MESSAGE,
     responseType: 'text',
