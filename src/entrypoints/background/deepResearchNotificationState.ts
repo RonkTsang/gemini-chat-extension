@@ -106,6 +106,22 @@ export function consumeDeepResearchReport(
   })
 }
 
+export function getDeepResearchTask(
+  tabId: number,
+  conversationId: string,
+  timestamp: number,
+): Promise<TaskMutationResult<DeepResearchTask | null>> {
+  return runExclusive(async () => {
+    const expiredTasks = removeExpiredTasks(timestamp)
+    const task = getTasks().get(getTaskKey(tabId, conversationId)) ?? null
+    await persistTasksIfNeeded(expiredTasks.length > 0)
+    return {
+      value: task,
+      expiredTasks,
+    }
+  })
+}
+
 export function clearDeepResearchTasksForTab(
   tabId: number,
 ): Promise<DeepResearchTask[]> {

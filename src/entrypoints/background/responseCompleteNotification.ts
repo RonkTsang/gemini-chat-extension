@@ -8,13 +8,23 @@ import {
   getResponseCompleteNotificationReadiness,
   hasResponseCompleteNotificationAudioPermission,
   hasResponseCompleteNotificationPermission,
+  setResponseCompleteNotificationAudioEnabled,
+  setResponseCompleteNotificationEnabled,
   type NotificationReadiness,
 } from '@/services/responseCompleteNotificationSettings'
+import {
+  clearResponseCompleteNotificationPermissionIntent,
+  createResponseCompleteNotificationPermissionIntent,
+  getResponseCompleteNotificationPermissionIntent,
+  setResponseCompleteNotificationPermissionIntent,
+  type ResponseCompleteNotificationPermissionKind,
+} from '@/services/responseCompleteNotificationPermissionIntent'
 import {
   clearAllDeepResearchTasks,
   clearDeepResearchTasksForTab,
   consumeDeepResearchReport,
   consumeDeepResearchStreamSuppression,
+  getDeepResearchTask,
   registerDeepResearchPoll,
   type DeepResearchTask,
 } from './deepResearchNotificationState'
@@ -25,6 +35,7 @@ import {
 import {
   isResponseCompleteNotificationAudioRequestPermissionMessage,
   isResponseCompleteNotificationGetReadinessMessage,
+  isResponseCompleteNotificationOpenPermissionPopupMessage,
   isResponseCompleteNotificationRequestPermissionMessage,
   isResponseCompleteNotificationTestMessage,
   RESPONSE_COMPLETE_NOTIFICATION_GET_CONTENT_MESSAGE,
@@ -46,6 +57,10 @@ const MAX_IMAGE_DATA_URL_LENGTH = 750_000
 const STREAM_GENERATE_URL = '*://gemini.google.com/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate*'
 const BATCH_EXECUTE_URL = '*://gemini.google.com/_/BardChatUi/data/batchexecute*'
 const CONTENT_REQUEST_TIMEOUT_MS = 2_000
+const PERMISSION_POPUP_WIDTH = 360
+const PERMISSION_POPUP_HEIGHT = 520
+const PERMISSION_INTENT_POLL_INTERVAL_MS = 500
+const PERMISSION_INTENT_POLL_MAX_ATTEMPTS = 60
 
 let hasStarted = false
 let notificationEventListenersStarted = false
@@ -54,6 +69,9 @@ let permissionEventListenersStarted = false
 let tabEventListenersStarted = false
 let unwatchNotificationSetting: (() => void) | null = null
 let webRequestSyncPromise: Promise<void> = Promise.resolve()
+let permissionIntentPollTimer: ReturnType<typeof setTimeout> | null = null
+let permissionIntentPollAttempts = 0
+const deepResearchPollsObservedBeforeRequest = new Set<string>()
 
 const notificationTargets = new Map<string, {
   tabId: number
@@ -67,6 +85,15 @@ type BrowserWithOptionalNotifications = typeof browser & {
   notifications?: NotificationsApi
 }
 
+type BrowserWithOptionalAction = typeof browser & {
+  action?: {
+    openPopup?: (details?: { windowId?: number }) => Promise<void> | void
+  }
+  windows: typeof browser.windows & {
+    create?: typeof browser.windows.create
+  }
+}
+
 type RuntimeMessageSender = Parameters<
   Parameters<typeof browser.runtime.onMessage.addListener>[0]
 >[1]
@@ -77,6 +104,7 @@ type WebRequestBeforeRequestDetails = Parameters<WebRequestBeforeRequestListener
 
 type NotificationSource = 'response-complete' | 'test'
 type CompletionKind = 'standard-response' | 'deep-research'
+type DeepResearchPollObservationSource = 'before-request' | 'completed-fallback'
 type ImageNotificationPresentation = 'basic-icon' | 'image-template'
 
 interface ImageNotificationPresentationResult {
@@ -155,7 +183,15 @@ function ensurePermissionEventListeners(): void {
 }
 
 function handlePermissionChanged(): void {
-  void scheduleWebRequestListenerSync()
+  void handlePermissionChangedAsync()
+}
+
+async function handlePermissionChangedAsync(): Promise<void> {
+  const result = await enablePendingPermissionIntentIfGranted()
+  if (result !== 'pending') {
+    stopPendingPermissionIntentPolling()
+  }
+  await scheduleWebRequestListenerSync()
 }
 
 function ensureTabEventListeners(): void {
@@ -226,11 +262,22 @@ function handleGeminiRequestStarted(
     return undefined
   }
 
+  deepResearchPollsObservedBeforeRequest.add(details.requestId)
+  void trackDeepResearchPoll(details, request, 'before-request')
+  return undefined
+}
+
+function trackDeepResearchPoll(
+  details: Pick<WebRequestBeforeRequestDetails, 'requestId' | 'tabId' | 'timeStamp'>,
+  request: Extract<GeminiResponseRequest, { kind: 'deep-research-poll' }>,
+  observationSource: DeepResearchPollObservationSource,
+): Promise<void> {
   const eventTimestamp = Math.round(details.timeStamp || Date.now())
-  void registerDeepResearchPoll(details.tabId, request.conversationId, eventTimestamp)
+  return registerDeepResearchPoll(details.tabId, request.conversationId, eventTimestamp)
     .then((result) => {
       logExpiredDeepResearchTasks(result.expiredTasks)
       logBackgroundEvent(result.created ? 'deep-research-started' : 'deep-research-poll-observed', {
+        observationSource,
         tabId: details.tabId,
         conversationId: request.conversationId,
         requestId: details.requestId,
@@ -245,8 +292,8 @@ function handleGeminiRequestStarted(
       conversationId: request.conversationId,
       requestId: details.requestId,
       eventTimestamp,
+      observationSource,
     }))
-  return undefined
 }
 
 function handleGeminiRequestCompleted(details: WebRequestCompletedDetails): void {
@@ -256,9 +303,36 @@ function handleGeminiRequestCompleted(details: WebRequestCompletedDetails): void
     return
   }
 
+  if (request.kind === 'deep-research-poll') {
+    void processDeepResearchPollCompleted(details, request)
+    return
+  }
+
   if (request.kind === 'deep-research-report') {
     void processDeepResearchReportCompleted(details, request)
   }
+}
+
+async function processDeepResearchPollCompleted(
+  details: WebRequestCompletedDetails,
+  request: Extract<GeminiResponseRequest, { kind: 'deep-research-poll' }>,
+): Promise<void> {
+  if (deepResearchPollsObservedBeforeRequest.delete(details.requestId)) {
+    return
+  }
+
+  if (details.tabId < 0 || details.statusCode !== 200) {
+    logBackgroundEvent('deep-research-poll-complete-ignored-invalid', {
+      tabId: details.tabId,
+      conversationId: request.conversationId,
+      requestId: details.requestId,
+      statusCode: details.statusCode,
+      eventTimestamp: Math.round(details.timeStamp || Date.now()),
+    })
+    return
+  }
+
+  await trackDeepResearchPoll(details, request, 'completed-fallback')
 }
 
 async function processStreamGenerateCompleted(details: WebRequestCompletedDetails): Promise<void> {
@@ -320,6 +394,34 @@ async function processDeepResearchReportCompleted(
   }
 
   try {
+    const trackedResult = await getDeepResearchTask(
+      details.tabId,
+      request.conversationId,
+      eventTimestamp,
+    )
+    logExpiredDeepResearchTasks(trackedResult.expiredTasks)
+    if (!trackedResult.value) {
+      logBackgroundEvent('deep-research-report-ignored-untracked', {
+        tabId: details.tabId,
+        conversationId: request.conversationId,
+        requestId: details.requestId,
+        eventTimestamp,
+      })
+      return
+    }
+
+    const content = await requestNotificationContent(details.tabId, 'deep-research')
+    if (content?.completionConfirmed !== true) {
+      logBackgroundEvent('deep-research-report-ignored-not-complete', {
+        tabId: details.tabId,
+        conversationId: request.conversationId,
+        requestId: details.requestId,
+        eventTimestamp,
+        contentAvailable: Boolean(content),
+      })
+      return
+    }
+
     const result = await consumeDeepResearchReport(
       details.tabId,
       request.conversationId,
@@ -327,7 +429,7 @@ async function processDeepResearchReportCompleted(
     )
     logExpiredDeepResearchTasks(result.expiredTasks)
     if (!result.value) {
-      logBackgroundEvent('deep-research-report-ignored-untracked', {
+      logBackgroundEvent('deep-research-report-ignored-already-consumed', {
         tabId: details.tabId,
         conversationId: request.conversationId,
         requestId: details.requestId,
@@ -345,6 +447,8 @@ async function processDeepResearchReportCompleted(
       lastPollAt: result.value.lastPollAt,
       taskAgeMs: eventTimestamp - result.value.startedAt,
     })
+
+    await processResponseCompleted(details, 'deep-research', content)
   } catch (error) {
     logDeepResearchStateError('deep-research-report-consume-failed', error, {
       tabId: details.tabId,
@@ -352,15 +456,13 @@ async function processDeepResearchReportCompleted(
       requestId: details.requestId,
       eventTimestamp,
     })
-    return
   }
-
-  await processResponseCompleted(details, 'deep-research')
 }
 
 async function processResponseCompleted(
   details: WebRequestCompletedDetails,
   completionKind: CompletionKind,
+  providedContent?: ResponseCompleteNotificationContent,
 ): Promise<void> {
   const readiness = await getResponseCompleteNotificationReadiness()
   if (!isSendableReadiness(readiness)) {
@@ -374,7 +476,7 @@ async function processResponseCompleted(
     return
   }
 
-  const content = await requestNotificationContent(details.tabId, completionKind)
+  const content = providedContent ?? await requestNotificationContent(details.tabId, completionKind)
   if (content?.suppressed) {
     logBackgroundEvent('response-complete-suppressed-foreground', {
       completionKind,
@@ -499,11 +601,19 @@ function handleRuntimeMessage(
   }
 
   if (isResponseCompleteNotificationRequestPermissionMessage(message)) {
-    return requestPermission()
+    return openPermissionPopup({
+      permissionKind: 'visual',
+    }, sender)
   }
 
   if (isResponseCompleteNotificationAudioRequestPermissionMessage(message)) {
-    return requestAudioPermission()
+    return openPermissionPopup({
+      permissionKind: 'audio',
+    }, sender)
+  }
+
+  if (isResponseCompleteNotificationOpenPermissionPopupMessage(message)) {
+    return openPermissionPopup(message.payload, sender)
   }
 
   if (isResponseCompleteNotificationTestMessage(message)) {
@@ -524,60 +634,190 @@ function handleRuntimeMessage(
   return undefined
 }
 
-async function requestPermission(): Promise<ResponseCompleteNotificationResponse> {
-  try {
-    if (await hasResponseCompleteNotificationPermission()) {
-      await scheduleWebRequestListenerSync()
-      return { ok: true }
-    }
-
-    const granted = await browser.permissions.request({
-      ...getResponseCompleteNotificationPermissionRequest(),
-    })
-
-    if (granted) {
-      await scheduleWebRequestListenerSync()
-      return { ok: true }
-    }
-    return { ok: false, error: 'permission-denied' }
-  } catch (error) {
-    console.warn('[ResponseCompleteNotification] Failed to request permission:', error)
+async function openPermissionPopup(
+  payload: { permissionKind: ResponseCompleteNotificationPermissionKind },
+  sender: RuntimeMessageSender,
+): Promise<ResponseCompleteNotificationResponse> {
+  const sourceTabId = sender.tab?.id
+  const sourceWindowId = sender.tab?.windowId
+  if (typeof sourceTabId !== 'number' || typeof sourceWindowId !== 'number') {
     return {
       ok: false,
-      error: 'permission-denied',
+      error: 'missing-tab',
+    }
+  }
+
+  try {
+    if (await hasPermissionForKind(payload.permissionKind)) {
+      await enableSettingForKind(payload.permissionKind)
+      await scheduleWebRequestListenerSync()
+      return {
+        ok: true,
+        status: 'already-granted',
+      }
+    }
+
+    const intent = createResponseCompleteNotificationPermissionIntent(payload.permissionKind, {
+      tabId: sourceTabId,
+      windowId: sourceWindowId,
+    })
+    await setResponseCompleteNotificationPermissionIntent(intent)
+    startPendingPermissionIntentPolling()
+
+    const openedPopup = await tryOpenActionPopup(sourceWindowId)
+    if (openedPopup) {
+      return {
+        ok: true,
+        status: 'popup-opened',
+      }
+    }
+
+    const openedFallback = await tryOpenPermissionWindow(intent.nonce)
+    if (openedFallback) {
+      return {
+        ok: true,
+        status: 'fallback-window-opened',
+      }
+    }
+
+    await clearResponseCompleteNotificationPermissionIntent()
+    stopPendingPermissionIntentPolling()
+    return {
+      ok: false,
+      error: 'popup-open-failed',
+    }
+  } catch (error) {
+    await clearResponseCompleteNotificationPermissionIntent()
+    stopPendingPermissionIntentPolling()
+    console.warn('[ResponseCompleteNotification] Failed to open permission popup:', error)
+    return {
+      ok: false,
+      error: 'popup-open-failed',
     }
   }
 }
 
-async function requestAudioPermission(): Promise<ResponseCompleteNotificationResponse> {
-  if (import.meta.env.FIREFOX) {
-    return {
-      ok: false,
-      audioPermissionAvailable: false,
-      error: 'permission-denied',
+async function hasPermissionForKind(
+  permissionKind: ResponseCompleteNotificationPermissionKind,
+): Promise<boolean> {
+  if (permissionKind === 'audio') {
+    return hasResponseCompleteNotificationAudioPermission()
+  }
+
+  return hasResponseCompleteNotificationPermission()
+}
+
+async function enableSettingForKind(
+  permissionKind: ResponseCompleteNotificationPermissionKind,
+): Promise<void> {
+  if (permissionKind === 'audio') {
+    await setResponseCompleteNotificationAudioEnabled(true)
+    return
+  }
+
+  await setResponseCompleteNotificationEnabled(true)
+}
+
+async function enablePendingPermissionIntentIfGranted(): Promise<'enabled' | 'pending' | 'missing'> {
+  const intent = await getResponseCompleteNotificationPermissionIntent()
+  if (!intent) {
+    return 'missing'
+  }
+
+  if (!await hasPermissionForKind(intent.permissionKind)) {
+    return 'pending'
+  }
+
+  await enableSettingForKind(intent.permissionKind)
+  await clearResponseCompleteNotificationPermissionIntent()
+  await scheduleWebRequestListenerSync()
+  return 'enabled'
+}
+
+function startPendingPermissionIntentPolling(): void {
+  stopPendingPermissionIntentPolling()
+  permissionIntentPollAttempts = 0
+  void pollPendingPermissionIntent()
+}
+
+function stopPendingPermissionIntentPolling(): void {
+  if (permissionIntentPollTimer) {
+    clearTimeout(permissionIntentPollTimer)
+    permissionIntentPollTimer = null
+  }
+  permissionIntentPollAttempts = 0
+}
+
+async function pollPendingPermissionIntent(): Promise<void> {
+  try {
+    const result = await enablePendingPermissionIntentIfGranted()
+    if (result !== 'pending') {
+      stopPendingPermissionIntentPolling()
+      return
     }
+  } catch (error) {
+    logBackgroundEvent('permission-intent-poll-failed', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+  }
+
+  permissionIntentPollAttempts += 1
+  if (permissionIntentPollAttempts >= PERMISSION_INTENT_POLL_MAX_ATTEMPTS) {
+    stopPendingPermissionIntentPolling()
+    return
+  }
+
+  permissionIntentPollTimer = setTimeout(() => {
+    permissionIntentPollTimer = null
+    void pollPendingPermissionIntent()
+  }, PERMISSION_INTENT_POLL_INTERVAL_MS)
+}
+
+async function tryOpenActionPopup(windowId: number): Promise<boolean> {
+  const actionApi = (browser as BrowserWithOptionalAction).action
+  if (!actionApi?.openPopup) {
+    return false
   }
 
   try {
-    const granted = await browser.permissions.request({
-      ...getResponseCompleteNotificationAudioPermissionRequest(),
-    })
-    return {
-      ok: granted,
-      audioPermissionAvailable: granted,
-      ...(granted ? {} : { error: 'permission-denied' as const }),
-    }
+    await actionApi.openPopup({ windowId })
+    return true
   } catch (error) {
-    console.warn('[ResponseCompleteNotification] Failed to request audio permission:', error)
-    return {
-      ok: false,
-      audioPermissionAvailable: false,
-      error: 'permission-denied',
-    }
+    logBackgroundEvent('permission-action-popup-open-failed', {
+      windowId,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return false
+  }
+}
+
+async function tryOpenPermissionWindow(nonce: string): Promise<boolean> {
+  const windowsApi = (browser as BrowserWithOptionalAction).windows
+  if (!windowsApi.create) {
+    return false
+  }
+
+  try {
+    const popupUrl = new URL(browser.runtime.getURL('/popup.html'))
+    popupUrl.searchParams.set('intent', 'response-complete-notification')
+    popupUrl.searchParams.set('nonce', nonce)
+    await windowsApi.create({
+      type: 'popup',
+      url: popupUrl.href,
+      width: PERMISSION_POPUP_WIDTH,
+      height: PERMISSION_POPUP_HEIGHT,
+    })
+    return true
+  } catch (error) {
+    logBackgroundEvent('permission-fallback-window-open-failed', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return false
   }
 }
 
 async function getReadinessResponse(): Promise<ResponseCompleteNotificationResponse> {
+  await enablePendingPermissionIntentIfGranted()
   const [readiness, audioPermissionAvailable] = await Promise.all([
     getResponseCompleteNotificationReadiness(),
     hasResponseCompleteNotificationAudioPermission(),
@@ -841,6 +1081,8 @@ export function resetResponseCompleteNotificationBackgroundForTest(): void {
   tabEventListenersStarted = false
   webRequestListenerStarted = false
   webRequestSyncPromise = Promise.resolve()
+  stopPendingPermissionIntentPolling()
+  deepResearchPollsObservedBeforeRequest.clear()
   for (const timer of notificationClearTimers.values()) {
     clearTimeout(timer)
   }

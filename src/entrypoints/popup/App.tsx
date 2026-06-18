@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { browser } from 'wxt/browser';
 
 import { 
@@ -18,6 +18,17 @@ import {
 } from '@/components/ui/color-mode';
 import { t } from '@/utils/i18n';
 import { PRODUCT_NAME } from '@/common/config';
+import {
+  clearResponseCompleteNotificationPermissionIntent,
+  getResponseCompleteNotificationPermissionIntent,
+  type ResponseCompleteNotificationPermissionIntent,
+} from '@/services/responseCompleteNotificationPermissionIntent';
+import {
+  getResponseCompleteNotificationAudioPermissionRequest,
+  getResponseCompleteNotificationPermissionRequest,
+  setResponseCompleteNotificationAudioEnabled,
+  setResponseCompleteNotificationEnabled,
+} from '@/services/responseCompleteNotificationSettings';
 import { 
   getAllSettings,
   setChatOutlineEnabled,
@@ -26,8 +37,17 @@ import { ChatOutlineIcon, QuickQuoteIcon, ExternalLinkIcon, NotificationIcon } f
 import { quickFollowStore } from '@/stores/quickFollowStore'
 import { useResponseCompleteNotificationSettings } from '@/hooks/useResponseCompleteNotificationSettings';
 
+type BrowserWithOptionalPermissions = typeof browser & {
+  permissions?: typeof browser.permissions
+}
+
 function App() {
   const [isLoading, setIsLoading] = useState(true);
+  const [permissionIntent, setPermissionIntent] = useState<ResponseCompleteNotificationPermissionIntent | null>(null);
+  const [permissionIntentLoaded, setPermissionIntentLoaded] = useState(false);
+  const [permissionGrantPending, setPermissionGrantPending] = useState(false);
+  const [permissionGrantError, setPermissionGrantError] = useState<string | null>(null);
+  const permissionIntentLoadStarted = useRef(false);
   const [settings, setSettings] = useState({
     enableChatOutline: true,
     enableQuickQuote: true,
@@ -45,6 +65,28 @@ function App() {
   useEffect(() => {
     setTheme('system');
   }, [])
+
+  useEffect(() => {
+    if (permissionIntentLoadStarted.current) {
+      return;
+    }
+    permissionIntentLoadStarted.current = true;
+
+    const loadPermissionIntent = async () => {
+      try {
+        const nonce = new URLSearchParams(window.location.search).get('nonce');
+        const intent = await getResponseCompleteNotificationPermissionIntent(nonce);
+        setPermissionIntent(await resolveGrantedPermissionIntent(intent));
+      } catch (error) {
+        console.error('Failed to load response notification permission intent:', error);
+        setPermissionIntent(null);
+      } finally {
+        setPermissionIntentLoaded(true);
+      }
+    };
+
+    loadPermissionIntent();
+  }, []);
 
   // Load initial settings from storage
   useEffect(() => {
@@ -101,12 +143,162 @@ function App() {
     });
   };
 
-  if (isLoading || notificationSettings.isLoading) {
+  const resolveGrantedPermissionIntent = async (
+    intent: ResponseCompleteNotificationPermissionIntent | null,
+  ): Promise<ResponseCompleteNotificationPermissionIntent | null> => {
+    if (!intent) {
+      return null;
+    }
+
+    const permissionsApi = (browser as BrowserWithOptionalPermissions).permissions;
+    if (!permissionsApi?.contains) {
+      return intent;
+    }
+
+    const permissionRequest = intent.permissionKind === 'audio'
+      ? getResponseCompleteNotificationAudioPermissionRequest()
+      : getResponseCompleteNotificationPermissionRequest();
+
+    if (!await permissionsApi.contains(permissionRequest)) {
+      return intent;
+    }
+
+    if (intent.permissionKind === 'audio') {
+      await setResponseCompleteNotificationAudioEnabled(true);
+    } else {
+      await setResponseCompleteNotificationEnabled(true);
+    }
+    await clearResponseCompleteNotificationPermissionIntent();
+    return null;
+  };
+
+  const handleGrantNotificationPermission = async () => {
+    if (!permissionIntent) {
+      return;
+    }
+
+    const permissionsApi = (browser as BrowserWithOptionalPermissions).permissions;
+    if (!permissionsApi?.request) {
+      setPermissionGrantError(t('responseNotificationPermissionDenied') || 'Required permissions were not granted.');
+      return;
+    }
+
+    setPermissionGrantPending(true);
+    setPermissionGrantError(null);
+    try {
+      const permissionRequest = permissionIntent.permissionKind === 'audio'
+        ? getResponseCompleteNotificationAudioPermissionRequest()
+        : getResponseCompleteNotificationPermissionRequest();
+      const granted = await permissionsApi.contains(permissionRequest)
+        || await permissionsApi.request(permissionRequest);
+
+      if (!granted) {
+        setPermissionGrantError(
+          permissionIntent.permissionKind === 'audio'
+            ? t('responseNotificationAudioPermissionDenied') || 'Audio permission was not granted.'
+            : t('responseNotificationPermissionDenied') || 'Required permissions were not granted.',
+        );
+        await clearResponseCompleteNotificationPermissionIntent();
+        return;
+      }
+
+      if (permissionIntent.permissionKind === 'audio') {
+        await setResponseCompleteNotificationAudioEnabled(true);
+      } else {
+        await setResponseCompleteNotificationEnabled(true);
+      }
+      await clearResponseCompleteNotificationPermissionIntent();
+      window.close();
+    } catch (error) {
+      console.error('Failed to grant response notification permission:', error);
+      setPermissionGrantError(
+        permissionIntent.permissionKind === 'audio'
+          ? t('responseNotificationAudioPermissionDenied') || 'Audio permission was not granted.'
+          : t('responseNotificationPermissionDenied') || 'Required permissions were not granted.',
+      );
+      await clearResponseCompleteNotificationPermissionIntent();
+    } finally {
+      setPermissionGrantPending(false);
+    }
+  };
+
+  const handleCancelPermissionGrant = async () => {
+    await clearResponseCompleteNotificationPermissionIntent();
+    window.close();
+  };
+
+  if (isLoading || notificationSettings.isLoading || !permissionIntentLoaded) {
     return (
       <Box width="320px" p={3}>
         <Flex justify="center" align="center" h="100px">
           <Text>Loading...</Text>
         </Flex>
+      </Box>
+    );
+  }
+
+  if (permissionIntent) {
+    const isAudioIntent = permissionIntent.permissionKind === 'audio';
+
+    return (
+      <Box width="320px" fontFamily="system-ui, sans-serif" fontSize="14px" color={textColor}>
+        <Card.Root border="none" shadow="none">
+          <Card.Header pb={2} px={4} pt={4}>
+            <Flex align="center" gap={2} mb={2}>
+              <Box
+                w="32px"
+                h="32px"
+                borderRadius="6px"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                flexShrink={0}
+                bg="#64748b"
+              >
+                <NotificationIcon />
+              </Box>
+              <Heading size="md" fontWeight="semibold">
+                {isAudioIntent
+                  ? t('responseNotificationAudioPermissionTitle') || 'Enable notification sound'
+                  : t('responseNotificationPermissionTitle') || 'Enable response notifications'}
+              </Heading>
+            </Flex>
+            <Text fontSize="sm" color={secondaryTextColor}>
+              {isAudioIntent
+                ? t('responseNotificationAudioPermissionDescription') || 'Grant the extension audio permission so it can play a short sound after a notification is created.'
+                : t('responseNotificationPermissionDescription') || 'Grant notification permissions so Gemini Power Kit can notify you when Gemini finishes replying.'}
+            </Text>
+          </Card.Header>
+
+          <Card.Body px={4} py={3}>
+            <Stack gap={3}>
+              {permissionGrantError ? (
+                <Text fontSize="xs" color="red.500">
+                  {permissionGrantError}
+                </Text>
+              ) : null}
+              <Button
+                colorPalette="blue"
+                width="100%"
+                loading={permissionGrantPending}
+                onClick={() => void handleGrantNotificationPermission()}
+              >
+                {isAudioIntent
+                  ? t('responseNotificationAudioPermissionButton') || 'Allow notification sound'
+                  : t('responseNotificationPermissionButton') || 'Allow notifications'}
+              </Button>
+              <Button
+                variant="ghost"
+                width="100%"
+                color={mutedTextColor}
+                disabled={permissionGrantPending}
+                onClick={() => void handleCancelPermissionGrant()}
+              >
+                {t('responseNotificationPermissionCancel') || 'Not now'}
+              </Button>
+            </Stack>
+          </Card.Body>
+        </Card.Root>
       </Box>
     );
   }

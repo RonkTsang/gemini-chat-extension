@@ -100,8 +100,8 @@ next StreamGenerate completion in the same tab
   -> do not notify
 
 matching successful hNvQHb completion
-  -> consume active task
-  -> notify once
+  -> confirm gem-processing-card.completed is rendered
+  -> consume active task and notify once
 ```
 
 The notification continues to follow the existing foreground policy. If the
@@ -390,7 +390,9 @@ Do not log request or response bodies.
 - First Deep Research `kwDCne` suppresses the initialization
   `StreamGenerate`.
 - Repeated `kwDCne` requests do not create notifications.
-- Matching successful `hNvQHb` creates one notification.
+- Matching successful `hNvQHb` creates one notification only after the
+  processing-card DOM is completed.
+- `kwDCne onCompleted` tracks the task when `onBeforeRequest` was missed.
 - Untracked `hNvQHb` does not notify.
 - Non-200 `hNvQHb` keeps the task available for a later successful retry.
 - Duplicate successful `hNvQHb` requests notify at most once.

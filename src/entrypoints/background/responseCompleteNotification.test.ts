@@ -3,12 +3,18 @@ import { browser } from 'wxt/browser'
 
 import {
   getResponseCompleteNotificationEnabled,
+  getResponseCompleteNotificationAudioEnabled,
   setResponseCompleteNotificationAudioEnabled,
   setResponseCompleteNotificationEnabled,
 } from '@/services/responseCompleteNotificationSettings'
 import {
+  RESPONSE_COMPLETE_NOTIFICATION_PERMISSION_INTENT_KEY,
+  type ResponseCompleteNotificationPermissionIntent,
+} from '@/services/responseCompleteNotificationPermissionIntent'
+import {
   RESPONSE_COMPLETE_NOTIFICATION_AUDIO_REQUEST_PERMISSION_MESSAGE,
   RESPONSE_COMPLETE_NOTIFICATION_GET_READINESS_MESSAGE,
+  RESPONSE_COMPLETE_NOTIFICATION_OPEN_PERMISSION_POPUP_MESSAGE,
   RESPONSE_COMPLETE_NOTIFICATION_REQUEST_PERMISSION_MESSAGE,
   RESPONSE_COMPLETE_NOTIFICATION_TEST_MESSAGE,
 } from '@/types/runtime-messages'
@@ -74,7 +80,6 @@ vi.mock('wxt/browser', () => ({
     },
     permissions: {
       contains: vi.fn(),
-      request: vi.fn(),
       onAdded: {
         addListener: vi.fn((listener: () => void) => {
           permissionAddedListener = listener
@@ -85,6 +90,9 @@ vi.mock('wxt/browser', () => ({
           permissionRemovedListener = listener
         }),
       },
+    },
+    action: {
+      openPopup: vi.fn(() => Promise.resolve()),
     },
     notifications: {
       create: vi.fn(() => Promise.resolve('')),
@@ -129,10 +137,14 @@ vi.mock('wxt/browser', () => ({
         set: vi.fn(async (items: Record<string, unknown>) => {
           Object.assign(sessionStorageData, items)
         }),
+        remove: vi.fn(async (key: string) => {
+          delete sessionStorageData[key]
+        }),
       },
     },
     windows: {
       update: vi.fn(() => Promise.resolve()),
+      create: vi.fn(() => Promise.resolve({ id: 10 })),
     },
     tabs: {
       get: vi.fn(() => Promise.resolve({ id: 7, windowId: 9 })),
@@ -150,12 +162,10 @@ vi.mock('wxt/browser', () => ({
 const permissionsContainsMock = vi.mocked(
   browser.permissions.contains as unknown as (permissions: unknown) => Promise<boolean>,
 )
-const permissionsRequestMock = vi.mocked(
-  browser.permissions.request as unknown as (permissions: unknown) => Promise<boolean>,
-)
 const getPermissionLevelMock = vi.mocked(
   browser.notifications.getPermissionLevel as unknown as () => Promise<'granted' | 'denied'>,
 )
+const actionOpenPopupMock = vi.mocked(browser.action.openPopup)
 const createNotificationMock = vi.mocked(browser.notifications.create)
 const clearNotificationMock = vi.mocked(browser.notifications.clear)
 const webRequestAddListenerMock = vi.mocked(browser.webRequest.onCompleted.addListener)
@@ -170,6 +180,7 @@ const tabsGetMock = vi.mocked(
 )
 const tabsUpdateMock = vi.mocked(browser.tabs.update)
 const windowsUpdateMock = vi.mocked(browser.windows.update)
+const windowsCreateMock = vi.mocked(browser.windows.create)
 const runtimeSendMessageMock = vi.mocked(browser.runtime.sendMessage)
 const offscreenCreateDocumentMock = vi.mocked(browser.offscreen.createDocument)
 
@@ -206,6 +217,17 @@ function startDeepResearchPoll(overrides: Partial<Parameters<WebRequestBeforeReq
   })
 }
 
+function completeDeepResearchPoll(overrides: Partial<Parameters<WebRequestCompletedListener>[0]> = {}): void {
+  webRequestCompletedListener?.({
+    requestId: 'poll-1',
+    tabId: 7,
+    statusCode: 200,
+    timeStamp: 110,
+    url: 'https://gemini.google.com/_/BardChatUi/data/batchexecute?rpcids=kwDCne&source-path=%2Fapp%2Fc_1',
+    ...overrides,
+  })
+}
+
 function completeDeepResearchReport(overrides: Partial<Parameters<WebRequestCompletedListener>[0]> = {}): void {
   webRequestCompletedListener?.({
     requestId: 'report-1',
@@ -236,7 +258,6 @@ describe('responseCompleteNotification background V2', () => {
     await setResponseCompleteNotificationEnabled(false)
     await setResponseCompleteNotificationAudioEnabled(false)
     permissionsContainsMock.mockResolvedValue(true)
-    permissionsRequestMock.mockResolvedValue(true)
     getPermissionLevelMock.mockResolvedValue('granted')
     tabsGetMock.mockResolvedValue({ id: 7, windowId: 9 })
     tabsSendMessageMock.mockResolvedValue({
@@ -244,6 +265,7 @@ describe('responseCompleteNotification background V2', () => {
       title: 'Chat title',
       message: 'Response summary',
       responseType: 'text',
+      completionConfirmed: true,
     })
     startResponseCompleteNotificationBackground()
     await flushPromises()
@@ -254,31 +276,137 @@ describe('responseCompleteNotification background V2', () => {
     vi.unstubAllEnvs()
   })
 
-  it('requests all optional Chrome permissions together', async () => {
+  it('opens the action popup when visual notification permission is missing', async () => {
     permissionsContainsMock.mockResolvedValue(false)
 
     const response = await sendRuntimeMessage({
-      type: RESPONSE_COMPLETE_NOTIFICATION_REQUEST_PERMISSION_MESSAGE,
-    })
+      type: RESPONSE_COMPLETE_NOTIFICATION_OPEN_PERMISSION_POPUP_MESSAGE,
+      payload: {
+        permissionKind: 'visual',
+      },
+    }, { tab: { id: 7, windowId: 9 } })
 
-    expect(permissionsRequestMock).toHaveBeenCalledWith({
+    expect(permissionsContainsMock).toHaveBeenCalledWith({
       permissions: ['notifications', 'webRequest'],
     })
-    expect(response).toEqual({ ok: true })
+    expect(actionOpenPopupMock).toHaveBeenCalledWith({ windowId: 9 })
+    expect(windowsCreateMock).not.toHaveBeenCalled()
+    expect(response).toEqual({ ok: true, status: 'popup-opened' })
+    expect(sessionStorageData[RESPONSE_COMPLETE_NOTIFICATION_PERMISSION_INTENT_KEY]).toMatchObject({
+      permissionKind: 'visual',
+      sourceTabId: 7,
+      sourceWindowId: 9,
+    })
   })
 
-  it('uses the required Firefox notification permission without requesting it again', async () => {
-    vi.stubEnv('FIREFOX', 'true')
+  it('enables visual notifications immediately when permission already exists', async () => {
+    permissionsContainsMock.mockResolvedValue(true)
 
     const response = await sendRuntimeMessage({
       type: RESPONSE_COMPLETE_NOTIFICATION_REQUEST_PERMISSION_MESSAGE,
+    }, { tab: { id: 7, windowId: 9 } })
+
+    expect(actionOpenPopupMock).not.toHaveBeenCalled()
+    expect(response).toEqual({ ok: true, status: 'already-granted' })
+    await expect(getResponseCompleteNotificationEnabled()).resolves.toBe(true)
+  })
+
+  it('enables visual notifications when permission is granted after the popup opens', async () => {
+    permissionsContainsMock.mockResolvedValue(false)
+    await sendRuntimeMessage({
+      type: RESPONSE_COMPLETE_NOTIFICATION_OPEN_PERMISSION_POPUP_MESSAGE,
+      payload: {
+        permissionKind: 'visual',
+      },
+    }, { tab: { id: 7, windowId: 9 } })
+    await expect(getResponseCompleteNotificationEnabled()).resolves.toBe(false)
+
+    permissionsContainsMock.mockResolvedValue(true)
+    permissionAddedListener?.()
+    await flushPromises()
+
+    await expect(getResponseCompleteNotificationEnabled()).resolves.toBe(true)
+    expect(sessionStorageData[RESPONSE_COMPLETE_NOTIFICATION_PERMISSION_INTENT_KEY]).toBeUndefined()
+  })
+
+  it('polls pending permission intent when the permission event is missed', async () => {
+    vi.useFakeTimers()
+    permissionsContainsMock.mockResolvedValue(false)
+    await sendRuntimeMessage({
+      type: RESPONSE_COMPLETE_NOTIFICATION_OPEN_PERMISSION_POPUP_MESSAGE,
+      payload: {
+        permissionKind: 'visual',
+      },
+    }, { tab: { id: 7, windowId: 9 } })
+    await expect(getResponseCompleteNotificationEnabled()).resolves.toBe(false)
+
+    permissionsContainsMock.mockResolvedValue(true)
+    await vi.advanceTimersByTimeAsync(500)
+    await Promise.resolve()
+    await Promise.resolve()
+
+    await expect(getResponseCompleteNotificationEnabled()).resolves.toBe(true)
+    expect(sessionStorageData[RESPONSE_COMPLETE_NOTIFICATION_PERMISSION_INTENT_KEY]).toBeUndefined()
+  })
+
+  it('enables a granted pending intent when readiness is polled from content UI', async () => {
+    permissionsContainsMock.mockResolvedValue(false)
+    await sendRuntimeMessage({
+      type: RESPONSE_COMPLETE_NOTIFICATION_OPEN_PERMISSION_POPUP_MESSAGE,
+      payload: {
+        permissionKind: 'visual',
+      },
+    }, { tab: { id: 7, windowId: 9 } })
+    await expect(getResponseCompleteNotificationEnabled()).resolves.toBe(false)
+
+    permissionsContainsMock.mockResolvedValue(true)
+    const response = await sendRuntimeMessage({
+      type: RESPONSE_COMPLETE_NOTIFICATION_GET_READINESS_MESSAGE,
     })
 
-    expect(permissionsContainsMock).toHaveBeenCalledWith({
-      permissions: ['notifications'],
+    expect(response).toMatchObject({
+      ok: true,
+      readiness: 'allowed',
     })
-    expect(permissionsRequestMock).not.toHaveBeenCalled()
-    expect(response).toEqual({ ok: true })
+    await expect(getResponseCompleteNotificationEnabled()).resolves.toBe(true)
+    expect(sessionStorageData[RESPONSE_COMPLETE_NOTIFICATION_PERMISSION_INTENT_KEY]).toBeUndefined()
+  })
+
+  it('falls back to a popup window when action.openPopup fails', async () => {
+    permissionsContainsMock.mockResolvedValue(false)
+    actionOpenPopupMock.mockRejectedValueOnce(new Error('not available'))
+
+    const response = await sendRuntimeMessage({
+      type: RESPONSE_COMPLETE_NOTIFICATION_OPEN_PERMISSION_POPUP_MESSAGE,
+      payload: {
+        permissionKind: 'visual',
+      },
+    }, { tab: { id: 7, windowId: 9 } })
+
+    const intent = sessionStorageData[RESPONSE_COMPLETE_NOTIFICATION_PERMISSION_INTENT_KEY] as ResponseCompleteNotificationPermissionIntent
+    expect(response).toEqual({ ok: true, status: 'fallback-window-opened' })
+    expect(windowsCreateMock).toHaveBeenCalledWith({
+      type: 'popup',
+      url: `extension:///popup.html?intent=response-complete-notification&nonce=${intent.nonce}`,
+      width: 360,
+      height: 520,
+    })
+  })
+
+  it('clears the permission intent when no popup can be opened', async () => {
+    permissionsContainsMock.mockResolvedValue(false)
+    actionOpenPopupMock.mockRejectedValueOnce(new Error('not available'))
+    windowsCreateMock.mockRejectedValueOnce(new Error('window failed'))
+
+    const response = await sendRuntimeMessage({
+      type: RESPONSE_COMPLETE_NOTIFICATION_OPEN_PERMISSION_POPUP_MESSAGE,
+      payload: {
+        permissionKind: 'visual',
+      },
+    }, { tab: { id: 7, windowId: 9 } })
+
+    expect(response).toEqual({ ok: false, error: 'popup-open-failed' })
+    expect(sessionStorageData[RESPONSE_COMPLETE_NOTIFICATION_PERMISSION_INTENT_KEY]).toBeUndefined()
   })
 
   it('registers and removes one listener as the setting changes', async () => {
@@ -346,6 +474,51 @@ describe('responseCompleteNotification background V2', () => {
       title: 'Chat title',
       message: 'Response summary',
     }))
+  })
+
+  it('tracks Deep Research from completed polling when onBeforeRequest is missed', async () => {
+    await setResponseCompleteNotificationEnabled(true)
+    await flushPromises()
+
+    completeDeepResearchPoll()
+    await flushPromises()
+    completeStream()
+    await flushPromises()
+
+    expect(createNotificationMock).not.toHaveBeenCalled()
+
+    completeDeepResearchReport()
+    await flushPromises()
+
+    expect(tabsSendMessageMock).toHaveBeenCalledWith(7, {
+      type: 'response-complete-notification:get-content',
+      payload: {
+        completionKind: 'deep-research',
+      },
+    })
+    expect(createNotificationMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps the Deep Research task while hNvQHb completes before the DOM report is complete', async () => {
+    await setResponseCompleteNotificationEnabled(true)
+    await flushPromises()
+    startDeepResearchPoll()
+    await flushPromises()
+    tabsSendMessageMock.mockResolvedValueOnce({
+      suppressed: false,
+      title: 'Chat title',
+      message: 'Your response is ready.',
+      responseType: 'text',
+      completionConfirmed: false,
+    })
+
+    completeDeepResearchReport()
+    await flushPromises()
+    expect(createNotificationMock).not.toHaveBeenCalled()
+
+    completeDeepResearchReport({ requestId: 'report-final', timeStamp: 600 })
+    await flushPromises()
+    expect(createNotificationMock).toHaveBeenCalledTimes(1)
   })
 
   it('ignores untracked and duplicate Deep Research report requests', async () => {
@@ -572,34 +745,51 @@ describe('responseCompleteNotification background V2', () => {
     expect(clearNotificationMock).toHaveBeenCalledTimes(1)
   })
 
-  it('requests only offscreen permission when enabling audio', async () => {
+  it('opens the action popup when audio permission is missing', async () => {
+    permissionsContainsMock.mockResolvedValue(false)
+
     const response = await sendRuntimeMessage({
       type: RESPONSE_COMPLETE_NOTIFICATION_AUDIO_REQUEST_PERMISSION_MESSAGE,
-    })
+    }, { tab: { id: 7, windowId: 9 } })
 
-    expect(permissionsRequestMock).toHaveBeenCalledWith({
+    expect(permissionsContainsMock).toHaveBeenCalledWith({
       permissions: ['offscreen'],
     })
-    expect(response).toEqual({
-      ok: true,
-      audioPermissionAvailable: true,
+    expect(actionOpenPopupMock).toHaveBeenCalledWith({ windowId: 9 })
+    expect(response).toEqual({ ok: true, status: 'popup-opened' })
+    expect(sessionStorageData[RESPONSE_COMPLETE_NOTIFICATION_PERMISSION_INTENT_KEY]).toMatchObject({
+      permissionKind: 'audio',
+      sourceTabId: 7,
+      sourceWindowId: 9,
     })
+  })
+
+  it('enables audio immediately when audio permission already exists', async () => {
+    permissionsContainsMock.mockResolvedValue(true)
+
+    const response = await sendRuntimeMessage({
+      type: RESPONSE_COMPLETE_NOTIFICATION_AUDIO_REQUEST_PERMISSION_MESSAGE,
+    }, { tab: { id: 7, windowId: 9 } })
+
+    expect(actionOpenPopupMock).not.toHaveBeenCalled()
+    expect(response).toEqual({ ok: true, status: 'already-granted' })
+    await expect(getResponseCompleteNotificationAudioEnabled()).resolves.toBe(true)
   })
 
   it('keeps visual notifications enabled when audio permission is denied', async () => {
     await setResponseCompleteNotificationEnabled(true)
-    permissionsRequestMock.mockResolvedValue(false)
+    permissionsContainsMock.mockResolvedValue(false)
 
     const response = await sendRuntimeMessage({
       type: RESPONSE_COMPLETE_NOTIFICATION_AUDIO_REQUEST_PERMISSION_MESSAGE,
-    })
+    }, { tab: { id: 7, windowId: 9 } })
 
     expect(response).toEqual({
-      ok: false,
-      audioPermissionAvailable: false,
-      error: 'permission-denied',
+      ok: true,
+      status: 'popup-opened',
     })
     await expect(getResponseCompleteNotificationEnabled()).resolves.toBe(true)
+    await expect(getResponseCompleteNotificationAudioEnabled()).resolves.toBe(false)
   })
 
   it('plays custom audio only after a notification is created', async () => {

@@ -14,7 +14,10 @@ Deep Research:
 
 kwDCne onBeforeRequest
   -> persist active conversation and arm one StreamGenerate suppression
+kwDCne onCompleted
+  -> persist the conversation when onBeforeRequest was missed
 matching hNvQHb onCompleted
+  -> confirm the processing-card DOM is completed
   -> consume the active conversation
   -> reuse the shared content, suppression, notification, and audio path
 ```
@@ -30,12 +33,29 @@ grace-window detector is removed.
   - existing content-script matches provide required Gemini host access;
   - enabling the setting requests both optional API permissions together.
   - enabling audio separately requests optional `offscreen`.
+  - Popup requests permissions directly. SettingPanel creates a short-lived
+    permission intent, opens the extension action popup, and falls back to an
+    extension popup window when `action.openPopup()` is unavailable.
 - Firefox:
   - keeps required `notifications`, `webRequest`, `webRequestBlocking`, and Gemini host access;
   - enables the setting without a runtime permission request because Firefox
     cannot preserve the in-page SettingPanel user gesture through background.
 
 Readiness checks the complete permission request for the current browser. Background watches setting and permission changes and serializes listener synchronization so concurrent events cannot register duplicate listeners.
+
+The Chrome SettingPanel cannot call `permissions.request()` directly from the
+content-script context, and forwarding the switch click to background does not
+preserve the required user gesture. Instead, background stores a session-scoped
+permission intent, opens the extension action popup, and falls back to a small
+extension popup window. The popup reads the intent, presents the explicit
+confirmation action, requests permissions from the extension-page context, then
+enables the relevant setting after the grant.
+
+The content UI polls readiness while the popup is open, and background also
+reconciles pending intents from permission-change events and readiness checks.
+Firefox keeps rendering the shared settings content directly because its
+notification permissions are required at install time and do not need a runtime
+prompt.
 
 ## Shared Background
 
@@ -48,6 +68,7 @@ The shared response notification background owns:
 - listener registration and removal;
 - ephemeral Deep Research task persistence in `storage.session`;
 - initialization suppression and at-most-once final report consumption;
+- completed processing-card confirmation before consuming a report task;
 - successful request validation;
 - content request timeout and generic fallback;
 - notification permission checks, creation, click focus, and click clear.

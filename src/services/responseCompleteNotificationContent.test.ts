@@ -105,6 +105,7 @@ describe('responseCompleteNotificationContent', () => {
       title: 'Chat title',
       message: '拼多多深度研究报告',
       responseType: 'text',
+      completionConfirmed: true,
     })
   })
 
@@ -115,7 +116,7 @@ describe('responseCompleteNotificationContent', () => {
     setTimeout(() => {
       document.querySelector('model-response')!.insertAdjacentHTML(
         'beforeend',
-        '<immersive-entry-chip><gem-processing-card><span class="card-title">Delayed report title</span></gem-processing-card></immersive-entry-chip>',
+        '<immersive-entry-chip><gem-processing-card class="completed"><span class="card-title">Delayed report title</span></gem-processing-card></immersive-entry-chip>',
       )
     }, 150)
 
@@ -124,6 +125,20 @@ describe('responseCompleteNotificationContent', () => {
     await expect(contentPromise).resolves.toMatchObject({
       message: 'Delayed report title',
       responseType: 'text',
+      completionConfirmed: true,
+    })
+  })
+
+  it('does not confirm Deep Research while the processing card is still running', async () => {
+    vi.useFakeTimers()
+    renderDeepResearchResponse('Research report title')
+    document.querySelector('gem-processing-card')!.className = 'selected processing'
+    const contentPromise = getResponseCompleteNotificationContent('deep-research')
+
+    await vi.advanceTimersByTimeAsync(1_000)
+
+    await expect(contentPromise).resolves.toMatchObject({
+      completionConfirmed: false,
     })
   })
 
@@ -132,7 +147,7 @@ describe('responseCompleteNotificationContent', () => {
     const turn = document.querySelector('.conversation-container')!
     turn.querySelector('gem-processing-card')!.insertAdjacentHTML(
       'afterend',
-      '<gem-processing-card><span class="card-title"> Final title </span></gem-processing-card>',
+      '<gem-processing-card class="completed"><span class="card-title"> Final title </span></gem-processing-card>',
     )
 
     expect(getDeepResearchTitle(turn)).toBe('Final title')

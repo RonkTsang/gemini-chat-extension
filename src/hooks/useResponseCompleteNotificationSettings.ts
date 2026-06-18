@@ -5,6 +5,7 @@ import {
   enableResponseCompleteNotification,
   enableResponseCompleteNotificationAudio,
   getResponseCompleteNotificationAudioEnabled,
+  getResponseCompleteNotificationAudioPermissionRequest,
   getResponseCompleteNotificationPermissionRequest,
   getResponseCompleteNotificationEnabled,
   setResponseCompleteNotificationAudioEnabled,
@@ -13,8 +14,7 @@ import {
 } from '@/services/responseCompleteNotificationSettings'
 import {
   RESPONSE_COMPLETE_NOTIFICATION_GET_READINESS_MESSAGE,
-  RESPONSE_COMPLETE_NOTIFICATION_AUDIO_REQUEST_PERMISSION_MESSAGE,
-  RESPONSE_COMPLETE_NOTIFICATION_REQUEST_PERMISSION_MESSAGE,
+  RESPONSE_COMPLETE_NOTIFICATION_OPEN_PERMISSION_POPUP_MESSAGE,
   RESPONSE_COMPLETE_NOTIFICATION_TEST_MESSAGE,
   type ResponseCompleteNotificationResponse,
 } from '@/types/runtime-messages'
@@ -23,6 +23,12 @@ import { getCurrentLocale, t } from '@/utils/i18n'
 type BrowserWithOptionalPermissions = typeof browser & {
   permissions?: typeof browser.permissions
 }
+
+type PermissionRequestResult = 'granted' | 'popup-opened' | 'denied'
+type PermissionKind = 'visual' | 'audio'
+
+const PERMISSION_POPUP_GRANT_POLL_INTERVAL_MS = 500
+const PERMISSION_POPUP_GRANT_POLL_MAX_ATTEMPTS = 120
 
 async function getReadiness(): Promise<NotificationReadiness> {
   try {
@@ -48,24 +54,85 @@ async function getReadinessResponse(): Promise<ResponseCompleteNotificationRespo
   }
 }
 
-async function requestPermission(): Promise<boolean> {
-  const permissionsApi = (browser as BrowserWithOptionalPermissions).permissions
-  const isExtensionPage = window.location.protocol === 'chrome-extension:'
+function isExtensionPage(): boolean {
+  return window.location.protocol === 'chrome-extension:'
     || window.location.protocol === 'moz-extension:'
+}
 
-  if (isExtensionPage && permissionsApi?.request) {
+async function requestPermission(): Promise<PermissionRequestResult> {
+  const permissionsApi = (browser as BrowserWithOptionalPermissions).permissions
+
+  if (isExtensionPage() && permissionsApi?.request) {
     const permissionRequest = getResponseCompleteNotificationPermissionRequest()
     if (await permissionsApi.contains(permissionRequest)) {
-      return true
+      return 'granted'
     }
-    return permissionsApi.request(permissionRequest)
+    return await permissionsApi.request(permissionRequest) ? 'granted' : 'denied'
   }
 
   const response = await browser.runtime.sendMessage({
-    type: RESPONSE_COMPLETE_NOTIFICATION_REQUEST_PERMISSION_MESSAGE,
+    type: RESPONSE_COMPLETE_NOTIFICATION_OPEN_PERMISSION_POPUP_MESSAGE,
+    payload: {
+      permissionKind: 'visual',
+    },
   }) as ResponseCompleteNotificationResponse | undefined
 
-  return response?.ok === true
+  if (response?.status === 'already-granted') {
+    return 'granted'
+  }
+  if (response?.ok === true) {
+    return 'popup-opened'
+  }
+  return 'denied'
+}
+
+async function requestAudioPermission(): Promise<PermissionRequestResult> {
+  const permissionsApi = (browser as BrowserWithOptionalPermissions).permissions
+
+  if (isExtensionPage() && permissionsApi?.request) {
+    const permissionRequest = getResponseCompleteNotificationAudioPermissionRequest()
+    if (await permissionsApi.contains(permissionRequest)) {
+      return 'granted'
+    }
+    return await permissionsApi.request(permissionRequest) ? 'granted' : 'denied'
+  }
+
+  const response = await browser.runtime.sendMessage({
+    type: RESPONSE_COMPLETE_NOTIFICATION_OPEN_PERMISSION_POPUP_MESSAGE,
+    payload: {
+      permissionKind: 'audio',
+    },
+  }) as ResponseCompleteNotificationResponse | undefined
+
+  if (response?.status === 'already-granted') {
+    return 'granted'
+  }
+  if (response?.ok === true) {
+    return 'popup-opened'
+  }
+  return 'denied'
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms)
+  })
+}
+
+async function waitForPermissionPopupGrant(permissionKind: PermissionKind): Promise<boolean> {
+  for (let attempt = 0; attempt < PERMISSION_POPUP_GRANT_POLL_MAX_ATTEMPTS; attempt += 1) {
+    await getReadinessResponse()
+    const enabled = permissionKind === 'audio'
+      ? await getResponseCompleteNotificationAudioEnabled()
+      : await getResponseCompleteNotificationEnabled()
+    if (enabled) {
+      return true
+    }
+
+    await delay(PERMISSION_POPUP_GRANT_POLL_INTERVAL_MS)
+  }
+
+  return false
 }
 
 export function useResponseCompleteNotificationSettings() {
@@ -154,8 +221,19 @@ export function useResponseCompleteNotificationSettings() {
       }
 
       setNotice(null)
-      const granted = await requestPermission()
-      if (!granted) {
+      const permissionResult = await requestPermission()
+      if (permissionResult === 'popup-opened') {
+        setEnabled(false)
+        setReadiness('missing-extension-permission')
+        setNotice(t('responseNotificationPermissionPopupOpened') || 'Complete permission setup in the popup.')
+        if (await waitForPermissionPopupGrant('visual')) {
+          setEnabled(true)
+          setNotice(null)
+          await refreshReadiness()
+        }
+        return
+      }
+      if (permissionResult !== 'granted') {
         await setResponseCompleteNotificationEnabled(false)
         setEnabled(false)
         setReadiness('missing-extension-permission')
@@ -188,11 +266,20 @@ export function useResponseCompleteNotificationSettings() {
       }
 
       setAudioNotice(null)
-      const response = await browser.runtime.sendMessage({
-        type: RESPONSE_COMPLETE_NOTIFICATION_AUDIO_REQUEST_PERMISSION_MESSAGE,
-      }) as ResponseCompleteNotificationResponse | undefined
-
-      if (response?.ok !== true) {
+      const permissionResult = await requestAudioPermission()
+      if (permissionResult === 'popup-opened') {
+        setAudioEnabled(false)
+        setAudioPermissionAvailable(false)
+        setAudioNotice(t('responseNotificationPermissionPopupOpened') || 'Complete permission setup in the popup.')
+        if (await waitForPermissionPopupGrant('audio')) {
+          setAudioEnabled(true)
+          setAudioPermissionAvailable(true)
+          setAudioNotice(null)
+          await refreshReadiness()
+        }
+        return
+      }
+      if (permissionResult !== 'granted') {
         await setResponseCompleteNotificationAudioEnabled(false)
         setAudioEnabled(false)
         setAudioPermissionAvailable(false)

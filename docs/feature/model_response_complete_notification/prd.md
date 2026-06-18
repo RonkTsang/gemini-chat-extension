@@ -18,7 +18,7 @@ Deep Research uses a request lifecycle rather than the initial
 
 ```text
 kwDCne request observed -> suppress the initialization StreamGenerate
-tracked hNvQHb successful completion -> Deep Research report is ready
+tracked hNvQHb successful completion + completed processing-card DOM -> Deep Research report is ready
 ```
 
 ## 2. Goals
@@ -51,7 +51,11 @@ Chrome declares the following optional permissions:
 
 Existing Gemini content-script matches already provide required Gemini host access. Declaring the same origin in `optional_host_permissions` is invalid because Chrome treats it as redundant.
 
-When the user enables the feature, Chrome requests `notifications` and `webRequest` in one user gesture. If either is denied, the feature remains disabled.
+When the user enables the feature from the Popup, Chrome requests
+`notifications` and `webRequest` directly from that user gesture. The in-page
+SettingPanel opens the extension action popup, or a popup window fallback, so
+the permission request originates from an extension page confirmation action.
+If either permission is denied, the feature remains disabled.
 
 Chrome requests optional `offscreen` permission only when the user enables the
 audio setting. Audio permission denial does not disable visual notifications.
@@ -74,10 +78,11 @@ The shared background registers its WebRequest listeners only while:
 The listener handles only matching requests with a valid tab ID and `statusCode === 200`. Failed, cancelled, non-200, and non-tab requests do not create completion notifications.
 
 For Deep Research, background tracks conversations after observing
-`batchexecute?rpcids=kwDCne`, suppresses the next `StreamGenerate` completion in
-that tab, and creates one notification only when the matching conversation's
-successful `batchexecute?rpcids=hNvQHb` request completes. Untracked `hNvQHb`
-requests do not create notifications.
+`batchexecute?rpcids=kwDCne` through `onBeforeRequest` or the `onCompleted`
+fallback, suppresses the next `StreamGenerate` completion in that tab, and
+creates one notification only when a matching successful
+`batchexecute?rpcids=hNvQHb` request observes a completed processing-card DOM.
+Untracked or still-processing `hNvQHb` requests do not create notifications.
 
 After completion, background asks the originating content script for:
 

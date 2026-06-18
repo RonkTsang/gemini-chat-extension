@@ -1,4 +1,5 @@
 import type { StuffMediaDataEvent } from '@/common/event'
+import type { ResponseCompleteNotificationPermissionKind } from '@/services/responseCompleteNotificationPermissionIntent'
 import type { NotificationReadiness } from '@/services/responseCompleteNotificationSettings'
 
 export const STUFF_MEDIA_DATA_RECEIVED_MESSAGE = 'stuff-media:data-received' as const
@@ -9,6 +10,7 @@ export const RESPONSE_COMPLETE_NOTIFICATION_TEST_MESSAGE = 'response-complete-no
 export const RESPONSE_COMPLETE_NOTIFICATION_GET_READINESS_MESSAGE = 'response-complete-notification:get-readiness' as const
 export const RESPONSE_COMPLETE_NOTIFICATION_REQUEST_PERMISSION_MESSAGE = 'response-complete-notification:request-permission' as const
 export const RESPONSE_COMPLETE_NOTIFICATION_AUDIO_REQUEST_PERMISSION_MESSAGE = 'response-complete-notification-audio:request-permission' as const
+export const RESPONSE_COMPLETE_NOTIFICATION_OPEN_PERMISSION_POPUP_MESSAGE = 'response-complete-notification:open-permission-popup' as const
 export const RESPONSE_COMPLETE_NOTIFICATION_AUDIO_PLAY_MESSAGE = 'response-complete-notification-audio:play' as const
 
 export type ResponseNotificationContentType = 'text' | 'image'
@@ -46,6 +48,7 @@ export interface ResponseCompleteNotificationContent {
   title: string
   message: string
   responseType: ResponseNotificationContentType
+  completionConfirmed?: boolean
   imageDataUrl?: string
 }
 
@@ -68,6 +71,13 @@ export interface ResponseCompleteNotificationAudioRequestPermissionMessage {
   type: typeof RESPONSE_COMPLETE_NOTIFICATION_AUDIO_REQUEST_PERMISSION_MESSAGE
 }
 
+export interface ResponseCompleteNotificationOpenPermissionPopupMessage {
+  type: typeof RESPONSE_COMPLETE_NOTIFICATION_OPEN_PERMISSION_POPUP_MESSAGE
+  payload: {
+    permissionKind: ResponseCompleteNotificationPermissionKind
+  }
+}
+
 export interface ResponseCompleteNotificationAudioPlayMessage {
   type: typeof RESPONSE_COMPLETE_NOTIFICATION_AUDIO_PLAY_MESSAGE
   target: 'offscreen'
@@ -75,9 +85,10 @@ export interface ResponseCompleteNotificationAudioPlayMessage {
 
 export interface ResponseCompleteNotificationResponse {
   ok: boolean
+  status?: 'already-granted' | 'popup-opened' | 'fallback-window-opened'
   readiness?: NotificationReadiness
   audioPermissionAvailable?: boolean
-  error?: 'missing-tab' | 'permission-denied' | 'notification-failed'
+  error?: 'missing-tab' | 'permission-denied' | 'notification-failed' | 'popup-open-failed' | 'permission-api-unavailable'
 }
 
 export function isStuffMediaDataReceivedMessage(
@@ -180,6 +191,23 @@ export function isResponseCompleteNotificationAudioRequestPermissionMessage(
 
   const candidate = message as Partial<ResponseCompleteNotificationAudioRequestPermissionMessage>
   return candidate.type === RESPONSE_COMPLETE_NOTIFICATION_AUDIO_REQUEST_PERMISSION_MESSAGE
+}
+
+export function isResponseCompleteNotificationOpenPermissionPopupMessage(
+  message: unknown,
+): message is ResponseCompleteNotificationOpenPermissionPopupMessage {
+  if (!message || typeof message !== 'object') {
+    return false
+  }
+
+  const candidate = message as Partial<ResponseCompleteNotificationOpenPermissionPopupMessage>
+  return candidate.type === RESPONSE_COMPLETE_NOTIFICATION_OPEN_PERMISSION_POPUP_MESSAGE
+    && !!candidate.payload
+    && typeof candidate.payload === 'object'
+    && (
+      candidate.payload.permissionKind === 'visual'
+      || candidate.payload.permissionKind === 'audio'
+    )
 }
 
 export function isResponseCompleteNotificationAudioPlayMessage(
