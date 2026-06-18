@@ -6,6 +6,7 @@ export const STUFF_MEDIA_DATA_RECEIVED_MESSAGE = 'stuff-media:data-received' as 
 export const OPEN_IN_NEW_TAB_MESSAGE = 'stuff-page:open-in-new-tab' as const
 export const FIREFOX_GET_INSTANCE_ID_MESSAGE = 'firefox:get-instance-id' as const
 export const RESPONSE_COMPLETE_NOTIFICATION_GET_CONTENT_MESSAGE = 'response-complete-notification:get-content' as const
+export const RESPONSE_COMPLETE_NOTIFICATION_GET_DEEP_RESEARCH_STATUS_MESSAGE = 'response-complete-notification:get-deep-research-status' as const
 export const RESPONSE_COMPLETE_NOTIFICATION_TEST_MESSAGE = 'response-complete-notification:test' as const
 export const RESPONSE_COMPLETE_NOTIFICATION_GET_READINESS_MESSAGE = 'response-complete-notification:get-readiness' as const
 export const RESPONSE_COMPLETE_NOTIFICATION_REQUEST_PERMISSION_MESSAGE = 'response-complete-notification:request-permission' as const
@@ -50,6 +51,26 @@ export interface ResponseCompleteNotificationContent {
   responseType: ResponseNotificationContentType
   completionConfirmed?: boolean
   imageDataUrl?: string
+}
+
+export type ResponseCompleteNotificationDeepResearchStatus =
+  | { state: 'absent' }
+  | {
+      state: 'processing'
+      title?: string
+      conversationId?: string
+    }
+  | {
+      state: 'completed'
+      title: string
+      conversationId?: string
+    }
+
+export interface ResponseCompleteNotificationGetDeepResearchStatusMessage {
+  type: typeof RESPONSE_COMPLETE_NOTIFICATION_GET_DEEP_RESEARCH_STATUS_MESSAGE
+  payload?: {
+    conversationId?: string
+  }
 }
 
 export interface ResponseCompleteNotificationTestMessage {
@@ -144,6 +165,17 @@ export function isResponseCompleteNotificationGetContentMessage(
       candidate.payload.completionKind === 'standard-response'
       || candidate.payload.completionKind === 'deep-research'
     )
+}
+
+export function isResponseCompleteNotificationGetDeepResearchStatusMessage(
+  message: unknown,
+): message is ResponseCompleteNotificationGetDeepResearchStatusMessage {
+  if (!message || typeof message !== 'object') {
+    return false
+  }
+
+  const candidate = message as Partial<ResponseCompleteNotificationGetDeepResearchStatusMessage>
+  return candidate.type === RESPONSE_COMPLETE_NOTIFICATION_GET_DEEP_RESEARCH_STATUS_MESSAGE
 }
 
 export function isResponseCompleteNotificationTestMessage(

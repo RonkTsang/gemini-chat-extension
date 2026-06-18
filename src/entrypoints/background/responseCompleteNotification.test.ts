@@ -13,6 +13,8 @@ import {
 } from '@/services/responseCompleteNotificationPermissionIntent'
 import {
   RESPONSE_COMPLETE_NOTIFICATION_AUDIO_REQUEST_PERMISSION_MESSAGE,
+  RESPONSE_COMPLETE_NOTIFICATION_GET_CONTENT_MESSAGE,
+  RESPONSE_COMPLETE_NOTIFICATION_GET_DEEP_RESEARCH_STATUS_MESSAGE,
   RESPONSE_COMPLETE_NOTIFICATION_GET_READINESS_MESSAGE,
   RESPONSE_COMPLETE_NOTIFICATION_OPEN_PERMISSION_POPUP_MESSAGE,
   RESPONSE_COMPLETE_NOTIFICATION_REQUEST_PERMISSION_MESSAGE,
@@ -184,6 +186,42 @@ const windowsCreateMock = vi.mocked(browser.windows.create)
 const runtimeSendMessageMock = vi.mocked(browser.runtime.sendMessage)
 const offscreenCreateDocumentMock = vi.mocked(browser.offscreen.createDocument)
 
+const DEFAULT_NOTIFICATION_CONTENT = {
+  suppressed: false,
+  title: 'Chat title',
+  message: 'Response summary',
+  responseType: 'text',
+  completionConfirmed: true,
+}
+
+function mockContentResponses({
+  deepResearchStatus = { state: 'absent' },
+  notificationContent = DEFAULT_NOTIFICATION_CONTENT,
+}: {
+  deepResearchStatus?: unknown
+  notificationContent?: unknown
+} = {}): void {
+  tabsSendMessageMock.mockImplementation(async (_tabId: number, message: unknown) => {
+    if (
+      message
+      && typeof message === 'object'
+      && (message as { type?: unknown }).type === RESPONSE_COMPLETE_NOTIFICATION_GET_DEEP_RESEARCH_STATUS_MESSAGE
+    ) {
+      return deepResearchStatus
+    }
+
+    if (
+      message
+      && typeof message === 'object'
+      && (message as { type?: unknown }).type === RESPONSE_COMPLETE_NOTIFICATION_GET_CONTENT_MESSAGE
+    ) {
+      return notificationContent
+    }
+
+    return notificationContent
+  })
+}
+
 async function sendRuntimeMessage(message: unknown, sender: Parameters<RuntimeMessageListener>[1] = {}) {
   if (!runtimeMessageListener) {
     throw new Error('runtime message listener was not registered')
@@ -260,13 +298,7 @@ describe('responseCompleteNotification background V2', () => {
     permissionsContainsMock.mockResolvedValue(true)
     getPermissionLevelMock.mockResolvedValue('granted')
     tabsGetMock.mockResolvedValue({ id: 7, windowId: 9 })
-    tabsSendMessageMock.mockResolvedValue({
-      suppressed: false,
-      title: 'Chat title',
-      message: 'Response summary',
-      responseType: 'text',
-      completionConfirmed: true,
-    })
+    mockContentResponses()
     startResponseCompleteNotificationBackground()
     await flushPromises()
   })
@@ -497,6 +529,79 @@ describe('responseCompleteNotification background V2', () => {
       },
     })
     expect(createNotificationMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('suppresses Case 2 Deep Research StreamGenerate when the DOM is processing', async () => {
+    await setResponseCompleteNotificationEnabled(true)
+    await flushPromises()
+    mockContentResponses({
+      deepResearchStatus: {
+        state: 'processing',
+        title: 'Research in progress',
+        conversationId: 'c_1',
+      },
+    })
+
+    completeStream()
+    await flushPromises()
+    expect(createNotificationMock).not.toHaveBeenCalled()
+
+    completeDeepResearchReport()
+    await flushPromises()
+
+    expect(tabsSendMessageMock).toHaveBeenCalledWith(7, {
+      type: 'response-complete-notification:get-deep-research-status',
+      payload: {
+        conversationId: undefined,
+      },
+    })
+    expect(createNotificationMock).toHaveBeenCalledTimes(1)
+    expect(createNotificationMock).toHaveBeenCalledWith('response-complete:7:500', expect.objectContaining({
+      title: 'Chat title',
+      message: 'Response summary',
+    }))
+  })
+
+  it('tracks Case 2 Deep Research from untracked hNvQHb history polling', async () => {
+    await setResponseCompleteNotificationEnabled(true)
+    await flushPromises()
+    mockContentResponses({
+      deepResearchStatus: {
+        state: 'processing',
+        title: 'Research in progress',
+        conversationId: 'c_1',
+      },
+    })
+
+    completeDeepResearchReport({ requestId: 'history-poll', timeStamp: 300 })
+    await flushPromises()
+    expect(createNotificationMock).not.toHaveBeenCalled()
+
+    completeDeepResearchReport({ requestId: 'history-final', timeStamp: 600 })
+    await flushPromises()
+
+    expect(createNotificationMock).toHaveBeenCalledTimes(1)
+    expect(createNotificationMock).toHaveBeenCalledWith('response-complete:7:600', expect.objectContaining({
+      title: 'Chat title',
+      message: 'Response summary',
+    }))
+  })
+
+  it('does not notify when an untracked hNvQHb already shows completed history', async () => {
+    await setResponseCompleteNotificationEnabled(true)
+    await flushPromises()
+    mockContentResponses({
+      deepResearchStatus: {
+        state: 'completed',
+        title: 'Completed report',
+        conversationId: 'c_1',
+      },
+    })
+
+    completeDeepResearchReport()
+    await flushPromises()
+
+    expect(createNotificationMock).not.toHaveBeenCalled()
   })
 
   it('keeps the Deep Research task while hNvQHb completes before the DOM report is complete', async () => {

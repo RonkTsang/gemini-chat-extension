@@ -1,6 +1,8 @@
 import { browser } from 'wxt/browser'
 import {
+  isResponseCompleteNotificationGetDeepResearchStatusMessage,
   isResponseCompleteNotificationGetContentMessage,
+  type ResponseCompleteNotificationDeepResearchStatus,
   type ResponseCompletionKind,
   type ResponseCompleteNotificationContent,
   type ResponseNotificationContentType,
@@ -12,7 +14,8 @@ const STRUCTURED_CONTENT_SELECTOR = 'structured-content-container'
 const MODEL_RESPONSE_MESSAGE_CONTENT_SELECTOR = '[id*="model-response-message-content"]'
 const RESPONSE_CONTENT_SELECTOR = `${STRUCTURED_CONTENT_SELECTOR} ${MODEL_RESPONSE_MESSAGE_CONTENT_SELECTOR}`
 const FINAL_IMAGE_SELECTOR = 'generated-image > single-image > div > div > button.image-button > img'
-const DEEP_RESEARCH_TITLE_SELECTOR = 'immersive-entry-chip gem-processing-card.completed .card-title'
+const DEEP_RESEARCH_CARD_SELECTOR = 'gem-processing-card'
+const DEEP_RESEARCH_TITLE_SELECTOR = '.card-title'
 const MAX_NOTIFICATION_MESSAGE_LENGTH = 200
 const FALLBACK_NOTIFICATION_TITLE = 'Gemini finished replying'
 const FALLBACK_NOTIFICATION_MESSAGE = 'Your response is ready.'
@@ -47,11 +50,45 @@ export function startResponseCompleteNotificationContentProvider(): void {
   hasStarted = true
   browser.runtime.onMessage.addListener((message) => {
     if (!isResponseCompleteNotificationGetContentMessage(message)) {
+      if (isResponseCompleteNotificationGetDeepResearchStatusMessage(message)) {
+        return Promise.resolve(getDeepResearchDomStatus())
+      }
       return undefined
     }
 
     return getResponseCompleteNotificationContent(message.payload.completionKind)
   })
+}
+
+export function getDeepResearchDomStatus(): ResponseCompleteNotificationDeepResearchStatus {
+  const turn = getLastFinalTurn()
+  if (!turn) {
+    return { state: 'absent' }
+  }
+
+  const conversationId = getCurrentConversationId()
+  const cards = Array.from(turn.querySelectorAll<HTMLElement>(DEEP_RESEARCH_CARD_SELECTOR))
+  for (let index = cards.length - 1; index >= 0; index -= 1) {
+    const card = cards[index]
+    const title = getDeepResearchCardTitle(card)
+    if (card.classList.contains('completed') && !card.classList.contains('processing') && title) {
+      return {
+        state: 'completed',
+        title,
+        ...(conversationId ? { conversationId } : {}),
+      }
+    }
+
+    if (card.classList.contains('processing')) {
+      return {
+        state: 'processing',
+        ...(title ? { title } : {}),
+        ...(conversationId ? { conversationId } : {}),
+      }
+    }
+  }
+
+  return { state: 'absent' }
 }
 
 export async function getResponseCompleteNotificationContent(
@@ -144,14 +181,30 @@ async function readNotificationContent(
 }
 
 export function getDeepResearchTitle(turn: Element): string | null {
-  const titleElements = turn.querySelectorAll<HTMLElement>(DEEP_RESEARCH_TITLE_SELECTOR)
-  for (let index = titleElements.length - 1; index >= 0; index -= 1) {
-    const title = normalizeWhitespace(titleElements.item(index).textContent ?? '')
+  const cards = turn.querySelectorAll<HTMLElement>(DEEP_RESEARCH_CARD_SELECTOR)
+  for (let index = cards.length - 1; index >= 0; index -= 1) {
+    const card = cards.item(index)
+    if (!card.classList.contains('completed') || card.classList.contains('processing')) {
+      continue
+    }
+
+    const title = getDeepResearchCardTitle(card)
     if (title) {
-      return title.slice(0, MAX_NOTIFICATION_MESSAGE_LENGTH)
+      return title
     }
   }
   return null
+}
+
+function getDeepResearchCardTitle(card: Element): string {
+  return normalizeWhitespace(
+    card.querySelector<HTMLElement>(DEEP_RESEARCH_TITLE_SELECTOR)?.textContent ?? '',
+  ).slice(0, MAX_NOTIFICATION_MESSAGE_LENGTH)
+}
+
+function getCurrentConversationId(): string | null {
+  const match = window.location.pathname.match(/\/app\/([^/]+)/)
+  return match?.[1] ?? null
 }
 
 function createFallbackContent(

@@ -4,6 +4,7 @@ import {
   clearDeepResearchTasksForTab,
   consumeDeepResearchReport,
   consumeDeepResearchStreamSuppression,
+  registerDeepResearchHistoryPoll,
   registerDeepResearchPoll,
   resetDeepResearchNotificationStateForTest,
 } from './deepResearchNotificationState'
@@ -37,6 +38,7 @@ describe('deepResearchNotificationState', () => {
     const created = await registerDeepResearchPoll(7, 'c_1', 100)
     expect(created.created).toBe(true)
     expect(created.value.suppressNextStreamGenerate).toBe(true)
+    expect(created.value.source).toBe('job-poll')
 
     const consumed = await consumeDeepResearchStreamSuppression(7, 110)
     expect(consumed.value?.conversationId).toBe('c_1')
@@ -46,6 +48,17 @@ describe('deepResearchNotificationState', () => {
     expect(refreshed.created).toBe(false)
     expect(refreshed.value.lastPollAt).toBe(120)
     expect(refreshed.value.suppressNextStreamGenerate).toBe(false)
+  })
+
+  it('creates history-poll tasks without arming StreamGenerate suppression', async () => {
+    const created = await registerDeepResearchHistoryPoll(7, 'c_1', 100)
+
+    expect(created.created).toBe(true)
+    expect(created.value.source).toBe('history-poll')
+    expect(created.value.suppressNextStreamGenerate).toBe(false)
+
+    const consumed = await consumeDeepResearchStreamSuppression(7, 110)
+    expect(consumed.value).toBeNull()
   })
 
   it('consumes the most recently polled armed task for a tab', async () => {

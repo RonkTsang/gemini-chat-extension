@@ -9,7 +9,10 @@ export interface DeepResearchTask {
   startedAt: number
   lastPollAt: number
   suppressNextStreamGenerate: boolean
+  source: DeepResearchTaskSource
 }
+
+export type DeepResearchTaskSource = 'job-poll' | 'history-poll'
 
 interface TaskMutationResult<T> {
   value: T
@@ -28,6 +31,23 @@ export function registerDeepResearchPoll(
   conversationId: string,
   timestamp: number,
 ): Promise<RegisterDeepResearchPollResult> {
+  return registerDeepResearchTask(tabId, conversationId, timestamp, 'job-poll')
+}
+
+export function registerDeepResearchHistoryPoll(
+  tabId: number,
+  conversationId: string,
+  timestamp: number,
+): Promise<RegisterDeepResearchPollResult> {
+  return registerDeepResearchTask(tabId, conversationId, timestamp, 'history-poll')
+}
+
+function registerDeepResearchTask(
+  tabId: number,
+  conversationId: string,
+  timestamp: number,
+  source: DeepResearchTaskSource,
+): Promise<RegisterDeepResearchPollResult> {
   return runExclusive(async () => {
     const expiredTasks = removeExpiredTasks(timestamp)
     const key = getTaskKey(tabId, conversationId)
@@ -42,7 +62,8 @@ export function registerDeepResearchPoll(
           conversationId,
           startedAt: timestamp,
           lastPollAt: timestamp,
-          suppressNextStreamGenerate: true,
+          suppressNextStreamGenerate: source === 'job-poll',
+          source,
         }
 
     getTasks().set(key, task)
@@ -168,7 +189,7 @@ async function ensureTasksLoaded(): Promise<void> {
     Array.isArray(storedTasks)
       ? storedTasks
           .filter(isDeepResearchTask)
-          .map(task => [getTaskKey(task.tabId, task.conversationId), task])
+          .map(task => [getTaskKey(task.tabId, task.conversationId), normalizeDeepResearchTask(task)])
       : [],
   )
 }
@@ -219,6 +240,18 @@ function isDeepResearchTask(value: unknown): value is DeepResearchTask {
     && typeof candidate.startedAt === 'number'
     && typeof candidate.lastPollAt === 'number'
     && typeof candidate.suppressNextStreamGenerate === 'boolean'
+    && (candidate.source === undefined || isDeepResearchTaskSource(candidate.source))
+}
+
+function normalizeDeepResearchTask(task: DeepResearchTask): DeepResearchTask {
+  return {
+    ...task,
+    source: isDeepResearchTaskSource(task.source) ? task.source : 'job-poll',
+  }
+}
+
+function isDeepResearchTaskSource(value: unknown): value is DeepResearchTaskSource {
+  return value === 'job-poll' || value === 'history-poll'
 }
 
 export function resetDeepResearchNotificationStateForTest(): void {

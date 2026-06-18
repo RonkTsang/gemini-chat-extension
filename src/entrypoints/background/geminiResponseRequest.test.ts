@@ -14,17 +14,29 @@ describe('classifyGeminiResponseRequest', () => {
     expect(classifyGeminiResponseRequest(
       `${BASE_BATCH_URL}?source-path=%2Fapp%2Fc_123&rt=c&rpcids=kwDCne`,
     )).toEqual({
-      kind: 'deep-research-poll',
+      kind: 'batchexecute',
+      rpcId: 'kwDCne',
       conversationId: 'c_123',
     })
   })
 
-  it('classifies Deep Research final report retrieval', () => {
+  it('classifies conversation history retrieval', () => {
     expect(classifyGeminiResponseRequest(
       `${BASE_BATCH_URL}?rpcids=hNvQHb&source-path=/app/c_456`,
     )).toEqual({
-      kind: 'deep-research-report',
+      kind: 'batchexecute',
+      rpcId: 'hNvQHb',
       conversationId: 'c_456',
+    })
+  })
+
+  it('classifies other conversation-scoped RPCs', () => {
+    expect(classifyGeminiResponseRequest(
+      `${BASE_BATCH_URL}?rpcids=MUAZcd&source-path=%2Fapp%2Fc_123`,
+    )).toEqual({
+      kind: 'batchexecute',
+      rpcId: 'MUAZcd',
+      conversationId: 'c_123',
     })
   })
 
@@ -35,9 +47,6 @@ describe('classifyGeminiResponseRequest', () => {
     )).toEqual({ kind: 'other' })
     expect(classifyGeminiResponseRequest(
       `${BASE_BATCH_URL}?rpcids=hNvQHb`,
-    )).toEqual({ kind: 'other' })
-    expect(classifyGeminiResponseRequest(
-      `${BASE_BATCH_URL}?rpcids=MUAZcd&source-path=%2Fapp%2Fc_123`,
     )).toEqual({ kind: 'other' })
   })
 })

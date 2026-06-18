@@ -25,11 +25,13 @@ import {
   consumeDeepResearchReport,
   consumeDeepResearchStreamSuppression,
   getDeepResearchTask,
+  registerDeepResearchHistoryPoll,
   registerDeepResearchPoll,
   type DeepResearchTask,
 } from './deepResearchNotificationState'
 import {
   classifyGeminiResponseRequest,
+  GEMINI_RPC_IDS,
   type GeminiResponseRequest,
 } from './geminiResponseRequest'
 import {
@@ -39,7 +41,9 @@ import {
   isResponseCompleteNotificationRequestPermissionMessage,
   isResponseCompleteNotificationTestMessage,
   RESPONSE_COMPLETE_NOTIFICATION_GET_CONTENT_MESSAGE,
+  RESPONSE_COMPLETE_NOTIFICATION_GET_DEEP_RESEARCH_STATUS_MESSAGE,
   type ResponseCompleteNotificationContent,
+  type ResponseCompleteNotificationDeepResearchStatus,
   type ResponseCompleteNotificationResponse,
   type ResponseNotificationContentType,
 } from '@/types/runtime-messages'
@@ -105,6 +109,7 @@ type WebRequestBeforeRequestDetails = Parameters<WebRequestBeforeRequestListener
 type NotificationSource = 'response-complete' | 'test'
 type CompletionKind = 'standard-response' | 'deep-research'
 type DeepResearchPollObservationSource = 'before-request' | 'completed-fallback'
+type DeepResearchHistoryObservationSource = 'stream-generate' | 'history-completed'
 type ImageNotificationPresentation = 'basic-icon' | 'image-template'
 
 interface ImageNotificationPresentationResult {
@@ -258,7 +263,7 @@ function handleGeminiRequestStarted(
   details: WebRequestBeforeRequestDetails,
 ): ReturnType<WebRequestBeforeRequestListener> {
   const request = classifyGeminiResponseRequest(details.url)
-  if (request.kind !== 'deep-research-poll' || details.tabId < 0) {
+  if (!isDeepResearchPollRequest(request) || details.tabId < 0) {
     return undefined
   }
 
@@ -269,7 +274,7 @@ function handleGeminiRequestStarted(
 
 function trackDeepResearchPoll(
   details: Pick<WebRequestBeforeRequestDetails, 'requestId' | 'tabId' | 'timeStamp'>,
-  request: Extract<GeminiResponseRequest, { kind: 'deep-research-poll' }>,
+  request: Extract<GeminiResponseRequest, { kind: 'batchexecute' }>,
   observationSource: DeepResearchPollObservationSource,
 ): Promise<void> {
   const eventTimestamp = Math.round(details.timeStamp || Date.now())
@@ -303,19 +308,19 @@ function handleGeminiRequestCompleted(details: WebRequestCompletedDetails): void
     return
   }
 
-  if (request.kind === 'deep-research-poll') {
+  if (isDeepResearchPollRequest(request)) {
     void processDeepResearchPollCompleted(details, request)
     return
   }
 
-  if (request.kind === 'deep-research-report') {
-    void processDeepResearchReportCompleted(details, request)
+  if (isConversationHistoryRequest(request)) {
+    void processConversationHistoryCompleted(details, request)
   }
 }
 
 async function processDeepResearchPollCompleted(
   details: WebRequestCompletedDetails,
-  request: Extract<GeminiResponseRequest, { kind: 'deep-research-poll' }>,
+  request: Extract<GeminiResponseRequest, { kind: 'batchexecute' }>,
 ): Promise<void> {
   if (deepResearchPollsObservedBeforeRequest.delete(details.requestId)) {
     return
@@ -369,6 +374,25 @@ async function processStreamGenerateCompleted(details: WebRequestCompletedDetail
     })
   }
 
+  const deepResearchStatus = await requestDeepResearchDomStatus(details.tabId)
+  if (deepResearchStatus?.state === 'processing') {
+    if (deepResearchStatus.conversationId) {
+      await trackDeepResearchHistoryPoll(details, {
+        kind: 'batchexecute',
+        rpcId: GEMINI_RPC_IDS.conversationHistory,
+        conversationId: deepResearchStatus.conversationId,
+      }, 'stream-generate')
+    }
+    logBackgroundEvent('deep-research-stream-standard-suppressed-by-dom', {
+      tabId: details.tabId,
+      requestId: details.requestId,
+      eventTimestamp: Math.round(details.timeStamp || Date.now()),
+      conversationId: deepResearchStatus.conversationId,
+      titleAvailable: Boolean(deepResearchStatus.title),
+    })
+    return
+  }
+
   logBackgroundEvent('standard-response-completed', {
     tabId: details.tabId,
     requestId: details.requestId,
@@ -377,9 +401,9 @@ async function processStreamGenerateCompleted(details: WebRequestCompletedDetail
   await processResponseCompleted(details, 'standard-response')
 }
 
-async function processDeepResearchReportCompleted(
+async function processConversationHistoryCompleted(
   details: WebRequestCompletedDetails,
-  request: Extract<GeminiResponseRequest, { kind: 'deep-research-report' }>,
+  request: Extract<GeminiResponseRequest, { kind: 'batchexecute' }>,
 ): Promise<void> {
   const eventTimestamp = Math.round(details.timeStamp || Date.now())
   if (details.tabId < 0 || details.statusCode !== 200) {
@@ -401,12 +425,7 @@ async function processDeepResearchReportCompleted(
     )
     logExpiredDeepResearchTasks(trackedResult.expiredTasks)
     if (!trackedResult.value) {
-      logBackgroundEvent('deep-research-report-ignored-untracked', {
-        tabId: details.tabId,
-        conversationId: request.conversationId,
-        requestId: details.requestId,
-        eventTimestamp,
-      })
+      await handleUntrackedConversationHistoryCompleted(details, request, eventTimestamp)
       return
     }
 
@@ -457,6 +476,67 @@ async function processDeepResearchReportCompleted(
       eventTimestamp,
     })
   }
+}
+
+async function handleUntrackedConversationHistoryCompleted(
+  details: WebRequestCompletedDetails,
+  request: Extract<GeminiResponseRequest, { kind: 'batchexecute' }>,
+  eventTimestamp: number,
+): Promise<void> {
+  const status = await requestDeepResearchDomStatus(details.tabId, request.conversationId)
+  logBackgroundEvent('deep-research-dom-status', {
+    tabId: details.tabId,
+    conversationId: request.conversationId,
+    requestId: details.requestId,
+    eventTimestamp,
+    state: status?.state ?? 'unavailable',
+  })
+
+  if (status?.state === 'processing') {
+    await trackDeepResearchHistoryPoll(details, request, 'history-completed')
+    return
+  }
+
+  logBackgroundEvent(
+    status?.state === 'completed'
+      ? 'deep-research-history-completed-untracked'
+      : 'deep-research-report-ignored-untracked',
+    {
+      tabId: details.tabId,
+      conversationId: request.conversationId,
+      requestId: details.requestId,
+      eventTimestamp,
+    },
+  )
+}
+
+function trackDeepResearchHistoryPoll(
+  details: Pick<WebRequestCompletedDetails, 'requestId' | 'tabId' | 'timeStamp'>,
+  request: Extract<GeminiResponseRequest, { kind: 'batchexecute' }>,
+  observationSource: DeepResearchHistoryObservationSource,
+): Promise<void> {
+  const eventTimestamp = Math.round(details.timeStamp || Date.now())
+  return registerDeepResearchHistoryPoll(details.tabId, request.conversationId, eventTimestamp)
+    .then((result) => {
+      logExpiredDeepResearchTasks(result.expiredTasks)
+      logBackgroundEvent(result.created ? 'deep-research-history-task-started' : 'deep-research-history-poll-observed', {
+        observationSource,
+        tabId: details.tabId,
+        conversationId: request.conversationId,
+        requestId: details.requestId,
+        eventTimestamp,
+        startedAt: result.value.startedAt,
+        lastPollAt: result.value.lastPollAt,
+        suppressNextStreamGenerate: result.value.suppressNextStreamGenerate,
+      })
+    })
+    .catch(error => logDeepResearchStateError('deep-research-history-poll-track-failed', error, {
+      tabId: details.tabId,
+      conversationId: request.conversationId,
+      requestId: details.requestId,
+      eventTimestamp,
+      observationSource,
+    }))
 }
 
 async function processResponseCompleted(
@@ -557,6 +637,42 @@ async function requestNotificationContent(
     })
     return null
   }
+}
+
+async function requestDeepResearchDomStatus(
+  tabId: number,
+  conversationId?: string,
+): Promise<ResponseCompleteNotificationDeepResearchStatus | null> {
+  try {
+    return await Promise.race([
+      browser.tabs.sendMessage(tabId, {
+        type: RESPONSE_COMPLETE_NOTIFICATION_GET_DEEP_RESEARCH_STATUS_MESSAGE,
+        payload: {
+          conversationId,
+        },
+      }) as Promise<ResponseCompleteNotificationDeepResearchStatus>,
+      new Promise<null>(resolve => setTimeout(() => resolve(null), CONTENT_REQUEST_TIMEOUT_MS)),
+    ])
+  } catch (error) {
+    logBackgroundEvent('deep-research-dom-status-unavailable', {
+      tabId,
+      conversationId,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return null
+  }
+}
+
+function isDeepResearchPollRequest(
+  request: GeminiResponseRequest,
+): request is Extract<GeminiResponseRequest, { kind: 'batchexecute' }> {
+  return request.kind === 'batchexecute' && request.rpcId === GEMINI_RPC_IDS.deepResearchPoll
+}
+
+function isConversationHistoryRequest(
+  request: GeminiResponseRequest,
+): request is Extract<GeminiResponseRequest, { kind: 'batchexecute' }> {
+  return request.kind === 'batchexecute' && request.rpcId === GEMINI_RPC_IDS.conversationHistory
 }
 
 async function getTab(tabId: number): Promise<Browser.tabs.Tab | null> {

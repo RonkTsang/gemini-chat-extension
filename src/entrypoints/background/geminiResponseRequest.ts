@@ -1,18 +1,20 @@
 const GEMINI_HOSTNAME = 'gemini.google.com'
 const STREAM_GENERATE_PATH = '/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate'
 const BATCH_EXECUTE_PATH = '/_/BardChatUi/data/batchexecute'
-const DEEP_RESEARCH_POLL_RPC_ID = 'kwDCne'
-const DEEP_RESEARCH_REPORT_RPC_ID = 'hNvQHb'
 const CONVERSATION_SOURCE_PATH_PREFIX = '/app/'
+
+export const GEMINI_RPC_IDS = {
+  deepResearchPoll: 'kwDCne',
+  conversationHistory: 'hNvQHb',
+  finalAcknowledgement: 'VxUbXb',
+  conversationConfirmation: 'k81mDb',
+} as const
 
 export type GeminiResponseRequest =
   | { kind: 'stream-generate' }
   | {
-      kind: 'deep-research-poll'
-      conversationId: string
-    }
-  | {
-      kind: 'deep-research-report'
+      kind: 'batchexecute'
+      rpcId: string
       conversationId: string
     }
   | { kind: 'other' }
@@ -43,16 +45,10 @@ export function classifyGeminiResponseRequest(url: string): GeminiResponseReques
   }
 
   const rpcId = parsedUrl.searchParams.get('rpcids')
-  if (rpcId === DEEP_RESEARCH_POLL_RPC_ID) {
+  if (rpcId) {
     return {
-      kind: 'deep-research-poll',
-      conversationId,
-    }
-  }
-
-  if (rpcId === DEEP_RESEARCH_REPORT_RPC_ID) {
-    return {
-      kind: 'deep-research-report',
+      kind: 'batchexecute',
+      rpcId,
       conversationId,
     }
   }

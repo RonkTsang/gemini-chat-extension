@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  RESPONSE_COMPLETE_NOTIFICATION_GET_DEEP_RESEARCH_STATUS_MESSAGE,
+  type ResponseCompleteNotificationDeepResearchStatus,
+} from '@/types/runtime-messages'
+import {
+  getDeepResearchDomStatus,
   getDeepResearchTitle,
   getResponseCompleteNotificationContent,
   resetResponseCompleteNotificationContentProviderForTest,
@@ -75,6 +80,7 @@ describe('responseCompleteNotificationContent', () => {
     runtimeMessageListener = null
     document.body.innerHTML = ''
     document.title = ''
+    window.history.replaceState(null, '', '/')
     setPageState('hidden', false)
     vi.useRealTimers()
   })
@@ -84,6 +90,23 @@ describe('responseCompleteNotificationContent', () => {
     startResponseCompleteNotificationContentProvider()
 
     expect(runtimeMessageListener).not.toBeNull()
+  })
+
+  it('responds to Deep Research status messages with a promise', async () => {
+    window.history.replaceState(null, '', '/app/c_1')
+    renderDeepResearchResponse('Research report title')
+    startResponseCompleteNotificationContentProvider()
+
+    const response = runtimeMessageListener?.({
+      type: RESPONSE_COMPLETE_NOTIFICATION_GET_DEEP_RESEARCH_STATUS_MESSAGE,
+    })
+
+    expect(response).toBeInstanceOf(Promise)
+    await expect(response as Promise<ResponseCompleteNotificationDeepResearchStatus>).resolves.toEqual({
+      state: 'completed',
+      title: 'Research report title',
+      conversationId: 'c_1',
+    })
   })
 
   it('extracts the latest text response and title', async () => {
@@ -107,6 +130,57 @@ describe('responseCompleteNotificationContent', () => {
       responseType: 'text',
       completionConfirmed: true,
     })
+  })
+
+  it('reports Deep Research DOM status from the final turn', () => {
+    window.history.replaceState(null, '', '/app/c_1')
+    renderDeepResearchResponse('Research report title')
+    expect(getDeepResearchDomStatus()).toEqual({
+      state: 'completed',
+      title: 'Research report title',
+      conversationId: 'c_1',
+    })
+
+    document.querySelector('gem-processing-card')!.className = 'selected processing'
+    expect(getDeepResearchDomStatus()).toEqual({
+      state: 'processing',
+      title: 'Research report title',
+      conversationId: 'c_1',
+    })
+
+    document.body.innerHTML = ''
+    expect(getDeepResearchDomStatus()).toEqual({ state: 'absent' })
+  })
+
+  it('detects Deep Research cards by card class without requiring an immersive-entry-chip ancestor', () => {
+    window.history.replaceState(null, '', '/app/c_1')
+    document.body.innerHTML = `
+      <div class="conversation-container" id="turn-1">
+        <model-response>
+          <structured-content-container>
+            <div id="model-response-message-content-1">
+              <gem-processing-card class="selected processing gem-shimmer-active">
+                <span class="card-title gds-body-l">Running report</span>
+              </gem-processing-card>
+            </div>
+          </structured-content-container>
+        </model-response>
+      </div>
+    `
+
+    expect(getDeepResearchDomStatus()).toEqual({
+      state: 'processing',
+      title: 'Running report',
+      conversationId: 'c_1',
+    })
+
+    document.querySelector('gem-processing-card')!.className = 'selected completed'
+    expect(getDeepResearchDomStatus()).toEqual({
+      state: 'completed',
+      title: 'Running report',
+      conversationId: 'c_1',
+    })
+    expect(getDeepResearchTitle(document.querySelector('.conversation-container')!)).toBe('Running report')
   })
 
   it('retries until the Deep Research Title is available', async () => {
