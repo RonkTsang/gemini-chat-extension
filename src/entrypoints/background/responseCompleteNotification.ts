@@ -77,10 +77,6 @@ let permissionIntentPollTimer: ReturnType<typeof setTimeout> | null = null
 let permissionIntentPollAttempts = 0
 const deepResearchPollsObservedBeforeRequest = new Set<string>()
 
-const notificationTargets = new Map<string, {
-  tabId: number
-  windowId?: number
-}>()
 const notificationClearTimers = new Map<string, ReturnType<typeof setTimeout>>()
 
 type NotificationsApi = typeof browser.notifications
@@ -119,7 +115,6 @@ interface ImageNotificationPresentationResult {
 
 interface NotificationTarget {
   tabId?: number
-  windowId?: number
   title: string
   message: string
   timestamp: number
@@ -127,6 +122,12 @@ interface NotificationTarget {
   completionKind?: CompletionKind
   responseType: ResponseNotificationContentType
   imageDataUrl?: string
+}
+
+interface ParsedNotificationId {
+  source: NotificationSource
+  tabId?: number
+  timestamp: number
 }
 
 function logBackgroundEvent(
@@ -528,10 +529,8 @@ async function processResponseCompleted(
     return
   }
 
-  const tab = await getTab(details.tabId)
   await handleCreateNotification({
     tabId: details.tabId,
-    windowId: tab?.windowId,
     title: content?.title ?? FALLBACK_NOTIFICATION_TITLE,
     message: content?.message ?? FALLBACK_NOTIFICATION_MESSAGE,
     timestamp: Math.round(details.timeStamp || Date.now()),
@@ -700,7 +699,6 @@ function handleRuntimeMessage(
     })
     return handleCreateNotification({
       tabId: sender.tab?.id,
-      windowId: sender.tab?.windowId,
       title: TEST_NOTIFICATION_TITLE,
       message: TEST_NOTIFICATION_MESSAGE,
       timestamp: message.payload.timestamp,
@@ -975,13 +973,7 @@ async function createResponseCompleteNotification(target: NotificationTarget): P
   }
 
   ensureNotificationEventListeners()
-  const notificationId = `${target.source}:${target.tabId ?? 'popup'}:${target.timestamp}`
-  if (typeof target.tabId === 'number') {
-    notificationTargets.set(notificationId, {
-      tabId: target.tabId,
-      windowId: target.windowId,
-    })
-  }
+  const notificationId = buildNotificationId(target)
 
   const basicOptions: Browser.notifications.NotificationCreateOptions = {
     type: 'basic',
@@ -1043,6 +1035,49 @@ async function createResponseCompleteNotification(target: NotificationTarget): P
   })
 
   return notificationId
+}
+
+function buildNotificationId(target: NotificationTarget): string {
+  return `${target.source}:${target.tabId ?? 'popup'}:${target.timestamp}`
+}
+
+function parseNotificationId(notificationId: string): ParsedNotificationId | null {
+  const parts = notificationId.split(':')
+  if (parts.length !== 3) {
+    return null
+  }
+
+  const [source, targetId, timestampText] = parts
+  if (!isNotificationSource(source)) {
+    return null
+  }
+
+  const timestamp = Number(timestampText)
+  if (!Number.isFinite(timestamp)) {
+    return null
+  }
+
+  if (targetId === 'popup') {
+    return {
+      source,
+      timestamp,
+    }
+  }
+
+  const tabId = Number(targetId)
+  if (!Number.isInteger(tabId) || tabId < 0) {
+    return null
+  }
+
+  return {
+    source,
+    tabId,
+    timestamp,
+  }
+}
+
+function isNotificationSource(source: string): source is NotificationSource {
+  return source === 'response-complete' || source === 'test'
 }
 
 async function getImageNotificationPresentation(): Promise<ImageNotificationPresentationResult> {
@@ -1107,7 +1142,6 @@ function scheduleNotificationClear(notificationId: string, delayMs: number): voi
   cancelScheduledNotificationClear(notificationId)
   const timer = setTimeout(() => {
     notificationClearTimers.delete(notificationId)
-    notificationTargets.delete(notificationId)
     void clearNotification(notificationId)
   }, delayMs)
   notificationClearTimers.set(notificationId, timer)
@@ -1124,26 +1158,28 @@ function cancelScheduledNotificationClear(notificationId: string): void {
 }
 
 async function focusNotificationTarget(notificationId: string): Promise<void> {
-  const target = notificationTargets.get(notificationId)
-  if (!target) {
+  const target = parseNotificationId(notificationId)
+  if (typeof target?.tabId !== 'number') {
     return
   }
 
   try {
-    if (typeof target.windowId === 'number') {
-      await browser.windows.update(target.windowId, { focused: true })
+    const tab = await getTab(target.tabId)
+    if (!tab) {
+      return
+    }
+
+    if (typeof tab.windowId === 'number') {
+      await browser.windows.update(tab.windowId, { focused: true })
     }
     await browser.tabs.update(target.tabId, { active: true })
   } catch (error) {
     console.warn('[ResponseCompleteNotification] Failed to focus notification target:', error)
-  } finally {
-    notificationTargets.delete(notificationId)
   }
 }
 
 function handleNotificationClosed(notificationId: string): void {
   cancelScheduledNotificationClear(notificationId)
-  notificationTargets.delete(notificationId)
 }
 
 export function resetResponseCompleteNotificationBackgroundForTest(): void {
@@ -1165,5 +1201,4 @@ export function resetResponseCompleteNotificationBackgroundForTest(): void {
     clearTimeout(timer)
   }
   notificationClearTimers.clear()
-  notificationTargets.clear()
 }

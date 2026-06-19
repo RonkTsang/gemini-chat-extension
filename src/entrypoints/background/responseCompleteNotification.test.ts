@@ -235,6 +235,12 @@ async function flushPromises(): Promise<void> {
   await new Promise(resolve => setTimeout(resolve, 0))
 }
 
+async function flushNotificationClick(): Promise<void> {
+  for (let index = 0; index < 6; index += 1) {
+    await Promise.resolve()
+  }
+}
+
 function completeStream(overrides: Partial<Parameters<WebRequestCompletedListener>[0]> = {}): void {
   webRequestCompletedListener?.({
     requestId: 'request-1',
@@ -881,15 +887,56 @@ describe('responseCompleteNotification background V2', () => {
     }))
 
     notificationClickListener?.('test:7:789')
-    await Promise.resolve()
-    await Promise.resolve()
+    await flushNotificationClick()
 
+    expect(tabsGetMock).toHaveBeenCalledWith(7)
     expect(windowsUpdateMock).toHaveBeenCalledWith(9, { focused: true })
     expect(tabsUpdateMock).toHaveBeenCalledWith(7, { active: true })
     expect(clearNotificationMock).toHaveBeenCalledWith('test:7:789')
 
     await vi.advanceTimersByTimeAsync(5_000)
     expect(clearNotificationMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('focuses a response notification target from the notification id', async () => {
+    await setResponseCompleteNotificationEnabled(true)
+    await flushPromises()
+    completeStream()
+    await flushPromises()
+    tabsGetMock.mockClear()
+    clearNotificationMock.mockClear()
+
+    notificationClickListener?.('response-complete:7:123')
+    await flushNotificationClick()
+
+    expect(clearNotificationMock).toHaveBeenCalledWith('response-complete:7:123')
+    expect(tabsGetMock).toHaveBeenCalledWith(7)
+    expect(windowsUpdateMock).toHaveBeenCalledWith(9, { focused: true })
+    expect(tabsUpdateMock).toHaveBeenCalledWith(7, { active: true })
+  })
+
+  it('clears popup and malformed notifications without focusing a tab', async () => {
+    notificationClickListener?.('test:popup:789')
+    notificationClickListener?.('response-complete:not-a-tab:123')
+    await flushNotificationClick()
+
+    expect(clearNotificationMock).toHaveBeenCalledWith('test:popup:789')
+    expect(clearNotificationMock).toHaveBeenCalledWith('response-complete:not-a-tab:123')
+    expect(tabsGetMock).not.toHaveBeenCalled()
+    expect(windowsUpdateMock).not.toHaveBeenCalled()
+    expect(tabsUpdateMock).not.toHaveBeenCalled()
+  })
+
+  it('clears clicked notifications when the target tab is unavailable', async () => {
+    tabsGetMock.mockRejectedValueOnce(new Error('tab closed'))
+
+    notificationClickListener?.('response-complete:7:123')
+    await flushNotificationClick()
+
+    expect(clearNotificationMock).toHaveBeenCalledWith('response-complete:7:123')
+    expect(tabsGetMock).toHaveBeenCalledWith(7)
+    expect(windowsUpdateMock).not.toHaveBeenCalled()
+    expect(tabsUpdateMock).not.toHaveBeenCalled()
   })
 
   it('opens the action popup when audio permission is missing', async () => {
