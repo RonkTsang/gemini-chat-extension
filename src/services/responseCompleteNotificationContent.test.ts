@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   RESPONSE_COMPLETE_NOTIFICATION_GET_DEEP_RESEARCH_STATUS_MESSAGE,
@@ -74,6 +74,44 @@ function renderDeepResearchResponse(title: string, responseText = 'Research comp
   `
 }
 
+function renderImageResponse(imageAttributes = ''): void {
+  document.body.innerHTML = `
+    <top-bar-actions>
+      <div class="conversation-title-container">Image chat</div>
+    </top-bar-actions>
+    <div class="conversation-container" id="turn-1">
+      <model-response>
+        <structured-content-container>
+          <div id="model-response-message-content-1">
+            <generated-image>
+              <single-image>
+                <div><div><button class="image-button"><img ${imageAttributes}></button></div></div>
+              </single-image>
+            </generated-image>
+          </div>
+        </structured-content-container>
+      </model-response>
+    </div>
+  `
+}
+
+function mockImageProcessing(): void {
+  vi.stubGlobal('fetch', vi.fn(async () => new Response(
+    new Blob(['source-image'], { type: 'image/png' }),
+  )))
+  vi.stubGlobal('createImageBitmap', vi.fn(async () => ({
+    width: 128,
+    height: 64,
+    close: vi.fn(),
+  } as unknown as ImageBitmap)))
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
+    drawImage: vi.fn(),
+  } as unknown as CanvasRenderingContext2D)
+  vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementation((callback) => {
+    callback(new Blob(['compressed-image'], { type: 'image/jpeg' }))
+  })
+}
+
 describe('responseCompleteNotificationContent', () => {
   beforeEach(() => {
     resetResponseCompleteNotificationContentProviderForTest()
@@ -83,6 +121,12 @@ describe('responseCompleteNotificationContent', () => {
     window.history.replaceState(null, '', '/')
     setPageState('hidden', false)
     vi.useRealTimers()
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.unstubAllEnvs()
+    vi.restoreAllMocks()
   })
 
   it('registers one content request listener', () => {
@@ -266,6 +310,28 @@ describe('responseCompleteNotificationContent', () => {
       message: 'Delayed response',
       responseType: 'text',
     })
+  })
+
+  it('waits for a delayed final image source before creating notification image data', async () => {
+    vi.useFakeTimers()
+    mockImageProcessing()
+    renderImageResponse()
+
+    const contentPromise = getResponseCompleteNotificationContent()
+    setTimeout(() => {
+      document.querySelector('img')!.setAttribute('src', 'https://example.com/image.png')
+    }, 250)
+
+    await vi.advanceTimersByTimeAsync(1_000)
+
+    await expect(contentPromise).resolves.toMatchObject({
+      isForeground: false,
+      title: 'Image chat',
+      message: 'Your image is ready.',
+      responseType: 'image',
+      imageDataUrl: expect.stringMatching(/^data:image\/jpeg;base64,/),
+    })
+    expect(fetch).toHaveBeenCalledWith('https://example.com/image.png')
   })
 
   it('returns image response metadata on Firefox without image processing', async () => {

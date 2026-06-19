@@ -22,6 +22,8 @@ const FALLBACK_NOTIFICATION_MESSAGE = 'Your response is ready.'
 const FALLBACK_IMAGE_NOTIFICATION_MESSAGE = 'Your image is ready.'
 const CONTENT_RETRY_ATTEMPTS = 10
 const CONTENT_RETRY_DELAY_MS = 100
+const IMAGE_SOURCE_RETRY_ATTEMPTS = 4
+const IMAGE_SOURCE_RETRY_DELAY_MS = 1_000
 const IMAGE_NOTIFICATION_MAX_DIMENSION = 512
 const IMAGE_NOTIFICATION_MAX_BLOB_SIZE = 500_000
 const IMAGE_NOTIFICATION_JPEG_QUALITIES = [0.8, 0.65, 0.5]
@@ -146,8 +148,10 @@ async function readNotificationContent(
 
   const responseType = getResponseType(turn)
   const modelResponse = getLastNonEmptyModelResponse(turn)
-  const finalImage = findFinalImageWithSource(turn)
-  if (!modelResponse && !finalImage) {
+  const finalImage = responseType === 'image' && !import.meta.env.FIREFOX
+    ? await waitForFinalImageWithSource(turn)
+    : findFinalImageWithSource(turn)
+  if (!modelResponse && !finalImage && responseType !== 'image') {
     return null
   }
 
@@ -242,6 +246,21 @@ function getLastNonEmptyModelResponse(turn: HTMLElement): Element | null {
 function findFinalImageWithSource(container: Element): HTMLImageElement | null {
   return Array.from(container.querySelectorAll<HTMLImageElement>(FINAL_IMAGE_SELECTOR))
     .find(image => Boolean(getImageSourceUrl(image))) ?? null
+}
+
+async function waitForFinalImageWithSource(container: Element): Promise<HTMLImageElement | null> {
+  for (let attempt = 0; attempt < IMAGE_SOURCE_RETRY_ATTEMPTS; attempt += 1) {
+    const image = findFinalImageWithSource(container)
+    if (image) {
+      return image
+    }
+    if (attempt === IMAGE_SOURCE_RETRY_ATTEMPTS - 1) {
+      break
+    }
+    await delay(IMAGE_SOURCE_RETRY_DELAY_MS)
+  }
+
+  return null
 }
 
 async function createNotificationImageData(image: HTMLImageElement): Promise<NotificationImageData> {
