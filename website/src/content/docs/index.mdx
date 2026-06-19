@@ -1,7 +1,43 @@
 ---
-title: The Pro Kit to Double Your Google Gemini Productivity
-description: A minimal sidebar toolkit built for deep conversation navigation, prompt automation, and a personalized Gemini experience.
+title: Gemini Power Kit - Gemini Extension for Themes, Chat Outline, and Prompt Automation
+description: "Gemini Power Kit is a Google Gemini extension for Gemini themes, Chat Outline navigation, Quick Follow-up actions, and Chain Prompt automation."
 template: splash
+head:
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: |
+      {
+        "@context": "https://schema.org",
+        "@type": ["SoftwareApplication", "WebApplication"],
+        "name": "Gemini Power Kit",
+        "description": "Gemini Power Kit is a Chrome extension for Google Gemini that adds themes, Chat Outline navigation, Quick Follow-up actions, and Chain Prompt automation.",
+        "applicationCategory": "BrowserApplication",
+        "operatingSystem": "Chrome, Chromium-based browsers",
+        "browserRequirements": "Requires Google Chrome or another Chromium-based browser.",
+        "url": "https://gpk.ronktsang.com/",
+        "installUrl": "https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn",
+        "sameAs": [
+          "https://github.com/RonkTsang/gemini-chat-extension",
+          "https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn"
+        ],
+        "featureList": [
+          "Gemini themes and wallpaper customization",
+          "Chat Outline navigation for long Gemini conversations",
+          "Quick Follow-up actions for selected text",
+          "Chain Prompt automation for repeated Gemini workflows"
+        ],
+        "author": {
+          "@type": "Person",
+          "name": "RonkTsang",
+          "url": "https://github.com/RonkTsang"
+        },
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
 hero:
   tagline: Stop repeating, start creating. Chat Outline, Quick Follow-up, and Chain Prompt for maximum productivity.
   image:
@@ -22,6 +58,10 @@ import chatOutlineImg from '../../assets/features/chat-outline/interface.png';
 import quickFollowUpImg from '../../assets/features/quick-follow-up.png';
 import chainPromptImg from '../../assets/features/chain-prompt.png';
 import themeImg from '../../assets/features/theme-wallpaper.jpg';
+
+## What is Gemini Power Kit?
+
+Gemini Power Kit is a Chrome extension for Google Gemini. It helps people customize Gemini with visual themes and wallpaper, navigate long chats with Chat Outline, ask follow-up questions from selected text, and automate repeated prompt workflows. It is built for users who keep Gemini open for deep work, research, writing, coding, and daily productivity. Core settings and workflow data stay local on your device.
 
 <div class="value-band">
   <div class="value-pill">

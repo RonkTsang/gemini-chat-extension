@@ -7,7 +7,7 @@ const nanoidNonSecureCompat = fileURLToPath(new URL('./src/shims/nanoid-non-secu
 
 // https://astro.build/config
 export default defineConfig({
-	site: 'https://gpkit.ronktsang.com',
+	site: 'https://gpk.ronktsang.com',
 	vite: {
 		resolve: {
 			alias: {
