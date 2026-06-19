@@ -8,6 +8,8 @@
 
 # Gemini Power Kit - A Chrome Extension for Gemini
 
+[Gemini Power Kit official website](https://gpk.ronktsang.com/) · [Chrome Web Store](https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn?utm_source=item-share-cb)
+
 Transform your [Gemini](https://gemini.google.com) experience with powerful tools designed to boost your productivity and streamline your workflow. Gemini Power Kit is your essential companion, bringing together three powerful features: **Chat Outline**, **Quick Follow-up**, and **Chain Prompt**.
 
 ## Features
