@@ -24,7 +24,6 @@ import {
   clearAllDeepResearchTasks,
   clearDeepResearchTasksForTab,
   consumeDeepResearchReport,
-  consumeDeepResearchStreamSuppression,
   getDeepResearchTask,
   registerDeepResearchHistoryPoll,
   registerDeepResearchPoll,
@@ -110,7 +109,7 @@ type WebRequestBeforeRequestDetails = Parameters<WebRequestBeforeRequestListener
 type NotificationSource = 'response-complete' | 'test'
 type CompletionKind = 'standard-response' | 'deep-research'
 type DeepResearchPollObservationSource = 'before-request' | 'completed-fallback'
-type DeepResearchHistoryObservationSource = 'stream-generate' | 'history-completed'
+type DeepResearchHistoryObservationSource = 'history-completed'
 type ImageNotificationPresentation = 'basic-icon' | 'image-template'
 
 interface ImageNotificationPresentationResult {
@@ -290,7 +289,6 @@ function trackDeepResearchPoll(
         eventTimestamp,
         startedAt: result.value.startedAt,
         lastPollAt: result.value.lastPollAt,
-        suppressNextStreamGenerate: result.value.suppressNextStreamGenerate,
       })
     })
     .catch(error => logDeepResearchStateError('deep-research-poll-track-failed', error, {
@@ -347,49 +345,6 @@ async function processStreamGenerateCompleted(details: WebRequestCompletedDetail
       tabId: details.tabId,
       requestId: details.requestId,
       statusCode: details.statusCode,
-    })
-    return
-  }
-
-  try {
-    const result = await consumeDeepResearchStreamSuppression(
-      details.tabId,
-      Math.round(details.timeStamp || Date.now()),
-    )
-    logExpiredDeepResearchTasks(result.expiredTasks)
-    if (result.value) {
-      logBackgroundEvent('deep-research-stream-suppressed', {
-        tabId: details.tabId,
-        conversationId: result.value.conversationId,
-        requestId: details.requestId,
-        eventTimestamp: Math.round(details.timeStamp || Date.now()),
-        startedAt: result.value.startedAt,
-        lastPollAt: result.value.lastPollAt,
-      })
-      return
-    }
-  } catch (error) {
-    logDeepResearchStateError('deep-research-stream-suppression-check-failed', error, {
-      tabId: details.tabId,
-      requestId: details.requestId,
-    })
-  }
-
-  const deepResearchStatus = await requestDeepResearchDomStatus(details.tabId)
-  if (deepResearchStatus?.state === 'processing') {
-    if (deepResearchStatus.conversationId) {
-      await trackDeepResearchHistoryPoll(details, {
-        kind: 'batchexecute',
-        rpcId: GEMINI_RPC_IDS.conversationHistory,
-        conversationId: deepResearchStatus.conversationId,
-      }, 'stream-generate')
-    }
-    logBackgroundEvent('deep-research-stream-standard-suppressed-by-dom', {
-      tabId: details.tabId,
-      requestId: details.requestId,
-      eventTimestamp: Math.round(details.timeStamp || Date.now()),
-      conversationId: deepResearchStatus.conversationId,
-      titleAvailable: Boolean(deepResearchStatus.title),
     })
     return
   }
@@ -528,7 +483,6 @@ function trackDeepResearchHistoryPoll(
         eventTimestamp,
         startedAt: result.value.startedAt,
         lastPollAt: result.value.lastPollAt,
-        suppressNextStreamGenerate: result.value.suppressNextStreamGenerate,
       })
     })
     .catch(error => logDeepResearchStateError('deep-research-history-poll-track-failed', error, {

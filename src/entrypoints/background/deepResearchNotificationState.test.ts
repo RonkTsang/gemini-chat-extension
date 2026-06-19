@@ -3,13 +3,13 @@ import {
   clearAllDeepResearchTasks,
   clearDeepResearchTasksForTab,
   consumeDeepResearchReport,
-  consumeDeepResearchStreamSuppression,
   registerDeepResearchHistoryPoll,
   registerDeepResearchPoll,
   resetDeepResearchNotificationStateForTest,
 } from './deepResearchNotificationState'
 
 const storageData: Record<string, unknown> = {}
+const STORAGE_KEY = 'responseCompleteNotification.deepResearchTasks'
 
 vi.mock('wxt/browser', () => ({
   browser: {
@@ -34,40 +34,22 @@ describe('deepResearchNotificationState', () => {
     }
   })
 
-  it('creates a task and refreshes polls without rearming consumed suppression', async () => {
+  it('creates a job-poll task and refreshes later polls', async () => {
     const created = await registerDeepResearchPoll(7, 'c_1', 100)
     expect(created.created).toBe(true)
-    expect(created.value.suppressNextStreamGenerate).toBe(true)
     expect(created.value.source).toBe('job-poll')
-
-    const consumed = await consumeDeepResearchStreamSuppression(7, 110)
-    expect(consumed.value?.conversationId).toBe('c_1')
-    expect(consumed.value?.suppressNextStreamGenerate).toBe(false)
 
     const refreshed = await registerDeepResearchPoll(7, 'c_1', 120)
     expect(refreshed.created).toBe(false)
     expect(refreshed.value.lastPollAt).toBe(120)
-    expect(refreshed.value.suppressNextStreamGenerate).toBe(false)
+    expect(refreshed.value.source).toBe('job-poll')
   })
 
-  it('creates history-poll tasks without arming StreamGenerate suppression', async () => {
+  it('creates history-poll tasks', async () => {
     const created = await registerDeepResearchHistoryPoll(7, 'c_1', 100)
 
     expect(created.created).toBe(true)
     expect(created.value.source).toBe('history-poll')
-    expect(created.value.suppressNextStreamGenerate).toBe(false)
-
-    const consumed = await consumeDeepResearchStreamSuppression(7, 110)
-    expect(consumed.value).toBeNull()
-  })
-
-  it('consumes the most recently polled armed task for a tab', async () => {
-    await registerDeepResearchPoll(7, 'c_old', 100)
-    await registerDeepResearchPoll(7, 'c_new', 200)
-
-    const result = await consumeDeepResearchStreamSuppression(7, 210)
-
-    expect(result.value?.conversationId).toBe('c_new')
   })
 
   it('consumes only the exact report task once', async () => {
@@ -87,6 +69,27 @@ describe('deepResearchNotificationState', () => {
     const result = await consumeDeepResearchReport(7, 'c_1', 200)
 
     expect(result.value?.conversationId).toBe('c_1')
+  })
+
+  it('drops obsolete StreamGenerate suppression fields from stored tasks', async () => {
+    storageData[STORAGE_KEY] = [{
+      tabId: 7,
+      conversationId: 'c_1',
+      startedAt: 100,
+      lastPollAt: 100,
+      suppressNextStreamGenerate: true,
+      source: 'job-poll',
+    }]
+
+    const result = await consumeDeepResearchReport(7, 'c_1', 200)
+
+    expect(result.value).toEqual({
+      tabId: 7,
+      conversationId: 'c_1',
+      startedAt: 100,
+      lastPollAt: 100,
+      source: 'job-poll',
+    })
   })
 
   it('expires stale tasks opportunistically', async () => {

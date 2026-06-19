@@ -8,7 +8,6 @@ export interface DeepResearchTask {
   conversationId: string
   startedAt: number
   lastPollAt: number
-  suppressNextStreamGenerate: boolean
   source: DeepResearchTaskSource
 }
 
@@ -62,7 +61,6 @@ function registerDeepResearchTask(
           conversationId,
           startedAt: timestamp,
           lastPollAt: timestamp,
-          suppressNextStreamGenerate: source === 'job-poll',
           source,
         }
 
@@ -71,37 +69,6 @@ function registerDeepResearchTask(
     return {
       value: task,
       created: !existingTask,
-      expiredTasks,
-    }
-  })
-}
-
-export function consumeDeepResearchStreamSuppression(
-  tabId: number,
-  timestamp: number,
-): Promise<TaskMutationResult<DeepResearchTask | null>> {
-  return runExclusive(async () => {
-    const expiredTasks = removeExpiredTasks(timestamp)
-    const task = Array.from(getTasks().values())
-      .filter(candidate => candidate.tabId === tabId && candidate.suppressNextStreamGenerate)
-      .sort((left, right) => right.lastPollAt - left.lastPollAt)[0]
-
-    if (!task) {
-      await persistTasksIfNeeded(expiredTasks.length > 0)
-      return {
-        value: null,
-        expiredTasks,
-      }
-    }
-
-    const updatedTask = {
-      ...task,
-      suppressNextStreamGenerate: false,
-    }
-    getTasks().set(getTaskKey(task.tabId, task.conversationId), updatedTask)
-    await persistTasks()
-    return {
-      value: updatedTask,
       expiredTasks,
     }
   })
@@ -239,13 +206,15 @@ function isDeepResearchTask(value: unknown): value is DeepResearchTask {
     && typeof candidate.conversationId === 'string'
     && typeof candidate.startedAt === 'number'
     && typeof candidate.lastPollAt === 'number'
-    && typeof candidate.suppressNextStreamGenerate === 'boolean'
     && (candidate.source === undefined || isDeepResearchTaskSource(candidate.source))
 }
 
 function normalizeDeepResearchTask(task: DeepResearchTask): DeepResearchTask {
   return {
-    ...task,
+    tabId: task.tabId,
+    conversationId: task.conversationId,
+    startedAt: task.startedAt,
+    lastPollAt: task.lastPollAt,
     source: isDeepResearchTaskSource(task.source) ? task.source : 'job-poll',
   }
 }

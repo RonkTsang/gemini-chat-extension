@@ -485,7 +485,7 @@ describe('responseCompleteNotification background V2', () => {
     })
   })
 
-  it('suppresses Deep Research initialization and notifies on the final report', async () => {
+  it('notifies on Deep Research initialization StreamGenerate and the final report', async () => {
     await setResponseCompleteNotificationEnabled(true)
     await flushPromises()
 
@@ -493,7 +493,11 @@ describe('responseCompleteNotification background V2', () => {
     completeStream()
     await flushPromises()
 
-    expect(createNotificationMock).not.toHaveBeenCalled()
+    expect(createNotificationMock).toHaveBeenCalledTimes(1)
+    expect(createNotificationMock).toHaveBeenCalledWith('response-complete:7:123', expect.objectContaining({
+      title: 'Chat title',
+      message: 'Response summary',
+    }))
 
     completeDeepResearchReport()
     await flushPromises()
@@ -504,6 +508,7 @@ describe('responseCompleteNotification background V2', () => {
         completionKind: 'deep-research',
       },
     })
+    expect(createNotificationMock).toHaveBeenCalledTimes(2)
     expect(createNotificationMock).toHaveBeenCalledWith('response-complete:7:500', expect.objectContaining({
       title: 'Chat title',
       message: 'Response summary',
@@ -519,7 +524,11 @@ describe('responseCompleteNotification background V2', () => {
     completeStream()
     await flushPromises()
 
-    expect(createNotificationMock).not.toHaveBeenCalled()
+    expect(createNotificationMock).toHaveBeenCalledTimes(1)
+    expect(createNotificationMock).toHaveBeenCalledWith('response-complete:7:123', expect.objectContaining({
+      title: 'Chat title',
+      message: 'Response summary',
+    }))
 
     completeDeepResearchReport()
     await flushPromises()
@@ -530,10 +539,10 @@ describe('responseCompleteNotification background V2', () => {
         completionKind: 'deep-research',
       },
     })
-    expect(createNotificationMock).toHaveBeenCalledTimes(1)
+    expect(createNotificationMock).toHaveBeenCalledTimes(2)
   })
 
-  it('suppresses Case 2 Deep Research StreamGenerate when the DOM is processing', async () => {
+  it('notifies Case 2 StreamGenerate and tracks Deep Research from the following hNvQHb poll', async () => {
     await setResponseCompleteNotificationEnabled(true)
     await flushPromises()
     mockContentResponses({
@@ -546,19 +555,27 @@ describe('responseCompleteNotification background V2', () => {
 
     completeStream()
     await flushPromises()
-    expect(createNotificationMock).not.toHaveBeenCalled()
+    expect(createNotificationMock).toHaveBeenCalledTimes(1)
+    expect(createNotificationMock).toHaveBeenCalledWith('response-complete:7:123', expect.objectContaining({
+      title: 'Chat title',
+      message: 'Response summary',
+    }))
 
-    completeDeepResearchReport()
+    completeDeepResearchReport({ requestId: 'history-poll', timeStamp: 300 })
+    await flushPromises()
+    expect(createNotificationMock).toHaveBeenCalledTimes(1)
+
+    completeDeepResearchReport({ requestId: 'history-final', timeStamp: 600 })
     await flushPromises()
 
     expect(tabsSendMessageMock).toHaveBeenCalledWith(7, {
       type: 'response-complete-notification:get-deep-research-status',
       payload: {
-        conversationId: undefined,
+        conversationId: 'c_1',
       },
     })
-    expect(createNotificationMock).toHaveBeenCalledTimes(1)
-    expect(createNotificationMock).toHaveBeenCalledWith('response-complete:7:500', expect.objectContaining({
+    expect(createNotificationMock).toHaveBeenCalledTimes(2)
+    expect(createNotificationMock).toHaveBeenCalledWith('response-complete:7:600', expect.objectContaining({
       title: 'Chat title',
       message: 'Response summary',
     }))
