@@ -70,7 +70,7 @@ export default defineConfig({
 					items: [
 						{ label: 'FAQ', translations: { 'zh-CN': '常见问题' }, slug: 'support/faq' },
 						{ label: 'Notification Troubleshooting', translations: { 'zh-CN': '通知问题排查' }, slug: 'support/notification-troubleshooting' },
-						{ label: 'Changelog', translations: { 'zh-CN': '更新日志' }, slug: 'support/changelog' },
+						{ label: "What's New", translations: { 'zh-CN': '最新动态' }, slug: 'support/whats-new' },
 						{ label: 'Privacy Policy', translations: { 'zh-CN': '隐私政策' }, slug: 'privacy-policy' },
 					],
 				},

@@ -33,7 +33,7 @@ Implement a "What's New" toast notification that appears after an update.
     - **Feature List**: Display up to two items, each consisting of:
         - Feature Name
         - Brief Description
-    - **Footer**: A "Release Notes" link that redirects users to the full changelog.
+    - **Footer**: A "What's New" link that redirects users to the website release notes page.
     - **Sizing**: Fixed width with a defined maximum height.
 3.  **Components**: Built using Chakra UI. Evaluate if the existing `Toast` component can be reused or extended.
 4.  **Requirements**:

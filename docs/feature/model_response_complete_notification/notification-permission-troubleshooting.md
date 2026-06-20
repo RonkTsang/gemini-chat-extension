@@ -4,8 +4,8 @@ This guide explains how to check notification settings when Gemini Power Kit is 
 
 The user-facing version of this guide is published at:
 
-- https://gpkit.ronktsang.com/support/notification-troubleshooting/
-- https://gpkit.ronktsang.com/zh-cn/support/notification-troubleshooting/
+- https://gpk.ronktsang.com/support/notification-troubleshooting/
+- https://gpk.ronktsang.com/zh-cn/support/notification-troubleshooting/
 
 ## 1. What The Extension Can Check
 

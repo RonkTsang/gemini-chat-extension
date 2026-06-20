@@ -413,7 +413,7 @@
   },
   "whatsnew": {
     "title": "What's New",
-    "releaseNotes": "Release Notes",
+    "releaseNotes": "What's New",
     "notification": {
       "title": "Know when Gemini is ready",
       "description": "Step away while Gemini works. Get a desktop notification when the reply is ready, then click back to the chat.",

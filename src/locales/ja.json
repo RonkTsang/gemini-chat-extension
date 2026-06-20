@@ -417,7 +417,7 @@
   },
   "whatsnew": {
     "title": "新機能",
-    "releaseNotes": "リリースノート",
+    "releaseNotes": "最新情報",
     "notification": {
       "title": "Geminiの完了をすぐ受け取る",
       "description": "Geminiに任せて別の作業へ。返信ができたらデスクトップ通知でお知らせし、すぐチャットに戻れます。",

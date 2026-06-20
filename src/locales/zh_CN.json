@@ -417,7 +417,7 @@
   },
   "whatsnew": {
     "title": "更新内容",
-    "releaseNotes": "完整更新说明",
+    "releaseNotes": "最新动态",
     "notification": {
       "title": "Gemini 回复好时提醒你",
       "description": "切到其他标签页、窗口或应用后，Gemini 完成回复时会发送桌面通知，点击即可回到对话。",

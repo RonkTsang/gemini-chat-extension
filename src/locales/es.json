@@ -417,7 +417,7 @@
   },
   "whatsnew": {
     "title": "Novedades",
-    "releaseNotes": "Notas de la versión",
+    "releaseNotes": "Novedades",
     "notification": {
       "title": "Sabe cuándo Gemini está listo",
       "description": "Sigue con otra cosa mientras Gemini responde. Recibe una notificación de escritorio cuando la respuesta esté lista.",

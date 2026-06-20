@@ -12,7 +12,7 @@ export const EXTERNAL_LINKS = {
   GITHUB: 'https://github.com/RonkTsang/gemini-chat-extension',
   COFFEE: 'https://ko-fi.com/ronktsang',
   SHARE: 'https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn',
-  RELEASE_NOTES: 'https://www.notion.so/What-s-New-2eeda35941ef80d98e9df17363aeabfb',
-  NOTIFICATION_TROUBLESHOOTING: 'https://gpkit.ronktsang.com/support/notification-troubleshooting/',
-  NOTIFICATION_TROUBLESHOOTING_ZH_CN: 'https://gpkit.ronktsang.com/zh-cn/support/notification-troubleshooting/',
+  RELEASE_NOTES: 'https://gpk.ronktsang.com/support/whats-new/',
+  NOTIFICATION_TROUBLESHOOTING: 'https://gpk.ronktsang.com/support/notification-troubleshooting/',
+  NOTIFICATION_TROUBLESHOOTING_ZH_CN: 'https://gpk.ronktsang.com/zh-cn/support/notification-troubleshooting/',
 } as const;

@@ -246,6 +246,31 @@ header.header {
   display: block;
 }
 
+.release-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 1rem 0 1.5rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+
+.release-video {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 1rem 0 1.5rem;
+  border: 1px solid var(--sl-color-hairline-shade);
+  border-radius: 0.75rem;
+  background: #000;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme='light'] .release-image,
+[data-theme='light'] .release-video {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
 .section-heading {
   display: grid;
   gap: 0.9rem;
