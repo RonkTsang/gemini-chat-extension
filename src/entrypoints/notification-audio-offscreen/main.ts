@@ -1,4 +1,5 @@
 import notificationAudioUrl from '@/assets/sound/notification.mp3?url'
+import { logDevMessage } from '@/utils/devLogger'
 import { browser } from 'wxt/browser'
 import { isResponseCompleteNotificationAudioPlayMessage } from '@/types/runtime-messages'
 
@@ -12,6 +13,8 @@ browser.runtime.onMessage.addListener((message) => {
 
   audio.currentTime = 0
   return audio.play().catch((error) => {
-    console.error('[ResponseCompleteNotificationAudioOffscreen] Failed to play audio:', error)
+    if (import.meta.env.DEV) {
+      logDevMessage('error', '[ResponseCompleteNotificationAudioOffscreen] Failed to play audio:', error)
+    }
   })
 })

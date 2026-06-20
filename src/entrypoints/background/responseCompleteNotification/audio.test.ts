@@ -7,7 +7,7 @@ import {
 import {
   playResponseCompleteNotificationAudio,
   resetResponseCompleteNotificationAudioForTest,
-} from './responseCompleteNotificationAudio'
+} from './audio'
 
 const {
   getContextsMock,

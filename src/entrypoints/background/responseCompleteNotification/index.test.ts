@@ -23,12 +23,12 @@ import {
 } from '@/types/runtime-messages'
 import {
   resetDeepResearchNotificationStateForTest,
-} from './deepResearchNotificationState'
+} from './deepResearchState'
 import {
   resetResponseCompleteNotificationBackgroundForTest,
   startResponseCompleteNotificationBackground,
-} from './responseCompleteNotification'
-import { resetResponseCompleteNotificationAudioForTest } from './responseCompleteNotificationAudio'
+} from './index'
+import { resetResponseCompleteNotificationAudioForTest } from './audio'
 
 type RuntimeMessageListener = (message: unknown, sender: {
   tab?: {

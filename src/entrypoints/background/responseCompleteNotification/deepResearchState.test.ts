@@ -6,7 +6,7 @@ import {
   registerDeepResearchHistoryPoll,
   registerDeepResearchPoll,
   resetDeepResearchNotificationStateForTest,
-} from './deepResearchNotificationState'
+} from './deepResearchState'
 
 const storageData: Record<string, unknown> = {}
 const STORAGE_KEY = 'responseCompleteNotification.deepResearchTasks'

@@ -5,6 +5,10 @@ import {
   hasResponseCompleteNotificationAudioPermission,
 } from '@/services/responseCompleteNotificationSettings'
 import { RESPONSE_COMPLETE_NOTIFICATION_AUDIO_PLAY_MESSAGE } from '@/types/runtime-messages'
+import {
+  logAudioEvent,
+  warnNotificationDebugPayload,
+} from './logger'
 
 const OFFSCREEN_DOCUMENT_PATH = '/notification-audio-offscreen.html'
 const OFFSCREEN_JUSTIFICATION = 'Play an optional sound after response-complete notifications'
@@ -31,14 +35,6 @@ type ServiceWorkerClients = {
 }
 
 let creatingOffscreenDocument: Promise<void> | null = null
-
-function logAudioEvent(event: string, details: Record<string, unknown> = {}): void {
-  console.info('[ResponseCompleteNotificationAudio]', JSON.stringify({
-    timestamp: new Date().toISOString(),
-    event,
-    ...details,
-  }))
-}
 
 async function hasOffscreenDocument(): Promise<boolean> {
   const extensionUrl = browser.runtime.getURL('/icon/512.png')
@@ -80,7 +76,9 @@ async function ensureOffscreenDocument(): Promise<void> {
       reasons: ['AUDIO_PLAYBACK'],
       justification: OFFSCREEN_JUSTIFICATION,
     }).then(() => {
-      logAudioEvent('notification-audio-offscreen-created')
+      if (import.meta.env.DEV) {
+        logAudioEvent('notification-audio-offscreen-created')
+      }
     }).finally(() => {
       creatingOffscreenDocument = null
     })
@@ -110,13 +108,15 @@ export async function playResponseCompleteNotificationAudio(): Promise<void> {
       type: RESPONSE_COMPLETE_NOTIFICATION_AUDIO_PLAY_MESSAGE,
       target: 'offscreen',
     })
-    logAudioEvent('notification-audio-play-requested')
+    if (import.meta.env.DEV) {
+      logAudioEvent('notification-audio-play-requested')
+    }
   } catch (error) {
-    console.warn('[ResponseCompleteNotificationAudio]', JSON.stringify({
-      timestamp: new Date().toISOString(),
-      event: 'notification-audio-play-failed',
-      error: error instanceof Error ? error.message : String(error),
-    }))
+    if (import.meta.env.DEV) {
+      warnNotificationDebugPayload('[ResponseCompleteNotificationAudio]', 'notification-audio-play-failed', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
   }
 }
 
