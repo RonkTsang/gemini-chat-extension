@@ -12,6 +12,32 @@
   "settingsDescription": "自定义您的 $1 体验",
   "chatOutlineDescription": "生成可点击大纲，便于导航",
   "quickQuoteDescription": "选择文本快速引用并提问",
+  "responseNotificationLabel": "回复就绪时通知我",
+  "responseNotificationDescription": "显示聊天标题和简短预览。",
+  "responseNotificationForegroundOnlyLabel": "仅在未查看 Gemini 时通知",
+  "responseNotificationForegroundOnlyDescription": "切到其他标签页、窗口或应用后才显示通知。建议保持开启，避免打扰。",
+  "responseNotificationAudioLabel": "通知时播放声音",
+  "responseNotificationAudioDescription": "创建通知后播放一段简短提示音。",
+  "responseNotificationAudioPermissionDenied": "未获得音频权限。",
+  "responseNotificationAudioMissingPermission": "请再次开启音频以授予所需权限。",
+  "responseNotificationPermissionDenied": "未获得所需权限。",
+  "responseNotificationPermissionPopupOpened": "请在弹出的授权页中完成权限设置。",
+  "responseNotificationPermissionTitle": "开启回复通知",
+  "responseNotificationPermissionDescription": "允许浏览器权限以接收回复提醒。",
+  "responseNotificationPermissionButton": "允许通知",
+  "responseNotificationAudioPermissionTitle": "开启声音",
+  "responseNotificationAudioPermissionDescription": "允许播放可选提示音。",
+  "responseNotificationAudioPermissionButton": "允许通知提示音",
+  "responseNotificationPermissionCancel": "暂不开启",
+  "responseNotificationBlocked": "浏览器设置已阻止通知。",
+  "responseNotificationSystemUnknown": "通知可能仍取决于你的系统设置。",
+  "responseNotificationMissingPermission": "请再次开启以授予所需权限。",
+  "responseNotificationTest": "发送测试通知",
+  "responseNotificationTroubleshooting": "排查问题",
+  "responseNotificationTestTitle": "Gemini Power Kit 通知测试",
+  "responseNotificationTestMessage": "通知已正常工作。",
+  "responseNotificationTitle": "Gemini 已完成回复",
+  "responseNotificationMessage": "你的回复已准备好。",
   "quickFollow": {
     "more": "更多",
     "moreAriaLabel": "显示更多提示"
@@ -303,6 +329,15 @@
           }
         }
       },
+      "notification": {
+        "title": "通知",
+        "views": {
+          "index": {
+            "title": "通知",
+            "description": "在 Gemini 完成回复时接收通知。"
+          }
+        }
+      },
       "theme": {
         "title": "主题",
         "views": {
@@ -382,11 +417,11 @@
   },
   "whatsnew": {
     "title": "更新内容",
-    "releaseNotes": "完整更新说明",
-    "glassEffect": {
-      "title": "让消息毛玻璃刚刚好",
-      "description": "自由调节背景透出和毛玻璃模糊，让每段对话都更清爽、更通透，也更贴合你的壁纸。",
-      "action": "立即调节"
+    "releaseNotes": "最新动态",
+    "notification": {
+      "title": "Gemini 回复好时提醒你",
+      "description": "切到其他标签页、窗口或应用后，Gemini 完成回复时会发送桌面通知，点击即可回到对话。",
+      "action": "设置通知"
     }
   }
 }

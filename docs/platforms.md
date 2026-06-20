@@ -17,12 +17,42 @@ This project builds separate Chrome and Firefox extension variants with WXT. Kee
 
 - Base manifest keeps shared permissions minimal, mainly `storage`.
 - Firefox adds `webRequest`, `webRequestBlocking`, `*://gemini.google.com/*`, and `browser_specific_settings.gecko` in `wxt.config.ts`.
-- Chrome builds must not include Gecko settings or Firefox webRequest logic.
+- Chrome builds must not include Gecko settings or Firefox-only response interception logic. Response-complete notifications may use optional `webRequest`.
 
 ## Background Runtime
 
+- Chrome has an MV3 background service worker for shared notification message handling.
 - Firefox has a persistent MV2 background entrypoint at `src/entrypoints/background/index.ts`.
-- Chrome currently has no equivalent production background path for the Firefox-only webRequest flow.
+- Firefox-only response interception with `filterResponseData` stays behind
+  `import.meta.env.FIREFOX`. The shared response-complete notification monitor
+  uses `webRequest.onBeforeRequest` and `webRequest.onCompleted` on both
+  browsers, without reading response bodies.
+
+## Notifications
+
+- Chrome declares `notifications`, `webRequest`, and `offscreen` as optional permissions. Existing Gemini content-script matches already provide required Gemini host access.
+- Chrome Popup requests optional notification permissions directly. The
+  in-page SettingPanel opens the extension action popup, with a popup window
+  fallback, because a content-script click forwarded to background does not
+  preserve the user gesture required by `permissions.request()`.
+- Firefox keeps `notifications`, WebRequest, and Gemini host permissions
+  required. Firefox cannot preserve the user gesture when the in-page
+  SettingPanel sends a permission request to background, so making
+  `notifications` optional would cause the toggle to fail without showing a
+  permission prompt. Its SettingPanel continues to render notification controls
+  directly; the extension-page popup workflow is Chrome-only.
+- The response complete notification feature does not request `tabs`; notification click handling only uses stored `sender.tab.id` and `sender.tab.windowId`.
+- `StreamGenerate` completion is detected by shared background WebRequest monitoring. Notification title and message are requested from the Gemini content script; background must not read tab `url`, `title`, or `favIconUrl`.
+- Deep Research uses shared background WebRequest URL monitoring:
+  `kwDCne` marks an active conversation and suppresses its initialization
+  `StreamGenerate`; a matching successful `hNvQHb` completion creates the final
+  notification. Ephemeral task state is stored in `storage.session`.
+- Image response notifications are platform-specific: Chrome macOS uses a `basic` notification with the generated image thumbnail in `iconUrl`; Chrome on other platforms uses the `image` template with `imageUrl`; Firefox always uses `basic`.
+- Chromium system notifications use `silent: true` and can optionally play the
+  bundled completion sound through a Chrome-only Offscreen Document after
+  notification creation succeeds. Firefox omits the `silent` option because it
+  can prevent `notifications.create()` from completing on macOS; Firefox does
+  not expose the custom audio setting.
 
 ## Opening Tabs
 

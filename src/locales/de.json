@@ -12,6 +12,32 @@
   "settingsDescription": "Passen Sie Ihre $1 Erfahrung an",
   "chatOutlineDescription": "Klickbare Gliederung für einfache Navigation generieren",
   "quickQuoteDescription": "Text auswählen, um schnell zu zitieren und Fragen zu stellen",
+  "responseNotificationLabel": "Benachrichtigen, wenn Antworten bereit sind",
+  "responseNotificationDescription": "Zeigt den Chat-Titel und eine kurze Vorschau.",
+  "responseNotificationForegroundOnlyLabel": "Nur benachrichtigen, wenn Sie Gemini nicht geöffnet haben",
+  "responseNotificationForegroundOnlyDescription": "Benachrichtigungen werden angezeigt, nachdem Sie zu einem anderen Tab, Fenster oder einer anderen App gewechselt haben. Lassen Sie diese Option aktiviert, um Unterbrechungen zu vermeiden.",
+  "responseNotificationAudioLabel": "Ton bei Benachrichtigungen abspielen",
+  "responseNotificationAudioDescription": "Spielt nach dem Erstellen einer Benachrichtigung einen kurzen Ton ab.",
+  "responseNotificationAudioPermissionDenied": "Die Audioberechtigung wurde nicht erteilt.",
+  "responseNotificationAudioMissingPermission": "Aktivieren Sie Audio erneut, um die erforderliche Berechtigung zu erteilen.",
+  "responseNotificationPermissionDenied": "Die erforderlichen Berechtigungen wurden nicht erteilt.",
+  "responseNotificationPermissionPopupOpened": "Schließen Sie die Berechtigungseinrichtung im Popup ab.",
+  "responseNotificationPermissionTitle": "Antwortbenachrichtigungen aktivieren",
+  "responseNotificationPermissionDescription": "Browser-Berechtigung für Antwortbenachrichtigungen erlauben.",
+  "responseNotificationPermissionButton": "Benachrichtigungen erlauben",
+  "responseNotificationAudioPermissionTitle": "Ton aktivieren",
+  "responseNotificationAudioPermissionDescription": "Audiowiedergabe für den optionalen Ton erlauben.",
+  "responseNotificationAudioPermissionButton": "Benachrichtigungston erlauben",
+  "responseNotificationPermissionCancel": "Nicht jetzt",
+  "responseNotificationBlocked": "Benachrichtigungen sind in Ihren Browsereinstellungen blockiert.",
+  "responseNotificationSystemUnknown": "Benachrichtigungen können weiterhin von Ihren Systemeinstellungen abhängen.",
+  "responseNotificationMissingPermission": "Aktivieren Sie dies erneut, um die erforderlichen Berechtigungen zu erteilen.",
+  "responseNotificationTest": "Testbenachrichtigung senden",
+  "responseNotificationTroubleshooting": "Fehler beheben",
+  "responseNotificationTestTitle": "Gemini Power Kit-Benachrichtigungstest",
+  "responseNotificationTestMessage": "Benachrichtigungen funktionieren.",
+  "responseNotificationTitle": "Gemini hat fertig geantwortet",
+  "responseNotificationMessage": "Ihre Antwort ist bereit.",
   "quickFollow": {
     "more": "Mehr",
     "moreAriaLabel": "Weitere Prompts anzeigen"
@@ -303,6 +329,15 @@
           }
         }
       },
+      "notification": {
+        "title": "Benachrichtigungen",
+        "views": {
+          "index": {
+            "title": "Benachrichtigungen",
+            "description": "Lassen Sie sich benachrichtigen, wenn Gemini seine Antwort abgeschlossen hat."
+          }
+        }
+      },
       "theme": {
         "title": "Thema",
         "views": {
@@ -382,11 +417,11 @@
   },
   "whatsnew": {
     "title": "Was gibt's Neues",
-    "releaseNotes": "Versionshinweise",
-    "glassEffect": {
-      "title": "Nachrichten-Glas genau richtig",
-      "description": "Stimme Hintergrundsichtbarkeit und Glasunschärfe so ab, dass jeder Chat klar, luftig und perfekt zu deinem Hintergrund passt.",
-      "action": "Glas jetzt anpassen"
+    "releaseNotes": "Neuigkeiten",
+    "notification": {
+      "title": "Wissen, wenn Gemini fertig ist",
+      "description": "Arbeite weiter, während Gemini antwortet. Sobald die Antwort bereit ist, erinnert dich eine Desktop-Benachrichtigung.",
+      "action": "Einrichten"
     }
   }
 }

@@ -1,0 +1,90 @@
+---
+title: 回复完成通知
+description: Gemini 回复完成时收到系统通知，并可一键返回对应对话。
+---
+
+import { Image } from 'astro:assets';
+import notificationSettingsImg from '../../../../assets/features/notification/setting-panel.png';
+
+<Image
+  src={notificationSettingsImg}
+  alt="通知设置面板，包含回复完成通知、声音、测试通知与排查入口"
+  class="feature-image"
+/>
+
+## 功能概览
+
+Notifications 让你无需一直停留在 Gemini 标签页等待回复。当标准 Gemini 回复在后台标签页中完成时，Gemini Power Kit 会发送系统通知，并显示当前对话标题和简短回复预览。
+
+点击通知即可返回产生该通知的对话，同时从通知中心清除这条通知。
+
+## 为什么需要它
+
+较长的回复不应该让你一直盯着同一个标签页。以下场景尤其适合开启通知：
+
+- 同时处理多个 Gemini 对话
+- 等待回复时切换到其他应用
+- 运行耗时较长的 Prompt，并希望完成后立即继续
+- 不想反复检查标签页，希望通过声音获知完成状态
+
+## 设置说明
+
+<div class="settings-card-grid">
+  <article class="settings-card">
+    <div class="settings-label">Gemini 回复完成时通知我</div>
+    <p class="settings-detail">标准 Gemini 回复完成后，发送包含对话标题和简短回复预览的系统通知。</p>
+    <p class="settings-when">当你经常让 Gemini 在后台标签页中运行时，建议开启。</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">通知时播放声音</div>
+    <p class="settings-detail">通知创建成功后播放一段简短提示音。独立声音选项目前适用于 Chromium 浏览器。</p>
+    <p class="settings-when">当视觉通知容易被忽略，或 Gemini 被其他应用遮挡时使用。</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">发送测试通知</div>
+    <p class="settings-detail">创建一条测试通知，用于确认浏览器权限与系统通知设置是否正常。</p>
+    <p class="settings-when">首次开启通知或修改操作系统设置后，建议立即测试。</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">通知问题排查</div>
+    <p class="settings-detail">打开排查指南，检查浏览器权限和操作系统通知设置。</p>
+    <p class="settings-when">功能已经开启但没有出现通知时使用。</p>
+  </article>
+</div>
+
+## 快速使用
+
+1. 打开 Gemini Power Kit 侧边栏。
+2. 进入 **Notifications**。
+3. 开启 **Gemini 回复完成时通知我**，并允许浏览器请求的权限。
+4. 按需开启 **通知时播放声音**。
+5. 点击 **发送测试通知**，确认设置正常。
+6. 让 Gemini 开始回复，然后切换到其他标签页或应用。
+7. 收到完成通知后，点击通知返回对应对话。
+
+## 通知行为
+
+- 仅当 Gemini 页面不可见或未获得焦点时发送通知。
+- 可读取到内容时，通知会显示当前对话标题和简短回复预览。
+- 无法读取回复详情时，仍会发送通用的回复完成通知。
+- 点击通知会聚焦对应 Gemini 对话，并清除该通知。
+- 通知内容在本地处理，扩展不会读取流式响应正文。
+
+## 当前支持范围
+
+通知目前用于检测标准 Gemini 回复。Deep Research、Canvas，以及其他未使用标准回复流程的 Gemini 功能，可能不会触发完成通知。
+
+## 问题排查
+
+如果测试通知没有出现：
+
+1. 确认通知主开关仍处于开启状态。
+2. 打开[通知问题排查](/zh-cn/support/notification-troubleshooting/)。
+3. 在操作系统设置中允许浏览器发送通知。
+4. 检查专注模式、勿扰模式或其他可能隐藏通知的系统模式。
+5. 再次发送测试通知。
+
+## 相关功能
+
+- [标签页标题同步](/zh-cn/features/tab-title-sync/)
+- [对话大纲](/zh-cn/features/chat-outline/)

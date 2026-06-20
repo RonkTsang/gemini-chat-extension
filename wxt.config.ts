@@ -42,6 +42,11 @@ export default defineConfig({
       permissions: [
         "storage"
       ],
+      optional_permissions: [
+        "notifications",
+        "webRequest",
+        "offscreen"
+      ],
       web_accessible_resources: [
         {
           resources: ["url-monitor-main-world.js", "theme-sync-main-world.js", "icon/512.png"],
@@ -51,7 +56,9 @@ export default defineConfig({
     };
 
     if (env.browser === 'firefox') {
+      delete manifest.optional_permissions
       manifest.permissions.push(
+        'notifications',
         'webRequest',
         'webRequestBlocking',
         '*://gemini.google.com/*',

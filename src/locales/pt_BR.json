@@ -12,6 +12,32 @@
   "settingsDescription": "Personalize sua experiência com o $1",
   "chatOutlineDescription": "Gerar esboço clicável para navegação fácil",
   "quickQuoteDescription": "Selecionar texto para citar rapidamente e fazer perguntas",
+  "responseNotificationLabel": "Avisar quando as respostas estiverem prontas",
+  "responseNotificationDescription": "Mostra o título do chat e uma prévia curta.",
+  "responseNotificationForegroundOnlyLabel": "Notificar somente quando eu estiver fora do Gemini",
+  "responseNotificationForegroundOnlyDescription": "As notificações aparecem depois que você muda de aba, janela ou app. Mantenha ativado para evitar interrupções.",
+  "responseNotificationAudioLabel": "Reproduzir som com as notificações",
+  "responseNotificationAudioDescription": "Reproduz um som curto após a criação de uma notificação.",
+  "responseNotificationAudioPermissionDenied": "A permissão de áudio não foi concedida.",
+  "responseNotificationAudioMissingPermission": "Ative o áudio novamente para conceder a permissão necessária.",
+  "responseNotificationPermissionDenied": "As permissões necessárias não foram concedidas.",
+  "responseNotificationPermissionPopupOpened": "Conclua a configuração de permissões no popup.",
+  "responseNotificationPermissionTitle": "Ativar notificações de resposta",
+  "responseNotificationPermissionDescription": "Permita a permissão do navegador para alertas de resposta.",
+  "responseNotificationPermissionButton": "Permitir notificações",
+  "responseNotificationAudioPermissionTitle": "Ativar som",
+  "responseNotificationAudioPermissionDescription": "Permita a reprodução de áudio para o som opcional.",
+  "responseNotificationAudioPermissionButton": "Permitir som de notificação",
+  "responseNotificationPermissionCancel": "Agora não",
+  "responseNotificationBlocked": "As notificações estão bloqueadas pelas configurações do seu navegador.",
+  "responseNotificationSystemUnknown": "As notificações ainda podem depender das configurações do sistema.",
+  "responseNotificationMissingPermission": "Ative isto novamente para conceder as permissões necessárias.",
+  "responseNotificationTest": "Enviar notificação de teste",
+  "responseNotificationTroubleshooting": "Resolver problemas",
+  "responseNotificationTestTitle": "Teste de notificação do Gemini Power Kit",
+  "responseNotificationTestMessage": "As notificações estão funcionando.",
+  "responseNotificationTitle": "O Gemini terminou de responder",
+  "responseNotificationMessage": "Sua resposta está pronta.",
   "quickFollow": {
     "more": "Mais",
     "moreAriaLabel": "Mostrar mais prompts"
@@ -303,6 +329,15 @@
           }
         }
       },
+      "notification": {
+        "title": "Notificações",
+        "views": {
+          "index": {
+            "title": "Notificações",
+            "description": "Receba uma notificação quando o Gemini terminar de responder."
+          }
+        }
+      },
       "theme": {
         "title": "Tema",
         "views": {
@@ -382,11 +417,11 @@
   },
   "whatsnew": {
     "title": "O que há de novo",
-    "releaseNotes": "Notas de lançamento",
-    "glassEffect": {
-      "title": "Deixe o vidro das mensagens no ponto",
-      "description": "Ajuste a visibilidade do fundo e o desfoque do vidro para deixar cada conversa mais nítida, leve e combinando com seu papel de parede.",
-      "action": "Ajustar agora"
+    "releaseNotes": "Novidades",
+    "notification": {
+      "title": "Saiba quando o Gemini terminar",
+      "description": "Faça outra coisa enquanto o Gemini responde. Você recebe uma notificação na área de trabalho quando a resposta ficar pronta.",
+      "action": "Configurar"
     }
   }
 }

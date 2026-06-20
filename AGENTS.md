@@ -81,6 +81,12 @@ Verifies all locale files against English base.
 - Keep paths aligned with existing alias usage (e.g., `@/utils/...`)
 - Example: `import { eventBus } from '@/utils/eventbus'`
 
+### Extension Runtime Safety
+
+- Background code can run for long periods; do not keep unbounded in-memory state in module globals.
+- Any background `Map`, `Set`, cache, queue, timer, or per-tab/per-window state must have a cleanup path, max size, TTL, or be derivable from browser state.
+- Prefer structured IDs and browser APIs over long-lived background lookup tables for routing or recovery.
+
 ---
 
 ## Architecture Conventions
