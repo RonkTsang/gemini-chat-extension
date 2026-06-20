@@ -414,10 +414,10 @@
   "whatsnew": {
     "title": "What's New",
     "releaseNotes": "Release Notes",
-    "glassEffect": {
-      "title": "Make message glass feel just right",
-      "description": "Dial in background visibility and glass blur until every chat feels crisp, airy, and perfectly tuned to your wallpaper.",
-      "action": "Tune glass now"
+    "notification": {
+      "title": "Know when Gemini is ready",
+      "description": "Step away while Gemini works. Get a desktop notification when the reply is ready, then click back to the chat.",
+      "action": "Set up notifications"
     }
   }
 }

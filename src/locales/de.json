@@ -418,10 +418,10 @@
   "whatsnew": {
     "title": "Was gibt's Neues",
     "releaseNotes": "Versionshinweise",
-    "glassEffect": {
-      "title": "Nachrichten-Glas genau richtig",
-      "description": "Stimme Hintergrundsichtbarkeit und Glasunschärfe so ab, dass jeder Chat klar, luftig und perfekt zu deinem Hintergrund passt.",
-      "action": "Glas jetzt anpassen"
+    "notification": {
+      "title": "Wissen, wenn Gemini fertig ist",
+      "description": "Arbeite weiter, während Gemini antwortet. Sobald die Antwort bereit ist, erinnert dich eine Desktop-Benachrichtigung.",
+      "action": "Einrichten"
     }
   }
 }

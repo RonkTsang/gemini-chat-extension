@@ -418,10 +418,10 @@
   "whatsnew": {
     "title": "Novedades",
     "releaseNotes": "Notas de la versión",
-    "glassEffect": {
-      "title": "Deja el vidrio de mensajes perfecto",
-      "description": "Ajusta la visibilidad del fondo y el desenfoque hasta que cada chat se sienta más claro, ligero y conectado con tu fondo.",
-      "action": "Ajustar ahora"
+    "notification": {
+      "title": "Sabe cuándo Gemini está listo",
+      "description": "Sigue con otra cosa mientras Gemini responde. Recibe una notificación de escritorio cuando la respuesta esté lista.",
+      "action": "Configurar"
     }
   }
 }

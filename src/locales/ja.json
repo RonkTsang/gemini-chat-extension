@@ -418,10 +418,10 @@
   "whatsnew": {
     "title": "新機能",
     "releaseNotes": "リリースノート",
-    "glassEffect": {
-      "title": "メッセージのグラス効果を心地よく",
-      "description": "背景の見え方とグラスぼかしを調整して、壁紙になじむ、すっきり軽やかなチャット画面にできます。",
-      "action": "今すぐ調整"
+    "notification": {
+      "title": "Geminiの完了をすぐ受け取る",
+      "description": "Geminiに任せて別の作業へ。返信ができたらデスクトップ通知でお知らせし、すぐチャットに戻れます。",
+      "action": "通知を設定"
     }
   }
 }

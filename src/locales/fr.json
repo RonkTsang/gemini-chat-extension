@@ -418,10 +418,10 @@
   "whatsnew": {
     "title": "Quoi de neuf",
     "releaseNotes": "Notes de version",
-    "glassEffect": {
-      "title": "Un verre de messages parfaitement dosé",
-      "description": "Réglez la visibilité de l'arrière-plan et le flou du verre pour des discussions plus nettes, légères et accordées à votre fond.",
-      "action": "Ajuster maintenant"
+    "notification": {
+      "title": "Savoir quand Gemini est prêt",
+      "description": "Faites autre chose pendant que Gemini répond. Une notification de bureau vous prévient dès que la réponse est prête.",
+      "action": "Configurer"
     }
   }
 }

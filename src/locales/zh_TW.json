@@ -418,10 +418,10 @@
   "whatsnew": {
     "title": "更新內容",
     "releaseNotes": "完整更新說明",
-    "glassEffect": {
-      "title": "讓訊息毛玻璃剛剛好",
-      "description": "自由調整背景透出與毛玻璃模糊，讓每段對話都更清爽、更通透，也更貼合您的桌布。",
-      "action": "立即調整"
+    "notification": {
+      "title": "Gemini 完成時提醒你",
+      "description": "切到其他分頁、視窗或應用程式後，Gemini 完成回覆時會傳送桌面通知，點一下即可回到對話。",
+      "action": "設定通知"
     }
   }
 }

@@ -418,10 +418,10 @@
   "whatsnew": {
     "title": "새로운 기능",
     "releaseNotes": "릴리스 노트",
-    "glassEffect": {
-      "title": "메시지 유리 효과를 딱 맞게",
-      "description": "배경 보임 정도와 유리 흐림을 조절해 모든 대화를 더 선명하고 산뜻하게, 내 배경과 잘 어울리게 만들어 보세요.",
-      "action": "지금 조정하기"
+    "notification": {
+      "title": "Gemini가 끝나면 바로 확인",
+      "description": "Gemini가 답하는 동안 다른 일을 해도 괜찮아요. 답변이 준비되면 데스크톱 알림을 받고 채팅으로 돌아갈 수 있습니다.",
+      "action": "알림 설정"
     }
   }
 }

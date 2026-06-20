@@ -1,0 +1,4 @@
+interface:
+  display_name: "What's New Updater"
+  short_description: "Create Gemini Power Kit update banners"
+  default_prompt: "Use $whats-new-updater to create a Gemini Power Kit What's New update with image guidance, localized copy, and code changes."
