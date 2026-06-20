@@ -52,9 +52,18 @@ type WebRequestBeforeRequestListener = (details: {
   url: string
 }) => void
 
+type WebRequestErrorListener = (details: {
+  requestId: string
+  tabId: number
+  timeStamp: number
+  url: string
+  error: string
+}) => void
+
 let runtimeMessageListener: RuntimeMessageListener | null = null
 let webRequestCompletedListener: WebRequestCompletedListener | null = null
 let webRequestBeforeRequestListener: WebRequestBeforeRequestListener | null = null
+let webRequestErrorListener: WebRequestErrorListener | null = null
 let permissionAddedListener: (() => void) | null = null
 let permissionRemovedListener: (() => void) | null = null
 let notificationClickListener: ((notificationId: string) => void) | null = null
@@ -131,6 +140,16 @@ vi.mock('wxt/browser', () => ({
           }
         }),
       },
+      onErrorOccurred: {
+        addListener: vi.fn((listener: WebRequestErrorListener) => {
+          webRequestErrorListener = listener
+        }),
+        removeListener: vi.fn((listener: WebRequestErrorListener) => {
+          if (webRequestErrorListener === listener) {
+            webRequestErrorListener = null
+          }
+        }),
+      },
     },
     storage: {
       session: {
@@ -175,6 +194,8 @@ const webRequestAddListenerMock = vi.mocked(browser.webRequest.onCompleted.addLi
 const webRequestRemoveListenerMock = vi.mocked(browser.webRequest.onCompleted.removeListener)
 const webRequestBeforeRequestAddListenerMock = vi.mocked(browser.webRequest.onBeforeRequest.addListener)
 const webRequestBeforeRequestRemoveListenerMock = vi.mocked(browser.webRequest.onBeforeRequest.removeListener)
+const webRequestErrorAddListenerMock = vi.mocked(browser.webRequest.onErrorOccurred.addListener)
+const webRequestErrorRemoveListenerMock = vi.mocked(browser.webRequest.onErrorOccurred.removeListener)
 const tabsSendMessageMock = vi.mocked(
   browser.tabs.sendMessage as unknown as (tabId: number, message: unknown) => Promise<unknown>,
 )
@@ -262,6 +283,17 @@ function startDeepResearchPoll(overrides: Partial<Parameters<WebRequestBeforeReq
   })
 }
 
+function errorDeepResearchPoll(overrides: Partial<Parameters<WebRequestErrorListener>[0]> = {}): void {
+  webRequestErrorListener?.({
+    requestId: 'poll-1',
+    tabId: 7,
+    timeStamp: 105,
+    url: 'https://gemini.google.com/_/BardChatUi/data/batchexecute?rpcids=kwDCne&source-path=%2Fapp%2Fc_1',
+    error: 'net::ERR_ABORTED',
+    ...overrides,
+  })
+}
+
 function completeDeepResearchPoll(overrides: Partial<Parameters<WebRequestCompletedListener>[0]> = {}): void {
   webRequestCompletedListener?.({
     requestId: 'poll-1',
@@ -292,6 +324,7 @@ describe('responseCompleteNotification background V2', () => {
     runtimeMessageListener = null
     webRequestCompletedListener = null
     webRequestBeforeRequestListener = null
+    webRequestErrorListener = null
     permissionAddedListener = null
     permissionRemovedListener = null
     notificationClickListener = null
@@ -457,16 +490,20 @@ describe('responseCompleteNotification background V2', () => {
 
     expect(webRequestAddListenerMock).toHaveBeenCalledTimes(1)
     expect(webRequestBeforeRequestAddListenerMock).toHaveBeenCalledTimes(1)
+    expect(webRequestErrorAddListenerMock).toHaveBeenCalledTimes(1)
     expect(webRequestCompletedListener).not.toBeNull()
     expect(webRequestBeforeRequestListener).not.toBeNull()
+    expect(webRequestErrorListener).not.toBeNull()
 
     await setResponseCompleteNotificationEnabled(false)
     await flushPromises()
 
     expect(webRequestRemoveListenerMock).toHaveBeenCalledTimes(1)
     expect(webRequestBeforeRequestRemoveListenerMock).toHaveBeenCalledTimes(1)
+    expect(webRequestErrorRemoveListenerMock).toHaveBeenCalledTimes(1)
     expect(webRequestCompletedListener).toBeNull()
     expect(webRequestBeforeRequestListener).toBeNull()
+    expect(webRequestErrorListener).toBeNull()
   })
 
   it('creates a rich notification when StreamGenerate completes successfully', async () => {
@@ -546,6 +583,22 @@ describe('responseCompleteNotification background V2', () => {
       },
     })
     expect(createNotificationMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('clears an observed Deep Research poll request when the request errors', async () => {
+    await setResponseCompleteNotificationEnabled(true)
+    await flushPromises()
+
+    startDeepResearchPoll()
+    await flushPromises()
+    errorDeepResearchPoll()
+    completeDeepResearchPoll()
+    await flushPromises()
+
+    completeDeepResearchReport()
+    await flushPromises()
+
+    expect(createNotificationMock).toHaveBeenCalledTimes(1)
   })
 
   it('notifies Case 2 StreamGenerate and tracks Deep Research from the following hNvQHb poll', async () => {

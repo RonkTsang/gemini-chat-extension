@@ -71,6 +71,8 @@ import type {
   WebRequestBeforeRequestListener,
   WebRequestCompletedDetails,
   WebRequestCompletedListener,
+  WebRequestErrorDetails,
+  WebRequestErrorListener,
 } from './types'
 
 export {
@@ -157,11 +159,16 @@ async function syncWebRequestListener(): Promise<void> {
       handleGeminiRequestCompleted,
       { urls: [STREAM_GENERATE_URL, BATCH_EXECUTE_URL] },
     )
+    browser.webRequest.onErrorOccurred.addListener(
+      handleGeminiRequestErrored,
+      { urls: [BATCH_EXECUTE_URL] },
+    )
     webRequestListenerStarted = true
     if (import.meta.env.DEV) {
       logBackgroundEvent('web-request-listener-started', {
         beforeRequestUrls: [BATCH_EXECUTE_URL],
         completedUrls: [STREAM_GENERATE_URL, BATCH_EXECUTE_URL],
+        errorUrls: [BATCH_EXECUTE_URL],
       })
     }
     return
@@ -170,6 +177,8 @@ async function syncWebRequestListener(): Promise<void> {
   if (!shouldListen && webRequestListenerStarted) {
     browser.webRequest.onBeforeRequest.removeListener(handleGeminiRequestStarted)
     browser.webRequest.onCompleted.removeListener(handleGeminiRequestCompleted)
+    browser.webRequest.onErrorOccurred.removeListener(handleGeminiRequestErrored)
+    deepResearchPollsObservedBeforeRequest.clear()
     webRequestListenerStarted = false
     if (import.meta.env.DEV) {
       logBackgroundEvent('web-request-listener-stopped', { readiness })
@@ -195,6 +204,12 @@ function handleGeminiRequestStarted(
   deepResearchPollsObservedBeforeRequest.add(details.requestId)
   void trackDeepResearchPoll(details, request, 'before-request')
   return undefined
+}
+
+function handleGeminiRequestErrored(
+  details: WebRequestErrorDetails,
+): ReturnType<WebRequestErrorListener> {
+  deepResearchPollsObservedBeforeRequest.delete(details.requestId)
 }
 
 function trackDeepResearchPoll(
@@ -630,6 +645,7 @@ export function resetResponseCompleteNotificationBackgroundForTest(): void {
   if (webRequestListenerStarted) {
     browser.webRequest.onBeforeRequest.removeListener(handleGeminiRequestStarted)
     browser.webRequest.onCompleted.removeListener(handleGeminiRequestCompleted)
+    browser.webRequest.onErrorOccurred.removeListener(handleGeminiRequestErrored)
   }
   unwatchNotificationSetting?.()
   unwatchNotificationSetting = null

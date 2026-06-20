@@ -24,6 +24,8 @@ export type WebRequestCompletedListener = Parameters<typeof browser.webRequest.o
 export type WebRequestCompletedDetails = Parameters<WebRequestCompletedListener>[0]
 export type WebRequestBeforeRequestListener = Parameters<typeof browser.webRequest.onBeforeRequest.addListener>[0]
 export type WebRequestBeforeRequestDetails = Parameters<WebRequestBeforeRequestListener>[0]
+export type WebRequestErrorListener = Parameters<typeof browser.webRequest.onErrorOccurred.addListener>[0]
+export type WebRequestErrorDetails = Parameters<WebRequestErrorListener>[0]
 
 export type NotificationSource = 'response-complete' | 'test'
 export type CompletionKind = 'standard-response' | 'deep-research'
