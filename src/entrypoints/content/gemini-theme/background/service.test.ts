@@ -90,6 +90,8 @@ function createSettings(overrides: Partial<ThemeBackgroundSettings> = {}): Theme
     messageGlassBlurCustomized: false,
     sidebarScrimEnabled: true,
     sidebarScrimIntensity: 20,
+    chatTextLightColor: null,
+    chatTextDarkColor: null,
     welcomeGreetingReadabilityMode: 'auto',
     welcomeGreetingResolved: 'default',
     welcomeGreetingResolvedAssetId: null,

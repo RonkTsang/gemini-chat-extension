@@ -16,6 +16,7 @@ import {
   type AppearanceMode,
   type AppearanceState,
   type BackgroundImagePosition,
+  type GeminiTheme,
   type ThemeBackgroundResolvedState,
   type ThemeBackgroundSettings,
   type WelcomeGreetingReadabilityMode,
@@ -27,10 +28,13 @@ import { tt } from '@/utils/i18n'
 
 export interface ThemeSettingsController {
   appearanceState: AppearanceState
+  effectiveTheme: GeminiTheme
   backgroundState: ThemeBackgroundResolvedState | null
   isBackgroundLoading: boolean
   activeKey: string
   previewState: ThemeBackgroundResolvedState
+  chatTextColor: string | null
+  defaultChatTextColor: string
   handleSelect: (key: string) => Promise<void>
   handleAppearanceChange: (mode: AppearanceMode) => void
   handleToggleBackground: (enabled: boolean) => Promise<void>
@@ -44,6 +48,8 @@ export interface ThemeSettingsController {
   handleMessageGlassBackgroundVisibilityChange: (value: number) => Promise<void>
   handleMessageGlassBlurChange: (value: number) => Promise<void>
   handleResetGlassSettings: () => Promise<void>
+  handleChatTextColorChange: (color: string) => Promise<void>
+  handleResetChatTextColor: () => Promise<void>
   handleWelcomeGreetingReadabilityModeChange: (
     mode: WelcomeGreetingReadabilityMode,
   ) => Promise<void>
@@ -54,6 +60,11 @@ export interface ThemeSettingsController {
 interface UseThemeSettingsControllerOptions {
   systemThemeWatchEnabled?: boolean
   settingsPanelStateSyncEnabled?: boolean
+}
+
+const DEFAULT_CHAT_TEXT_COLORS: Record<GeminiTheme, string> = {
+  light: '#1f1f1f',
+  dark: '#e3e3e3',
 }
 
 function toResolvedState(
@@ -84,6 +95,52 @@ function getBackgroundErrorMessage(error: unknown): string {
   return tt('settingPanel.theme.imageLoadFailed', 'Image loading failed, please try again')
 }
 
+function toTwoDigitHex(value: number): string {
+  return Math.min(255, Math.max(0, Math.round(value)))
+    .toString(16)
+    .padStart(2, '0')
+}
+
+function normalizeCssColorToHex(value: string): string | null {
+  const trimmed = value.trim()
+  if (/^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i.test(trimmed)) {
+    return trimmed.toLowerCase()
+  }
+
+  if (!trimmed.startsWith('rgb')) return null
+
+  const parts = trimmed.match(/[\d.]+/g)
+  if (!parts || parts.length < 3) return null
+
+  const red = Number(parts[0])
+  const green = Number(parts[1])
+  const blue = Number(parts[2])
+  if (![red, green, blue].every(Number.isFinite)) return null
+
+  const alpha = parts[3] === undefined ? 1 : Number(parts[3])
+  const alphaHex = Number.isFinite(alpha) && alpha < 1
+    ? toTwoDigitHex(alpha * 255)
+    : ''
+
+  return `#${toTwoDigitHex(red)}${toTwoDigitHex(green)}${toTwoDigitHex(blue)}${alphaHex}`
+}
+
+function readDefaultChatTextColor(theme: GeminiTheme): string {
+  if (typeof document === 'undefined' || !document.body) {
+    return DEFAULT_CHAT_TEXT_COLORS[theme]
+  }
+
+  const probe = document.createElement('span')
+  probe.style.color = 'var(--gem-sys-color--on-surface)'
+  probe.style.display = 'none'
+  document.body.appendChild(probe)
+
+  const computedColor = getComputedStyle(probe).color
+  probe.remove()
+
+  return normalizeCssColorToHex(computedColor) ?? DEFAULT_CHAT_TEXT_COLORS[theme]
+}
+
 export function useThemeSettingsController(
   options: UseThemeSettingsControllerOptions = {},
 ): ThemeSettingsController {
@@ -96,6 +153,9 @@ export function useThemeSettingsController(
   const [isPanelOpen, setIsPanelOpen] = useState(true)
   const [backgroundState, setBackgroundState] = useState<ThemeBackgroundResolvedState | null>(null)
   const [isBackgroundLoading, setIsBackgroundLoading] = useState(true)
+  const [defaultChatTextColor, setDefaultChatTextColor] = useState(
+    () => readDefaultChatTextColor(getAppearanceState().effectiveTheme),
+  )
 
   useEvent('settings:state-changed', (data) => {
     if (!settingsPanelStateSyncEnabled) return
@@ -144,6 +204,10 @@ export function useThemeSettingsController(
 
     return unsubscribe
   }, [appearanceState.mode, isPanelOpen, systemThemeWatchEnabled])
+
+  useEffect(() => {
+    setDefaultChatTextColor(readDefaultChatTextColor(appearanceState.effectiveTheme))
+  }, [appearanceState.effectiveTheme, palette])
 
   const handleSelect = useCallback(async (key: string) => {
     await applyTheme(key)
@@ -266,6 +330,32 @@ export function useThemeSettingsController(
     }
   }, [])
 
+  const handleChatTextColorChange = useCallback(async (color: string) => {
+    try {
+      const state = await updateThemeBackgroundSettings(
+        appearanceState.effectiveTheme === 'dark'
+          ? { chatTextDarkColor: color }
+          : { chatTextLightColor: color },
+      )
+      setBackgroundState(state)
+    } catch (error) {
+      toaster.create({ type: 'error', title: getBackgroundErrorMessage(error) })
+    }
+  }, [appearanceState.effectiveTheme])
+
+  const handleResetChatTextColor = useCallback(async () => {
+    try {
+      const state = await updateThemeBackgroundSettings(
+        appearanceState.effectiveTheme === 'dark'
+          ? { chatTextDarkColor: null }
+          : { chatTextLightColor: null },
+      )
+      setBackgroundState(state)
+    } catch (error) {
+      toaster.create({ type: 'error', title: getBackgroundErrorMessage(error) })
+    }
+  }, [appearanceState.effectiveTheme])
+
   const handleWelcomeGreetingReadabilityModeChange = useCallback(
     async (mode: WelcomeGreetingReadabilityMode) => {
       try {
@@ -309,13 +399,19 @@ export function useThemeSettingsController(
     },
     [backgroundState],
   )
+  const chatTextColor = appearanceState.effectiveTheme === 'dark'
+    ? previewState.settings.chatTextDarkColor
+    : previewState.settings.chatTextLightColor
 
   return {
     appearanceState,
+    effectiveTheme: appearanceState.effectiveTheme,
     backgroundState,
     isBackgroundLoading,
     activeKey,
     previewState,
+    chatTextColor,
+    defaultChatTextColor,
     handleSelect,
     handleAppearanceChange,
     handleToggleBackground,
@@ -327,6 +423,8 @@ export function useThemeSettingsController(
     handleMessageGlassBackgroundVisibilityChange,
     handleMessageGlassBlurChange,
     handleResetGlassSettings,
+    handleChatTextColorChange,
+    handleResetChatTextColor,
     handleWelcomeGreetingReadabilityModeChange,
     handleUploadFile,
     handleRemoveImage,

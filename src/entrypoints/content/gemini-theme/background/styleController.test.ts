@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import {
   applyThemeBackgroundStyle,
   clearThemeBackgroundStyle,
@@ -27,6 +29,8 @@ function createState(
       messageGlassBlurCustomized: false,
       sidebarScrimEnabled: true,
       sidebarScrimIntensity: 20,
+      chatTextLightColor: null,
+      chatTextDarkColor: null,
       welcomeGreetingReadabilityMode: 'auto',
       welcomeGreetingResolved: 'default',
       welcomeGreetingResolvedAssetId: null,
@@ -158,6 +162,12 @@ describe('styleController', () => {
     expect(document.documentElement.style.getPropertyValue('--gpk-sidebar-scrim-alpha')).toBe(
       '0.50',
     )
+    expect(document.documentElement.style.getPropertyValue('--gpk-chat-text-light-color')).toBe(
+      '',
+    )
+    expect(document.documentElement.style.getPropertyValue('--gpk-chat-text-dark-color')).toBe(
+      '',
+    )
     expect(document.documentElement.style.getPropertyValue('--gpk-bg-image')).toContain(
       'blob:preview',
     )
@@ -208,6 +218,48 @@ describe('styleController', () => {
     expect(bgLayer).toBeTruthy()
     expect(bgLayer?.style.display).toBe('none')
     expect(bgLayer?.style.backgroundImage).toBe('none')
+  })
+
+  it('syncs chat text color variables', () => {
+    applyThemeBackgroundStyle(
+      createState({
+        settings: {
+          chatTextLightColor: '#112233',
+          chatTextDarkColor: '#ddeeffcc',
+        } as ThemeBackgroundResolvedState['settings'],
+      }),
+    )
+
+    expect(document.documentElement.style.getPropertyValue('--gpk-chat-text-light-color')).toBe(
+      '#112233',
+    )
+    expect(document.documentElement.style.getPropertyValue('--gpk-chat-text-dark-color')).toBe(
+      '#ddeeffcc',
+    )
+
+    applyThemeBackgroundStyle(createState())
+
+    expect(document.documentElement.style.getPropertyValue('--gpk-chat-text-light-color')).toBe(
+      '',
+    )
+    expect(document.documentElement.style.getPropertyValue('--gpk-chat-text-dark-color')).toBe(
+      '',
+    )
+  })
+
+  it('scopes chat text color CSS to chat-window', () => {
+    const css = readFileSync(
+      join(
+        process.cwd(),
+        'src/entrypoints/content/gemini-theme/background/style.css',
+      ),
+      'utf8',
+    )
+
+    expect(css).toContain('body.light-theme chat-window')
+    expect(css).toContain('body.dark-theme chat-window')
+    expect(css).toContain('--gem-sys-color--on-surface: var(--gpk-chat-text-light-color)')
+    expect(css).toContain('--gem-sys-color--on-surface: var(--gpk-chat-text-dark-color)')
   })
 
   it('clears style tag, root attributes and background layer', () => {
@@ -290,6 +342,12 @@ describe('styleController', () => {
       ),
     ).toBe('')
     expect(document.documentElement.style.getPropertyValue('--gpk-sidebar-scrim-alpha')).toBe(
+      '',
+    )
+    expect(document.documentElement.style.getPropertyValue('--gpk-chat-text-light-color')).toBe(
+      '',
+    )
+    expect(document.documentElement.style.getPropertyValue('--gpk-chat-text-dark-color')).toBe(
       '',
     )
   })

@@ -27,6 +27,7 @@ export const MESSAGE_GLASS_BLUR_MIN = 0
 export const MESSAGE_GLASS_BLUR_MAX = 20
 export const SIDEBAR_SCRIM_INTENSITY_MIN = 0
 export const SIDEBAR_SCRIM_INTENSITY_MAX = 100
+const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i
 
 export const BACKGROUND_IMAGE_POSITIONS = [
   'top-left',
@@ -86,6 +87,8 @@ export interface ThemeBackgroundSettings {
   messageGlassBlurCustomized: boolean
   sidebarScrimEnabled: boolean
   sidebarScrimIntensity: number
+  chatTextLightColor: string | null
+  chatTextDarkColor: string | null
   welcomeGreetingReadabilityMode: WelcomeGreetingReadabilityMode
   welcomeGreetingResolved: WelcomeGreetingResolved
   welcomeGreetingResolvedAssetId: string | null
@@ -110,6 +113,8 @@ export interface ThemeBackgroundPatch {
   messageGlassBlurCustomized?: boolean
   sidebarScrimEnabled?: boolean
   sidebarScrimIntensity?: number
+  chatTextLightColor?: string | null
+  chatTextDarkColor?: string | null
   welcomeGreetingReadabilityMode?: WelcomeGreetingReadabilityMode
   welcomeGreetingResolved?: WelcomeGreetingResolved
   welcomeGreetingResolvedAssetId?: string | null
@@ -153,6 +158,8 @@ export const DEFAULT_THEME_BACKGROUND_SETTINGS: ThemeBackgroundSettings = {
   messageGlassBlurCustomized: false,
   sidebarScrimEnabled: true,
   sidebarScrimIntensity: 20,
+  chatTextLightColor: null,
+  chatTextDarkColor: null,
   welcomeGreetingReadabilityMode: 'auto',
   welcomeGreetingResolved: 'default',
   welcomeGreetingResolvedAssetId: null,
@@ -240,6 +247,12 @@ function normalizeWelcomeGreetingResolvedAssetId(value: unknown): string | null 
   return trimmed.length > 0 ? trimmed : null
 }
 
+function normalizeChatTextColor(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  return HEX_COLOR_PATTERN.test(trimmed) ? trimmed.toLowerCase() : null
+}
+
 export function isAllowedBackgroundImageMimeType(
   mimeType: string,
 ): mimeType is ThemeBackgroundMimeType {
@@ -320,6 +333,8 @@ export function normalizeThemeBackgroundSettings(
   const sidebarScrimEnabled = typeof source.sidebarScrimEnabled === 'boolean'
     ? source.sidebarScrimEnabled
     : DEFAULT_THEME_BACKGROUND_SETTINGS.sidebarScrimEnabled
+  const chatTextLightColor = normalizeChatTextColor(source.chatTextLightColor)
+  const chatTextDarkColor = normalizeChatTextColor(source.chatTextDarkColor)
   const welcomeGreetingReadabilityMode = normalizeWelcomeGreetingMode(
     source.welcomeGreetingReadabilityMode,
   )
@@ -370,6 +385,8 @@ export function normalizeThemeBackgroundSettings(
     messageGlassBlurCustomized: source.messageGlassBlurCustomized === true,
     sidebarScrimEnabled,
     sidebarScrimIntensity,
+    chatTextLightColor,
+    chatTextDarkColor,
     welcomeGreetingReadabilityMode,
     welcomeGreetingResolved,
     welcomeGreetingResolvedAssetId,
