@@ -11,6 +11,7 @@ import { startResponseCompleteNotificationContentProvider } from '@/services/res
 import { i18nCache } from '@/utils/i18nCache'
 import { stuffPageModule } from './stuff-page'
 import { initTheme, initThemeBackground } from './gemini-theme'
+import { gemAvatarModule } from './gem-avatar'
 import {
   FIREFOX_INSTANCE_ID_ATTR,
   markFirefoxReloadRequired,
@@ -105,6 +106,10 @@ export default defineContentScript({
     urlMonitor.start()
     console.log('[ContentScript] URL Monitor started')
 
+    // 2.1 Start Gem avatar module (depends on URL monitor events)
+    gemAvatarModule.start()
+    console.log('[ContentScript] Gem Avatar Module started')
+
     // 3. Then start chat change detector (depends on urlMonitor)
     chatChangeDetector.start()
     console.log('[ContentScript] Chat Change Detector started')
@@ -145,6 +150,7 @@ export default defineContentScript({
     ui.mount();
     startPowerKitEntry()
     ctx.onInvalidated(() => {
+      gemAvatarModule.stop()
       stopPowerKitEntry()
     })
     console.log('[ContentScript] UI mounted, context still valid:', ctx.isValid)
