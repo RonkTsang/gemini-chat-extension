@@ -1,0 +1,208 @@
+.gpk-gem-avatar-logo-anchor,
+.gpk-gem-avatar-anchor {
+  position: relative !important;
+}
+
+.gpk-gem-avatar-anchor {
+  overflow: visible !important;
+}
+
+.gpk-gem-avatar-logo-anchor {
+  isolation: isolate;
+}
+
+.gpk-gem-avatar,
+.gpk-gem-avatar-preview,
+.gpk-gem-avatar-uploader,
+.gpk-gem-avatar-delete {
+  box-sizing: border-box;
+}
+
+.gpk-gem-avatar {
+  display: block;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.gpk-gem-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gpk-gem-avatar-logo-anchor > :not(.gpk-gem-avatar-logo):not(.gpk-gem-avatar-preview) {
+  position: relative;
+  z-index: 0;
+}
+
+.gpk-gem-avatar-logo {
+  position: absolute !important;
+  top: 0;
+  left: 0;
+  z-index: 2147483646;
+  width: var(--bot-logo-size, 100%);
+  height: var(--bot-logo-size, 100%);
+  pointer-events: none;
+}
+
+.gpk-gem-avatar-logo-clickable {
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.gpk-gem-avatar-logo-clickable:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.gpk-gem-avatar-recent-chat-logo {
+  border-radius: calc(var(--bot-logo-size, 32px) / 3);
+}
+
+.gpk-gem-avatar-preview {
+  position: absolute;
+  inset: 0;
+  z-index: 2147483647;
+  display: grid;
+  place-items: center;
+  overflow: visible;
+  border-radius: 999px;
+}
+
+.gpk-gem-avatar-preview::before {
+  position: absolute;
+  inset: -8px;
+  z-index: 0;
+  content: '';
+  border-radius: 999px;
+}
+
+.gpk-gem-avatar-edit {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.gpk-gem-avatar-uploader {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  cursor: pointer;
+  background: rgba(32, 33, 36, 0.42);
+  border-radius: 999px;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.gpk-gem-avatar-preview:hover .gpk-gem-avatar-uploader,
+.gpk-gem-avatar-uploader:focus-visible {
+  opacity: 1;
+}
+
+.gpk-gem-avatar-uploader svg {
+  width: 18px;
+  height: 18px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.32));
+}
+
+.gpk-gem-avatar-delete {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 2;
+  display: grid;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  place-items: center;
+  color: #fff;
+  cursor: pointer;
+  background: rgba(32, 33, 36, 0.72);
+  border: 0;
+  border-radius: 999px;
+  opacity: 0;
+  transition:
+    background 120ms ease,
+    opacity 120ms ease;
+}
+
+.gpk-gem-avatar-delete svg {
+  width: 10px;
+  height: 10px;
+}
+
+.gpk-gem-avatar-delete:hover,
+.gpk-gem-avatar-delete:focus-visible {
+  background: rgba(32, 33, 36, 0.88);
+}
+
+.gpk-gem-avatar-preview:hover .gpk-gem-avatar-delete:not([hidden]),
+.gpk-gem-avatar-delete:focus-visible {
+  opacity: 1;
+}
+
+.gpk-gem-avatar-delete[hidden] {
+  display: none;
+}
+
+.gpk-gem-avatar-file-input {
+  display: none;
+}
+
+.gpk-gem-avatar-message {
+  position: absolute;
+  top: 0;
+  z-index: 3;
+  width: 40px;
+  height: 40px;
+  pointer-events: none;
+  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.28);
+}
+
+.gpk-gem-avatar-message.gpk-gem-avatar-message-clickable {
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.gpk-gem-avatar-message.gpk-gem-avatar-message-clickable:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.gpk-gem-avatar-message-compact {
+  width: 32px;
+  height: 32px;
+}
+
+.gpk-gem-avatar-message-user {
+  right: -12px;
+  transform: translateX(100%);
+}
+
+.gpk-gem-avatar-message-model {
+  left: -12px;
+  transform: translateX(-100%);
+}
+
+.gpk-gem-avatar-message-user.gpk-gem-avatar-message-compact {
+  right: 0;
+}
+
+.gpk-gem-avatar-message-model.gpk-gem-avatar-message-compact {
+  left: 0;
+}
+
+.gpk-gem-avatar-edit-preview-scroller {
+  padding-left: 40px !important;
+  padding-right: 32px !important;
+}
+
+.gpk-gem-avatar-edit-preview-scroller .gpk-gem-avatar-message-model.gpk-gem-avatar-message-compact {
+  left: -4px;
+}
