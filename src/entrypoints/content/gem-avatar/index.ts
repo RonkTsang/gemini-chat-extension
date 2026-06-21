@@ -5,94 +5,54 @@ import type {
 } from '@/domain/gem-avatar/types'
 import { eventBus } from '@/utils/eventbus'
 
+import {
+  createDeleteButton,
+  createUploaderElement,
+  ensureLogoAvatar,
+  ensureMatchingTargets,
+  ensureMessageAvatar,
+  findDirectInjectedAvatar,
+  findFirstElement,
+  getImageSource,
+  removeDirectInjectedAvatar,
+  removeInjectedAvatars,
+  setAvatarImage,
+} from './dom'
+import {
+  describeElementForLog,
+  describePageForLog,
+  logGemAvatarEvent,
+} from './logger'
 import { getGemAvatarRouteKey, parseGemAvatarPage } from './route'
-import './style.css'
-
-const INJECTED_ATTR = 'data-gpk-gem-avatar-injected'
-const CHAT_ROOT_SELECTORS = [
-  'chat-window #chat-history infinite-scroller[data-test-id="chat-history-container"]',
-  '#chat-history infinite-scroller',
-  'chat-window',
-] as const
-const HEADER_ROOT_SELECTORS = ['chat-window', 'body'] as const
-const EDIT_ROOT_SELECTORS = ['bots-creation-window', 'body'] as const
-const LIST_ROOT_SELECTORS = ['div.bots-section-container', 'body'] as const
-const EDIT_LOGO_SELECTOR = 'bots-creation-window div.title-container > bot-logo'
-const EDIT_PREVIEW_CHAT_ROOT_SELECTOR = 'bots-creation-window infinite-scroller'
-const EDIT_PREVIEW_LOGO_SELECTOR = `${EDIT_PREVIEW_CHAT_ROOT_SELECTOR} bot-logo`
-const HEADER_LOGO_SELECTOR = 'bot-logo'
-const LIST_ROW_SELECTOR = 'div.bots-section-container bot-list-row'
-const LIST_ROW_LINK_SELECTOR = 'a.bot-row[href^="/gem/"], a.bot-row[href*="/gem/"]'
-const LIST_ROW_LOGO_SELECTOR = 'bot-logo'
-const USER_AVATAR_SELECTOR = 'sidenav-mavatar-footer > div.mavatar-footer-row > a > div.mavatar-container > img.mavatar-image'
-const USER_MESSAGE_TARGET_SELECTOR = 'user-query-content > div.user-query-container'
-const MODEL_MESSAGE_TARGET_SELECTOR = 'response-container > div.response-container'
-const LOGO_AVATAR_CLASS = 'gpk-gem-avatar-logo'
-const LOGO_AVATAR_CLICKABLE_CLASS = 'gpk-gem-avatar-logo-clickable'
-const MESSAGE_AVATAR_CLICKABLE_CLASS = 'gpk-gem-avatar-message-clickable'
-const RECENT_CHAT_LOGO_AVATAR_CLASS = 'gpk-gem-avatar-recent-chat-logo'
-const EDIT_PREVIEW_SCROLLER_CLASS = 'gpk-gem-avatar-edit-preview-scroller'
-const CHAT_RELEVANT_SELECTOR = [
-  '.conversation-container',
-  'user-query',
-  'model-response',
-  USER_MESSAGE_TARGET_SELECTOR,
+import {
+  CHAT_RELEVANT_SELECTOR,
+  CHAT_ROOT_RETRY_DELAY_MS,
+  CHAT_ROOT_RETRY_LIMIT,
+  CHAT_ROOT_SELECTORS,
+  CHAT_ROUTE_SETTLE_RETRY_DELAY_MS,
+  CHAT_ROUTE_SETTLE_RETRY_LIMIT,
+  EDIT_LOGO_SELECTOR,
+  EDIT_PREVIEW_CHAT_ROOT_SELECTOR,
+  EDIT_PREVIEW_LOGO_SELECTOR,
+  EDIT_PREVIEW_SCROLLER_CLASS,
+  EDIT_ROOT_SELECTORS,
+  HEADER_LOGO_SELECTOR,
+  HEADER_ROOT_SELECTORS,
+  INJECTED_ATTR,
+  LIST_ROOT_SELECTORS,
+  LIST_ROW_LINK_SELECTOR,
+  LIST_ROW_LOGO_SELECTOR,
+  LIST_ROW_SELECTOR,
+  LOGO_AVATAR_CLASS,
   MODEL_MESSAGE_TARGET_SELECTOR,
-].join(',')
-const CHAT_ROOT_RETRY_LIMIT = 20
-const CHAT_ROOT_RETRY_DELAY_MS = 250
-const CHAT_ROUTE_SETTLE_RETRY_LIMIT = 12
-const CHAT_ROUTE_SETTLE_RETRY_DELAY_MS = 250
+  USER_AVATAR_SELECTOR,
+  USER_MESSAGE_TARGET_SELECTOR,
+} from './selectors'
+import './style.css'
 
 interface ObserverState {
   observer: MutationObserver | null
   root: Element | null
-}
-
-interface LogoAvatarOptions {
-  editGemId?: string
-}
-
-interface MessageAvatarOptions {
-  editGemId?: string
-}
-
-function findFirstElement(selectors: readonly string[]): Element | null {
-  for (const selector of selectors) {
-    const element = document.querySelector(selector)
-    if (element) return element
-  }
-  return null
-}
-
-function describePageForLog(page: GemAvatarPage): string {
-  if (page.kind === 'chat') {
-    return page.chatId
-      ? `chat:${page.gemId}/${page.chatId}`
-      : `chat:${page.gemId}`
-  }
-  if (page.kind === 'edit') {
-    return `edit:${page.gemId}`
-  }
-  return page.kind
-}
-
-function describeElementForLog(element: Element | null): string | null {
-  if (!element) return null
-
-  const tag = element.tagName.toLowerCase()
-  const id = element.id ? `#${element.id}` : ''
-  const testId = element.getAttribute('data-test-id')
-  const testIdText = testId ? `[data-test-id="${testId}"]` : ''
-  return `${tag}${id}${testIdText}`
-}
-
-function logGemAvatar(message: string, details?: Record<string, unknown>): void {
-  if (details) {
-    console.log(`[GemAvatar] ${message}`, details)
-    return
-  }
-  console.log(`[GemAvatar] ${message}`)
 }
 
 function pageUsesSameContext(a: GemAvatarPage, b: GemAvatarPage): boolean {
@@ -101,193 +61,6 @@ function pageUsesSameContext(a: GemAvatarPage, b: GemAvatarPage): boolean {
 
 function isCreateOrEditPage(page: GemAvatarPage): boolean {
   return page.kind === 'create' || page.kind === 'edit'
-}
-
-function getImageSource(image: HTMLImageElement | null): string | null {
-  const source = image?.currentSrc || image?.src || image?.getAttribute('src')
-  return source?.trim() || null
-}
-
-function createEditIconSvg(): SVGSVGElement {
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-  svg.setAttribute('viewBox', '0 0 24 24')
-  svg.setAttribute('aria-hidden', 'true')
-  svg.setAttribute('focusable', 'false')
-
-  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
-  path.setAttribute('fill', 'currentColor')
-  path.setAttribute('d', 'M4 17.46V20h2.54L17.6 8.94l-2.54-2.54L4 17.46Zm15.56-10.48c.59-.59.59-1.54 0-2.12L18.14 3.44a1.5 1.5 0 0 0-2.12 0l-1.1 1.1 2.54 2.54 1.1-1.1Z')
-  svg.append(path)
-  return svg
-}
-
-function createCloseIconSvg(): SVGSVGElement {
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-  svg.setAttribute('viewBox', '0 0 24 24')
-  svg.setAttribute('aria-hidden', 'true')
-  svg.setAttribute('focusable', 'false')
-
-  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
-  path.setAttribute('fill', 'none')
-  path.setAttribute('stroke', 'currentColor')
-  path.setAttribute('stroke-linecap', 'round')
-  path.setAttribute('stroke-linejoin', 'round')
-  path.setAttribute('stroke-width', '3')
-  path.setAttribute('d', 'M18 6 6 18M6 6l12 12')
-  svg.append(path)
-  return svg
-}
-
-function createDeleteButton(): HTMLButtonElement {
-  const button = document.createElement('button')
-  button.type = 'button'
-  button.className = 'gpk-gem-avatar-delete'
-  button.setAttribute('aria-label', 'Delete Gem avatar')
-  button.append(createCloseIconSvg())
-  return button
-}
-
-function getGemEditUrl(gemId: string): string {
-  return new URL(`/gems/edit/${encodeURIComponent(gemId)}`, window.location.origin).href
-}
-
-function setAvatarImage(avatar: HTMLElement, src: string | null): void {
-  let image = avatar.querySelector('img')
-  if (!src) {
-    image?.remove()
-    avatar.removeAttribute('data-gpk-gem-avatar-src')
-    return
-  }
-
-  if (!image) {
-    image = document.createElement('img')
-    image.alt = ''
-    image.decoding = 'async'
-    image.loading = 'lazy'
-    avatar.append(image)
-  }
-
-  if (avatar.getAttribute('data-gpk-gem-avatar-src') !== src) {
-    image.src = src
-    avatar.setAttribute('data-gpk-gem-avatar-src', src)
-  }
-}
-
-function removeDirectInjectedAvatar(target: Element, className: string): void {
-  findDirectInjectedAvatar(target, className)?.remove()
-}
-
-function configureAvatarEditPageInteraction(
-  avatar: HTMLElement,
-  editGemId: string | undefined,
-  clickableClassName: string,
-): void {
-  if (!editGemId) {
-    avatar.classList.remove(clickableClassName)
-    avatar.removeAttribute('role')
-    avatar.removeAttribute('tabindex')
-    avatar.removeAttribute('title')
-    avatar.removeAttribute('aria-label')
-    avatar.setAttribute('aria-hidden', 'true')
-    avatar.onclick = null
-    avatar.onkeydown = null
-    return
-  }
-
-  const openEditPage = (event: Event) => {
-    event.preventDefault()
-    event.stopPropagation()
-    window.open(getGemEditUrl(editGemId), '_blank', 'noopener,noreferrer')
-  }
-
-  avatar.classList.add(clickableClassName)
-  avatar.removeAttribute('aria-hidden')
-  avatar.setAttribute('role', 'link')
-  avatar.setAttribute('tabindex', '0')
-  avatar.setAttribute('title', 'Open Gem editor')
-  avatar.setAttribute('aria-label', 'Open Gem editor')
-  avatar.onclick = openEditPage
-  avatar.onkeydown = (event) => {
-    if (event.key !== 'Enter' && event.key !== ' ') return
-    openEditPage(event)
-  }
-}
-
-function findDirectInjectedAvatar(
-  target: Element,
-  className: string,
-): HTMLElement | null {
-  return Array.from(target.children).find((child) => (
-    child instanceof HTMLElement && child.classList.contains(className)
-  )) as HTMLElement | null
-}
-
-function ensureMessageAvatar(
-  target: Element,
-  variant: 'user' | 'model',
-  src: string,
-  size: 'normal' | 'compact' = 'normal',
-  options: MessageAvatarOptions = {},
-): void {
-  if (!(target instanceof HTMLElement)) return
-
-  const className = variant === 'user'
-    ? 'gpk-gem-avatar-message-user'
-    : 'gpk-gem-avatar-message-model'
-  const existing = findDirectInjectedAvatar(target, className)
-  const avatar = existing ?? document.createElement('gem-avatar')
-
-  avatar.className = [
-    'gpk-gem-avatar',
-    'gpk-gem-avatar-message',
-    className,
-    size === 'compact' ? 'gpk-gem-avatar-message-compact' : '',
-  ].join(' ')
-  avatar.setAttribute(INJECTED_ATTR, 'true')
-  avatar.setAttribute('aria-hidden', 'true')
-  setAvatarImage(avatar, src)
-  configureAvatarEditPageInteraction(
-    avatar,
-    options.editGemId,
-    MESSAGE_AVATAR_CLICKABLE_CLASS,
-  )
-
-  target.classList.add('gpk-gem-avatar-anchor')
-  if (!existing) {
-    target.append(avatar)
-  }
-}
-
-function ensureLogoAvatar(
-  target: Element,
-  src: string,
-  className: string,
-  options: LogoAvatarOptions = {},
-): void {
-  if (!(target instanceof HTMLElement)) return
-
-  const existing = findDirectInjectedAvatar(target, LOGO_AVATAR_CLASS)
-  const avatar = existing ?? document.createElement('gem-avatar')
-  const classNames = ['gpk-gem-avatar', LOGO_AVATAR_CLASS, className]
-
-  if (target.closest('recent-chat-list-item')) {
-    classNames.push(RECENT_CHAT_LOGO_AVATAR_CLASS)
-  }
-
-  avatar.className = classNames.join(' ')
-  avatar.setAttribute(INJECTED_ATTR, 'true')
-  avatar.setAttribute('aria-hidden', 'true')
-  setAvatarImage(avatar, src)
-  configureAvatarEditPageInteraction(
-    avatar,
-    options.editGemId,
-    LOGO_AVATAR_CLICKABLE_CLASS,
-  )
-
-  target.classList.add('gpk-gem-avatar-logo-anchor')
-  if (!existing) {
-    target.append(avatar)
-  }
 }
 
 function getCurrentEditAvatarUrl(
@@ -302,12 +75,6 @@ function getCurrentEditAvatarUrl(
     return pendingPreviewUrl ?? activeGemAvatarUrl
   }
   return null
-}
-
-function removeInjectedAvatars(root: ParentNode = document): void {
-  root.querySelectorAll(`[${INJECTED_ATTR}="true"]`).forEach((node) => {
-    node.remove()
-  })
 }
 
 class GemAvatarModule {
@@ -339,7 +106,7 @@ class GemAvatarModule {
 
     this.isStarted = true
     this.unsubscribeUrlChange = eventBus.on('urlchange', (event) => {
-      logGemAvatar('urlchange received', {
+      logGemAvatarEvent('urlchange-received', {
         eventUrl: event.url,
         href: window.location.href,
       })
@@ -369,7 +136,7 @@ class GemAvatarModule {
     const sameContext = pageUsesSameContext(this.currentPage, nextPage)
     const previousPage = this.currentPage
 
-    logGemAvatar('sync route', {
+    logGemAvatarEvent('route-sync', {
       previousPage: describePageForLog(previousPage),
       nextPage: describePageForLog(nextPage),
       sameContext,
@@ -398,7 +165,7 @@ class GemAvatarModule {
 
     if (nextPage.kind === 'chat') {
       this.activeGemAvatarUrl = await gemAvatarRepository.resolveObjectUrl(nextPage.gemId)
-      logGemAvatar('chat avatar resolved', {
+      logGemAvatarEvent('chat-avatar-resolved', {
         page: describePageForLog(nextPage),
         hasAvatar: Boolean(this.activeGemAvatarUrl),
       })
@@ -440,7 +207,7 @@ class GemAvatarModule {
   private installChatObserver(): void {
     const root = findFirstElement(CHAT_ROOT_SELECTORS)
     if (!root) {
-      logGemAvatar('chat observer root missing')
+      logGemAvatarEvent('chat-observer-root-missing')
       return
     }
     if (this.chatState.root === root && this.chatState.observer) {
@@ -457,7 +224,7 @@ class GemAvatarModule {
     observer.observe(root, { childList: true, subtree: true })
     this.chatState = { observer, root }
     this.chatRootRetryAttempts = 0
-    logGemAvatar('chat observer installed', {
+    logGemAvatarEvent('chat-observer-installed', {
       root: describeElementForLog(root),
     })
   }
@@ -619,7 +386,7 @@ class GemAvatarModule {
       this.ensureHeaderAvatar()
 
       if (previousRoot !== this.chatState.root) {
-        logGemAvatar('chat observer root refreshed after route settle', {
+        logGemAvatarEvent('chat-observer-root-refreshed-after-route-settle', {
           previousRoot: describeElementForLog(previousRoot),
           nextRoot: describeElementForLog(this.chatState.root),
           attempt: this.chatRouteSettleAttempts,
@@ -666,12 +433,12 @@ class GemAvatarModule {
       document.querySelector<HTMLImageElement>(USER_AVATAR_SELECTOR),
     )
 
-    this.ensureMatchingTargets(scope, USER_MESSAGE_TARGET_SELECTOR, (target) => {
+    ensureMatchingTargets(scope, USER_MESSAGE_TARGET_SELECTOR, (target) => {
       if (userAvatarUrl) {
         ensureMessageAvatar(target, 'user', userAvatarUrl)
       }
     })
-    this.ensureMatchingTargets(scope, MODEL_MESSAGE_TARGET_SELECTOR, (target) => {
+    ensureMatchingTargets(scope, MODEL_MESSAGE_TARGET_SELECTOR, (target) => {
       ensureMessageAvatar(target, 'model', this.activeGemAvatarUrl!, 'normal', {
         editGemId: gemId,
       })
@@ -732,12 +499,12 @@ class GemAvatarModule {
       if (root instanceof HTMLElement) {
         root.classList.add(EDIT_PREVIEW_SCROLLER_CLASS)
       }
-      this.ensureMatchingTargets(root, USER_MESSAGE_TARGET_SELECTOR, (target) => {
+      ensureMatchingTargets(root, USER_MESSAGE_TARGET_SELECTOR, (target) => {
         if (userAvatarUrl) {
           ensureMessageAvatar(target, 'user', userAvatarUrl, 'compact')
         }
       })
-      this.ensureMatchingTargets(root, MODEL_MESSAGE_TARGET_SELECTOR, (target) => {
+      ensureMatchingTargets(root, MODEL_MESSAGE_TARGET_SELECTOR, (target) => {
         ensureMessageAvatar(target, 'model', previewUrl, 'compact')
       })
     })
@@ -754,7 +521,7 @@ class GemAvatarModule {
       if (root instanceof HTMLElement) {
         root.classList.remove(EDIT_PREVIEW_SCROLLER_CLASS)
       }
-      this.ensureMatchingTargets(root, MODEL_MESSAGE_TARGET_SELECTOR, (target) => {
+      ensureMatchingTargets(root, MODEL_MESSAGE_TARGET_SELECTOR, (target) => {
         removeDirectInjectedAvatar(target, 'gpk-gem-avatar-message-model')
       })
     })
@@ -812,17 +579,6 @@ class GemAvatarModule {
     return objectUrl
   }
 
-  private ensureMatchingTargets(
-    scope: ParentNode | Element,
-    selector: string,
-    callback: (element: Element) => void,
-  ): void {
-    if (scope instanceof Element && scope.matches(selector)) {
-      callback(scope)
-    }
-    scope.querySelectorAll(selector).forEach(callback)
-  }
-
   private ensureEditPreview(logo: Element, previewUrl: string | null): void {
     if (!(logo instanceof HTMLElement)) return
 
@@ -836,13 +592,7 @@ class GemAvatarModule {
       avatar.className = 'gpk-gem-avatar gpk-gem-avatar-edit'
       avatar.setAttribute('aria-hidden', 'true')
 
-      const uploader = document.createElement('gem-avatar-uploader')
-      uploader.className = 'gpk-gem-avatar-uploader'
-      uploader.setAttribute('role', 'button')
-      uploader.setAttribute('tabindex', '0')
-      uploader.setAttribute('aria-label', 'Upload Gem avatar')
-      uploader.append(createEditIconSvg())
-
+      const uploader = createUploaderElement()
       const deleteButton = createDeleteButton()
 
       const input = document.createElement('input')
