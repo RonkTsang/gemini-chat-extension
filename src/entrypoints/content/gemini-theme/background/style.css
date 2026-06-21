@@ -87,6 +87,16 @@
   background-color: color-mix(in srgb, var(--theme-600), transparent 80%) !important;
 }
 
+:root[data-gpk-bg-enabled="true"] body.light-theme chat-window,
+:root[data-gpk-bg-enabled="true"] :where(.theme-host):where(.light-theme) chat-window {
+  --gem-sys-color--on-surface: var(--gpk-chat-text-light-color);
+}
+
+:root[data-gpk-bg-enabled="true"] body.dark-theme chat-window,
+:root[data-gpk-bg-enabled="true"] :where(.theme-host):where(.dark-theme) chat-window {
+  --gem-sys-color--on-surface: var(--gpk-chat-text-dark-color);
+}
+
 :root[data-gpk-bg-enabled="true"][data-gpk-sidebar-scrim-enabled="true"] body.dark-theme bard-sidenav-container>bard-sidenav,
 :root[data-gpk-bg-enabled="true"][data-gpk-sidebar-scrim-enabled="true"] :where(.theme-host):where(.dark-theme) bard-sidenav-container>bard-sidenav {
   box-shadow: none;

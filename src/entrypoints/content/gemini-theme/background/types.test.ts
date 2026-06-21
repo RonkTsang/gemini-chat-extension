@@ -40,6 +40,8 @@ describe('theme background settings normalize', () => {
     expect(result.sidebarScrimIntensity).toBe(
       DEFAULT_THEME_BACKGROUND_SETTINGS.sidebarScrimIntensity,
     )
+    expect(result.chatTextLightColor).toBeNull()
+    expect(result.chatTextDarkColor).toBeNull()
     expect(result.welcomeGreetingReadabilityMode).toBe(
       DEFAULT_THEME_BACKGROUND_SETTINGS.welcomeGreetingReadabilityMode,
     )
@@ -138,6 +140,22 @@ describe('theme background settings normalize', () => {
       imageRef: { kind: 'asset', assetId: '' },
     })
     expect(result.imageRef).toEqual({ kind: 'none' })
+  })
+
+  it('normalizes chat text colors', () => {
+    const result = normalizeThemeBackgroundSettings({
+      chatTextLightColor: ' #AABBCC ',
+      chatTextDarkColor: '#112233AA',
+    })
+    const invalid = normalizeThemeBackgroundSettings({
+      chatTextLightColor: 'rgb(1, 2, 3)',
+      chatTextDarkColor: '#12345',
+    })
+
+    expect(result.chatTextLightColor).toBe('#aabbcc')
+    expect(result.chatTextDarkColor).toBe('#112233aa')
+    expect(invalid.chatTextLightColor).toBeNull()
+    expect(invalid.chatTextDarkColor).toBeNull()
   })
 
   it('resets welcome greeting cache when background is disabled', () => {

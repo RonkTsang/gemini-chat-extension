@@ -19,12 +19,14 @@ import {
   HiOutlineTrash,
 } from 'react-icons/hi'
 import type {
+  GeminiTheme,
   ThemeBackgroundResolvedState,
   WelcomeGreetingReadabilityMode,
 } from '@/entrypoints/content/gemini-theme'
 import { MESSAGE_GLASS_BACKGROUND_VISIBILITY_DEFAULT } from '@/entrypoints/content/gemini-theme'
 import { Tooltip } from '@/components/ui/tooltip'
 import { tt } from '@/utils/i18n'
+import { ChatTextColorControl } from './ChatTextColorControl'
 
 interface CustomBackgroundProps {
   variant?: 'default' | 'compact'
@@ -38,6 +40,11 @@ interface CustomBackgroundProps {
   onMessageGlassBackgroundVisibilityChange: (value: number) => Promise<void>
   onMessageGlassBlurChange: (value: number) => Promise<void>
   onResetGlassSettings: () => Promise<void>
+  effectiveTheme: GeminiTheme
+  chatTextColor: string | null
+  defaultChatTextColor: string
+  onChatTextColorChange: (color: string) => Promise<void>
+  onResetChatTextColor: () => Promise<void>
   onWelcomeGreetingReadabilityModeChange: (
     mode: WelcomeGreetingReadabilityMode,
   ) => Promise<void>
@@ -628,6 +635,16 @@ export function CustomBackground(props: CustomBackgroundProps) {
               <NativeSelect.Indicator />
             </NativeSelect.Root>
           </Stack>
+
+          <ChatTextColorControl
+            variant={props.variant}
+            mode={props.effectiveTheme}
+            value={props.chatTextColor}
+            defaultValue={props.defaultChatTextColor}
+            disabled={props.isLoading || isFilePending}
+            onChange={props.onChatTextColorChange}
+            onReset={props.onResetChatTextColor}
+          />
         </>
       )}
     </Box>

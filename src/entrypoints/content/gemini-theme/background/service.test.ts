@@ -73,7 +73,7 @@ import { BACKGROUND_FILE_SIZE_LIMIT } from './types'
 
 function createSettings(overrides: Partial<ThemeBackgroundSettings> = {}): ThemeBackgroundSettings {
   return {
-    version: 4,
+    version: 5,
     backgroundImageEnabled: false,
     backgroundBlurPx: 5,
     messageGlassEnabled: false,
@@ -89,6 +89,8 @@ function createSettings(overrides: Partial<ThemeBackgroundSettings> = {}): Theme
     messageGlassBlurCustomized: false,
     sidebarScrimEnabled: true,
     sidebarScrimIntensity: 20,
+    chatTextLightColor: null,
+    chatTextDarkColor: null,
     welcomeGreetingReadabilityMode: 'auto',
     welcomeGreetingResolved: 'default',
     welcomeGreetingResolvedAssetId: null,

@@ -20,7 +20,7 @@ function createSettings(
   overrides: Partial<ThemeBackgroundSettings> = {},
 ): ThemeBackgroundSettings {
   return {
-    version: 4,
+    version: 5,
     backgroundImageEnabled: true,
     backgroundBlurPx: 5,
     messageGlassEnabled: false,
@@ -36,6 +36,8 @@ function createSettings(
     messageGlassBlurCustomized: false,
     sidebarScrimEnabled: true,
     sidebarScrimIntensity: 20,
+    chatTextLightColor: null,
+    chatTextDarkColor: null,
     welcomeGreetingReadabilityMode: 'auto',
     welcomeGreetingResolved: 'default',
     welcomeGreetingResolvedAssetId: null,
