@@ -30,7 +30,10 @@ This project builds separate Chrome and Firefox extension variants with WXT. Kee
 
 ## Notifications
 
-- Chrome declares `notifications`, `webRequest`, and `offscreen` as optional permissions. Existing Gemini content-script matches already provide required Gemini host access.
+- Chrome declares `notifications`, `webRequest`, and `offscreen` as optional
+  permissions. It also declares `*://gemini.google.com/*` as optional host
+  access because the `webRequest` API requires host access to observe Gemini
+  requests.
 - Chrome Popup requests optional notification permissions directly. The
   in-page SettingPanel opens the extension action popup, with a popup window
   fallback, because a content-script click forwarded to background does not

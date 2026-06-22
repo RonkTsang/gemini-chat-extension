@@ -47,6 +47,9 @@ export default defineConfig({
         "webRequest",
         "offscreen"
       ],
+      optional_host_permissions: [
+        "*://gemini.google.com/*"
+      ],
       web_accessible_resources: [
         {
           resources: ["url-monitor-main-world.js", "theme-sync-main-world.js", "icon/512.png"],

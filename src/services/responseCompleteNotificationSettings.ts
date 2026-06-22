@@ -5,6 +5,7 @@ import { storage } from '#imports'
 export const RESPONSE_COMPLETE_NOTIFICATION_PERMISSION = 'notifications' as const
 export const RESPONSE_COMPLETE_NOTIFICATION_WEB_REQUEST_PERMISSION = 'webRequest' as const
 export const RESPONSE_COMPLETE_NOTIFICATION_AUDIO_PERMISSION = 'offscreen' as const
+export const RESPONSE_COMPLETE_NOTIFICATION_GEMINI_ORIGIN = '*://gemini.google.com/*' as const
 
 export type NotificationReadiness =
   | 'off'
@@ -77,6 +78,9 @@ export function getResponseCompleteNotificationPermissionRequest(): Browser.perm
     permissions: [
       RESPONSE_COMPLETE_NOTIFICATION_PERMISSION,
       RESPONSE_COMPLETE_NOTIFICATION_WEB_REQUEST_PERMISSION,
+    ],
+    origins: [
+      RESPONSE_COMPLETE_NOTIFICATION_GEMINI_ORIGIN,
     ],
   }
 }

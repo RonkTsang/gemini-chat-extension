@@ -46,17 +46,21 @@ Chrome declares the following optional permissions:
 
 ```json
 {
-  "optional_permissions": ["notifications", "webRequest", "offscreen"]
+  "optional_permissions": ["notifications", "webRequest", "offscreen"],
+  "optional_host_permissions": ["*://gemini.google.com/*"]
 }
 ```
 
-Existing Gemini content-script matches already provide required Gemini host access. Declaring the same origin in `optional_host_permissions` is invalid because Chrome treats it as redundant.
+Chrome requests Gemini host access together with `webRequest` because the
+WebRequest API requires access to the observed host. The same origin also
+appears in content-script matches for DOM injection.
 
 When the user enables the feature from the Popup, Chrome requests
-`notifications` and `webRequest` directly from that user gesture. The in-page
-SettingPanel opens the extension action popup, or a popup window fallback, so
-the permission request originates from an extension page confirmation action.
-If either permission is denied, the feature remains disabled.
+`notifications`, `webRequest`, and Gemini host access directly from that user
+gesture. The in-page SettingPanel opens the extension action popup, or a popup
+window fallback, so the permission request originates from an extension page
+confirmation action. If any required capability is denied, the feature remains
+disabled.
 
 Chrome requests optional `offscreen` permission only when the user enables the
 audio setting. Audio permission denial does not disable visual notifications.
@@ -124,7 +128,7 @@ on macOS and uses the browser's default notification behavior.
 ## 7. Acceptance Criteria
 
 1. Chrome new installs and upgrades do not automatically request notification or WebRequest permissions.
-2. Chrome requests `notifications` and `webRequest` only when the user enables the feature.
+2. Chrome requests `notifications`, `webRequest`, and Gemini host access only when the user enables the feature.
 3. Firefox has required `notifications` permission and enables the feature without making a runtime permission request.
 4. A successful standard `StreamGenerate` request in a background tab creates one notification.
 5. Foreground responses are suppressed by default and can be allowed from the

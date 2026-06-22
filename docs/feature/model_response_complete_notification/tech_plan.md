@@ -142,7 +142,7 @@ node scripts/check-i18n.js
 
 Inspect generated manifests:
 
-- Chrome contains optional `notifications` and optional `webRequest`, with no redundant optional Gemini origin declaration.
+- Chrome contains optional `notifications`, optional `webRequest`, and optional Gemini host access for WebRequest observation.
 - Firefox retains required `notifications` and WebRequest permissions.
 - Chrome contains optional `offscreen`; Firefox does not contain `offscreen` or
   the audio Offscreen page.
