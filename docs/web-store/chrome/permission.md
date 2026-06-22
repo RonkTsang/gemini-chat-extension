@@ -30,11 +30,17 @@ content or personal information.
 
 ### Host access: `*://gemini.google.com/*`
 
-Host access is required because Gemini Power Kit runs only on Gemini and needs
-to add its user interface inside the Gemini page. The content script reads and
-updates the Gemini page DOM to provide user-facing features such as the chat
-outline, quick quote controls, prompt tools, theme controls, and notification
-content extraction.
+Gemini Power Kit runs only on Gemini. Its content scripts match
+`gemini.google.com` so the extension can add its user interface inside the
+Gemini page. The content script reads and updates the Gemini page DOM to provide
+user-facing features such as the chat outline, quick quote controls, prompt
+tools, theme controls, and notification content extraction.
+
+The Chrome manifest also declares `*://gemini.google.com/*` as optional host
+access for response-complete notifications. This optional host access is
+requested together with optional `webRequest` only after the user explicitly
+enables response-complete notifications, because Chrome requires host access for
+WebRequest observation.
 
 For response-complete notifications, DOM access is used only after the browser
 network completion signal has fired. The extension asks the Gemini content
@@ -56,8 +62,9 @@ collection unrelated to the notification feature.
 ### Optional `webRequest`
 
 The `webRequest` permission is optional on Chrome and is requested together
-with `notifications` only after the user explicitly enables response-complete
-notifications. It is used to observe successful Gemini request completion for:
+with `notifications` and Gemini host access only after the user explicitly
+enables response-complete notifications. It is used to observe successful Gemini
+request completion for:
 
 - `StreamGenerate` standard response completion.
 - Deep Research `batchexecute` lifecycle requests needed to avoid early or

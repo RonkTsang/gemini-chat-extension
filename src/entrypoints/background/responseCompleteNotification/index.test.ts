@@ -361,6 +361,7 @@ describe('responseCompleteNotification background V2', () => {
 
     expect(permissionsContainsMock).toHaveBeenCalledWith({
       permissions: ['notifications', 'webRequest'],
+      origins: ['*://gemini.google.com/*'],
     })
     expect(actionOpenPopupMock).toHaveBeenCalledWith({ windowId: 9 })
     expect(windowsCreateMock).not.toHaveBeenCalled()
