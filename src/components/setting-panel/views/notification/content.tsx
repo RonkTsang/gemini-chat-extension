@@ -1,6 +1,7 @@
 import { Box, Button, Container, Stack, Switch, Text } from '@chakra-ui/react'
 import { useResponseCompleteNotificationSettings } from '@/hooks/useResponseCompleteNotificationSettings'
 import { t } from '@/utils/i18n'
+import { NotificationAudioAssetControl } from './NotificationAudioAssetControl'
 
 interface NotificationSettingsContentProps {
   extensionPage?: boolean
@@ -45,26 +46,39 @@ export function NotificationSettingsContent({ extensionPage = false }: Notificat
 
             {notificationSettings.audioSupported ? (
               <Container backgroundColor={containerBackground} p={4} borderRadius="2xl">
-                <Stack direction="row" align="center" justify="space-between" gap={4}>
-                  <Stack gap={1}>
-                    <Text>{t('responseNotificationAudioLabel')}</Text>
+                <Stack gap={3}>
+                  <Stack direction="row" align="center" justify="space-between" gap={4}>
+                    <Stack gap={1}>
+                      <Text>{t('responseNotificationAudioLabel')}</Text>
+                    </Stack>
+                    <Switch.Root
+                      checked={notificationSettings.audioEnabled}
+                      disabled={
+                        !notificationSettings.enabled
+                        || notificationSettings.isLoading
+                        || notificationSettings.isPending
+                        || notificationSettings.isAudioPending
+                      }
+                      onCheckedChange={(details) => void notificationSettings.toggleAudioEnabled(details.checked)}
+                      flexShrink={0}
+                    >
+                      <Switch.HiddenInput />
+                      <Switch.Control>
+                        <Switch.Thumb />
+                      </Switch.Control>
+                    </Switch.Root>
                   </Stack>
-                  <Switch.Root
-                    checked={notificationSettings.audioEnabled}
-                    disabled={
-                      !notificationSettings.enabled
-                      || notificationSettings.isLoading
-                      || notificationSettings.isPending
-                      || notificationSettings.isAudioPending
-                    }
-                    onCheckedChange={(details) => void notificationSettings.toggleAudioEnabled(details.checked)}
-                    flexShrink={0}
-                  >
-                    <Switch.HiddenInput />
-                    <Switch.Control>
-                      <Switch.Thumb />
-                    </Switch.Control>
-                  </Switch.Root>
+
+                  {notificationSettings.audioEnabled ? (
+                    <NotificationAudioAssetControl
+                      disabled={
+                        !notificationSettings.enabled
+                        || notificationSettings.isLoading
+                        || notificationSettings.isPending
+                        || notificationSettings.isAudioPending
+                      }
+                    />
+                  ) : null}
                 </Stack>
               </Container>
             ) : null}
