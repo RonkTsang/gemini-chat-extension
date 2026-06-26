@@ -111,16 +111,9 @@ function renderVideoResponse(): void {
                   <video-player>
                     <video
                       playsinline
-                      src="https://contribution.usercontent.google.com/download?c=abc&amp;filename=video.mp4&amp;opi=103135050"
+                      src="https://cdn.example.test/generated/video.mp4"
                       crossorigin="use-credentials"
                     ></video>
-                    <div class="controls">
-                      <button aria-label="Download video"></button>
-                      <button aria-label="Play video"></button>
-                      <span role="timer" aria-label="10 seconds elapsed, 0 seconds remaining">
-                        <span aria-hidden="true">0:10 / 0:10</span>
-                      </span>
-                    </div>
                   </video-player>
                 </generated-video>
               </response-element>
@@ -404,9 +397,8 @@ describe('responseCompleteNotificationContent', () => {
       message: '您的视频已准备就绪！',
       responseType: 'video',
       video: {
-        sourceUrl: 'https://contribution.usercontent.google.com/download?c=abc&filename=video.mp4&opi=103135050',
+        sourceUrl: 'https://cdn.example.test/generated/video.mp4',
         fileName: 'video.mp4',
-        durationLabel: '10 seconds elapsed, 0 seconds remaining',
       },
     })
   })

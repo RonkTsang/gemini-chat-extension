@@ -16,10 +16,6 @@ const MODEL_RESPONSE_MESSAGE_CONTENT_SELECTOR = '[id*="model-response-message-co
 const RESPONSE_CONTENT_SELECTOR = `${STRUCTURED_CONTENT_SELECTOR} ${MODEL_RESPONSE_MESSAGE_CONTENT_SELECTOR}`
 const FINAL_IMAGE_SELECTOR = 'generated-image > single-image > div > div > button.image-button > img'
 const FINAL_VIDEO_SELECTOR = 'generated-video video-player video[src]'
-const VIDEO_READY_CONTROL_SELECTOR = [
-  'button[aria-label="Download video"]',
-  'button[aria-label="Play video"]',
-].join(',')
 const DEEP_RESEARCH_CARD_SELECTOR = 'gem-processing-card'
 const DEEP_RESEARCH_TITLE_SELECTOR = '.card-title'
 const MAX_NOTIFICATION_MESSAGE_LENGTH = 200
@@ -275,39 +271,32 @@ function findFinalVideo(turn: HTMLElement): ResponseCompleteNotificationVideoCon
   }
 
   const generatedVideo = video.closest('generated-video')
-  if (!generatedVideo?.querySelector(VIDEO_READY_CONTROL_SELECTOR)) {
+  if (!generatedVideo) {
     return null
   }
 
   const sourceUrl = video.currentSrc || video.getAttribute('src') || video.src
-  if (!sourceUrl || !isGeneratedVideoUrl(sourceUrl)) {
+  if (!sourceUrl) {
     return null
   }
 
   const durationLabel = normalizeWhitespace(
     generatedVideo.querySelector<HTMLElement>('[role="timer"]')?.getAttribute('aria-label') ?? '',
   )
+  const fileName = getVideoFileNameFromSourceUrl(sourceUrl)
   return {
     sourceUrl,
-    ...(getVideoFileName(sourceUrl) ? { fileName: getVideoFileName(sourceUrl) } : {}),
+    ...(fileName ? { fileName } : {}),
     ...(durationLabel ? { durationLabel } : {}),
   }
 }
 
-function isGeneratedVideoUrl(value: string): boolean {
+function getVideoFileNameFromSourceUrl(value: string): string | undefined {
   try {
     const url = new URL(value)
-    return url.hostname === 'contribution.usercontent.google.com'
-      && url.pathname === '/download'
-      && (url.searchParams.get('filename') ?? '').toLowerCase().endsWith('.mp4')
-  } catch {
-    return false
-  }
-}
-
-function getVideoFileName(value: string): string | undefined {
-  try {
-    return new URL(value).searchParams.get('filename') ?? undefined
+    return url.searchParams.get('filename')
+      ?? url.pathname.split('/').filter(Boolean).at(-1)
+      ?? undefined
   } catch {
     return undefined
   }
