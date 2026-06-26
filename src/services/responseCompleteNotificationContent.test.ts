@@ -95,6 +95,43 @@ function renderImageResponse(imageAttributes = ''): void {
   `
 }
 
+function renderVideoResponse(): void {
+  document.body.innerHTML = `
+    <top-bar-actions>
+      <div class="conversation-title-container">Video chat</div>
+    </top-bar-actions>
+    <div class="conversation-container" id="turn-1">
+      <model-response>
+        <structured-content-container>
+          <div id="model-response-message-content-1">
+            <p>您的视频已准备就绪！</p>
+            <div class="attachment-container unknown">
+              <response-element>
+                <generated-video style="aspect-ratio: 1280 / 720; inline-size: 100%;">
+                  <video-player>
+                    <video
+                      playsinline
+                      src="https://contribution.usercontent.google.com/download?c=abc&amp;filename=video.mp4&amp;opi=103135050"
+                      crossorigin="use-credentials"
+                    ></video>
+                    <div class="controls">
+                      <button aria-label="Download video"></button>
+                      <button aria-label="Play video"></button>
+                      <span role="timer" aria-label="10 seconds elapsed, 0 seconds remaining">
+                        <span aria-hidden="true">0:10 / 0:10</span>
+                      </span>
+                    </div>
+                  </video-player>
+                </generated-video>
+              </response-element>
+            </div>
+          </div>
+        </structured-content-container>
+      </model-response>
+    </div>
+  `
+}
+
 function mockImageProcessing(): void {
   vi.stubGlobal('fetch', vi.fn(async () => new Response(
     new Blob(['source-image'], { type: 'image/png' }),
@@ -355,6 +392,31 @@ describe('responseCompleteNotificationContent', () => {
     await expect(getResponseCompleteNotificationContent()).resolves.toMatchObject({
       isForeground: false,
       responseType: 'image',
+    })
+  })
+
+  it('extracts generated video metadata from the final response', async () => {
+    renderVideoResponse()
+
+    await expect(getResponseCompleteNotificationContent()).resolves.toMatchObject({
+      isForeground: false,
+      title: 'Video chat',
+      message: '您的视频已准备就绪！',
+      responseType: 'video',
+      video: {
+        sourceUrl: 'https://contribution.usercontent.google.com/download?c=abc&filename=video.mp4&opi=103135050',
+        fileName: 'video.mp4',
+        durationLabel: '10 seconds elapsed, 0 seconds remaining',
+      },
+    })
+  })
+
+  it('confirms a tracked async video response without a Deep Research card', async () => {
+    renderVideoResponse()
+
+    await expect(getResponseCompleteNotificationContent('deep-research')).resolves.toMatchObject({
+      responseType: 'video',
+      completionConfirmed: true,
     })
   })
 })

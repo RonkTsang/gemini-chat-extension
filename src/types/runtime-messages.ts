@@ -18,8 +18,14 @@ export const RESPONSE_COMPLETE_NOTIFICATION_AUDIO_ASSET_GET_METADATA_MESSAGE = '
 export const RESPONSE_COMPLETE_NOTIFICATION_AUDIO_ASSET_SAVE_MESSAGE = 'response-complete-notification-audio-asset:save' as const
 export const RESPONSE_COMPLETE_NOTIFICATION_AUDIO_ASSET_DELETE_MESSAGE = 'response-complete-notification-audio-asset:delete' as const
 
-export type ResponseNotificationContentType = 'text' | 'image'
+export type ResponseNotificationContentType = 'text' | 'image' | 'video'
 export type ResponseCompletionKind = 'standard-response' | 'deep-research'
+
+export interface ResponseCompleteNotificationVideoContent {
+  sourceUrl: string
+  fileName?: string
+  durationLabel?: string
+}
 
 export interface StuffMediaDataReceivedMessage {
   type: typeof STUFF_MEDIA_DATA_RECEIVED_MESSAGE
@@ -55,6 +61,7 @@ export interface ResponseCompleteNotificationContent {
   responseType: ResponseNotificationContentType
   completionConfirmed?: boolean
   imageDataUrl?: string
+  video?: ResponseCompleteNotificationVideoContent
 }
 
 export type ResponseCompleteNotificationDeepResearchStatus =

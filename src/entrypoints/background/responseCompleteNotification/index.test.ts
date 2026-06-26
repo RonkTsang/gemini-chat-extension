@@ -674,6 +674,41 @@ describe('responseCompleteNotification background V2', () => {
     expect(createNotificationMock).toHaveBeenCalledTimes(2)
   })
 
+  it('notifies when a tracked async video response appears in conversation history', async () => {
+    await setResponseCompleteNotificationEnabled(true)
+    await flushPromises()
+    mockContentResponses({
+      notificationContent: {
+        isForeground: false,
+        title: 'Video chat',
+        message: '您的视频已准备就绪！',
+        responseType: 'video',
+        completionConfirmed: true,
+        video: {
+          sourceUrl: 'https://contribution.usercontent.google.com/download?c=abc&filename=video.mp4&opi=103135050',
+          fileName: 'video.mp4',
+          durationLabel: '10 seconds elapsed, 0 seconds remaining',
+        },
+      },
+    })
+
+    startDeepResearchPoll()
+    await flushPromises()
+    completeDeepResearchReport()
+    await flushPromises()
+
+    expect(tabsSendMessageMock).toHaveBeenCalledWith(7, {
+      type: 'response-complete-notification:get-content',
+      payload: {
+        completionKind: 'deep-research',
+      },
+    })
+    expect(createNotificationMock).toHaveBeenCalledWith('response-complete:7:500', expect.objectContaining({
+      title: 'Video chat',
+      message: '您的视频已准备就绪！',
+    }))
+  })
+
   it('clears an observed Deep Research poll request when the request errors', async () => {
     await setResponseCompleteNotificationEnabled(true)
     await flushPromises()

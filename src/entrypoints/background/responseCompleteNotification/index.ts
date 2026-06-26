@@ -525,6 +525,7 @@ async function processResponseCompleted(
     completionKind,
     responseType: content?.responseType ?? 'text',
     imageDataUrl: content?.imageDataUrl,
+    video: content?.video,
   })
 }
 

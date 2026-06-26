@@ -1,5 +1,8 @@
 import type { Browser, browser } from 'wxt/browser'
-import type { ResponseNotificationContentType } from '@/types/runtime-messages'
+import type {
+  ResponseCompleteNotificationVideoContent,
+  ResponseNotificationContentType,
+} from '@/types/runtime-messages'
 
 export type NotificationsApi = typeof browser.notifications
 
@@ -47,6 +50,7 @@ export interface NotificationTarget {
   completionKind?: CompletionKind
   responseType: ResponseNotificationContentType
   imageDataUrl?: string
+  video?: ResponseCompleteNotificationVideoContent
 }
 
 export interface ParsedNotificationId {
