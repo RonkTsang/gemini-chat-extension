@@ -13,6 +13,9 @@ import {
   type ResponseCompleteNotificationPermissionIntent,
 } from '@/services/responseCompleteNotificationPermissionIntent'
 import {
+  RESPONSE_COMPLETE_NOTIFICATION_AUDIO_ASSET_DELETE_MESSAGE,
+  RESPONSE_COMPLETE_NOTIFICATION_AUDIO_ASSET_GET_METADATA_MESSAGE,
+  RESPONSE_COMPLETE_NOTIFICATION_AUDIO_ASSET_SAVE_MESSAGE,
   RESPONSE_COMPLETE_NOTIFICATION_AUDIO_REQUEST_PERMISSION_MESSAGE,
   RESPONSE_COMPLETE_NOTIFICATION_GET_CONTENT_MESSAGE,
   RESPONSE_COMPLETE_NOTIFICATION_GET_DEEP_RESEARCH_STATUS_MESSAGE,
@@ -69,6 +72,22 @@ let permissionRemovedListener: (() => void) | null = null
 let notificationClickListener: ((notificationId: string) => void) | null = null
 let tabRemovedListener: ((tabId: number) => void) | null = null
 const sessionStorageData: Record<string, unknown> = {}
+
+const {
+  getAudioAssetMetadataMock,
+  persistAudioAssetMock,
+  deleteAudioAssetMock,
+} = vi.hoisted(() => ({
+  getAudioAssetMetadataMock: vi.fn(),
+  persistAudioAssetMock: vi.fn(),
+  deleteAudioAssetMock: vi.fn(),
+}))
+
+vi.mock('@/services/responseCompleteNotificationAudioAsset', () => ({
+  getResponseCompleteNotificationAudioAssetMetadata: getAudioAssetMetadataMock,
+  persistResponseCompleteNotificationAudioAsset: persistAudioAssetMock,
+  deleteResponseCompleteNotificationAudioAsset: deleteAudioAssetMock,
+}))
 
 vi.mock('wxt/browser', () => ({
   browser: {
@@ -339,6 +358,16 @@ describe('responseCompleteNotification background V2', () => {
     permissionsContainsMock.mockResolvedValue(true)
     getPermissionLevelMock.mockResolvedValue('granted')
     tabsGetMock.mockResolvedValue({ id: 7, windowId: 9 })
+    getAudioAssetMetadataMock.mockResolvedValue(null)
+    persistAudioAssetMock.mockResolvedValue({
+      id: 'response-complete-notification',
+      fileName: 'custom.mp3',
+      mimeType: 'audio/mpeg',
+      size: 5,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    })
+    deleteAudioAssetMock.mockResolvedValue(undefined)
     mockContentResponses()
     startResponseCompleteNotificationBackground()
     await flushPromises()
@@ -383,6 +412,65 @@ describe('responseCompleteNotification background V2', () => {
     expect(actionOpenPopupMock).not.toHaveBeenCalled()
     expect(response).toEqual({ ok: true, status: 'already-granted' })
     await expect(getResponseCompleteNotificationEnabled()).resolves.toBe(true)
+  })
+
+  it('returns notification audio asset metadata from the background origin', async () => {
+    const metadata = {
+      id: 'response-complete-notification',
+      fileName: 'custom.mp3',
+      mimeType: 'audio/mpeg',
+      size: 5,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    }
+    getAudioAssetMetadataMock.mockResolvedValue(metadata)
+
+    const response = await sendRuntimeMessage({
+      type: RESPONSE_COMPLETE_NOTIFICATION_AUDIO_ASSET_GET_METADATA_MESSAGE,
+    })
+
+    expect(getAudioAssetMetadataMock).toHaveBeenCalledTimes(1)
+    expect(response).toEqual({
+      ok: true,
+      audioAsset: metadata,
+    })
+  })
+
+  it('persists uploaded notification audio in the background origin', async () => {
+    const response = await sendRuntimeMessage({
+      type: RESPONSE_COMPLETE_NOTIFICATION_AUDIO_ASSET_SAVE_MESSAGE,
+      payload: {
+        fileName: 'custom.mp3',
+        mimeType: 'audio/mpeg',
+        size: 5,
+        dataUrl: 'data:audio/mpeg;base64,YXVkaW8=',
+      },
+    })
+
+    expect(persistAudioAssetMock).toHaveBeenCalledWith(expect.objectContaining({
+      fileName: 'custom.mp3',
+      mimeType: 'audio/mpeg',
+      size: 5,
+      blob: expect.any(Blob),
+    }))
+    expect(response).toEqual({
+      ok: true,
+      audioAsset: expect.objectContaining({
+        fileName: 'custom.mp3',
+      }),
+    })
+  })
+
+  it('deletes uploaded notification audio from the background origin', async () => {
+    const response = await sendRuntimeMessage({
+      type: RESPONSE_COMPLETE_NOTIFICATION_AUDIO_ASSET_DELETE_MESSAGE,
+    })
+
+    expect(deleteAudioAssetMock).toHaveBeenCalledTimes(1)
+    expect(response).toEqual({
+      ok: true,
+      audioAsset: null,
+    })
   })
 
   it('enables visual notifications when permission is granted after the popup opens', async () => {
@@ -584,6 +672,41 @@ describe('responseCompleteNotification background V2', () => {
       },
     })
     expect(createNotificationMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('notifies when a tracked async video response appears in conversation history', async () => {
+    await setResponseCompleteNotificationEnabled(true)
+    await flushPromises()
+    mockContentResponses({
+      notificationContent: {
+        isForeground: false,
+        title: 'Video chat',
+        message: '您的视频已准备就绪！',
+        responseType: 'video',
+        completionConfirmed: true,
+        video: {
+          sourceUrl: 'https://contribution.usercontent.google.com/download?c=abc&filename=video.mp4&opi=103135050',
+          fileName: 'video.mp4',
+          durationLabel: '10 seconds elapsed, 0 seconds remaining',
+        },
+      },
+    })
+
+    startDeepResearchPoll()
+    await flushPromises()
+    completeDeepResearchReport()
+    await flushPromises()
+
+    expect(tabsSendMessageMock).toHaveBeenCalledWith(7, {
+      type: 'response-complete-notification:get-content',
+      payload: {
+        completionKind: 'deep-research',
+      },
+    })
+    expect(createNotificationMock).toHaveBeenCalledWith('response-complete:7:500', expect.objectContaining({
+      title: 'Video chat',
+      message: '您的视频已准备就绪！',
+    }))
   })
 
   it('clears an observed Deep Research poll request when the request errors', async () => {

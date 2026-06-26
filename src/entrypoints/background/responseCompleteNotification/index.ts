@@ -20,6 +20,9 @@ import {
 } from './geminiResponseRequest'
 import {
   isResponseCompleteNotificationAudioRequestPermissionMessage,
+  isResponseCompleteNotificationAudioAssetDeleteMessage,
+  isResponseCompleteNotificationAudioAssetGetMetadataMessage,
+  isResponseCompleteNotificationAudioAssetSaveMessage,
   isResponseCompleteNotificationGetReadinessMessage,
   isResponseCompleteNotificationOpenPermissionPopupMessage,
   isResponseCompleteNotificationRequestPermissionMessage,
@@ -27,6 +30,11 @@ import {
   type ResponseCompleteNotificationContent,
   type ResponseCompleteNotificationResponse,
 } from '@/types/runtime-messages'
+import {
+  deleteResponseCompleteNotificationAudioAsset,
+  getResponseCompleteNotificationAudioAssetMetadata,
+  persistResponseCompleteNotificationAudioAsset,
+} from '@/services/responseCompleteNotificationAudioAsset'
 import { playResponseCompleteNotificationAudio } from './audio'
 import {
   requestDeepResearchDomStatus,
@@ -517,6 +525,7 @@ async function processResponseCompleted(
     completionKind,
     responseType: content?.responseType ?? 'text',
     imageDataUrl: content?.imageDataUrl,
+    video: content?.video,
   })
 }
 
@@ -536,6 +545,18 @@ function handleRuntimeMessage(
   message: unknown,
   sender: RuntimeMessageSender,
 ): Promise<ResponseCompleteNotificationResponse> | undefined {
+  if (isResponseCompleteNotificationAudioAssetGetMetadataMessage(message)) {
+    return handleGetNotificationAudioAssetMetadata()
+  }
+
+  if (isResponseCompleteNotificationAudioAssetSaveMessage(message)) {
+    return handleSaveNotificationAudioAsset(message.payload)
+  }
+
+  if (isResponseCompleteNotificationAudioAssetDeleteMessage(message)) {
+    return handleDeleteNotificationAudioAsset()
+  }
+
   if (isResponseCompleteNotificationGetReadinessMessage(message)) {
     return getReadinessResponse()
   }
@@ -573,6 +594,73 @@ function handleRuntimeMessage(
   }
 
   return undefined
+}
+
+async function dataUrlToBlob(dataUrl: string, fallbackMimeType: string): Promise<Blob> {
+  const response = await fetch(dataUrl)
+  const blob = await response.blob()
+  if (blob.type) {
+    return blob
+  }
+  return new Blob([await blob.arrayBuffer()], { type: fallbackMimeType })
+}
+
+async function handleGetNotificationAudioAssetMetadata(): Promise<ResponseCompleteNotificationResponse> {
+  return {
+    ok: true,
+    audioAsset: await getResponseCompleteNotificationAudioAssetMetadata(),
+  }
+}
+
+async function handleSaveNotificationAudioAsset(payload: {
+  fileName: string
+  mimeType: string
+  size: number
+  dataUrl: string
+}): Promise<ResponseCompleteNotificationResponse> {
+  try {
+    const blob = await dataUrlToBlob(payload.dataUrl, payload.mimeType)
+    const audioAsset = await persistResponseCompleteNotificationAudioAsset({
+      fileName: payload.fileName,
+      mimeType: payload.mimeType,
+      size: payload.size,
+      blob,
+    })
+    return {
+      ok: true,
+      audioAsset,
+    }
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      warnNotificationDebugPayload('[ResponseCompleteNotificationBackground]', 'notification-audio-asset-save-failed', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
+    return {
+      ok: false,
+      error: 'notification-failed',
+    }
+  }
+}
+
+async function handleDeleteNotificationAudioAsset(): Promise<ResponseCompleteNotificationResponse> {
+  try {
+    await deleteResponseCompleteNotificationAudioAsset()
+    return {
+      ok: true,
+      audioAsset: null,
+    }
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      warnNotificationDebugPayload('[ResponseCompleteNotificationBackground]', 'notification-audio-asset-delete-failed', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
+    return {
+      ok: false,
+      error: 'notification-failed',
+    }
+  }
 }
 
 async function handleCreateNotification(

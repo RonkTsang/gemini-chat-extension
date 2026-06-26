@@ -1,5 +1,6 @@
 import type { StuffMediaDataEvent } from '@/common/event'
 import type { ResponseCompleteNotificationPermissionKind } from '@/services/responseCompleteNotificationPermissionIntent'
+import type { ResponseCompleteNotificationAudioAssetMetadata } from '@/services/responseCompleteNotificationAudioAsset'
 import type { NotificationReadiness } from '@/services/responseCompleteNotificationSettings'
 
 export const STUFF_MEDIA_DATA_RECEIVED_MESSAGE = 'stuff-media:data-received' as const
@@ -13,9 +14,18 @@ export const RESPONSE_COMPLETE_NOTIFICATION_REQUEST_PERMISSION_MESSAGE = 'respon
 export const RESPONSE_COMPLETE_NOTIFICATION_AUDIO_REQUEST_PERMISSION_MESSAGE = 'response-complete-notification-audio:request-permission' as const
 export const RESPONSE_COMPLETE_NOTIFICATION_OPEN_PERMISSION_POPUP_MESSAGE = 'response-complete-notification:open-permission-popup' as const
 export const RESPONSE_COMPLETE_NOTIFICATION_AUDIO_PLAY_MESSAGE = 'response-complete-notification-audio:play' as const
+export const RESPONSE_COMPLETE_NOTIFICATION_AUDIO_ASSET_GET_METADATA_MESSAGE = 'response-complete-notification-audio-asset:get-metadata' as const
+export const RESPONSE_COMPLETE_NOTIFICATION_AUDIO_ASSET_SAVE_MESSAGE = 'response-complete-notification-audio-asset:save' as const
+export const RESPONSE_COMPLETE_NOTIFICATION_AUDIO_ASSET_DELETE_MESSAGE = 'response-complete-notification-audio-asset:delete' as const
 
-export type ResponseNotificationContentType = 'text' | 'image'
+export type ResponseNotificationContentType = 'text' | 'image' | 'video'
 export type ResponseCompletionKind = 'standard-response' | 'deep-research'
+
+export interface ResponseCompleteNotificationVideoContent {
+  sourceUrl: string
+  fileName?: string
+  durationLabel?: string
+}
 
 export interface StuffMediaDataReceivedMessage {
   type: typeof STUFF_MEDIA_DATA_RECEIVED_MESSAGE
@@ -51,6 +61,7 @@ export interface ResponseCompleteNotificationContent {
   responseType: ResponseNotificationContentType
   completionConfirmed?: boolean
   imageDataUrl?: string
+  video?: ResponseCompleteNotificationVideoContent
 }
 
 export type ResponseCompleteNotificationDeepResearchStatus =
@@ -104,11 +115,30 @@ export interface ResponseCompleteNotificationAudioPlayMessage {
   target: 'offscreen'
 }
 
+export interface ResponseCompleteNotificationAudioAssetGetMetadataMessage {
+  type: typeof RESPONSE_COMPLETE_NOTIFICATION_AUDIO_ASSET_GET_METADATA_MESSAGE
+}
+
+export interface ResponseCompleteNotificationAudioAssetSaveMessage {
+  type: typeof RESPONSE_COMPLETE_NOTIFICATION_AUDIO_ASSET_SAVE_MESSAGE
+  payload: {
+    fileName: string
+    mimeType: string
+    size: number
+    dataUrl: string
+  }
+}
+
+export interface ResponseCompleteNotificationAudioAssetDeleteMessage {
+  type: typeof RESPONSE_COMPLETE_NOTIFICATION_AUDIO_ASSET_DELETE_MESSAGE
+}
+
 export interface ResponseCompleteNotificationResponse {
   ok: boolean
   status?: 'already-granted' | 'popup-opened' | 'fallback-window-opened'
   readiness?: NotificationReadiness
   audioPermissionAvailable?: boolean
+  audioAsset?: ResponseCompleteNotificationAudioAssetMetadata | null
   error?: 'missing-tab' | 'permission-denied' | 'notification-failed' | 'popup-open-failed' | 'permission-api-unavailable'
 }
 
@@ -252,4 +282,43 @@ export function isResponseCompleteNotificationAudioPlayMessage(
   const candidate = message as Partial<ResponseCompleteNotificationAudioPlayMessage>
   return candidate.type === RESPONSE_COMPLETE_NOTIFICATION_AUDIO_PLAY_MESSAGE
     && candidate.target === 'offscreen'
+}
+
+export function isResponseCompleteNotificationAudioAssetGetMetadataMessage(
+  message: unknown,
+): message is ResponseCompleteNotificationAudioAssetGetMetadataMessage {
+  if (!message || typeof message !== 'object') {
+    return false
+  }
+
+  const candidate = message as Partial<ResponseCompleteNotificationAudioAssetGetMetadataMessage>
+  return candidate.type === RESPONSE_COMPLETE_NOTIFICATION_AUDIO_ASSET_GET_METADATA_MESSAGE
+}
+
+export function isResponseCompleteNotificationAudioAssetSaveMessage(
+  message: unknown,
+): message is ResponseCompleteNotificationAudioAssetSaveMessage {
+  if (!message || typeof message !== 'object') {
+    return false
+  }
+
+  const candidate = message as Partial<ResponseCompleteNotificationAudioAssetSaveMessage>
+  return candidate.type === RESPONSE_COMPLETE_NOTIFICATION_AUDIO_ASSET_SAVE_MESSAGE
+    && !!candidate.payload
+    && typeof candidate.payload === 'object'
+    && typeof candidate.payload.fileName === 'string'
+    && typeof candidate.payload.mimeType === 'string'
+    && typeof candidate.payload.size === 'number'
+    && typeof candidate.payload.dataUrl === 'string'
+}
+
+export function isResponseCompleteNotificationAudioAssetDeleteMessage(
+  message: unknown,
+): message is ResponseCompleteNotificationAudioAssetDeleteMessage {
+  if (!message || typeof message !== 'object') {
+    return false
+  }
+
+  const candidate = message as Partial<ResponseCompleteNotificationAudioAssetDeleteMessage>
+  return candidate.type === RESPONSE_COMPLETE_NOTIFICATION_AUDIO_ASSET_DELETE_MESSAGE
 }

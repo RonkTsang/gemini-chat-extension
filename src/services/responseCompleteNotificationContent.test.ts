@@ -95,6 +95,36 @@ function renderImageResponse(imageAttributes = ''): void {
   `
 }
 
+function renderVideoResponse(): void {
+  document.body.innerHTML = `
+    <top-bar-actions>
+      <div class="conversation-title-container">Video chat</div>
+    </top-bar-actions>
+    <div class="conversation-container" id="turn-1">
+      <model-response>
+        <structured-content-container>
+          <div id="model-response-message-content-1">
+            <p>您的视频已准备就绪！</p>
+            <div class="attachment-container unknown">
+              <response-element>
+                <generated-video style="aspect-ratio: 1280 / 720; inline-size: 100%;">
+                  <video-player>
+                    <video
+                      playsinline
+                      src="https://cdn.example.test/generated/video.mp4"
+                      crossorigin="use-credentials"
+                    ></video>
+                  </video-player>
+                </generated-video>
+              </response-element>
+            </div>
+          </div>
+        </structured-content-container>
+      </model-response>
+    </div>
+  `
+}
+
 function mockImageProcessing(): void {
   vi.stubGlobal('fetch', vi.fn(async () => new Response(
     new Blob(['source-image'], { type: 'image/png' }),
@@ -355,6 +385,30 @@ describe('responseCompleteNotificationContent', () => {
     await expect(getResponseCompleteNotificationContent()).resolves.toMatchObject({
       isForeground: false,
       responseType: 'image',
+    })
+  })
+
+  it('extracts generated video metadata from the final response', async () => {
+    renderVideoResponse()
+
+    await expect(getResponseCompleteNotificationContent()).resolves.toMatchObject({
+      isForeground: false,
+      title: 'Video chat',
+      message: '您的视频已准备就绪！',
+      responseType: 'video',
+      video: {
+        sourceUrl: 'https://cdn.example.test/generated/video.mp4',
+        fileName: 'video.mp4',
+      },
+    })
+  })
+
+  it('confirms a tracked async video response without a Deep Research card', async () => {
+    renderVideoResponse()
+
+    await expect(getResponseCompleteNotificationContent('deep-research')).resolves.toMatchObject({
+      responseType: 'video',
+      completionConfirmed: true,
     })
   })
 })

@@ -22,6 +22,7 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
       '#imports': path.resolve(__dirname, './src/test/mocks/wxt-imports.ts'),
+      '#i18n': path.resolve(__dirname, './src/test/mocks/wxt-i18n.ts'),
     },
   },
 });

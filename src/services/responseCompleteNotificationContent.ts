@@ -5,6 +5,7 @@ import {
   type ResponseCompleteNotificationDeepResearchStatus,
   type ResponseCompletionKind,
   type ResponseCompleteNotificationContent,
+  type ResponseCompleteNotificationVideoContent,
   type ResponseNotificationContentType,
 } from '@/types/runtime-messages'
 import { extractModelResponseContent } from '@/utils/messageUtils'
@@ -14,12 +15,14 @@ const STRUCTURED_CONTENT_SELECTOR = 'structured-content-container'
 const MODEL_RESPONSE_MESSAGE_CONTENT_SELECTOR = '[id*="model-response-message-content"]'
 const RESPONSE_CONTENT_SELECTOR = `${STRUCTURED_CONTENT_SELECTOR} ${MODEL_RESPONSE_MESSAGE_CONTENT_SELECTOR}`
 const FINAL_IMAGE_SELECTOR = 'generated-image > single-image > div > div > button.image-button > img'
+const FINAL_VIDEO_SELECTOR = 'generated-video video-player video[src]'
 const DEEP_RESEARCH_CARD_SELECTOR = 'gem-processing-card'
 const DEEP_RESEARCH_TITLE_SELECTOR = '.card-title'
 const MAX_NOTIFICATION_MESSAGE_LENGTH = 200
 const FALLBACK_NOTIFICATION_TITLE = 'Gemini finished replying'
 const FALLBACK_NOTIFICATION_MESSAGE = 'Your response is ready.'
 const FALLBACK_IMAGE_NOTIFICATION_MESSAGE = 'Your image is ready.'
+const FALLBACK_VIDEO_NOTIFICATION_MESSAGE = 'Your video is ready.'
 const CONTENT_RETRY_ATTEMPTS = 10
 const CONTENT_RETRY_DELAY_MS = 100
 const IMAGE_SOURCE_RETRY_ATTEMPTS = 4
@@ -129,9 +132,13 @@ export function getCompletedModelResponseSummary(
   const extractedContent = modelResponse ? extractModelResponseContent(modelResponse) : ''
   const normalized = normalizeWhitespace(extractedContent || modelResponse?.textContent || '')
   if (!normalized) {
-    return responseType === 'image'
-      ? FALLBACK_IMAGE_NOTIFICATION_MESSAGE
-      : FALLBACK_NOTIFICATION_MESSAGE
+    if (responseType === 'image') {
+      return FALLBACK_IMAGE_NOTIFICATION_MESSAGE
+    }
+    if (responseType === 'video') {
+      return FALLBACK_VIDEO_NOTIFICATION_MESSAGE
+    }
+    return FALLBACK_NOTIFICATION_MESSAGE
   }
 
   return normalized.slice(0, MAX_NOTIFICATION_MESSAGE_LENGTH)
@@ -148,17 +155,18 @@ async function readNotificationContent(
 
   const responseType = getResponseType(turn)
   const modelResponse = getLastNonEmptyModelResponse(turn)
+  const finalVideo = responseType === 'video' ? findFinalVideo(turn) : null
   const finalImage = responseType === 'image' && !import.meta.env.FIREFOX
     ? await waitForFinalImageWithSource(turn)
     : findFinalImageWithSource(turn)
-  if (!modelResponse && !finalImage && responseType !== 'image') {
+  if (!modelResponse && !finalImage && !finalVideo && responseType !== 'image') {
     return null
   }
 
   const deepResearchTitle = completionKind === 'deep-research'
     ? getDeepResearchTitle(turn)
     : null
-  if (completionKind === 'deep-research' && !deepResearchTitle) {
+  if (completionKind === 'deep-research' && !deepResearchTitle && responseType !== 'video') {
     return null
   }
 
@@ -174,11 +182,34 @@ async function readNotificationContent(
   return {
     isForeground,
     title: getCurrentChatNotificationTitle(),
-    message: deepResearchTitle ?? getCompletedModelResponseSummary(modelResponse, responseType),
+    message: deepResearchTitle ?? getCompletedResponseSummary(modelResponse, responseType),
     responseType,
     ...(completionKind === 'deep-research' ? { completionConfirmed: true } : {}),
     ...(imageDataUrl ? { imageDataUrl } : {}),
+    ...(finalVideo ? { video: finalVideo } : {}),
   }
+}
+
+function getCompletedResponseSummary(
+  modelResponse: Element | null,
+  responseType: ResponseNotificationContentType,
+): string {
+  if (responseType !== 'video') {
+    return getCompletedModelResponseSummary(modelResponse, responseType)
+  }
+
+  if (!modelResponse) {
+    return FALLBACK_VIDEO_NOTIFICATION_MESSAGE
+  }
+
+  const clone = modelResponse.cloneNode(true) as Element
+  clone.querySelectorAll('generated-video').forEach(element => element.remove())
+  const normalized = normalizeWhitespace(
+    extractModelResponseContent(clone) || clone.textContent || '',
+  )
+  return normalized
+    ? normalized.slice(0, MAX_NOTIFICATION_MESSAGE_LENGTH)
+    : FALLBACK_VIDEO_NOTIFICATION_MESSAGE
 }
 
 export function getDeepResearchTitle(turn: Element): string | null {
@@ -227,7 +258,48 @@ function getLastFinalTurn(): HTMLElement | null {
 }
 
 function getResponseType(turn: HTMLElement): ResponseNotificationContentType {
+  if (findFinalVideo(turn)) {
+    return 'video'
+  }
   return turn.querySelector('generated-image single-image') ? 'image' : 'text'
+}
+
+function findFinalVideo(turn: HTMLElement): ResponseCompleteNotificationVideoContent | null {
+  const video = turn.querySelector<HTMLVideoElement>(FINAL_VIDEO_SELECTOR)
+  if (!video) {
+    return null
+  }
+
+  const generatedVideo = video.closest('generated-video')
+  if (!generatedVideo) {
+    return null
+  }
+
+  const sourceUrl = video.currentSrc || video.getAttribute('src') || video.src
+  if (!sourceUrl) {
+    return null
+  }
+
+  const durationLabel = normalizeWhitespace(
+    generatedVideo.querySelector<HTMLElement>('[role="timer"]')?.getAttribute('aria-label') ?? '',
+  )
+  const fileName = getVideoFileNameFromSourceUrl(sourceUrl)
+  return {
+    sourceUrl,
+    ...(fileName ? { fileName } : {}),
+    ...(durationLabel ? { durationLabel } : {}),
+  }
+}
+
+function getVideoFileNameFromSourceUrl(value: string): string | undefined {
+  try {
+    const url = new URL(value)
+    return url.searchParams.get('filename')
+      ?? url.pathname.split('/').filter(Boolean).at(-1)
+      ?? undefined
+  } catch {
+    return undefined
+  }
 }
 
 function getLastNonEmptyModelResponse(turn: HTMLElement): Element | null {

@@ -34,11 +34,22 @@ export interface ChainPromptRow {
   steps: { id: string; name?: string; prompt: string }[]
 }
 
+export interface NotificationAudioAssetRow {
+  id: 'response-complete-notification'
+  fileName: string
+  mimeType: string
+  size: number
+  blob: Blob
+  createdAt: string
+  updatedAt: string
+}
+
 export class GeminiExtensionDB extends Dexie {
   chain_prompts!: Table<ChainPromptRow, string>
   quick_follow_prompts!: Table<QuickFollowPromptRow, string>
   quick_follow_settings!: Table<QuickFollowSettingsRow, string>
   theme_assets!: Table<ThemeAssetRow, string>
+  notification_audio_assets!: Table<NotificationAudioAssetRow, string>
 
   constructor() {
     super('gemini_extension')
@@ -64,8 +75,18 @@ export class GeminiExtensionDB extends Dexie {
       .upgrade(() => {
         // no-op: existing installations do not require data migration
       })
+    this.version(4)
+      .stores({
+        chain_prompts: 'id, name, createdAt, updatedAt',
+        quick_follow_prompts: 'id, updatedAt',
+        quick_follow_settings: 'id',
+        theme_assets: 'id, feature, updatedAt',
+        notification_audio_assets: 'id, updatedAt'
+      })
+      .upgrade(() => {
+        // no-op: existing installations do not require data migration
+      })
   }
 }
 
 export const db = new GeminiExtensionDB()
-
