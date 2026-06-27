@@ -1,3 +1,17 @@
+# [0.8.0](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.7.0...v0.8.0) (2026-06-27)
+
+
+### Bug Fixes
+
+* library open-in-new-tab ([#33](https://github.com/RonkTsang/gemini-chat-extension/issues/33)) ([f2751b2](https://github.com/RonkTsang/gemini-chat-extension/commit/f2751b225f7cb1eeffbc24c6215be4fbf201acb3))
+* **notification:** request Gemini host access ([#31](https://github.com/RonkTsang/gemini-chat-extension/issues/31)) ([bc19efb](https://github.com/RonkTsang/gemini-chat-extension/commit/bc19efbbd1ee466d5d38726667e2274652a13758))
+
+
+### Features
+
+* Add custom notification audio ([#32](https://github.com/RonkTsang/gemini-chat-extension/issues/32)) ([570db41](https://github.com/RonkTsang/gemini-chat-extension/commit/570db413382211343c42140c2fd9996277e93e73))
+* Add model response complete notifications ([#30](https://github.com/RonkTsang/gemini-chat-extension/issues/30)) ([da72631](https://github.com/RonkTsang/gemini-chat-extension/commit/da7263122bbfddec09c6c3a6fa72459f2640e0b1))
+
 # [0.7.0](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.6.4...v0.7.0) (2026-05-30)
 
 
