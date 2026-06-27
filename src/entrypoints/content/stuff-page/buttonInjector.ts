@@ -4,18 +4,15 @@
  * Injects "Open in New Tab" buttons to library-item-card elements.
  * Uses MutationObserver to handle dynamically loaded content.
  * 
- * - Uses WeakMap to track card injection state
+ * - Uses WeakSet to track card injection state
  */
 
-
 import { t } from '@/utils/i18n'
-import { handleOpenInNewTab } from './navigation'
+import { handleOpenInNewTab, resolveOpenInNewTabUrl } from './navigation'
 import './style.css'
 
 // Track injected buttons to avoid duplicates
-const injectedCards = new WeakSet<Element>()
-
-
+let injectedCards = new WeakSet<Element>()
 
 // Keep reference to MutationObserver for cleanup
 let mutationObserver: MutationObserver | null = null
@@ -37,22 +34,17 @@ function getOpenInNewTabSvg(): string {
 `.trim()
 }
 
-
-
-
-
 /**
  * Create and inject button for a library-item-card
  * 
  * @param card The library-item-card element (serves as the container)
+ * @param url The pre-resolved absolute navigation URL.
  */
-function injectButton(card: Element): void {
+function injectButton(card: Element, url: string): void {
   // Skip if already injected
   if (injectedCards.has(card)) {
     return
   }
-
-
 
   // Create button element
   const button = document.createElement('div')
@@ -61,12 +53,13 @@ function injectButton(card: Element): void {
   button.setAttribute('role', 'button')
   button.setAttribute('tabindex', '0')
   button.setAttribute('aria-label', t('stuffPage.openInNewTab'))
+  button.dataset.openUrl = url
 
   // Add click handler
   button.addEventListener('click', (e) => {
     e.preventDefault()
     e.stopPropagation()
-    handleOpenInNewTab(card)
+    handleOpenInNewTab(url)
   })
 
   // Add keyboard support (Enter and Space)
@@ -74,7 +67,7 @@ function injectButton(card: Element): void {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()
       e.stopPropagation()
-      handleOpenInNewTab(card)
+      handleOpenInNewTab(url)
     }
   })
 
@@ -84,8 +77,6 @@ function injectButton(card: Element): void {
   tooltip.textContent = t('stuffPage.openInNewTab')
   button.appendChild(tooltip)
 
-
-
   // Insert button directly into library-item-card
   card.appendChild(button)
 
@@ -94,29 +85,52 @@ function injectButton(card: Element): void {
 }
 
 /**
+ * Inject a button only when the card has resolvable navigation data.
+ */
+export function tryInjectButton(card: Element): boolean {
+  if (injectedCards.has(card)) {
+    return false
+  }
+
+  if (card.querySelector('.gem-ext-open-new-tab-btn')) {
+    injectedCards.add(card)
+    return false
+  }
+
+  const url = resolveOpenInNewTabUrl(card)
+  if (!url) {
+    return false
+  }
+
+  injectButton(card, url)
+  return true
+}
+
+/**
+ * Reconcile currently rendered cards after media data arrives.
+ */
+export function reconcileOpenInNewTabButtons(): void {
+  const cards = document.querySelectorAll('library-sections-overview-page library-item-card')
+  let injectedCount = 0
+
+  cards.forEach((card) => {
+    if (tryInjectButton(card)) {
+      injectedCount++
+    }
+  })
+
+  if (injectedCount > 0) {
+    console.log('[ButtonInjector] Reconciled open-in-new-tab buttons:', injectedCount)
+  }
+}
+
+/**
  * Start monitoring for library-item-card elements
  */
 export function startButtonInjector(): void {
   console.log('[ButtonInjector] Starting button injector...')
 
-
-
-  // Find media container from library-sections-overview-page
-  const overviewPage = document.querySelector('library-sections-overview-page')
-  if (!overviewPage) {
-    console.log('[ButtonInjector] Overview page not found, will retry on DOM changes')
-    // Will be handled by MutationObserver below
-  } else {
-    const mediaContainer = overviewPage.querySelector('.media-container')
-    if (!mediaContainer) {
-      console.log('[ButtonInjector] Media container not found, will retry on DOM changes')
-    } else {
-      // Inject to existing cards
-      const existingCards = mediaContainer.querySelectorAll('library-item-card')
-      console.log('[ButtonInjector] Found', existingCards.length, 'existing cards')
-      existingCards.forEach(card => injectButton(card))
-    }
-  }
+  reconcileOpenInNewTabButtons()
 
   // Setup MutationObserver to watch for new and removed cards
   mutationObserver = new MutationObserver((mutations) => {
@@ -142,9 +156,8 @@ export function startButtonInjector(): void {
 
         if (addedCards.length > 0) {
           console.log('[ButtonInjector] Found', addedCards.length, 'new cards')
-          addedCards.forEach(card => injectButton(card))
+          addedCards.forEach(card => tryInjectButton(card))
         }
-
 
       }
     }
@@ -168,11 +181,9 @@ export function stopButtonInjector(): void {
     mutationObserver.disconnect()
     mutationObserver = null
   }
+  injectedCards = new WeakSet<Element>()
 
-  // Note: WeakMap (injectedCards) will automatically clean up when cards are garbage collected
-  // DOM elements and event listeners attached to them are automatically cleaned up when the parent verification
-  // cards are removed from the DOM.
-
-
+  // Note: WeakSet (injectedCards) will automatically clean up when cards are garbage collected
+  // DOM elements and event listeners are cleaned up when cards are removed from the DOM.
   console.log('[ButtonInjector] Stopped and cleaned up')
 }

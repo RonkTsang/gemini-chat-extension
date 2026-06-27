@@ -4,6 +4,7 @@
  * Handles extracting jslog data and opening items in new tabs.
  */
 
+import { browser } from 'wxt/browser'
 import { MediaItemStatus } from '@/utils/stuffMediaParser'
 import { OPEN_IN_NEW_TAB_MESSAGE } from '@/types/runtime-messages'
 import { stuffDataCache } from './dataCache'
@@ -63,24 +64,20 @@ export function extractMediaInfoFromJslog(jslog: string | null): MediaInfo | nul
 }
 
 /**
- * Handle "Open in New Tab" button click
+ * Resolve the final navigation URL for a library-item-card.
  * 
  * @param cardElement The library-item-card element
  */
-export function handleOpenInNewTab(cardElement: Element): void {
+export function resolveOpenInNewTabUrl(cardElement: Element): string | null {
   try {
-    // Extract jslog attribute
     const jslog = cardElement.getAttribute('jslog')
     if (!jslog) {
-      console.warn('[Navigation] No jslog attribute found on card')
-      return
+      return null
     }
 
-    // Extract media info
     const mediaInfo = extractMediaInfoFromJslog(jslog)
     if (!mediaInfo) {
-      console.warn('[Navigation] Could not extract media info from jslog')
-      return
+      return null
     }
 
     let mediaItem = null
@@ -98,48 +95,50 @@ export function handleOpenInNewTab(cardElement: Element): void {
 
       if (title) {
         mediaItem = stuffDataCache.findByTitle(title)
-        if (!mediaItem) {
-          console.warn('[Navigation] MediaItem not found by title:', title)
-        }
-      } else {
-        console.warn('[Navigation] No title found in card element for Audio item')
       }
     }
 
     if (!mediaItem) {
-      console.warn('[Navigation] MediaItem not found in cache. Info:', mediaInfo)
-      return
+      return null
     }
 
-    // Build URL path (remove prefixes: "c_" from conversationId, "r_" from responseId)
     const conversationId = mediaItem.conversationId.replace(/^c_/, '')
     const responseId = mediaItem.responseId.replace(/^r_/, '')
-    const url = `/app/${conversationId}#${responseId}`
-    const absoluteUrl = new URL(url, window.location.origin).href
+    if (!conversationId || !responseId) {
+      return null
+    }
 
+    return new URL(`/app/${conversationId}#${responseId}`, window.location.origin).href
+  } catch (error) {
+    console.error('[Navigation] Error resolving new-tab URL:', error)
+    return null
+  }
+}
+
+/**
+ * Handle "Open in New Tab" button click
+ *
+ * @param url The pre-resolved absolute URL.
+ */
+export function handleOpenInNewTab(url: string): void {
+  try {
     console.log('[Navigation] Opening in new tab:', {
-      timestamp: mediaInfo.timestamp,
-      status: mediaInfo.status,
-      originalConversationId: mediaItem.conversationId,
-      originalResponseId: mediaItem.responseId,
-      conversationId,
-      responseId,
-      url: absoluteUrl,
+      url,
     })
 
     if (import.meta.env.FIREFOX) {
       void browser.runtime.sendMessage({
         type: OPEN_IN_NEW_TAB_MESSAGE,
-        payload: { url: absoluteUrl },
+        payload: { url },
       }).catch((error) => {
         console.warn('[Navigation] Failed to request new tab:', error)
-        window.open(absoluteUrl, '_blank')
+        window.open(url, '_blank')
       })
       return
     }
 
     // Open in new tab
-    window.open(absoluteUrl, '_blank')
+    window.open(url, '_blank')
   } catch (error) {
     console.error('[Navigation] Error opening in new tab:', error)
   }

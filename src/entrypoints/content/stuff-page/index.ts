@@ -17,7 +17,7 @@ import {
   isStuffMediaDataReceivedMessage,
 } from '@/types/runtime-messages'
 import { stuffDataCache } from './dataCache'
-import { startButtonInjector, stopButtonInjector } from './buttonInjector'
+import { reconcileOpenInNewTabButtons, startButtonInjector, stopButtonInjector } from './buttonInjector'
 
 /**
  * Stuff Page Module State
@@ -94,6 +94,8 @@ class StuffPageModule {
         addedCount,
         totalCached: stuffDataCache.size,
       })
+
+      reconcileOpenInNewTabButtons()
 
       // Emit to event bus for other modules (if needed)
       eventBus.emit('stuff-media:data-received', {
