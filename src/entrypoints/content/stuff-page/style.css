@@ -5,11 +5,11 @@ library-item-card {
 
 .gem-ext-open-new-tab-btn {
   position: absolute;
-  right: 4px;
+  right: 46px;
   top: 4px;
-  width: 35px;
+  width: 36px;
   aspect-ratio: 1;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.34);
   border-radius: 100%;
   display: none;
   justify-content: center;
@@ -21,7 +21,7 @@ library-item-card {
 }
 
 .gem-ext-open-new-tab-btn:hover {
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.52);
 }
 
 library-item-card:hover .gem-ext-open-new-tab-btn {
