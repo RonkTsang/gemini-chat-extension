@@ -23,6 +23,7 @@ import {
   filterMediaItemsWithImages,
   filterMediaItemsAudio,
   STUFF_REQUEST_TYPES,
+  isStuffMediaSourcePath,
 } from './stuffMediaParser';
 import fs from 'fs';
 import path from 'path';
@@ -35,6 +36,9 @@ const __dirname = path.dirname(__filename);
 // Read test sample data
 const SAMPLE_RESPONSE_PATH = path.resolve(__dirname, '../../test/samples/media-response.txt');
 const sampleResponse = fs.readFileSync(SAMPLE_RESPONSE_PATH, 'utf-8');
+const LIBRARY_REQUEST_PATH = path.resolve(__dirname, '../../.original/library/request.md');
+const libraryRequestMarkdown = fs.readFileSync(LIBRARY_REQUEST_PATH, 'utf-8');
+const libraryResponse = libraryRequestMarkdown.match(/```([\s\S]*?)```/)?.[1]?.trim() ?? '';
 
 describe('stuffMediaParser', () => {
   // ==================== Request Type Identification ====================
@@ -53,7 +57,20 @@ describe('stuffMediaParser', () => {
   });
 
   describe('isStuffMediaRequest', () => {
-    it('should identify valid Media requests', () => {
+    it('should identify current Library media requests', () => {
+      const url =
+        'https://gemini.google.com/_/BardChatUi/data/batchexecute?rpcids=jGArJ&source-path=%2Flibrary';
+      const fReq = encodeURIComponent(
+        JSON.stringify([
+          [['jGArJ', JSON.stringify([STUFF_REQUEST_TYPES.MEDIA, 30]), null, 'generic']],
+        ]),
+      );
+      const formData = { 'f.req': fReq };
+
+      expect(isStuffMediaRequest(url, formData)).toBe(true);
+    });
+
+    it('should reject legacy My Stuff source paths', () => {
       const url =
         'https://gemini.google.com/_/BardChatUi/data/batchexecute?rpcids=jGArJ&source-path=%2Fmystuff';
       const fReq = encodeURIComponent(
@@ -63,7 +80,20 @@ describe('stuffMediaParser', () => {
       );
       const formData = { 'f.req': fReq };
 
-      expect(isStuffMediaRequest(url, formData)).toBe(true);
+      expect(isStuffMediaRequest(url, formData)).toBe(false);
+    });
+
+    it('should reject unsupported source paths', () => {
+      const url =
+        'https://gemini.google.com/_/BardChatUi/data/batchexecute?rpcids=jGArJ&source-path=%2Fapp%2Fc_123';
+      const fReq = encodeURIComponent(
+        JSON.stringify([
+          [['jGArJ', JSON.stringify([STUFF_REQUEST_TYPES.MEDIA, 30]), null, 'generic']],
+        ]),
+      );
+      const formData = { 'f.req': fReq };
+
+      expect(isStuffMediaRequest(url, formData)).toBe(false);
     });
 
     it('should reject non-batchexecute endpoints', () => {
@@ -78,7 +108,7 @@ describe('stuffMediaParser', () => {
 
     it('should reject Docs type requests', () => {
       const url =
-        'https://gemini.google.com/_/BardChatUi/data/batchexecute?rpcids=jGArJ&source-path=%2Fmystuff';
+        'https://gemini.google.com/_/BardChatUi/data/batchexecute?rpcids=jGArJ&source-path=%2Flibrary';
       const fReq = encodeURIComponent(
         JSON.stringify([
           [['jGArJ', JSON.stringify([STUFF_REQUEST_TYPES.DOCS, 30]), null, 'generic']],
@@ -164,6 +194,19 @@ describe('stuffMediaParser', () => {
       expect(titleItems[0].title).toBe('Why Warren Buffett Bought SIRI XM Despite Huge Losses');
     });
 
+    it('should parse current Library media response data', () => {
+      const result = parseMediaResponse(libraryResponse);
+
+      expect(result).not.toBeNull();
+      expect(result?.totalCount).toBeGreaterThan(0);
+
+      const firstItem = result!.items[0];
+      expect(firstItem.conversationId).toBe('c_9f13b6112bdb41cf');
+      expect(firstItem.responseId).toBe('r_bcb2eed9c92e4379');
+      expect(firstItem.timestamp).toBe(1781941629);
+      expect(firstItem.thumbnailUrl).toContain('https://lh3.googleusercontent.com/');
+    });
+
     it('should handle invalid responses', () => {
       expect(parseMediaResponse('not json')).toBeNull();
       expect(parseMediaResponse('{"error": 500}')).toBeNull();
@@ -183,6 +226,13 @@ describe('stuffMediaParser', () => {
 
   // ==================== Utility Functions ====================
   describe('Utility Functions', () => {
+    it('should identify supported Stuff media source paths', () => {
+      expect(isStuffMediaSourcePath('/library')).toBe(true);
+      expect(isStuffMediaSourcePath('/mystuff')).toBe(false);
+      expect(isStuffMediaSourcePath('/app/c_123')).toBe(false);
+      expect(isStuffMediaSourcePath(null)).toBe(false);
+    });
+
     it('should format item with image', () => {
       const item = {
         conversationId: 'conv123',

@@ -1,5 +1,5 @@
 import { browser } from 'wxt/browser'
-import { isStuffMediaRequest, parseMediaResponse } from '@/utils/stuffMediaParser'
+import { isStuffMediaSourcePath, parseMediaResponse } from '@/utils/stuffMediaParser'
 import {
   FIREFOX_GET_INSTANCE_ID_MESSAGE,
   OPEN_IN_NEW_TAB_MESSAGE,
@@ -15,7 +15,6 @@ const firefoxInstanceId = globalThis.crypto?.randomUUID?.()
 type OnBeforeRequestListener = Parameters<typeof browser.webRequest.onBeforeRequest.addListener>[0]
 type OnBeforeRequestDetails = Parameters<OnBeforeRequestListener>[0]
 type OnBeforeRequestResult = ReturnType<OnBeforeRequestListener>
-type RequestBody = OnBeforeRequestDetails extends { requestBody?: infer T } ? T : never
 type OnHeadersReceivedListener = Parameters<typeof browser.webRequest.onHeadersReceived.addListener>[0]
 type OnHeadersReceivedDetails = Parameters<OnHeadersReceivedListener>[0]
 type OnHeadersReceivedResult = ReturnType<OnHeadersReceivedListener>
@@ -29,42 +28,12 @@ type StreamFilter = {
   disconnect: () => void
 }
 
-function extractFReq(requestBody: RequestBody | undefined): string | null {
-  if (!requestBody) {
-    return null
-  }
-
-  const requestBodyFormData = (requestBody as { formData?: Record<string, string[]> }).formData
-  const formValue = requestBodyFormData?.['f.req']?.[0]
-  if (typeof formValue === 'string') {
-    return formValue
-  }
-
-  const rawParts = (requestBody as { raw?: Array<{ bytes?: ArrayBuffer }> }).raw ?? []
-  const rawBytes = rawParts.find((part: { bytes?: ArrayBuffer }) => part.bytes)?.bytes
-  if (!rawBytes) {
-    return null
-  }
-
-  const rawBody = new TextDecoder().decode(rawBytes)
-  const formData = new URLSearchParams(rawBody)
-  return formData.get('f.req')
-}
-
-function shouldTrackRequest(url: string, fReq: string | null): boolean {
-  if (!fReq) {
-    return false
-  }
-
-  return isStuffMediaRequest(url, { 'f.req': fReq })
-}
-
 function shouldTrackByUrl(url: string): boolean {
   try {
     const urlObj = new URL(url)
     return urlObj.pathname === '/_/BardChatUi/data/batchexecute'
       && urlObj.searchParams.get('rpcids') === 'jGArJ'
-      && urlObj.searchParams.get('source-path') === '/mystuff'
+      && isStuffMediaSourcePath(urlObj.searchParams.get('source-path'))
   } catch {
     return false
   }
@@ -78,7 +47,6 @@ function createRequestMonitor() {
     url: string
     tabId: number
     trackedBy: 'before-request' | 'headers-fallback'
-    matchedByBody: boolean
     type?: OnBeforeRequestDetails['type']
     method?: string
     timeStamp?: number
@@ -91,7 +59,6 @@ function createRequestMonitor() {
       url: details.url,
       tracked: !!tracked,
       trackedBy: tracked?.trackedBy,
-      matchedByBody: tracked?.matchedByBody,
       tabId: tracked?.tabId,
       statusCode: details.statusCode,
       fromCache: details.fromCache,
@@ -123,17 +90,10 @@ function createRequestMonitor() {
       return undefined
     }
 
-    const fReq = extractFReq(details.requestBody)
-    const matchedByBody = fReq ? shouldTrackRequest(details.url, fReq) : false
-    if (fReq && !matchedByBody) {
-      return undefined
-    }
-
     trackedRequestIds.set(details.requestId, {
       url: details.url,
       tabId: details.tabId!,
       trackedBy: 'before-request',
-      matchedByBody,
       type: details.type,
       method: details.method,
       timeStamp: details.timeStamp,
@@ -145,8 +105,6 @@ function createRequestMonitor() {
       type: details.type,
       method: details.method,
       timeStamp: details.timeStamp,
-      hasFReq: !!fReq,
-      matchedByBody,
     })
     return undefined
   }
@@ -164,7 +122,6 @@ function createRequestMonitor() {
         url: details.url,
         tabId: details.tabId,
         trackedBy: 'headers-fallback',
-        matchedByBody: false,
         timeStamp: details.timeStamp,
       }
       trackedRequestIds.set(details.requestId, tracked)
@@ -191,7 +148,6 @@ function createRequestMonitor() {
       requestId: details.requestId,
       url: details.url,
       trackedBy: tracked.trackedBy,
-      matchedByBody: tracked.matchedByBody,
       statusCode: details.statusCode,
     })
 

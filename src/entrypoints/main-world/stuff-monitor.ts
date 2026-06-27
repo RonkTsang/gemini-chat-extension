@@ -8,8 +8,14 @@
  */
 
 import { xhrInterceptor, type XHRRequestSnapshot } from '@/utils/xhrInterceptor'
-import { parseMediaResponse, isStuffMediaRequest, type MediaItem } from '@/utils/stuffMediaParser'
+import { parseMediaResponse } from '@/utils/stuffMediaParser'
 import { GEM_EXT_EVENTS } from '@/common/event'
+
+const STUFF_MEDIA_BATCH_URL_PATTERN = /\/_\/BardChatUi\/data\/batchexecute\?.*rpcids=jGArJ.*source-path=%2Flibrary/
+
+function isSupportedStuffPagePath(pathname: string): boolean {
+  return pathname === '/library' || pathname.startsWith('/library/')
+}
 
 /**
  * Start monitoring Stuff Media API requests
@@ -25,34 +31,22 @@ export function startStuffMonitor(): void {
     console.log('[StuffMonitor Main World] Starting Stuff page monitoring...')
 
     unregisterInterceptor = xhrInterceptor.intercept({
-      // Match Stuff Media API endpoint with source-path parameter
-      urlPattern: /\/_\/BardChatUi\/data\/batchexecute\?.*rpcids=jGArJ.*source-path=%2Fmystuff/,
+      // Match Stuff Media API endpoint with source-path parameter.
+      urlPattern: STUFF_MEDIA_BATCH_URL_PATTERN,
 
       onResponse: (url: string, responseText: string, status: number, requestSnapshot: XHRRequestSnapshot) => {
         try {
-          // url: "/_/BardChatUi/data/batchexecute?rpcids=jGArJ&source-path=%2Fmystuff&bl=boq_assistant-bard-web-server_20260121.00_p1&f.sid=1945670880997184523&hl=en&_reqid=311373&rt=c"
+          // url: "/_/BardChatUi/data/batchexecute?rpcids=jGArJ&source-path=%2Flibrary&bl=boq_assistant-bard-web-server_20260625.12_p1&f.sid=8667359588762092056&hl=en&_reqid=7860267&rt=c"
           const requestURL = new URL(requestSnapshot.url, window.location.origin)
+          const sourcePath = requestURL.searchParams.get('source-path')
           console.log('[StuffMonitor Main World] Intercepted Stuff Media response:', {
             url,
             requestURL: requestURL.toString(),
+            sourcePath,
             status,
             responseLength: responseText.length,
             requestSnapshot,
           })
-
-          if (typeof requestSnapshot.body !== 'string') {
-            return
-          }
-
-          const formData = new URLSearchParams(requestSnapshot.body)
-
-          const isStuffReq = isStuffMediaRequest(requestURL.toString(), {
-            'f.req': formData.get('f.req') || '',
-          })
-
-          if (!isStuffReq) {
-            return
-          }
 
           // Parse the response using stuffMediaParser
           const mediaData = parseMediaResponse(responseText)
@@ -104,12 +98,16 @@ export function startStuffMonitor(): void {
 
   const checkUrl = () => {
     const pathname = window.location.pathname
-    // Match /mystuff or /mystuff/xx
-    const isStuffPage = pathname === '/mystuff' || pathname.startsWith('/mystuff/')
+    // Match the Gemini library media pages.
+    const isStuffPage = isSupportedStuffPagePath(pathname)
 
     if (isStuffPage) {
+      console.log('[StuffMonitor Main World] Supported library page detected:', pathname)
       startIntercept()
     } else {
+      if (unregisterInterceptor) {
+        console.log('[StuffMonitor Main World] Leaving supported library page:', pathname)
+      }
       stopIntercept()
     }
   }

@@ -31,6 +31,10 @@ export const STUFF_REQUEST_TYPES = {
   DOCS: [1, 1, 1, 1, 1, 0, 1] as StuffRequestTypeArray,
 } as const;
 
+export const STUFF_MEDIA_SOURCE_PATHS = ['/library'] as const;
+
+export type StuffMediaSourcePath = typeof STUFF_MEDIA_SOURCE_PATHS[number];
+
 /**
  * Stuff request parameters structure
  */
@@ -135,6 +139,10 @@ export function identifyStuffRequestType(typeArray: number[]): 'media' | 'docs' 
   return null;
 }
 
+export function isStuffMediaSourcePath(sourcePath: string | null): sourcePath is StuffMediaSourcePath {
+  return STUFF_MEDIA_SOURCE_PATHS.includes(sourcePath as StuffMediaSourcePath);
+}
+
 /**
  * Determine if it is a Stuff Media request
  *
@@ -157,7 +165,7 @@ export function isStuffMediaRequest(url: string, formData: Record<string, string
     }
 
     // 3. Check source-path
-    if (urlObj.searchParams.get('source-path') !== '/mystuff') {
+    if (!isStuffMediaSourcePath(urlObj.searchParams.get('source-path'))) {
       return false;
     }
 
@@ -251,8 +259,8 @@ export function buildNextPageRequest(
  */
 export function parseMediaResponse(responseText: string): ParsedMediaResponse | null {
   try {
-    // 1. Remove XSSI protection prefix ")]}'\n\n"
-    const cleanText = responseText.replace(/^\)\]\}'\s*\n\s*\n/, '');
+    // 1. Remove XSSI protection prefix. Gemini has used both one and two line breaks after it.
+    const cleanText = responseText.replace(/^\)\]\}'\s*\n+/, '');
 
     // 2. Split by lines
     const lines = cleanText.split('\n').filter((line) => line.trim());
