@@ -1,3 +1,10 @@
+## [0.8.1](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.8.0...v0.8.1) (2026-06-30)
+
+
+### Bug Fixes
+
+* **notification:** prevent test notification page flicker ([59b8333](https://github.com/RonkTsang/gemini-chat-extension/commit/59b83339270c3c26df20971a374eb1cd206a25a9))
+
 # [0.8.0](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.7.0...v0.8.0) (2026-06-27)
 
 
