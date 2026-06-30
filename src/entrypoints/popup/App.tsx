@@ -34,6 +34,7 @@ import {
   setChatOutlineEnabled,
 } from './storage';
 import { ChatOutlineIcon, QuickQuoteIcon, ExternalLinkIcon, NotificationIcon } from '@/components/icons';
+import { NotificationTestButton } from '@/components/notification/NotificationTestButton';
 import { quickFollowStore } from '@/stores/quickFollowStore'
 import { useResponseCompleteNotificationSettings } from '@/hooks/useResponseCompleteNotificationSettings';
 
@@ -428,13 +429,13 @@ function App() {
 
               {notificationSettings.enabled ? (
                 <Stack gap={1} mt={2} pl="40px">
-                  <Button
+                  <NotificationTestButton
                     variant="ghost"
                     justifyContent="flex-start"
                     color={mutedTextColor}
                     _hover={{ color: textColor, bg: hoverBg }}
-                    disabled={!notificationSettings.canSendTest || notificationSettings.isPending}
-                    onClick={() => void notificationSettings.sendTestNotification()}
+                    canSendTest={notificationSettings.canSendTest}
+                    sendTestNotification={notificationSettings.sendTestNotification}
                     fontWeight="normal"
                     fontSize="xs"
                     h="auto"
@@ -442,7 +443,7 @@ function App() {
                     py={1}
                   >
                     {t('responseNotificationTest') || "Send test notification"}
-                  </Button>
+                  </NotificationTestButton>
                   <Button
                     variant="ghost"
                     justifyContent="flex-start"

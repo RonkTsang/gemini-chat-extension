@@ -317,7 +317,6 @@ export function useResponseCompleteNotificationSettings() {
   }, [])
 
   const sendTestNotification = useCallback(async () => {
-    setIsPending(true)
     try {
       const response = await browser.runtime.sendMessage({
         type: RESPONSE_COMPLETE_NOTIFICATION_TEST_MESSAGE,
@@ -327,13 +326,14 @@ export function useResponseCompleteNotificationSettings() {
       }) as ResponseCompleteNotificationResponse | undefined
 
       if (response?.readiness) {
-        setReadiness(response.readiness)
+        const nextReadiness = response.readiness
+        setReadiness(currentReadiness => (
+          currentReadiness === nextReadiness ? currentReadiness : nextReadiness
+        ))
       }
     } catch (error) {
       console.error('Failed to send test notification:', error)
       await refreshReadiness()
-    } finally {
-      setIsPending(false)
     }
   }, [refreshReadiness])
 

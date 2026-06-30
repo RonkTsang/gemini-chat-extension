@@ -1,4 +1,5 @@
 import { Box, Button, Container, Stack, Switch, Text } from '@chakra-ui/react'
+import { NotificationTestButton } from '@/components/notification/NotificationTestButton'
 import { useResponseCompleteNotificationSettings } from '@/hooks/useResponseCompleteNotificationSettings'
 import { t } from '@/utils/i18n'
 import { NotificationAudioAssetControl } from './NotificationAudioAssetControl'
@@ -123,13 +124,13 @@ export function NotificationSettingsContent({ extensionPage = false }: Notificat
 
             {notificationSettings.enabled ? (
               <Stack direction={{ base: 'column', sm: 'row' }} gap={2}>
-                <Button
+                <NotificationTestButton
                   variant="outline"
-                  disabled={!notificationSettings.canSendTest || notificationSettings.isPending}
-                  onClick={() => void notificationSettings.sendTestNotification()}
+                  canSendTest={notificationSettings.canSendTest}
+                  sendTestNotification={notificationSettings.sendTestNotification}
                 >
                   {t('responseNotificationTest')}
-                </Button>
+                </NotificationTestButton>
                 <Button variant="ghost" onClick={notificationSettings.openTroubleshooting}>
                   {t('responseNotificationTroubleshooting')}
                 </Button>
