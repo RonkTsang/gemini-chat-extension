@@ -4,6 +4,7 @@ description: Follow the latest Gemini Power Kit releases, feature updates, and v
 ---
 
 import { Image } from 'astro:assets';
+import notificationSettings from '../../../assets/features/notification/setting-panel.png';
 import glassEffectControls from '../../../assets/releases/whats-new/v0.7.0-glass-effect-control-display.png';
 import themeGuide from '../../../assets/releases/whats-new/v0.6.0-theme-guide.jpg';
 import themeColors from '../../../assets/releases/whats-new/v0.6.0-theme-colors.png';
@@ -13,6 +14,34 @@ import openInNewTabVideo from '../../../assets/releases/whats-new/v0.5.0-open-in
 import chatOutlinePreview from '../../../assets/releases/whats-new/v0.5.0-chat-outline-preview.png';
 
 Keep up with the latest releases, improvements, and fixes.
+
+## v0.8.0 Reply Completion Notifications
+
+*June 27, 2026*
+
+Gemini Power Kit can now let you know when Gemini finishes replying.
+
+<Image
+  src={notificationSettings}
+  alt="Notification settings for Gemini reply completion alerts, sound, custom audio, and troubleshooting"
+  class="release-image"
+/>
+
+When a Gemini reply finishes in the background, Gemini Power Kit can send a system notification with the conversation title and a short preview. Click the notification to return to the right conversation, and the alert is cleared from the notification center.
+
+Notifications are opt-in. The extension asks for the required browser permissions only when you enable the feature, and the settings panel includes a test notification plus troubleshooting guidance for browser and system notification settings.
+
+### Notification Sound and Custom Audio
+
+You can enable a completion sound for notifications, then upload your own audio if you want a more recognizable cue. Custom audio is stored locally by the extension and falls back to the bundled sound when no custom file is set.
+
+### More Completion Types
+
+The notification flow now handles more than basic text replies. It can recognize image results, generated videos, and Deep Research completion paths when Gemini exposes the final result state.
+
+### Library Fix
+
+- Fixed **Open in New Tab** in the Library gallery, so media items can open in a separate tab without losing your place in the gallery.
 
 ## v0.7.0 Glass Effect Controls
 

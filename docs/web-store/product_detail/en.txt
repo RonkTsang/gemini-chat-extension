@@ -15,6 +15,12 @@ Stop scrolling endlessly through long threads.
   ● One-Click Navigation: Jump directly to any part of the chat.
   ● Pinned Mode: Keep your outline always visible for heavy research sessions.
 
+🔔 REPLY NOTIFICATIONS — STEP AWAY WITH CONFIDENCE
+Let Gemini work in the background without constantly checking the tab.
+  ● Ready Alerts: Get a desktop notification when a standard reply, image, video, or Deep Research report is ready.
+  ● Click to Return: Open the originating Gemini chat directly from the notification.
+  ● Optional Sound: Add a short built-in or custom audio cue when notifications appear.
+
 🔗 CHAIN PROMPT — AUTOMATE COMPLEX WORKFLOWS
 Turn multi-step tasks into one-click automations.
   ● Workflow Automation: Execute a sequence of prompts automatically.
@@ -29,7 +35,7 @@ Transform your workspace and make Gemini truly yours.
 
 💎 SEAMLESS EXPERIENCE
 ● Smart Tab Titles: Automatically renames browser tabs to match your chat titles, making it effortless to switch between multiple Gemini sessions.
-● Open Media in New Tab: From the My Stuff gallery, open any item in a new tab and keep your place—review results without losing your scroll position.
+● Open Media in New Tab: From the Library gallery, open any item in a new tab and keep your place—review results without losing your scroll position.
 
 PRIVACY FIRST
 🔒 All processing happens locally on your machine. Your data never leaves your device.

@@ -8,7 +8,7 @@ import notificationSettingsImg from '../../../assets/features/notification/setti
 
 <Image
   src={notificationSettingsImg}
-  alt="Notifications settings with reply completion alerts, sound, test notification, and troubleshooting link"
+  alt="Notifications settings with reply completion alerts, custom sound, foreground behavior, test notification, and troubleshooting link"
   class="feature-image"
 />
 
@@ -41,6 +41,11 @@ Long replies should not force you to keep watching one tab. Notifications help w
     <p class="settings-when">Use it when visual notifications are easy to miss or when Gemini is behind another app.</p>
   </article>
   <article class="settings-card">
+    <div class="settings-label">Notification sound</div>
+    <p class="settings-detail">Use the built-in completion sound or upload your own audio file for a more recognizable notification cue.</p>
+    <p class="settings-when">Custom audio is stored locally by the extension and is used only for notification sound playback.</p>
+  </article>
+  <article class="settings-card">
     <div class="settings-label">Send test notification</div>
     <p class="settings-detail">Creates a test alert so you can confirm that browser and system notification settings are working.</p>
     <p class="settings-when">Run this immediately after enabling notifications or after changing operating-system settings.</p>
@@ -58,9 +63,10 @@ Long replies should not force you to keep watching one tab. Notifications help w
 2. Go to **Notifications**.
 3. Turn on **Notify when Gemini finishes replying** and approve the requested browser permissions.
 4. Optionally turn on **Play a sound with notifications**.
-5. Click **Send test notification** to verify your setup.
-6. Start a Gemini reply, then switch to another tab or app.
-7. Click the completion notification to return to the correct conversation.
+5. Optionally upload a custom file under **Notification sound**.
+6. Click **Send test notification** to verify your setup.
+7. Start a Gemini reply, then switch to another tab or app.
+8. Click the completion notification to return to the correct conversation.
 
 ## Notification Behavior
 
@@ -68,6 +74,7 @@ Long replies should not force you to keep watching one tab. Notifications help w
 - The alert uses the current chat title and a short preview when they are available.
 - If response details cannot be read, you still receive a generic completion alert.
 - Clicking an alert focuses its Gemini conversation and clears the alert.
+- When notification sound is enabled, custom audio replaces the built-in completion sound.
 - The extension processes notification content locally and does not read the streaming response body.
 
 ## Current Scope

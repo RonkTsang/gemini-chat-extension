@@ -1,0 +1,45 @@
+Schneller arbeiten, smarter automatisieren und mehr Zeit zurückgewinnen.
+
+Gemini Power Kit verwandelt deinen KI-Chat in einen leistungsstarken Arbeitsbereich.
+Entwickelt für Nutzer, die mehr als nur Unterhaltung erwarten: Dieses Toolkit reduziert wiederholte manuelle Arbeit und gibt dir die Struktur, die du brauchst, um fokussiert zu bleiben.
+
+HAUPTFUNKTIONEN
+⚡ QUICK FOLLOW-UP — MARKIEREN UND SOFORT FRAGEN
+Kein umständliches Kopieren und Einfügen mehr. Interagiere direkt mit Gemini über jeden ausgewählten Text.
+  ● Sofortige Nachfrage: Markiere beliebigen Text und stelle direkt eine Frage dazu.
+  ● Eigene Prompt-Bibliothek: Erstelle eigene Kurzbefehle wie "Zusammenfassen" oder "Erklären" und starte sie mit einem Klick.
+
+🗂️ CHAT OUTLINE — NIE WIEDER DEN ÜBERBLICK VERLIEREN
+Höre auf, endlos durch lange Unterhaltungen zu scrollen.
+  ● Sofortiger Überblick: Sieh alle Prompts deiner Unterhaltung auf einen Blick.
+  ● Navigation mit einem Klick: Springe direkt zu jeder Stelle im Chat.
+  ● Angehefteter Modus: Halte die Gliederung bei umfangreichen Recherche-Sitzungen immer sichtbar.
+
+🔔 ANTWORT-BENACHRICHTIGUNGEN — SICHER WEGGEHEN
+Lass Gemini im Hintergrund arbeiten, ohne ständig den Tab zu prüfen.
+  ● Fertig-Hinweise: Erhalte eine Desktop-Benachrichtigung, wenn eine Standardantwort, ein Bild, ein Video oder ein Deep Research-Bericht bereit ist.
+  ● Zurück per Klick: Öffne den ursprünglichen Gemini-Chat direkt über die Benachrichtigung.
+  ● Optionaler Ton: Spiele beim Erscheinen einer Benachrichtigung einen kurzen integrierten oder eigenen Ton ab.
+
+🔗 CHAIN PROMPT — KOMPLEXE WORKFLOWS AUTOMATISIEREN
+Verwandle mehrstufige Aufgaben in Automatisierungen mit einem Klick.
+  ● Workflow-Automatisierung: Führe eine Abfolge von Prompts automatisch aus.
+  ● Dynamische Variablen: Definiere wiederverwendbare Platzhalter für flexible Workflows.
+  ● Visueller Builder: Verwalte deine Chains in einem intuitiven Drag-and-drop-Editor.
+  ● Echtzeit-Tracking: Verfolge den Automatisierungsfortschritt Schritt für Schritt.
+
+🎨 VISUELLE THEMEN — PERSONALISIERE DEIN GEMINI
+Verwandle deinen Arbeitsbereich und mache Gemini wirklich zu deinem.
+  ● Schöne Farbvorlagen: Wähle aus verschiedenen lebendigen Themes für eine persönlichere Umgebung.
+  ● Eigene Hintergrundbilder: Werte dein Erlebnis mit persönlichen Hintergründen und eleganten Glaseffekten auf.
+
+💎 NAHTLOSE ERFAHRUNG
+● Smarte Tab-Titel: Benennt Browser-Tabs automatisch passend zu deinen Chat-Titeln um, damit du leicht zwischen mehreren Gemini-Sitzungen wechseln kannst.
+● Medien in neuem Tab öffnen: Öffne in der Library-Galerie jedes Element in einem neuen Tab und behalte deine Position, damit du Ergebnisse ansehen kannst, ohne die Scrollposition zu verlieren.
+
+DATENSCHUTZ ZUERST
+🔒 Die gesamte Verarbeitung findet lokal auf deinem Gerat statt. Deine Daten verlassen dein Gerat nicht.
+
+LEISTUNG
+- Leichtgewichtig und sauber: Minimalistisches Design, das sich nahtlos in die native Oberfläche einfügt.
+- Unterstützt sowohl den hellen als auch den dunklen Modus.

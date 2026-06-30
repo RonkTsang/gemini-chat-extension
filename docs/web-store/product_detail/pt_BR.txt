@@ -1,0 +1,45 @@
+Trabalhe mais rápido, automatize melhor e recupere seu tempo.
+
+O Gemini Power Kit transforma seu chat de IA em um espaço de trabalho de alta performance.
+Criado para quem precisa de mais do que uma conversa, este kit elimina tarefas manuais repetitivas e oferece a estrutura profissional necessária para manter o foco.
+
+PRINCIPAIS RECURSOS
+⚡ QUICK FOLLOW-UP — SELECIONE E PERGUNTE NA HORA
+Elimine o atrito de copiar e colar. Interaja com o Gemini diretamente a partir de qualquer texto selecionado.
+  ● Pergunta instantânea: Selecione qualquer texto e pergunte imediatamente.
+  ● Biblioteca de prompts personalizada: Crie atalhos como "Resumir" ou "Explicar" e execute com um clique.
+
+🗂️ CHAT OUTLINE — NUNCA MAIS SE PERCA
+Pare de rolar sem fim por conversas longas.
+  ● Visão geral imediata: Veja todos os prompts da conversa de uma vez.
+  ● Navegação com um clique: Pule diretamente para qualquer parte do chat.
+  ● Modo fixado: Mantenha o outline sempre visível em sessões longas de pesquisa.
+
+🔔 NOTIFICAÇÕES DE RESPOSTA — SAIA DA ABA COM CONFIANÇA
+Deixe o Gemini trabalhar em segundo plano sem verificar a aba o tempo todo.
+  ● Alertas de pronto: Receba uma notificação na área de trabalho quando uma resposta comum, imagem, vídeo ou relatório do Deep Research estiver pronto.
+  ● Voltar com um clique: Abra o chat original do Gemini diretamente pela notificação.
+  ● Som opcional: Adicione um aviso sonoro curto, integrado ou personalizado, quando as notificações aparecerem.
+
+🔗 CHAIN PROMPT — AUTOMATIZE FLUXOS COMPLEXOS
+Transforme tarefas de várias etapas em automações de um clique.
+  ● Automação de fluxos: Execute uma sequência de prompts automaticamente.
+  ● Variáveis dinâmicas: Defina placeholders reutilizáveis para fluxos flexíveis.
+  ● Construtor visual: Gerencie suas chains com um editor intuitivo de arrastar e soltar.
+  ● Acompanhamento em tempo real: Veja o progresso da automação passo a passo.
+
+🎨 TEMAS VISUAIS — PERSONALIZE SEU GEMINI
+Transforme seu espaço de trabalho e deixe o Gemini com a sua cara.
+  ● Belos presets de cores: Escolha entre vários temas vibrantes para criar um ambiente mais pessoal.
+  ● Papéis de parede personalizados: Melhore a experiência com seus próprios fundos e elegantes efeitos de vidro.
+
+💎 EXPERIÊNCIA SEM ATRITO
+● Títulos inteligentes de abas: Renomeia automaticamente as abas do navegador de acordo com os títulos dos chats, facilitando alternar entre várias sessões do Gemini.
+● Abrir mídia em nova aba: Na galeria Library, abra qualquer item em uma nova aba e mantenha sua posição para revisar resultados sem perder onde estava.
+
+PRIVACIDADE EM PRIMEIRO LUGAR
+🔒 Todo o processamento acontece localmente no seu computador. Seus dados nunca saem do seu dispositivo.
+
+DESEMPENHO
+- Leve e limpo: Design minimalista que se integra perfeitamente à interface nativa.
+- Oferece excelente suporte aos modos claro e escuro.
