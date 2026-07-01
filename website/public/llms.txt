@@ -1,0 +1,46 @@
+# Gemini Power Kit
+
+> Gemini Power Kit is a browser extension for Google Gemini. It adds Chat Outline navigation, Quick Follow-up actions, Chain Prompt automation, tab title sync, reply-completion notifications, open-in-new-tab workflows, and theme customization.
+
+This website documents the public product, installation flow, feature behavior, troubleshooting guidance, release notes, and privacy policy for Gemini Power Kit. English pages are the canonical documentation set, with Chinese pages available under `/zh-cn/`.
+
+## Official Links
+
+- [Official Website](https://gpk.ronktsang.com/): Product overview and primary documentation entry point.
+- [Chrome Web Store Listing](https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn): Official install page for Gemini Power Kit.
+- [GitHub Repository](https://github.com/RonkTsang/gemini-chat-extension): Source repository for the extension.
+
+## Core Docs
+
+- [Install](https://gpk.ronktsang.com/guide/install/): How to install Gemini Power Kit.
+- [Quick Start](https://gpk.ronktsang.com/guide/quick-start/): First steps after installation.
+- [Features Overview](https://gpk.ronktsang.com/features/): Index of the main feature pages.
+
+## Features
+
+- [Chat Outline](https://gpk.ronktsang.com/features/chat-outline/): Navigate long Gemini conversations and jump between key sections.
+- [Quick Follow-up](https://gpk.ronktsang.com/features/quick-follow-up/): Ask contextual follow-up questions from selected text and saved prompts.
+- [Chain Prompt](https://gpk.ronktsang.com/features/chain-prompt/): Build reusable multi-step Gemini prompt workflows.
+- [Open in New Tab](https://gpk.ronktsang.com/features/stuff-open-new-tab/): Open Gemini Library items in new tabs without interrupting the current page.
+- [Tab Title Sync](https://gpk.ronktsang.com/features/tab-title-sync/): Sync browser tab titles with Gemini conversation titles.
+- [Gemini Reply Completion Notifications](https://gpk.ronktsang.com/features/notifications/): Receive system notifications when Gemini finishes replying.
+- [Theme Customizer](https://gpk.ronktsang.com/features/theme/): Customize Gemini appearance with themes, colors, wallpaper, and readability controls.
+
+## Support And Policy
+
+- [FAQ](https://gpk.ronktsang.com/support/faq/): Common questions about Gemini Power Kit.
+- [Notification Troubleshooting](https://gpk.ronktsang.com/support/notification-troubleshooting/): Browser and operating-system checks for notification delivery.
+- [What's New](https://gpk.ronktsang.com/support/whats-new/): Product release notes and feature updates.
+- [Privacy Policy](https://gpk.ronktsang.com/privacy-policy/): Privacy policy for Gemini Power Kit.
+
+## Chinese Docs
+
+- [Chinese Overview](https://gpk.ronktsang.com/zh-cn/): Gemini Power Kit Chinese overview.
+- [Chinese Install](https://gpk.ronktsang.com/zh-cn/guide/install/): Chinese installation guide.
+- [Chinese Quick Start](https://gpk.ronktsang.com/zh-cn/guide/quick-start/): Chinese quick-start guide.
+- [Chinese Features Overview](https://gpk.ronktsang.com/zh-cn/features/): Chinese feature index.
+- [Chinese Privacy Policy](https://gpk.ronktsang.com/zh-cn/privacy-policy/): Chinese privacy policy.
+
+## Optional
+
+- [Sitemap](https://gpk.ronktsang.com/sitemap-0.xml): Full indexable page list for crawlers.
