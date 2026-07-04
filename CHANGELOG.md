@@ -1,3 +1,10 @@
+## [0.8.2](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.8.1...v0.8.2) (2026-07-04)
+
+
+### Bug Fixes
+
+* **firefox:** use unique AMO add-on ID ([c3696a5](https://github.com/RonkTsang/gemini-chat-extension/commit/c3696a582311b46ba5a42447161043e432e778cd))
+
 ## [0.8.1](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.8.0...v0.8.1) (2026-06-30)
 
 
