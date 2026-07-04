@@ -68,7 +68,7 @@ export default defineConfig({
       )
       manifest.browser_specific_settings = {
         gecko: {
-          id: 'gemini-power-kit-firefox@ronktsang.com',
+          id: 'gemini-power-kit-ff@ronktsang.com',
           strict_min_version: '140.0',
           data_collection_permissions: {
             required: ['none'],
