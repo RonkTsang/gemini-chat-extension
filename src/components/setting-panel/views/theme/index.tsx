@@ -63,6 +63,7 @@ export function ThemeSettingsView() {
               backgroundEnabled={previewState.settings.backgroundImageEnabled}
               backgroundUrl={previewState.resolvedBackgroundUrl}
               blurPx={previewState.settings.backgroundBlurPx}
+              backgroundPosition={previewState.settings.backgroundImagePosition}
               sidebarScrimEnabled={previewState.settings.sidebarScrimEnabled}
               sidebarScrimIntensity={previewState.settings.sidebarScrimIntensity}
               messageGlassEnabled={previewState.settings.messageGlassEnabled}

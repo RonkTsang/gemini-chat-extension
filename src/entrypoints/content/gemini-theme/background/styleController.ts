@@ -1,4 +1,5 @@
 import type { ThemeBackgroundResolvedState } from './types'
+import { getBackgroundImagePositionCssValue } from './types'
 import { resolveMessageGlassSurfaces } from './messageGlassVisibility'
 import backgroundStyleCss from './style.css?raw'
 
@@ -14,6 +15,7 @@ const ROOT_SIDEBAR_SCRIM_ENABLED_ATTR = 'data-gpk-sidebar-scrim-enabled'
 const ROOT_FIREFOX_ATTR = 'data-gpk-firefox'
 const ROOT_BG_IMAGE_VAR = '--gpk-bg-image'
 const ROOT_BG_BLUR_VAR = '--gpk-bg-blur'
+const ROOT_BG_POSITION_VAR = '--gpk-bg-position'
 const ROOT_MSG_GLASS_TRANSPARENCY_VAR = '--gpk-msg-glass-transparency'
 const ROOT_MSG_GLASS_USER_DARK_SURFACE_LEGACY_MIX_VAR
   = '--gpk-msg-glass-user-dark-surface-legacy-mix'
@@ -109,6 +111,10 @@ export function applyThemeBackgroundStyle(
     ROOT_BG_BLUR_VAR,
     `${state.settings.backgroundBlurPx}px`,
   )
+  root.style.setProperty(
+    ROOT_BG_POSITION_VAR,
+    getBackgroundImagePositionCssValue(state.settings.backgroundImagePosition),
+  )
   const surfaces = resolveMessageGlassSurfaces(
     state.settings.messageGlassBackgroundVisibility,
   )
@@ -182,6 +188,7 @@ export function clearThemeBackgroundStyle(): void {
   root.removeAttribute(ROOT_FIREFOX_ATTR)
   root.style.removeProperty(ROOT_BG_IMAGE_VAR)
   root.style.removeProperty(ROOT_BG_BLUR_VAR)
+  root.style.removeProperty(ROOT_BG_POSITION_VAR)
   root.style.removeProperty(ROOT_MSG_GLASS_TRANSPARENCY_VAR)
   root.style.removeProperty(ROOT_MSG_GLASS_USER_DARK_SURFACE_LEGACY_MIX_VAR)
   root.style.removeProperty(ROOT_MSG_GLASS_USER_LIGHT_TRANSPARENCY_VAR)

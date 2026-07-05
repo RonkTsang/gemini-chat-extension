@@ -1,12 +1,17 @@
 import { Box, Heading, VStack, HStack } from '@chakra-ui/react'
 import { useColorMode } from '@/components/ui/color-mode'
-import { resolveMessageGlassSurface } from '@/entrypoints/content/gemini-theme'
+import {
+  getBackgroundImagePositionCssValue,
+  resolveMessageGlassSurface,
+  type BackgroundImagePosition,
+} from '@/entrypoints/content/gemini-theme'
 import { t } from '@/utils/i18n'
 
 interface LivePreviewProps {
   backgroundEnabled: boolean
   backgroundUrl: string | null
   blurPx: number
+  backgroundPosition: BackgroundImagePosition
   sidebarScrimEnabled: boolean
   sidebarScrimIntensity: number
   messageGlassEnabled: boolean
@@ -70,6 +75,7 @@ export function LivePreview({
   backgroundEnabled,
   backgroundUrl,
   blurPx,
+  backgroundPosition,
   sidebarScrimEnabled,
   sidebarScrimIntensity,
   messageGlassEnabled,
@@ -79,6 +85,9 @@ export function LivePreview({
 }: LivePreviewProps) {
   const { colorMode } = useColorMode()
   const isDark = colorMode === 'dark'
+  const backgroundPositionCss = getBackgroundImagePositionCssValue(
+    backgroundPosition,
+  )
   const isBackgroundMode = backgroundEnabled
   const canRenderBackground = backgroundEnabled && Boolean(backgroundUrl)
   const canRenderSidebarScrim =
@@ -137,7 +146,7 @@ export function LivePreview({
               inset={`-${Math.max(8, blurPx * 2)}px`}
               bgImage={`url(${backgroundUrl})`}
               bgSize="cover"
-              bgPos="center"
+              bgPos={backgroundPositionCss}
               filter={`blur(${blurPx}px)${isDark ? ' brightness(0.5)' : ''}`}
             />
           </Box>

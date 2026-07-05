@@ -13,6 +13,7 @@ export {
 export { themeBackgroundSettingsStorage } from './storage'
 
 export type {
+  BackgroundImagePosition,
   BackgroundImageRef,
   ThemeAssetRow,
   ThemeBackgroundPatch,
@@ -27,6 +28,8 @@ export type {
 
 export {
   ALLOWED_BACKGROUND_IMAGE_MIME_TYPES,
+  BACKGROUND_IMAGE_POSITION_CSS_VALUES,
+  BACKGROUND_IMAGE_POSITIONS,
   BACKGROUND_BLUR_MAX,
   BACKGROUND_BLUR_MIN,
   BACKGROUND_FILE_SIZE_LIMIT,
@@ -34,6 +37,7 @@ export {
   MESSAGE_GLASS_BACKGROUND_VISIBILITY_DEFAULT,
   MESSAGE_GLASS_BACKGROUND_VISIBILITY_MAX,
   MESSAGE_GLASS_BACKGROUND_VISIBILITY_MIN,
+  getBackgroundImagePositionCssValue,
   normalizeThemeBackgroundSettings,
   SIDEBAR_SCRIM_INTENSITY_MAX,
   SIDEBAR_SCRIM_INTENSITY_MIN,

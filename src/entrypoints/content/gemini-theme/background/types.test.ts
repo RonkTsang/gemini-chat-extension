@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
+  BACKGROUND_IMAGE_POSITION_CSS_VALUES,
+  BACKGROUND_IMAGE_POSITIONS,
   BACKGROUND_BLUR_MAX,
   BACKGROUND_BLUR_MIN,
   DEFAULT_THEME_BACKGROUND_SETTINGS,
@@ -12,6 +14,7 @@ import {
   MESSAGE_GLASS_TRANSPARENCY_MIN,
   SIDEBAR_SCRIM_INTENSITY_MAX,
   SIDEBAR_SCRIM_INTENSITY_MIN,
+  getBackgroundImagePositionCssValue,
   normalizeThemeBackgroundSettings,
 } from './types'
 
@@ -21,6 +24,9 @@ describe('theme background settings normalize', () => {
 
     expect(result.backgroundImageEnabled).toBe(DEFAULT_THEME_BACKGROUND_SETTINGS.backgroundImageEnabled)
     expect(result.backgroundBlurPx).toBe(DEFAULT_THEME_BACKGROUND_SETTINGS.backgroundBlurPx)
+    expect(result.backgroundImagePosition).toBe(
+      DEFAULT_THEME_BACKGROUND_SETTINGS.backgroundImagePosition,
+    )
     expect(result.messageGlassEnabled).toBe(DEFAULT_THEME_BACKGROUND_SETTINGS.messageGlassEnabled)
     expect(result.messageGlassTransparency).toBe(
       DEFAULT_THEME_BACKGROUND_SETTINGS.messageGlassTransparency,
@@ -61,6 +67,38 @@ describe('theme background settings normalize', () => {
 
     expect(low.backgroundBlurPx).toBe(BACKGROUND_BLUR_MIN)
     expect(high.backgroundBlurPx).toBe(BACKGROUND_BLUR_MAX)
+  })
+
+  it('normalizes background image position', () => {
+    for (const position of BACKGROUND_IMAGE_POSITIONS) {
+      expect(
+        normalizeThemeBackgroundSettings({
+          backgroundImagePosition: position,
+        }).backgroundImagePosition,
+      ).toBe(position)
+    }
+
+    expect(
+      normalizeThemeBackgroundSettings({
+        backgroundImagePosition: 'invalid',
+      }).backgroundImagePosition,
+    ).toBe('center')
+    expect(
+      normalizeThemeBackgroundSettings({
+        backgroundImagePosition: undefined,
+      }).backgroundImagePosition,
+    ).toBe('center')
+  })
+
+  it('maps background image positions to css values', () => {
+    for (const position of BACKGROUND_IMAGE_POSITIONS) {
+      expect(getBackgroundImagePositionCssValue(position)).toBe(
+        BACKGROUND_IMAGE_POSITION_CSS_VALUES[position],
+      )
+    }
+    expect(getBackgroundImagePositionCssValue('top-left')).toBe('left top')
+    expect(getBackgroundImagePositionCssValue('center')).toBe('center center')
+    expect(getBackgroundImagePositionCssValue('bottom-right')).toBe('right bottom')
   })
 
   it('clamps sidebar scrim intensity to valid range', () => {

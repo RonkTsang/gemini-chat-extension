@@ -20,9 +20,10 @@ function createSettings(
   overrides: Partial<ThemeBackgroundSettings> = {},
 ): ThemeBackgroundSettings {
   return {
-    version: 4,
+    version: 5,
     backgroundImageEnabled: true,
     backgroundBlurPx: 5,
+    backgroundImagePosition: 'center',
     messageGlassEnabled: false,
     messageGlassTransparency: 40,
     messageGlassLightTransparency: 40,

@@ -12,6 +12,7 @@ import {
   Slider,
   Switch,
   NativeSelect,
+  Grid,
 } from '@chakra-ui/react'
 import {
   HiOutlineCloudUpload,
@@ -20,9 +21,13 @@ import {
 } from 'react-icons/hi'
 import type {
   ThemeBackgroundResolvedState,
+  BackgroundImagePosition,
   WelcomeGreetingReadabilityMode,
 } from '@/entrypoints/content/gemini-theme'
-import { MESSAGE_GLASS_BACKGROUND_VISIBILITY_DEFAULT } from '@/entrypoints/content/gemini-theme'
+import {
+  BACKGROUND_IMAGE_POSITIONS,
+  MESSAGE_GLASS_BACKGROUND_VISIBILITY_DEFAULT,
+} from '@/entrypoints/content/gemini-theme'
 import { Tooltip } from '@/components/ui/tooltip'
 import { tt } from '@/utils/i18n'
 
@@ -32,6 +37,9 @@ interface CustomBackgroundProps {
   isLoading: boolean
   onToggleBackground: (enabled: boolean) => Promise<void>
   onBlurChange: (value: number) => Promise<void>
+  onBackgroundPositionChange: (
+    position: BackgroundImagePosition,
+  ) => Promise<void>
   onToggleSidebarScrim: (enabled: boolean) => Promise<void>
   onSidebarScrimIntensityChange: (value: number) => Promise<void>
   onToggleMessageGlass: (enabled: boolean) => Promise<void>
@@ -43,6 +51,139 @@ interface CustomBackgroundProps {
   ) => Promise<void>
   onUploadFile: (file: File) => Promise<void>
   onRemoveImage: () => Promise<void>
+}
+
+const BACKGROUND_POSITION_LABEL_KEYS: Record<
+  BackgroundImagePosition,
+  { key: string; fallback: string }
+> = {
+  'top-left': {
+    key: 'settingPanel.theme.backgroundPositionTopLeft',
+    fallback: 'Top left',
+  },
+  top: {
+    key: 'settingPanel.theme.backgroundPositionTop',
+    fallback: 'Top',
+  },
+  'top-right': {
+    key: 'settingPanel.theme.backgroundPositionTopRight',
+    fallback: 'Top right',
+  },
+  left: {
+    key: 'settingPanel.theme.backgroundPositionLeft',
+    fallback: 'Left',
+  },
+  center: {
+    key: 'settingPanel.theme.backgroundPositionCenter',
+    fallback: 'Center',
+  },
+  right: {
+    key: 'settingPanel.theme.backgroundPositionRight',
+    fallback: 'Right',
+  },
+  'bottom-left': {
+    key: 'settingPanel.theme.backgroundPositionBottomLeft',
+    fallback: 'Bottom left',
+  },
+  bottom: {
+    key: 'settingPanel.theme.backgroundPositionBottom',
+    fallback: 'Bottom',
+  },
+  'bottom-right': {
+    key: 'settingPanel.theme.backgroundPositionBottomRight',
+    fallback: 'Bottom right',
+  },
+}
+
+interface BackgroundPositionPickerProps {
+  value: BackgroundImagePosition
+  disabled: boolean
+  onChange: (position: BackgroundImagePosition) => void
+}
+
+function getBackgroundPositionLabel(position: BackgroundImagePosition): string {
+  const label = BACKGROUND_POSITION_LABEL_KEYS[position]
+  return tt(label.key, label.fallback)
+}
+
+function BackgroundPositionPicker({
+  value,
+  disabled,
+  onChange,
+}: BackgroundPositionPickerProps) {
+  return (
+    <Grid
+      templateColumns="repeat(3, 16px)"
+      templateRows="repeat(3, 16px)"
+      gap="3px"
+      width="54px"
+      height="54px"
+      flexShrink={0}
+    >
+      {BACKGROUND_IMAGE_POSITIONS.map((position) => {
+        const selected = value === position
+        const label = getBackgroundPositionLabel(position)
+
+        return (
+          <Tooltip
+            key={position}
+            content={label}
+            openDelay={250}
+            closeDelay={80}
+          >
+            <IconButton
+              aria-label={label}
+              aria-pressed={selected}
+              width="16px"
+              height="16px"
+              minW="16px"
+              p={0}
+              size="2xs"
+              variant="ghost"
+              borderRadius="sm"
+              border="1px solid"
+              borderColor={selected ? 'gemPrimary' : 'border'}
+              bg={selected
+                ? 'color-mix(in srgb, var(--gem-sys-color--primary), transparent 88%)'
+                : 'transparent'}
+              color={selected ? 'gemPrimary' : 'gemOnSurfaceVariant'}
+              display="inline-flex"
+              alignItems="center"
+              justifyContent="center"
+              cursor={disabled ? 'not-allowed' : 'pointer'}
+              opacity={disabled ? 0.45 : 1}
+              transition={[
+                'background-color 0.12s ease',
+                'border-color 0.12s ease',
+                'box-shadow 0.12s ease',
+              ].join(', ')}
+              _hover={disabled
+                ? undefined
+                : {
+                    bg: 'surfaceContainerHover',
+                    borderColor: selected ? 'gemPrimary' : 'gemOnSurfaceVariant',
+                  }}
+              _focusVisible={{
+                outline: '2px solid',
+                outlineColor: 'gemPrimary',
+                outlineOffset: '1px',
+              }}
+              disabled={disabled}
+              onClick={() => onChange(position)}
+            >
+              <Box
+                width={selected ? '5px' : '3px'}
+                height={selected ? '5px' : '3px'}
+                borderRadius="full"
+                bg={selected ? 'gemPrimary' : 'currentColor'}
+                opacity={selected ? 1 : 0.38}
+              />
+            </IconButton>
+          </Tooltip>
+        )
+      })}
+    </Grid>
+  )
 }
 
 export function CustomBackground(props: CustomBackgroundProps) {
@@ -61,6 +202,7 @@ export function CustomBackground(props: CustomBackgroundProps) {
   const previewUrl = props.state?.resolvedBackgroundUrl ?? null
   const isBackgroundEnabled = settings?.backgroundImageEnabled ?? false
   const blurValue = settings?.backgroundBlurPx ?? 5
+  const backgroundImagePosition = settings?.backgroundImagePosition ?? 'center'
   const messageGlassEnabled = settings?.messageGlassEnabled ?? false
   const messageGlassBackgroundVisibility =
     settings?.messageGlassBackgroundVisibility
@@ -330,6 +472,17 @@ export function CustomBackground(props: CustomBackgroundProps) {
               </Slider.Control>
             </Slider.Root>
           </Stack>
+
+          <HStack justify="space-between" mb={sectionGap} gap={3}>
+            <Text fontSize="sm" color="gemOnSurface" minW={0}>
+              {tt('settingPanel.theme.backgroundPosition', 'Position')}
+            </Text>
+            <BackgroundPositionPicker
+              value={backgroundImagePosition}
+              disabled={props.isLoading || isFilePending}
+              onChange={(position) => void props.onBackgroundPositionChange(position)}
+            />
+          </HStack>
 
           <HStack justify="space-between" mb={4} gap={3}>
             <HStack gap={1} minW={0} flex="1">

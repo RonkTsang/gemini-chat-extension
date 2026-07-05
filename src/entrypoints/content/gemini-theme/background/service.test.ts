@@ -73,9 +73,10 @@ import { BACKGROUND_FILE_SIZE_LIMIT } from './types'
 
 function createSettings(overrides: Partial<ThemeBackgroundSettings> = {}): ThemeBackgroundSettings {
   return {
-    version: 4,
+    version: 5,
     backgroundImageEnabled: false,
     backgroundBlurPx: 5,
+    backgroundImagePosition: 'center',
     messageGlassEnabled: false,
     messageGlassTransparency: 40,
     messageGlassLightTransparency: 40,

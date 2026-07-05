@@ -131,6 +131,7 @@ Verifies all locale files against English base.
 - Use helper in `src/utils/i18n.ts`: `t(id, substitutions?)`
 - Store translation keys in `src/locales/*.json`
 - English (`en.json`) is the base; keep keys aligned in other locales
+- Any i18n writing, review, or polishing work for `src/locales/*.json` must use the project-scoped `i18n-writer` subAgent defined in `.codex/agents/i18n-writer.toml`.
 
 ### Multi-Platform Differences
 - Before changing Chrome/Firefox-specific behavior, check [`docs/platforms.md`](docs/platforms.md).

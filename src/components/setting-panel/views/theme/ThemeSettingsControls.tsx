@@ -32,6 +32,7 @@ export function ThemeSettingsControls({
         isLoading={controller.isBackgroundLoading}
         onToggleBackground={controller.handleToggleBackground}
         onBlurChange={controller.handleBlurChange}
+        onBackgroundPositionChange={controller.handleBackgroundPositionChange}
         onToggleSidebarScrim={controller.handleToggleSidebarScrim}
         onSidebarScrimIntensityChange={controller.handleSidebarScrimIntensityChange}
         onToggleMessageGlass={controller.handleToggleMessageGlass}

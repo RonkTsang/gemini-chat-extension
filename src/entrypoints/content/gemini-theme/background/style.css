@@ -1,6 +1,7 @@
 :root {
   --gpk-bg-image: none;
   --gpk-bg-blur: 5px;
+  --gpk-bg-position: center center;
   --gpk-msg-glass-user-dark-surface-legacy-mix: 100%;
   --gpk-msg-glass-user-light-transparency: 40%;
   --gpk-msg-glass-user-dark-transparency: 40%;
@@ -23,7 +24,7 @@
   pointer-events: none;
   background-image: none;
   background-size: cover;
-  background-position: center;
+  background-position: var(--gpk-bg-position);
   background-repeat: no-repeat;
   filter: blur(var(--gpk-bg-blur));
   transform: scale(1.08);
