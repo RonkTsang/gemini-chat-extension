@@ -10,9 +10,10 @@ function createState(
 ): ThemeBackgroundResolvedState {
   const base: ThemeBackgroundResolvedState = {
     settings: {
-      version: 4,
+      version: 5,
       backgroundImageEnabled: false,
       backgroundBlurPx: 5,
+      backgroundImagePosition: 'center',
       messageGlassEnabled: false,
       messageGlassTransparency: 40,
       messageGlassLightTransparency: 40,
@@ -57,6 +58,7 @@ describe('styleController', () => {
         settings: {
           backgroundImageEnabled: true,
           backgroundBlurPx: 12,
+          backgroundImagePosition: 'bottom-right',
           messageGlassEnabled: true,
           messageGlassTransparency: 72,
           messageGlassBackgroundVisibility: 4,
@@ -87,6 +89,9 @@ describe('styleController', () => {
       'true',
     )
     expect(document.documentElement.style.getPropertyValue('--gpk-bg-blur')).toBe('12px')
+    expect(document.documentElement.style.getPropertyValue('--gpk-bg-position')).toBe(
+      'right bottom',
+    )
     expect(
       document.documentElement.style.getPropertyValue(
         '--gpk-msg-glass-user-dark-surface-legacy-mix',
@@ -192,6 +197,9 @@ describe('styleController', () => {
       'false',
     )
     expect(document.documentElement.style.getPropertyValue('--gpk-bg-image')).toBe('none')
+    expect(document.documentElement.style.getPropertyValue('--gpk-bg-position')).toBe(
+      'center center',
+    )
     expect(document.documentElement.style.getPropertyValue('--gpk-sidebar-scrim-alpha')).toBe(
       '0.00',
     )
@@ -221,6 +229,7 @@ describe('styleController', () => {
     expect(document.documentElement.getAttribute('data-gpk-sidebar-scrim-enabled')).toBeNull()
     expect(document.documentElement.style.getPropertyValue('--gpk-bg-image')).toBe('')
     expect(document.documentElement.style.getPropertyValue('--gpk-bg-blur')).toBe('')
+    expect(document.documentElement.style.getPropertyValue('--gpk-bg-position')).toBe('')
     expect(document.documentElement.style.getPropertyValue('--gpk-msg-glass-transparency')).toBe(
       '',
     )

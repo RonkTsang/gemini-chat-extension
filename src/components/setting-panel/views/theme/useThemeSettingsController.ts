@@ -15,6 +15,7 @@ import {
   uploadThemeBackground,
   type AppearanceMode,
   type AppearanceState,
+  type BackgroundImagePosition,
   type ThemeBackgroundResolvedState,
   type ThemeBackgroundSettings,
   type WelcomeGreetingReadabilityMode,
@@ -34,6 +35,9 @@ export interface ThemeSettingsController {
   handleAppearanceChange: (mode: AppearanceMode) => void
   handleToggleBackground: (enabled: boolean) => Promise<void>
   handleBlurChange: (value: number) => Promise<void>
+  handleBackgroundPositionChange: (
+    position: BackgroundImagePosition,
+  ) => Promise<void>
   handleToggleSidebarScrim: (enabled: boolean) => Promise<void>
   handleSidebarScrimIntensityChange: (value: number) => Promise<void>
   handleToggleMessageGlass: (enabled: boolean) => Promise<void>
@@ -171,6 +175,20 @@ export function useThemeSettingsController(
     }
   }, [])
 
+  const handleBackgroundPositionChange = useCallback(
+    async (position: BackgroundImagePosition) => {
+      try {
+        const state = await updateThemeBackgroundSettings({
+          backgroundImagePosition: position,
+        })
+        setBackgroundState(state)
+      } catch (error) {
+        toaster.create({ type: 'error', title: getBackgroundErrorMessage(error) })
+      }
+    },
+    [],
+  )
+
   const handleToggleSidebarScrim = useCallback(async (enabled: boolean) => {
     try {
       const state = await updateThemeBackgroundSettings({
@@ -302,6 +320,7 @@ export function useThemeSettingsController(
     handleAppearanceChange,
     handleToggleBackground,
     handleBlurChange,
+    handleBackgroundPositionChange,
     handleToggleSidebarScrim,
     handleSidebarScrimIntensityChange,
     handleToggleMessageGlass,
