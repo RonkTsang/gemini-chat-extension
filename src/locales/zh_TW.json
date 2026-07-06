@@ -438,6 +438,11 @@
   "whatsnew": {
     "title": "更新內容",
     "releaseNotes": "最新動態",
+    "backgroundPosition": {
+      "title": "背景位置更順手",
+      "description": "在 Theme 中微調桌布位置，讓畫面重點停在最合適的位置。",
+      "action": "打開主題"
+    },
     "notification": {
       "title": "Gemini 完成時提醒你",
       "description": "切到其他分頁、視窗或應用程式後，Gemini 完成回覆時會傳送桌面通知，點一下即可回到對話。",
