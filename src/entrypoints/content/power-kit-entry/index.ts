@@ -10,6 +10,8 @@ const MOBILE_POWER_KIT_BUTTON_TEST_ID = 'mobile-gemini-power-kit-control'
 const MOBILE_SETTINGS_BUTTON_TEST_ID = 'mobile-settings-and-help-control'
 
 const POWER_KIT_LABEL = 'Gemini Power kit'
+const MAVATAR_FALLBACK_ENTRY_SIZE_PX = 36
+const MAVATAR_FALLBACK_ICON_SIZE_PX = 18
 const DEFAULT_POWER_KIT_ICON_SIZE_PX = 20
 const MAVATAR_POWER_KIT_ICON_SIZE_PX = 16
 const WIDE_MAVATAR_EXPANDED_POWER_KIT_ICON_SIZE_PX = 18
@@ -28,7 +30,9 @@ const getPowerKitIconSvg = (sizePx = DEFAULT_POWER_KIT_ICON_SIZE_PX) => {
 
 const SYNC_RELATED_SELECTOR = [
   `side-nav-action-button[data-test-id="${DESKTOP_SETTINGS_HOST_TEST_ID}"]`,
+  `gem-icon-button[data-test-id="${DESKTOP_MAVATAR_SETTINGS_BUTTON_TEST_ID}"]`,
   `button[data-test-id="${DESKTOP_MAVATAR_SETTINGS_BUTTON_TEST_ID}"]`,
+  `gem-icon-button[data-test-id="${DESKTOP_POWER_KIT_HOST_TEST_ID}"]`,
   `button[data-test-id="${DESKTOP_POWER_KIT_HOST_TEST_ID}"]`,
   `div[data-test-id="${DESKTOP_MAVATAR_POWER_KIT_CONTAINER_TEST_ID}"]`,
   `button[data-test-id="${MOBILE_SETTINGS_BUTTON_TEST_ID}"]`,
@@ -172,8 +176,16 @@ const getDesktopSettingsHost = (): HTMLElement | null =>
     `mat-action-list.desktop-controls > side-nav-action-button[data-test-id="${DESKTOP_SETTINGS_HOST_TEST_ID}"]`
   )
 
-const getDesktopMavatarSettingsButton = (): HTMLButtonElement | null =>
-  document.querySelector(`button[data-test-id="${DESKTOP_MAVATAR_SETTINGS_BUTTON_TEST_ID}"]`)
+const getDesktopMavatarSettingsButton = (): HTMLElement | null =>
+  document.querySelector(
+    `gem-icon-button[data-test-id="${DESKTOP_MAVATAR_SETTINGS_BUTTON_TEST_ID}"], button[data-test-id="${DESKTOP_MAVATAR_SETTINGS_BUTTON_TEST_ID}"]`
+  )
+
+const getDesktopMavatarFooterRow = (): HTMLElement | null =>
+  document.querySelector('sidenav-mavatar-footer > div.mavatar-footer-row')
+
+const getDesktopMavatarFooterRight = (): HTMLElement | null =>
+  document.querySelector('sidenav-mavatar-footer > div.mavatar-footer-row .mavatar-footer-right')
 
 const getMobileSettingsButton = (): HTMLButtonElement | null =>
   document.querySelector(`button[data-test-id="${MOBILE_SETTINGS_BUTTON_TEST_ID}"]`)
@@ -227,7 +239,7 @@ const syncAttributesFromSource = (
   }
 }
 
-const bindThemeOpenHandler = (button: HTMLButtonElement) => {
+const bindThemeOpenHandler = (button: HTMLElement) => {
   if (button.dataset.gpkBound === '1') return
   button.dataset.gpkBound = '1'
   button.addEventListener('click', (event) => {
@@ -244,12 +256,12 @@ const bindThemeOpenHandler = (button: HTMLButtonElement) => {
   })
 }
 
-const getDesktopTooltipInstance = (button: HTMLButtonElement): Instance | null => {
+const getDesktopTooltipInstance = (button: HTMLElement): Instance | null => {
   const existing = (button as unknown as { _tippy?: Instance })._tippy
   return existing ?? null
 }
 
-const destroyDesktopTooltip = (button: HTMLButtonElement | null) => {
+const destroyDesktopTooltip = (button: HTMLElement | null) => {
   if (!button) return
   const existing = getDesktopTooltipInstance(button)
   if (!existing) return
@@ -259,12 +271,13 @@ const destroyDesktopTooltip = (button: HTMLButtonElement | null) => {
 
 const POWER_KIT_ENTRY_SELECTOR = [
   `side-nav-action-button[data-test-id="${DESKTOP_POWER_KIT_HOST_TEST_ID}"]`,
+  `gem-icon-button[data-test-id="${DESKTOP_POWER_KIT_HOST_TEST_ID}"]`,
   `button[data-test-id="${DESKTOP_POWER_KIT_HOST_TEST_ID}"]`,
   `button[data-test-id="${MOBILE_POWER_KIT_BUTTON_TEST_ID}"]`,
 ].join(',')
 
 const ensureDesktopTooltip = (
-  button: HTMLButtonElement,
+  button: HTMLElement,
   enabled: boolean,
   placement: 'top' | 'right' = 'top'
 ) => {
@@ -399,7 +412,7 @@ const decorateDesktopEntry = (host: HTMLElement, variant: DesktopVariant) => {
   htmlButton.style.setProperty('--mat-icon-button-icon-size', '20px')
   removeAttrIfPresent(button, 'aria-haspopup')
   removeAttrIfPresent(button, 'aria-expanded')
-  bindThemeOpenHandler(button as HTMLButtonElement)
+  bindThemeOpenHandler(button as HTMLElement)
 
   const icon = host.querySelector('mat-icon[data-test-id="side-nav-action-button-icon"], mat-icon')
   applyPowerKitSvgIcon(icon)
@@ -409,7 +422,7 @@ const decorateDesktopEntry = (host: HTMLElement, variant: DesktopVariant) => {
     setTextIfDifferent(text, POWER_KIT_LABEL)
   }
 
-  ensureDesktopTooltip(button as HTMLButtonElement, variant === 'collapsed')
+  ensureDesktopTooltip(button as HTMLElement, variant === 'collapsed')
   if (variant === 'expanded') {
     const textTarget = host.querySelector('[data-test-id="side-nav-action-button-content"]') as HTMLElement | null
     if (textTarget) ensureBadgeDot(textTarget, 'inline')
@@ -425,7 +438,7 @@ const buildDesktopEntryFromSettings = (settingsHost: HTMLElement, variant: Deskt
   return clone
 }
 
-const getDesktopMavatarVariant = (settingsButton: HTMLButtonElement): DesktopVariant => {
+const getDesktopMavatarVariant = (settingsButton: HTMLElement): DesktopVariant => {
   const footerRow = settingsButton.closest('.mavatar-footer-row')
   if (footerRow?.classList.contains('collapsed')) return 'collapsed'
 
@@ -433,14 +446,19 @@ const getDesktopMavatarVariant = (settingsButton: HTMLButtonElement): DesktopVar
   return sideNav?.classList.contains('collapsed') ? 'collapsed' : 'expanded'
 }
 
-const getDesktopMavatarPowerKitButton = (): HTMLButtonElement | null =>
-  document.querySelector(`button[data-test-id="${DESKTOP_POWER_KIT_HOST_TEST_ID}"]`)
+const getDesktopMavatarPowerKitButton = (): HTMLElement | null =>
+  document.querySelector(
+    `gem-icon-button[data-test-id="${DESKTOP_POWER_KIT_HOST_TEST_ID}"], button[data-test-id="${DESKTOP_POWER_KIT_HOST_TEST_ID}"]`
+  )
 
 const getDesktopMavatarPowerKitContainer = (): HTMLElement | null =>
   document.querySelector(`div[data-test-id="${DESKTOP_MAVATAR_POWER_KIT_CONTAINER_TEST_ID}"]`)
 
+const getDesktopMavatarFallbackPowerKitButton = (): HTMLButtonElement | null =>
+  document.querySelector(`button[data-test-id="${DESKTOP_POWER_KIT_HOST_TEST_ID}"]`)
+
 const decorateDesktopMavatarButton = (
-  button: HTMLButtonElement,
+  button: HTMLElement,
   sourceClassName: string,
   variant: DesktopVariant,
   sourceIconSizePx: number
@@ -455,6 +473,14 @@ const decorateDesktopMavatarButton = (
   removeAttrIfPresent(button, 'aria-haspopup')
   removeAttrIfPresent(button, 'aria-expanded')
   bindThemeOpenHandler(button)
+
+  const innerButton = button.matches('button') ? button : button.querySelector('button')
+  if (innerButton) {
+    setAttrIfDifferent(innerButton, 'aria-label', POWER_KIT_LABEL)
+    removeAttrIfPresent(innerButton, 'title')
+    removeAttrIfPresent(innerButton, 'aria-haspopup')
+    removeAttrIfPresent(innerButton, 'aria-expanded')
+  }
 
   const icon = button.querySelector('mat-icon')
   const useNarrowIconSize = variant === 'expanded' && isNarrowMavatarLayout()
@@ -472,12 +498,103 @@ const decorateDesktopMavatarButton = (
   ensureDesktopTooltip(button, true, variant === 'collapsed' ? 'right' : 'top')
 }
 
+const decorateDesktopMavatarFallbackButton = (
+  button: HTMLButtonElement,
+  iconSizePx: number
+) => {
+  setAttrIfDifferent(button, 'data-test-id', DESKTOP_POWER_KIT_HOST_TEST_ID)
+  setAttrIfDifferent(button, 'aria-label', POWER_KIT_LABEL)
+  setAttrIfDifferent(button, 'title', POWER_KIT_LABEL)
+  setAttrIfDifferent(button, 'data-gpk-variant', 'fallback')
+  button.type = 'button'
+  button.className = 'gpk-power-kit-fallback-entry'
+  button.style.width = `${MAVATAR_FALLBACK_ENTRY_SIZE_PX}px`
+  button.style.height = `${MAVATAR_FALLBACK_ENTRY_SIZE_PX}px`
+  button.style.minWidth = `${MAVATAR_FALLBACK_ENTRY_SIZE_PX}px`
+  button.style.padding = '0'
+  button.style.border = '0'
+  button.style.borderRadius = '50%'
+  button.style.background = 'transparent'
+  button.style.color = 'inherit'
+  button.style.display = 'inline-flex'
+  button.style.alignItems = 'center'
+  button.style.justifyContent = 'center'
+  button.style.cursor = 'pointer'
+  removeAttrIfPresent(button, 'aria-haspopup')
+  removeAttrIfPresent(button, 'aria-expanded')
+  bindThemeOpenHandler(button)
+
+  let icon = button.querySelector('span[data-gpk-fallback-icon="1"]')
+  if (!icon) {
+    icon = document.createElement('span')
+    icon.setAttribute('data-gpk-fallback-icon', '1')
+    button.replaceChildren(icon)
+  }
+  if (icon instanceof HTMLElement) {
+    icon.style.width = `${iconSizePx}px`
+    icon.style.height = `${iconSizePx}px`
+    icon.style.display = 'inline-flex'
+    icon.style.alignItems = 'center'
+    icon.style.justifyContent = 'center'
+  }
+  if (icon.getAttribute('data-gpk-icon-size') !== String(iconSizePx)) {
+    icon.innerHTML = getPowerKitIconSvg(iconSizePx)
+    icon.setAttribute('data-gpk-icon-size', String(iconSizePx))
+  }
+  if (icon instanceof HTMLElement) ensureBadgeDot(icon, 'icon')
+
+  ensureDesktopTooltip(button, true, 'top')
+}
+
+const insertAsPenultimateChild = (parent: HTMLElement, child: HTMLElement) => {
+  const lastElementExcludingChild = Array.from(parent.children)
+    .filter((element) => element !== child)
+    .at(-1)
+
+  if (lastElementExcludingChild) {
+    if (
+      child.parentElement === parent
+      && child.nextElementSibling === lastElementExcludingChild
+    ) {
+      return
+    }
+    parent.insertBefore(child, lastElementExcludingChild)
+    return
+  }
+
+  if (child.parentElement !== parent) {
+    parent.appendChild(child)
+  }
+}
+
+const ensureDesktopMavatarFallbackEntry = () => {
+  const footerRight = getDesktopMavatarFooterRight()
+  const footerRow = getDesktopMavatarFooterRow()
+  const mountParent = footerRight ?? footerRow
+  if (!mountParent) return false
+
+  bindDesktopObservers(mountParent, footerRow ?? mountParent)
+
+  const existingPowerKitEntry = getDesktopMavatarPowerKitButton()
+  if (existingPowerKitEntry && !existingPowerKitEntry.matches('button')) {
+    destroyDesktopTooltip(existingPowerKitEntry)
+    existingPowerKitEntry.remove()
+  }
+
+  const existingButton = getDesktopMavatarFallbackPowerKitButton()
+  const currentButton = existingButton ?? document.createElement('button')
+  decorateDesktopMavatarFallbackButton(currentButton, MAVATAR_FALLBACK_ICON_SIZE_PX)
+  insertAsPenultimateChild(mountParent, currentButton)
+
+  return true
+}
+
 const buildDesktopMavatarButtonFromSettings = (
-  settingsButton: HTMLButtonElement,
+  settingsButton: HTMLElement,
   variant: DesktopVariant,
   sourceIconSizePx: number
 ) => {
-  const clone = settingsButton.cloneNode(true) as HTMLButtonElement
+  const clone = settingsButton.cloneNode(true) as HTMLElement
   decorateDesktopMavatarButton(clone, settingsButton.className, variant, sourceIconSizePx)
   return clone
 }
@@ -486,8 +603,9 @@ const ensureDesktopMavatarEntry = () => {
   const settingsButton = getDesktopMavatarSettingsButton()
   const settingsButtonParent = settingsButton?.parentElement
   const footerRow = settingsButton?.closest('.mavatar-footer-row') as HTMLElement | null
+    ?? getDesktopMavatarFooterRow()
   if (!settingsButton || !settingsButtonParent || !footerRow) {
-    return false
+    return ensureDesktopMavatarFallbackEntry()
   }
 
   bindDesktopObservers(settingsButton, footerRow)
@@ -495,9 +613,15 @@ const ensureDesktopMavatarEntry = () => {
   const variant = getDesktopMavatarVariant(settingsButton)
   const sourceIconSizePx = getElementPixelSize(settingsButton.querySelector('mat-icon'))
   const existingButton = getDesktopMavatarPowerKitButton()
+  const isFallbackButton = Boolean(existingButton?.classList.contains('gpk-power-kit-fallback-entry'))
+  if (existingButton && isFallbackButton) {
+    destroyDesktopTooltip(existingButton)
+    existingButton.remove()
+  }
   const existingContainer = getDesktopMavatarPowerKitContainer()
-  const currentButton = existingButton
-    ?? buildDesktopMavatarButtonFromSettings(settingsButton, variant, sourceIconSizePx)
+  const currentButton = existingButton && !isFallbackButton
+    ? existingButton
+    : buildDesktopMavatarButtonFromSettings(settingsButton, variant, sourceIconSizePx)
 
   decorateDesktopMavatarButton(currentButton, settingsButton.className, variant, sourceIconSizePx)
 
@@ -537,7 +661,7 @@ const ensureLegacyDesktopEntry = () => {
 
   let currentHost = existingHost
   if (!existingHost || existingHost.getAttribute('data-gpk-variant') !== variant) {
-    destroyDesktopTooltip(existingHost?.querySelector('button') as HTMLButtonElement | null)
+    destroyDesktopTooltip(existingHost?.querySelector('button') as HTMLElement | null)
     const newHost = buildDesktopEntryFromSettings(settingsHost, variant)
     if (existingHost) {
       existingHost.replaceWith(newHost)
