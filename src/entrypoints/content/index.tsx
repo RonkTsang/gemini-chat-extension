@@ -4,6 +4,7 @@ import './prompt';
 import { browser } from 'wxt/browser'
 import { renderOverlay } from "./overlay"
 import { startPowerKitEntry, stopPowerKitEntry } from './power-kit-entry'
+import { startBulkDelete, stopBulkDelete } from './bulk-delete'
 import { chatChangeDetector } from '@/services/chatChangeDetector'
 import { urlMonitor } from '@/services/urlMonitor'
 import { tabTitleSync } from '@/services/tabTitleSync'
@@ -143,8 +144,10 @@ export default defineContentScript({
     });
 
     ui.mount();
+    startBulkDelete()
     startPowerKitEntry()
     ctx.onInvalidated(() => {
+      stopBulkDelete()
       stopPowerKitEntry()
     })
     console.log('[ContentScript] UI mounted, context still valid:', ctx.isValid)

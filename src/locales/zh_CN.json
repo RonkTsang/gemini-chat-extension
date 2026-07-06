@@ -48,6 +48,17 @@
   "responseNotificationTestMessage": "通知已正常工作。",
   "responseNotificationTitle": "Gemini 已完成回复",
   "responseNotificationMessage": "你的回复已准备好。",
+  "bulkDelete": {
+    "entryLabel": "批量删除",
+    "selectLatest50": "选择最近 50 条",
+    "selectUnpinned": "选择未固定",
+    "deleteSelected": "删除（$1）",
+    "deleteIdle": "删除（0）",
+    "loading": "加载中...",
+    "selectConversation": "选择对话",
+    "confirmDelete": "删除已选中的 $1 个聊天？此操作无法撤销。",
+    "loadFailed": "Gemini 无法加载更多聊天。请重新加载 Gemini，然后再次执行“选择最近 50 条”。"
+  },
   "quickFollow": {
     "more": "更多",
     "moreAriaLabel": "显示更多提示"

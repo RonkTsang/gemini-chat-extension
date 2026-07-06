@@ -48,6 +48,17 @@
   "responseNotificationTestMessage": "Notifications are working.",
   "responseNotificationTitle": "Gemini finished replying",
   "responseNotificationMessage": "Your response is ready.",
+  "bulkDelete": {
+    "entryLabel": "Bulk delete",
+    "selectLatest50": "Select latest 50",
+    "selectUnpinned": "Select unpinned",
+    "deleteSelected": "Delete ($1)",
+    "deleteIdle": "Delete (0)",
+    "loading": "Loading...",
+    "selectConversation": "Select conversation",
+    "confirmDelete": "Delete $1 selected chats? This cannot be undone.",
+    "loadFailed": "Gemini could not load more chats. Try reloading Gemini and run Select latest 50 again."
+  },
   "quickFollow": {
     "more": "More",
     "moreAriaLabel": "Show more prompts"

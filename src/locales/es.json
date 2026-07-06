@@ -48,6 +48,17 @@
   "responseNotificationTestMessage": "Las notificaciones funcionan.",
   "responseNotificationTitle": "Gemini terminó de responder",
   "responseNotificationMessage": "Tu respuesta está lista.",
+  "bulkDelete": {
+    "entryLabel": "Eliminación en lote",
+    "selectLatest50": "Seleccionar 50 más recientes",
+    "selectUnpinned": "Seleccionar no fijados",
+    "deleteSelected": "Eliminar ($1)",
+    "deleteIdle": "Eliminar (0)",
+    "loading": "Cargando...",
+    "selectConversation": "Selecciona una conversación",
+    "confirmDelete": "¿Eliminar los $1 chats seleccionados? No se puede deshacer.",
+    "loadFailed": "Gemini no pudo cargar más chats. Vuelve a cargar Gemini y usa Seleccionar 50 más recientes otra vez."
+  },
   "quickFollow": {
     "more": "Más",
     "moreAriaLabel": "Mostrar más prompts"

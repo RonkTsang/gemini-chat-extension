@@ -48,6 +48,17 @@
   "responseNotificationTestMessage": "알림이 정상적으로 작동합니다.",
   "responseNotificationTitle": "Gemini 답변이 완료되었습니다",
   "responseNotificationMessage": "답변이 준비되었습니다.",
+  "bulkDelete": {
+    "entryLabel": "일괄 삭제",
+    "selectLatest50": "최근 50개 선택",
+    "selectUnpinned": "고정되지 않은 대화 선택",
+    "deleteSelected": "삭제 ($1)",
+    "deleteIdle": "삭제 (0)",
+    "loading": "불러오는 중...",
+    "selectConversation": "대화 선택",
+    "confirmDelete": "선택한 채팅 $1개를 삭제할까요? 이 작업은 되돌릴 수 없습니다.",
+    "loadFailed": "Gemini에서 더 많은 채팅을 불러오지 못했습니다. Gemini를 다시 로드한 뒤 '최근 50개 선택'을 다시 실행하세요."
+  },
   "quickFollow": {
     "more": "더보기",
     "moreAriaLabel": "더 많은 프롬프트 표시"

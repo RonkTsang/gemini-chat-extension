@@ -48,6 +48,17 @@
   "responseNotificationTestMessage": "通知は正常に動作しています。",
   "responseNotificationTitle": "Gemini の返信が完了しました",
   "responseNotificationMessage": "返信の準備ができました。",
+  "bulkDelete": {
+    "entryLabel": "一括削除",
+    "selectLatest50": "最新 50 件を選択",
+    "selectUnpinned": "ピン留めなしを選択",
+    "deleteSelected": "削除（$1）",
+    "deleteIdle": "削除（0）",
+    "loading": "読み込み中...",
+    "selectConversation": "会話を選択",
+    "confirmDelete": "選択したチャット $1 件を削除しますか？この操作は元に戻せません。",
+    "loadFailed": "Gemini でさらにチャットを読み込めませんでした。Gemini を再読み込みして、もう一度「最新 50 件を選択」を実行してください。"
+  },
   "quickFollow": {
     "more": "もっと見る",
     "moreAriaLabel": "さらにプロンプトを表示"

@@ -48,6 +48,17 @@
   "responseNotificationTestMessage": "Benachrichtigungen funktionieren.",
   "responseNotificationTitle": "Gemini hat fertig geantwortet",
   "responseNotificationMessage": "Ihre Antwort ist bereit.",
+  "bulkDelete": {
+    "entryLabel": "Massenlöschung",
+    "selectLatest50": "Neueste 50 auswählen",
+    "selectUnpinned": "Nicht angeheftete auswählen",
+    "deleteSelected": "Löschen ($1)",
+    "deleteIdle": "Löschen (0)",
+    "loading": "Wird geladen...",
+    "selectConversation": "Unterhaltung auswählen",
+    "confirmDelete": "$1 ausgewählte Chats löschen? Das kann nicht rückgängig gemacht werden.",
+    "loadFailed": "Gemini konnte keine weiteren Chats laden. Lade Gemini neu und führe „Neueste 50 auswählen“ erneut aus."
+  },
   "quickFollow": {
     "more": "Mehr",
     "moreAriaLabel": "Weitere Prompts anzeigen"

@@ -48,6 +48,17 @@
   "responseNotificationTestMessage": "通知已正常運作。",
   "responseNotificationTitle": "Gemini 已完成回覆",
   "responseNotificationMessage": "您的回覆已準備好。",
+  "bulkDelete": {
+    "entryLabel": "批次刪除",
+    "selectLatest50": "選取最近 50 則",
+    "selectUnpinned": "選取未釘選",
+    "deleteSelected": "刪除（$1）",
+    "deleteIdle": "刪除（0）",
+    "loading": "載入中...",
+    "selectConversation": "選取對話",
+    "confirmDelete": "要刪除 $1 個已選取的聊天嗎？此操作無法復原。",
+    "loadFailed": "Gemini 無法載入更多聊天。請重新載入 Gemini，然後再試一次「選取最近 50 則」。"
+  },
   "quickFollow": {
     "more": "更多",
     "moreAriaLabel": "顯示更多提示"
