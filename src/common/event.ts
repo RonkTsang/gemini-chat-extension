@@ -6,11 +6,13 @@ type SettingsOpenSource =
   | 'popup'
   | 'whats-new'
   | 'theme-floating-panel'
+  | 'shortcut'
 
 type SettingsCloseSource =
   | 'run-modal'
   | 'manual'
   | 'theme-floating-panel'
+  | 'shortcut'
 
 export const GEM_EXT_EVENTS = {
   URL_CHANGE: 'gem-ext:urlchange',

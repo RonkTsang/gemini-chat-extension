@@ -378,6 +378,38 @@
             "title": "について"
           }
         }
+      },
+      "shortcut": {
+        "title": "ショートカット",
+        "views": {
+          "index": {
+            "title": "ショートカット"
+          }
+        }
+      }
+    },
+    "shortcut": {
+      "columns": {
+        "command": "コマンド",
+        "shortcut": "unassigned"
+      },
+      "unassigned": "未設定",
+      "editShortcut": "ショートカットを編集",
+      "clearShortcut": "ショートカットを削除",
+      "recording": "記録中...",
+      "actions": {
+        "openSettings": "Gemini Power Kit の設定を開く",
+        "openNewChat": "新しいチャットを開く",
+        "openTemporaryChat": "一時チャットを開く",
+        "focusInput": "入力欄をフォーカス",
+        "toggleSidebar": "サイドバーを切り替え",
+        "cycleModel": "モデルを切り替え"
+      },
+      "errors": {
+        "missingModifier": "Alt、Ctrl、Meta、Shift のいずれかを含めてください",
+        "singleLetter": "1文字のショートカットは使えません",
+        "specialKey": "このキーはショートカットに使えません",
+        "conflict": "このショートカットは既に使われています"
       }
     }
   },

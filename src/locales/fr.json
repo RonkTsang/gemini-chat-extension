@@ -378,6 +378,38 @@
             "title": "À propos"
           }
         }
+      },
+      "shortcut": {
+        "title": "Raccourci",
+        "views": {
+          "index": {
+            "title": "Raccourci"
+          }
+        }
+      }
+    },
+    "shortcut": {
+      "columns": {
+        "command": "Commande",
+        "shortcut": "unassigned"
+      },
+      "unassigned": "Non défini",
+      "editShortcut": "Modifier le raccourci",
+      "clearShortcut": "Supprimer le raccourci",
+      "recording": "Enregistrement...",
+      "actions": {
+        "openSettings": "Ouvrir les paramètres Gemini Power Kit",
+        "openNewChat": "Ouvrir un nouveau chat",
+        "openTemporaryChat": "Ouvrir le chat temporaire",
+        "focusInput": "Activer la saisie",
+        "toggleSidebar": "Basculer la barre latérale",
+        "cycleModel": "Changer de modèle"
+      },
+      "errors": {
+        "missingModifier": "Incluez Alt, Ctrl, Meta ou Maj",
+        "singleLetter": "Les raccourcis à une seule lettre ne sont pas pris en charge",
+        "specialKey": "Cette touche ne peut pas être utilisée comme raccourci",
+        "conflict": "Ce raccourci est déjà utilisé"
       }
     }
   },

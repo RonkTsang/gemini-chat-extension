@@ -378,6 +378,38 @@
             "title": "关于"
           }
         }
+      },
+      "shortcut": {
+        "title": "快捷键",
+        "views": {
+          "index": {
+            "title": "快捷键"
+          }
+        }
+      }
+    },
+    "shortcut": {
+      "columns": {
+        "command": "命令",
+        "shortcut": "unassigned"
+      },
+      "unassigned": "未设置",
+      "editShortcut": "编辑快捷键",
+      "clearShortcut": "删除快捷键",
+      "recording": "录制中...",
+      "actions": {
+        "openSettings": "打开 Gemini Power Kit 设置",
+        "openNewChat": "打开新聊天",
+        "openTemporaryChat": "打开临时聊天",
+        "focusInput": "聚焦输入框",
+        "toggleSidebar": "切换侧边栏",
+        "cycleModel": "切换模型"
+      },
+      "errors": {
+        "missingModifier": "请包含 Alt、Ctrl、Meta 或 Shift",
+        "singleLetter": "不支持单字母快捷键",
+        "specialKey": "此按键不能作为快捷键",
+        "conflict": "该快捷键已被其他命令使用"
       }
     }
   },

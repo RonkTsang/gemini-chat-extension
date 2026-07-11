@@ -374,6 +374,38 @@
             "title": "About"
           }
         }
+      },
+      "shortcut": {
+        "title": "Shortcut",
+        "views": {
+          "index": {
+            "title": "Shortcut"
+          }
+        }
+      }
+    },
+    "shortcut": {
+      "columns": {
+        "command": "Command",
+        "shortcut": "Shortcut"
+      },
+      "unassigned": "Unassigned",
+      "editShortcut": "Edit shortcut",
+      "clearShortcut": "Clear shortcut",
+      "recording": "Recording...",
+      "actions": {
+        "openSettings": "Open Gemini Power Kit Settings",
+        "openNewChat": "Open New Chat",
+        "openTemporaryChat": "Open Temporary Chat",
+        "focusInput": "Focus Input",
+        "toggleSidebar": "Toggle Sidebar",
+        "cycleModel": "Cycle Model"
+      },
+      "errors": {
+        "missingModifier": "Include Alt, Ctrl, Meta, or Shift",
+        "singleLetter": "Single-letter shortcuts aren't supported",
+        "specialKey": "This key can't be used as a shortcut",
+        "conflict": "This shortcut is already in use"
       }
     }
   },

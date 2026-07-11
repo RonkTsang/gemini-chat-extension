@@ -378,6 +378,38 @@
             "title": "Über"
           }
         }
+      },
+      "shortcut": {
+        "title": "Tastenkürzel",
+        "views": {
+          "index": {
+            "title": "Tastenkürzel"
+          }
+        }
+      }
+    },
+    "shortcut": {
+      "columns": {
+        "command": "Befehl",
+        "shortcut": "unassigned"
+      },
+      "unassigned": "Nicht festgelegt",
+      "editShortcut": "Tastenkürzel bearbeiten",
+      "clearShortcut": "Tastenkürzel löschen",
+      "recording": "Wird aufgezeichnet...",
+      "actions": {
+        "openSettings": "Gemini Power Kit-Einstellungen öffnen",
+        "openNewChat": "Neuen Chat öffnen",
+        "openTemporaryChat": "Temporären Chat öffnen",
+        "focusInput": "Eingabefeld fokussieren",
+        "toggleSidebar": "Seitenleiste umschalten",
+        "cycleModel": "Modell wechseln"
+      },
+      "errors": {
+        "missingModifier": "Alt, Strg, Meta oder Umschalt einfügen",
+        "singleLetter": "Einzelbuchstaben werden nicht unterstützt",
+        "specialKey": "Diese Taste kann nicht als Tastenkürzel verwendet werden",
+        "conflict": "Dieses Tastenkürzel wird bereits verwendet"
       }
     }
   },

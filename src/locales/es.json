@@ -378,6 +378,38 @@
             "title": "Acerca de"
           }
         }
+      },
+      "shortcut": {
+        "title": "Atajo",
+        "views": {
+          "index": {
+            "title": "Atajo"
+          }
+        }
+      }
+    },
+    "shortcut": {
+      "columns": {
+        "command": "Comando",
+        "shortcut": "unassigned"
+      },
+      "unassigned": "Sin asignar",
+      "editShortcut": "Editar atajo",
+      "clearShortcut": "Eliminar atajo",
+      "recording": "Grabando...",
+      "actions": {
+        "openSettings": "Abrir la configuración de Gemini Power Kit",
+        "openNewChat": "Abrir chat nuevo",
+        "openTemporaryChat": "Abrir chat temporal",
+        "focusInput": "Enfocar el campo",
+        "toggleSidebar": "Alternar barra lateral",
+        "cycleModel": "Cambiar modelo"
+      },
+      "errors": {
+        "missingModifier": "Incluye Alt, Ctrl, Meta o Shift",
+        "singleLetter": "No se admiten atajos de una sola letra",
+        "specialKey": "Esta tecla no puede usarse como atajo",
+        "conflict": "Este atajo ya está en uso"
       }
     }
   },

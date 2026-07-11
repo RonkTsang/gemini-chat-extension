@@ -378,6 +378,38 @@
             "title": "정보"
           }
         }
+      },
+      "shortcut": {
+        "title": "단축키",
+        "views": {
+          "index": {
+            "title": "단축키"
+          }
+        }
+      }
+    },
+    "shortcut": {
+      "columns": {
+        "command": "명령",
+        "shortcut": "unassigned"
+      },
+      "unassigned": "미설정",
+      "editShortcut": "단축키 수정",
+      "clearShortcut": "단축키 삭제",
+      "recording": "기록 중...",
+      "actions": {
+        "openSettings": "Gemini Power Kit 설정 열기",
+        "openNewChat": "새 채팅 열기",
+        "openTemporaryChat": "임시 채팅 열기",
+        "focusInput": "입력창에 포커스",
+        "toggleSidebar": "사이드바 전환",
+        "cycleModel": "모델 전환"
+      },
+      "errors": {
+        "missingModifier": "Alt, Ctrl, Meta 또는 Shift를 포함하세요",
+        "singleLetter": "한 글자 단축키는 지원하지 않아요",
+        "specialKey": "이 키는 단축키로 사용할 수 없어요",
+        "conflict": "이미 사용 중인 단축키예요"
       }
     }
   },

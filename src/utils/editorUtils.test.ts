@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  focusContentEditor,
   getDetailedButtonStatus,
   getSendButton,
   isReadyToSend,
@@ -75,5 +76,18 @@ describe('editorUtils send button detection', () => {
     expect(isResponding(sendButton!)).toBe(true)
     expect(stopModelResponse()).toBe(true)
     expect(clickSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('focuses the Gemini content editor', () => {
+    document.body.innerHTML = `
+      <rich-textarea>
+        <div class="ql-editor textarea new-input-ui" contenteditable="true">
+          <p>Hello</p>
+        </div>
+      </rich-textarea>
+    `
+
+    expect(focusContentEditor()).toBe(true)
+    expect(document.activeElement?.classList.contains('ql-editor')).toBe(true)
   })
 })
