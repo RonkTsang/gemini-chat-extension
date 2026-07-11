@@ -397,10 +397,17 @@
       "editShortcut": "단축키 수정",
       "clearShortcut": "단축키 삭제",
       "recording": "기록 중...",
+      "categories": {
+        "geminiPowerKit": "Gemini Power Kit",
+        "app": "앱",
+        "message": "메시지"
+      },
       "actions": {
         "openSettings": "Gemini Power Kit 설정 열기",
         "openNewChat": "새 채팅 열기",
         "openTemporaryChat": "임시 채팅 열기",
+        "openLibrary": "라이브러리 열기",
+        "openGems": "Gems 열기",
         "focusInput": "입력창에 포커스",
         "toggleSidebar": "사이드바 전환",
         "cycleModel": "모델 전환"

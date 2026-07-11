@@ -38,11 +38,20 @@
 在 SettingPanel 左侧导航的 Tools 分组新增 **Shortcut**。
 
 ### 3.2 面板布局
-Shortcut 面板使用列表布局。每一行三列：
+Shortcut 面板按 action 分类展示。每个分类使用左对齐的小标题和无表头 Table，仅保留行分隔线：
 
-| Command | Shortcut | Action |
-| :--- | :--- | :--- |
-| 命令名称 | 快捷键展示或录制输入框 | 删除按钮 |
+```text
+Gemini Power Kit
+[Toggle Gemini Power Kit Settings]
+
+App
+[Toggle Sidebar] [Open New Chat] [Toggle Temporary Chat] [Open Library] [Open Gems]
+
+Message
+[Focus Input] [Cycle Model]
+```
+
+每行使用两列：命令名称，以及包含快捷键展示、编辑和删除操作的快捷键区域。
 
 有快捷键时：
 
@@ -132,8 +141,11 @@ export type ShortcutAction =
   | 'toggleSidebar'
   | 'cycleModel'
 
+export type ShortcutCategory = 'geminiPowerKit' | 'app' | 'message'
+
 export interface ShortcutDefinition {
   action: ShortcutAction
+  category: ShortcutCategory
   labelKey: string
   defaultShortcut: string
   enableOnFormTags: Options['enableOnFormTags']
@@ -145,6 +157,9 @@ export interface ShortcutSettings {
   bindings: Record<ShortcutAction, string | null>
 }
 ```
+
+`shortcutCategories` 定义分组显示顺序和标题 i18n key；`shortcutDefinitions` 通过 `category`
+定义动作归属。设置页按该配置渲染，storage 仅保存 action bindings，因此分类调整不影响用户已有快捷键。
 
 建议使用 WXT storage：
 
@@ -215,9 +230,10 @@ function PageShortcutController() {
 
 ## 7. 验收标准
 1. SettingPanel > Tools 中可进入 Shortcut 页面。
-2. 八个默认快捷键在 Gemini 页面内生效。
-3. 修改或删除快捷键后无需刷新页面即可生效。
-4. 录制期间不会触发已有快捷键动作。
+2. 快捷键按 Gemini Power Kit、App、Message 三组展示，且不显示表头。
+3. 八个默认快捷键在 Gemini 页面内生效。
+4. 修改或删除快捷键后无需刷新页面即可生效。
+5. 录制期间不会触发已有快捷键动作。
 5. 重复、单字母、特殊键等非法输入会显示 danger 提醒。
 6. 快捷键按当前系统格式展示，并使用 Chakra `Kbd`。
 7. Temporary Chat 动作复用 `openNewChat` 打开新聊天后点击 `temp-chat-button > gem-icon-button`，不描述为转换已有聊天。

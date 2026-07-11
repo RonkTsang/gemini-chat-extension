@@ -5,7 +5,7 @@ import { HiOutlinePencil, HiOutlineTrash } from 'react-icons/hi'
 import { t } from '@/utils/i18n'
 import { useShortcutSettings } from '@/hooks/useShortcutSettings'
 import {
-  shortcutDefinitions,
+  shortcutDefinitionsByCategory,
   type ShortcutAction,
 } from '@/services/shortcuts/definitions'
 import { createShortcutString, formatShortcut } from '@/services/shortcuts/format'
@@ -239,99 +239,116 @@ export function ShortcutSettingsView() {
     >
       <Box flex="1" overflow="auto">
         <Container display="flex" justifyContent="center">
-          <Stack direction="column" maxWidth="740px" width="100%" align="stretch" gap={3}>
-            <Table.Root
-              width="100%"
-              variant="line"
-              mx={-3}
-              css={{
-                borderCollapse: 'collapse',
-              }}
-            >
-              <Table.ColumnGroup>
-                <Table.Column width="42%" />
-                <Table.Column />
-              </Table.ColumnGroup>
-              <Table.Header>
-                <Table.Row borderBottomWidth="1px" borderColor="border.muted">
-                  <Table.ColumnHeader py={3} px={3} color="fg.subtle" fontWeight="medium">
-                    {t('settingPanel.shortcut.columns.command')}
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader py={3} px={3} color="fg.subtle" fontWeight="medium">
-                    {t('settingPanel.shortcut.columns.shortcut')}
-                  </Table.ColumnHeader>
-                </Table.Row>
-              </Table.Header>
-              <Table.Body>
-                {shortcutDefinitions.map((definition) => {
-                  const action = definition.action
-                  const shortcut = settings.bindings[action]
-                  const isRecording = activeAction === action && recorder.isRecording
-                  const displayShortcut = isRecording ? recordedShortcut : shortcut
-                  const error = errors[action]
-                  const isHovered = hoveredAction === action
+          <Stack direction="column" maxWidth="600px" width="100%" align="stretch" gap={6}>
+            {shortcutDefinitionsByCategory.map((category) => {
+              const categoryHeadingId = `shortcut-category-${category.id}`
 
-                  return (
-                    <Table.Row
-                      key={action}
-                      borderBottomWidth="1px"
-                      borderColor="border.muted"
-                      onMouseEnter={() => setHoveredAction(action)}
-                      onMouseLeave={() => setHoveredAction((current) => current === action ? null : current)}
-                    >
-                      <Table.Cell py={3} px={3}>
-                        <Text fontSize="sm" fontWeight="normal">
-                          {t(definition.labelKey)}
-                        </Text>
-                      </Table.Cell>
-                      <Table.Cell py={3} px={3}>
-                        <Stack gap={1} width="100%">
-                          <HStack width="100%" gap={3}>
-                            <ShortcutField
-                              action={action}
-                              shortcut={displayShortcut}
-                              isRecording={isRecording}
-                              showEdit={isHovered}
-                              inputRef={(node) => {
-                                inputRefs.current[action] = node
-                              }}
-                              onStartRecording={startRecording}
-                              onStopRecording={requestStopRecording}
-                              onInvalidKey={() => {
-                                recorder.resetKeys()
-                                capturedKeysRef.current = new Set()
-                                setCapturedKeys(new Set())
-                                setErrors((current) => ({
-                                  ...current,
-                                  [action]: { reason: 'specialKey' },
-                                }))
-                              }}
-                              onInput={() => clearError(action)}
-                            />
-                            <Box flex={1} />
-                            <IconButton
-                              aria-label={t('settingPanel.shortcut.clearShortcut')}
-                              variant="ghost"
-                              size="sm"
-                              disabled={!shortcut && !isRecording && !error}
-                              onMouseDown={(event) => event.preventDefault()}
-                              onClick={() => void clearBinding(action)}
+              return (
+                <Box as="section" key={category.id}>
+                  <Text
+                    id={categoryHeadingId}
+                    mb={2}
+                    color="fg.subtle"
+                    fontSize="sm"
+                    fontWeight="medium"
+                  >
+                    {t(category.labelKey)}
+                  </Text>
+                  <Table.Root
+                    width="100%"
+                    variant="line"
+                    mx={-3}
+                    aria-labelledby={categoryHeadingId}
+                    css={{
+                      borderCollapse: 'collapse',
+                    }}
+                  >
+                    <Table.ColumnGroup>
+                      <Table.Column width="42%" />
+                      <Table.Column />
+                    </Table.ColumnGroup>
+                    <Table.Body>
+                      {category.definitions.map((definition, index) => {
+                        const action = definition.action
+                        const shortcut = settings.bindings[action]
+                        const isRecording = activeAction === action && recorder.isRecording
+                        const displayShortcut = isRecording ? recordedShortcut : shortcut
+                        const error = errors[action]
+                        const isHovered = hoveredAction === action
+                        const isLastRow = index === category.definitions.length - 1
+
+                        return (
+                          <Table.Row
+                            key={action}
+                            onMouseEnter={() => setHoveredAction(action)}
+                            onMouseLeave={() => setHoveredAction((current) => current === action ? null : current)}
+                          >
+                            <Table.Cell
+                              py={2}
+                              px={2}
+                              borderBottomWidth={isLastRow ? 0 : '1px'}
+                              borderColor="border.muted"
                             >
-                              <HiOutlineTrash />
-                            </IconButton>
-                          </HStack>
-                          {error ? (
-                            <Text fontSize="xs" color="fg.error">
-                              {getShortcutErrorText(error)}
-                            </Text>
-                          ) : null}
-                        </Stack>
-                      </Table.Cell>
-                    </Table.Row>
-                  )
-                })}
-              </Table.Body>
-            </Table.Root>
+                              <Text fontSize="sm" fontWeight="normal">
+                                {t(definition.labelKey)}
+                              </Text>
+                            </Table.Cell>
+                            <Table.Cell
+                              py={2}
+                              px={2}
+                              borderBottomWidth={isLastRow ? 0 : '1px'}
+                              borderColor="border.muted"
+                            >
+                              <Stack gap={1} width="100%">
+                                <HStack width="100%" gap={3}>
+                                  <ShortcutField
+                                    action={action}
+                                    shortcut={displayShortcut}
+                                    isRecording={isRecording}
+                                    showEdit={isHovered}
+                                    inputRef={(node) => {
+                                      inputRefs.current[action] = node
+                                    }}
+                                    onStartRecording={startRecording}
+                                    onStopRecording={requestStopRecording}
+                                    onInvalidKey={() => {
+                                      recorder.resetKeys()
+                                      capturedKeysRef.current = new Set()
+                                      setCapturedKeys(new Set())
+                                      setErrors((current) => ({
+                                        ...current,
+                                        [action]: { reason: 'specialKey' },
+                                      }))
+                                    }}
+                                    onInput={() => clearError(action)}
+                                  />
+                                  <Box flex={1} />
+                                  <IconButton
+                                    aria-label={t('settingPanel.shortcut.clearShortcut')}
+                                    variant="ghost"
+                                    size="sm"
+                                    disabled={!shortcut && !isRecording && !error}
+                                    onMouseDown={(event) => event.preventDefault()}
+                                    onClick={() => void clearBinding(action)}
+                                  >
+                                    <HiOutlineTrash />
+                                  </IconButton>
+                                </HStack>
+                                {error ? (
+                                  <Text fontSize="xs" color="fg.error">
+                                    {getShortcutErrorText(error)}
+                                  </Text>
+                                ) : null}
+                              </Stack>
+                            </Table.Cell>
+                          </Table.Row>
+                        )
+                      })}
+                    </Table.Body>
+                  </Table.Root>
+                </Box>
+              )
+            })}
           </Stack>
         </Container>
       </Box>
@@ -439,7 +456,9 @@ function ShortcutKbd({ shortcut }: { shortcut: string }) {
 
 function getShortcutErrorText(error: ShortcutError): string {
   if (error.reason === 'conflict') {
-    const conflictDefinition = shortcutDefinitions.find((definition) => definition.action === error.conflictAction)
+    const conflictDefinition = shortcutDefinitionsByCategory
+      .flatMap((category) => category.definitions)
+      .find((definition) => definition.action === error.conflictAction)
     return t('settingPanel.shortcut.errors.conflict', conflictDefinition ? t(conflictDefinition.labelKey) : '')
   }
 

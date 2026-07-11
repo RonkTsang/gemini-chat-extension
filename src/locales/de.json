@@ -397,10 +397,17 @@
       "editShortcut": "Tastenkürzel bearbeiten",
       "clearShortcut": "Tastenkürzel löschen",
       "recording": "Wird aufgezeichnet...",
+      "categories": {
+        "geminiPowerKit": "Gemini Power Kit",
+        "app": "App",
+        "message": "Nachricht"
+      },
       "actions": {
         "openSettings": "Gemini Power Kit-Einstellungen öffnen",
         "openNewChat": "Neuen Chat öffnen",
         "openTemporaryChat": "Temporären Chat öffnen",
+        "openLibrary": "Bibliothek öffnen",
+        "openGems": "Gems öffnen",
         "focusInput": "Eingabefeld fokussieren",
         "toggleSidebar": "Seitenleiste umschalten",
         "cycleModel": "Modell wechseln"

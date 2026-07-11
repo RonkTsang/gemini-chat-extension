@@ -397,10 +397,17 @@
       "editShortcut": "Modifier le raccourci",
       "clearShortcut": "Supprimer le raccourci",
       "recording": "Enregistrement...",
+      "categories": {
+        "geminiPowerKit": "Gemini Power Kit",
+        "app": "Application",
+        "message": "Message"
+      },
       "actions": {
         "openSettings": "Ouvrir les paramètres Gemini Power Kit",
         "openNewChat": "Ouvrir un nouveau chat",
         "openTemporaryChat": "Ouvrir le chat temporaire",
+        "openLibrary": "Ouvrir la bibliothèque",
+        "openGems": "Ouvrir Gems",
         "focusInput": "Activer la saisie",
         "toggleSidebar": "Basculer la barre latérale",
         "cycleModel": "Changer de modèle"

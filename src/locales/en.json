@@ -393,10 +393,17 @@
       "editShortcut": "Edit shortcut",
       "clearShortcut": "Clear shortcut",
       "recording": "Recording...",
+      "categories": {
+        "geminiPowerKit": "Gemini Power Kit",
+        "app": "App",
+        "message": "Message"
+      },
       "actions": {
         "openSettings": "Open Gemini Power Kit Settings",
         "openNewChat": "Open New Chat",
         "openTemporaryChat": "Open Temporary Chat",
+        "openLibrary": "Open Library",
+        "openGems": "Open Gems",
         "focusInput": "Focus Input",
         "toggleSidebar": "Toggle Sidebar",
         "cycleModel": "Cycle Model"

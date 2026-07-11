@@ -397,10 +397,17 @@
       "editShortcut": "編輯快捷鍵",
       "clearShortcut": "刪除快捷鍵",
       "recording": "錄製中...",
+      "categories": {
+        "geminiPowerKit": "Gemini Power Kit",
+        "app": "應用程式",
+        "message": "訊息"
+      },
       "actions": {
         "openSettings": "開啟 Gemini Power Kit 設定",
         "openNewChat": "開啟新聊天",
         "openTemporaryChat": "開啟臨時聊天",
+        "openLibrary": "開啟資料庫",
+        "openGems": "開啟 Gems",
         "focusInput": "聚焦輸入框",
         "toggleSidebar": "切換側邊欄",
         "cycleModel": "切換模型"

@@ -397,10 +397,17 @@
       "editShortcut": "ショートカットを編集",
       "clearShortcut": "ショートカットを削除",
       "recording": "記録中...",
+      "categories": {
+        "geminiPowerKit": "Gemini Power Kit",
+        "app": "アプリ",
+        "message": "メッセージ"
+      },
       "actions": {
         "openSettings": "Gemini Power Kit の設定を開く",
         "openNewChat": "新しいチャットを開く",
         "openTemporaryChat": "一時チャットを開く",
+        "openLibrary": "ライブラリを開く",
+        "openGems": "Gems を開く",
         "focusInput": "入力欄をフォーカス",
         "toggleSidebar": "サイドバーを切り替え",
         "cycleModel": "モデルを切り替え"

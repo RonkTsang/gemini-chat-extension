@@ -397,10 +397,17 @@
       "editShortcut": "Editar atajo",
       "clearShortcut": "Eliminar atajo",
       "recording": "Grabando...",
+      "categories": {
+        "geminiPowerKit": "Gemini Power Kit",
+        "app": "Aplicación",
+        "message": "Mensaje"
+      },
       "actions": {
         "openSettings": "Abrir la configuración de Gemini Power Kit",
         "openNewChat": "Abrir chat nuevo",
         "openTemporaryChat": "Abrir chat temporal",
+        "openLibrary": "Abrir biblioteca",
+        "openGems": "Abrir Gems",
         "focusInput": "Enfocar el campo",
         "toggleSidebar": "Alternar barra lateral",
         "cycleModel": "Cambiar modelo"
