@@ -449,6 +449,11 @@
   "whatsnew": {
     "title": "更新内容",
     "releaseNotes": "最新动态",
+    "backgroundPosition": {
+      "title": "背景位置更顺手",
+      "description": "在 Theme 中微调壁纸位置，让画面重点停在最合适的位置。",
+      "action": "打开主题"
+    },
     "notification": {
       "title": "Gemini 回复好时提醒你",
       "description": "切到其他标签页、窗口或应用后，Gemini 完成回复时会发送桌面通知，点击即可回到对话。",

@@ -445,6 +445,11 @@
   "whatsnew": {
     "title": "What's New",
     "releaseNotes": "What's New",
+    "backgroundPosition": {
+      "title": "Place backgrounds just right",
+      "description": "Fine-tune wallpaper placement from the Theme panel so your image stays framed where it matters.",
+      "action": "Open Theme"
+    },
     "notification": {
       "title": "Know when Gemini is ready",
       "description": "Step away while Gemini works. Get a desktop notification when the reply is ready, then click back to the chat.",

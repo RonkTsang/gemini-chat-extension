@@ -1,3 +1,16 @@
+# [0.9.0](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.8.3...v0.9.0) (2026-07-06)
+
+
+### Bug Fixes
+
+* restore power kit sidebar entry ([#38](https://github.com/RonkTsang/gemini-chat-extension/issues/38)) ([a30e54e](https://github.com/RonkTsang/gemini-chat-extension/commit/a30e54e25ab40052c7a0922c2e10917bb83d8d0f))
+
+
+### Features
+
+* add background image position control ([#34](https://github.com/RonkTsang/gemini-chat-extension/issues/34)) ([#35](https://github.com/RonkTsang/gemini-chat-extension/issues/35)) ([b20c0dc](https://github.com/RonkTsang/gemini-chat-extension/commit/b20c0dc81bcdfb2949a66e3dd095e899f2246f54))
+* add background position whats new ([69d76b0](https://github.com/RonkTsang/gemini-chat-extension/commit/69d76b0ae90bcb39df61b4dbe8f056ad88dd98c7))
+
 ## [0.8.3](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.8.2...v0.8.3) (2026-07-04)
 
 
