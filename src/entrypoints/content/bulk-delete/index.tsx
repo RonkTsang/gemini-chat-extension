@@ -18,6 +18,7 @@ import {
   updateBulkMenu,
 } from './dom'
 import { deleteConversationRows } from './deleteQueue'
+import { createDeleteProgressOverlay, type DeleteProgressOverlay } from './deleteProgressOverlay'
 import './style.css'
 
 let observer: MutationObserver | null = null
@@ -29,6 +30,7 @@ let loading = false
 let deleting = false
 let selectedKeys = new Set<string>()
 let abortController: AbortController | null = null
+let deleteProgressOverlay: DeleteProgressOverlay | null = null
 
 function renderEntry(): void {
   const header = findChatHeader()
@@ -132,6 +134,8 @@ function exitBulkDeleteMode(): void {
   selectedKeys = new Set()
   abortController?.abort()
   abortController = null
+  deleteProgressOverlay?.destroy()
+  deleteProgressOverlay = null
   removeBulkMenu()
   cleanupChatCheckboxes()
   renderEntry()
@@ -174,7 +178,9 @@ function selectUnpinned(): void {
   const nextSelectedKeys = new Set(selectedKeys)
   const rows = reconcileChatCheckboxes(selectedKeys, handleCheckboxChange)
   rows.forEach((row) => {
-    if (!isPinnedChatRow(row.row)) {
+    if (isPinnedChatRow(row.row)) {
+      nextSelectedKeys.delete(row.key)
+    } else {
       nextSelectedKeys.add(row.key)
     }
   })
@@ -200,9 +206,22 @@ async function deleteSelected(): Promise<void> {
   try {
     const rowsToDelete = getChatRows()
       .filter(row => selectedKeys.has(row.key))
-      .map(row => row.row)
-    await deleteConversationRows(rowsToDelete, abortController.signal)
+    const titlesInDeleteOrder = [...rowsToDelete]
+      .reverse()
+      .map(row => row.link.textContent?.trim() || row.link.getAttribute('aria-label') || '')
+    const elementsToDelete = rowsToDelete.map(row => row.row)
+    deleteProgressOverlay = elementsToDelete.length >= 2
+      ? createDeleteProgressOverlay(titlesInDeleteOrder)
+      : null
+    await deleteConversationRows(elementsToDelete, abortController.signal, {
+      onDeleted: () => deleteProgressOverlay?.advance(),
+      onFailed: () => deleteProgressOverlay?.discard(),
+      onSkipped: () => deleteProgressOverlay?.discard(),
+    })
+    await deleteProgressOverlay?.finish()
   } finally {
+    deleteProgressOverlay?.destroy()
+    deleteProgressOverlay = null
     deleting = false
     selectedKeys = new Set()
     cleanupChatCheckboxes()

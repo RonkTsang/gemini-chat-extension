@@ -54,6 +54,7 @@
     "selectUnpinned": "고정되지 않은 대화 선택",
     "deleteSelected": "삭제 ($1)",
     "deleteIdle": "삭제 (0)",
+    "deleteProgress": "완료 $1 / $2",
     "loading": "불러오는 중...",
     "selectConversation": "대화 선택",
     "confirmDelete": "선택한 채팅 $1개를 삭제할까요? 이 작업은 되돌릴 수 없습니다.",

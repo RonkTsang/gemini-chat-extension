@@ -17,6 +17,8 @@ const DELETE_MENU_BUTTON_SELECTORS = [
 ]
 
 const CONFIRM_DELETE_BUTTON_SELECTORS = [
+  'mat-dialog-actions gem-button[cdkfocusinitial] button',
+  'mat-dialog-actions [cdkfocusinitial] button',
   'button[data-test-id="confirm-button"]',
   '[data-test-id="confirm-button"]',
   'button[aria-label*="confirm" i]',
@@ -144,6 +146,15 @@ async function waitForActionable(selectors: string[], root: ParentNode = documen
   return null
 }
 
+function findConfirmDeleteButton(dialog: ParentNode): HTMLElement | null {
+  const focusedConfirmButton = dialog.querySelector<HTMLElement>([
+    'mat-dialog-actions gem-button[cdkfocusinitial] button:not([disabled])',
+    'mat-dialog-actions [cdkfocusinitial] button:not([disabled])',
+  ].join(','))
+
+  return focusedConfirmButton ?? findFirstVisible(CONFIRM_DELETE_BUTTON_SELECTORS, dialog)
+}
+
 async function waitForRowRemoved(row: HTMLElement, timeoutMs = 15000, signal?: AbortSignal): Promise<void> {
   const startedAt = Date.now()
   while (Date.now() - startedAt < timeoutMs) {
@@ -186,7 +197,8 @@ async function deleteOneConversation(row: HTMLElement, signal?: AbortSignal): Pr
   await wait(200, signal)
 
   const dialog = findFirstVisible(['[role="dialog"]'], overlay) ?? overlay
-  const confirmButton = await waitForActionable(CONFIRM_DELETE_BUTTON_SELECTORS, dialog, 7000, signal)
+  const confirmButton = findConfirmDeleteButton(dialog)
+    ?? await waitForActionable(CONFIRM_DELETE_BUTTON_SELECTORS, dialog, 7000, signal)
   if (!confirmButton) {
     throw new Error('confirm delete button not found')
   }
@@ -200,7 +212,17 @@ export interface DeleteQueueResult {
   failed: number
 }
 
-export async function deleteConversationRows(rows: HTMLElement[], signal?: AbortSignal): Promise<DeleteQueueResult> {
+export interface DeleteQueueCallbacks {
+  onDeleted?: () => Promise<void> | void
+  onFailed?: () => Promise<void> | void
+  onSkipped?: () => Promise<void> | void
+}
+
+export async function deleteConversationRows(
+  rows: HTMLElement[],
+  signal?: AbortSignal,
+  callbacks: DeleteQueueCallbacks = {},
+): Promise<DeleteQueueResult> {
   const result: DeleteQueueResult = { succeeded: 0, failed: 0 }
 
   for (const row of Array.from(rows).reverse()) {
@@ -208,13 +230,16 @@ export async function deleteConversationRows(rows: HTMLElement[], signal?: Abort
       break
     }
     if (!document.body.contains(row)) {
+      await callbacks.onSkipped?.()
       continue
     }
     try {
       await deleteOneConversation(row, signal)
       result.succeeded++
+      await callbacks.onDeleted?.()
     } catch (error) {
       result.failed++
+      await callbacks.onFailed?.()
       document.body.dispatchEvent(new KeyboardEvent('keydown', {
         key: 'Escape',
         code: 'Escape',
@@ -227,4 +252,8 @@ export async function deleteConversationRows(rows: HTMLElement[], signal?: Abort
   }
 
   return result
+}
+
+export const __deleteQueueTestApi = {
+  findConfirmDeleteButton,
 }

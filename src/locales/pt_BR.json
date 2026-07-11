@@ -54,6 +54,7 @@
     "selectUnpinned": "Selecionar não fixadas",
     "deleteSelected": "Excluir ($1)",
     "deleteIdle": "Excluir (0)",
+    "deleteProgress": "Concluído $1 / $2",
     "loading": "Carregando...",
     "selectConversation": "Selecionar conversa",
     "confirmDelete": "Excluir $1 chats selecionados? Isso não pode ser desfeito.",

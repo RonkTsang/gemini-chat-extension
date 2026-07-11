@@ -54,6 +54,7 @@
     "selectUnpinned": "ピン留めなしを選択",
     "deleteSelected": "削除（$1）",
     "deleteIdle": "削除（0）",
+    "deleteProgress": "完了 $1 / $2",
     "loading": "読み込み中...",
     "selectConversation": "会話を選択",
     "confirmDelete": "選択したチャット $1 件を削除しますか？この操作は元に戻せません。",

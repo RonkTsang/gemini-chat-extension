@@ -11,6 +11,7 @@ import {
   shouldIgnoreBulkDeleteMutations,
   updateBulkMenu,
 } from './dom'
+import { __bulkDeleteTestApi, stopBulkDelete } from './index'
 
 vi.mock('@/utils/i18n', () => ({
   t: (id: string, substitutions?: string | string[]) => {
@@ -69,6 +70,7 @@ describe('bulk delete DOM helpers', () => {
   })
 
   afterEach(() => {
+    stopBulkDelete()
     cleanupChatCheckboxes()
     removeBulkMenu()
     document.body.innerHTML = ''
@@ -207,5 +209,22 @@ describe('bulk delete DOM helpers', () => {
 
     expect(isPinnedChatRow(rows[0].row)).toBe(true)
     expect(isPinnedChatRow(rows[1].row)).toBe(false)
+  })
+
+  it('deselects pinned chats when selecting unpinned chats', () => {
+    renderSidenav(2)
+    const rows = getChatRows()
+    rows[0].link.querySelector('.trailing-content')?.insertAdjacentHTML('beforeend', `
+      <mat-icon data-mat-icon-name="push_pin" fonticon="push_pin"></mat-icon>
+    `)
+
+    __bulkDeleteTestApi.enterBulkDeleteMode()
+    const checkboxes = document.querySelectorAll<HTMLInputElement>('.gpk-bulk-delete-checkbox')
+    checkboxes.forEach(checkbox => checkbox.click())
+
+    __bulkDeleteTestApi.selectUnpinned()
+
+    expect(checkboxes[0].checked).toBe(false)
+    expect(checkboxes[1].checked).toBe(true)
   })
 })

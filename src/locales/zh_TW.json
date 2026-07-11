@@ -54,6 +54,7 @@
     "selectUnpinned": "選取未釘選",
     "deleteSelected": "刪除（$1）",
     "deleteIdle": "刪除（0）",
+    "deleteProgress": "已完成 $1 / $2",
     "loading": "載入中...",
     "selectConversation": "選取對話",
     "confirmDelete": "要刪除 $1 個已選取的聊天嗎？此操作無法復原。",

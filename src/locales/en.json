@@ -54,6 +54,7 @@
     "selectUnpinned": "Select unpinned",
     "deleteSelected": "Delete ($1)",
     "deleteIdle": "Delete (0)",
+    "deleteProgress": "Completed $1 / $2",
     "loading": "Loading...",
     "selectConversation": "Select conversation",
     "confirmDelete": "Delete $1 selected chats? This cannot be undone.",

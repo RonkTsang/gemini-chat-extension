@@ -54,6 +54,7 @@
     "selectUnpinned": "Nicht angeheftete auswählen",
     "deleteSelected": "Löschen ($1)",
     "deleteIdle": "Löschen (0)",
+    "deleteProgress": "Abgeschlossen $1 / $2",
     "loading": "Wird geladen...",
     "selectConversation": "Unterhaltung auswählen",
     "confirmDelete": "$1 ausgewählte Chats löschen? Das kann nicht rückgängig gemacht werden.",
