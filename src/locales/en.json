@@ -396,7 +396,7 @@
       "categories": {
         "geminiPowerKit": "Gemini Power Kit",
         "app": "App",
-        "message": "Message"
+        "prompt": "Prompt"
       },
       "actions": {
         "openSettings": "Open Gemini Power Kit Settings",
@@ -406,7 +406,12 @@
         "openGems": "Open Gems",
         "focusInput": "Focus Input",
         "toggleSidebar": "Toggle Sidebar",
-        "cycleModel": "Cycle Model"
+        "cycleModel": "Cycle Model",
+        "createImage": "Create Image",
+        "createMusic": "Create Music",
+        "openCanvas": "Open Canvas",
+        "openDeepResearch": "Open Deep Research",
+        "uploadFiles": "Upload Files"
       },
       "errors": {
         "missingModifier": "Include Alt, Ctrl, Meta, or Shift",

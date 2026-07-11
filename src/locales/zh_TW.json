@@ -400,7 +400,7 @@
       "categories": {
         "geminiPowerKit": "Gemini Power Kit",
         "app": "應用程式",
-        "message": "訊息"
+        "prompt": "提示詞"
       },
       "actions": {
         "openSettings": "開啟 Gemini Power Kit 設定",
@@ -410,7 +410,12 @@
         "openGems": "開啟 Gems",
         "focusInput": "聚焦輸入框",
         "toggleSidebar": "切換側邊欄",
-        "cycleModel": "切換模型"
+        "cycleModel": "切換模型",
+        "createImage": "建立圖片",
+        "createMusic": "建立音樂",
+        "openCanvas": "開啟畫布",
+        "openDeepResearch": "開啟深度研究",
+        "uploadFiles": "上傳檔案"
       },
       "errors": {
         "missingModifier": "請包含 Alt、Ctrl、Meta 或 Shift",

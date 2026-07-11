@@ -9,6 +9,11 @@ export const shortcutActions = [
   'focusInput',
   'toggleSidebar',
   'cycleModel',
+  'createImage',
+  'createMusic',
+  'openCanvas',
+  'openDeepResearch',
+  'uploadFiles',
 ] as const
 
 export type ShortcutAction = typeof shortcutActions[number]
@@ -23,8 +28,8 @@ export const shortcutCategories = [
     labelKey: 'settingPanel.shortcut.categories.app',
   },
   {
-    id: 'message',
-    labelKey: 'settingPanel.shortcut.categories.message',
+    id: 'prompt',
+    labelKey: 'settingPanel.shortcut.categories.prompt',
   },
 ] as const
 
@@ -34,7 +39,7 @@ export interface ShortcutDefinition {
   action: ShortcutAction
   category: ShortcutCategory
   labelKey: string
-  defaultShortcut: string
+  defaultShortcut: string | null
   enableOnFormTags: Options['enableOnFormTags']
   enableOnContentEditable: boolean
 }
@@ -90,7 +95,7 @@ export const shortcutDefinitions: ShortcutDefinition[] = [
   },
   {
     action: 'focusInput',
-    category: 'message',
+    category: 'prompt',
     labelKey: 'settingPanel.shortcut.actions.focusInput',
     defaultShortcut: 'slash',
     enableOnFormTags: false,
@@ -98,9 +103,49 @@ export const shortcutDefinitions: ShortcutDefinition[] = [
   },
   {
     action: 'cycleModel',
-    category: 'message',
+    category: 'prompt',
     labelKey: 'settingPanel.shortcut.actions.cycleModel',
     defaultShortcut: 'ctrl+shift+m',
+    enableOnFormTags: ['textbox'],
+    enableOnContentEditable: true,
+  },
+  {
+    action: 'uploadFiles',
+    category: 'prompt',
+    labelKey: 'settingPanel.shortcut.actions.uploadFiles',
+    defaultShortcut: 'mod+u',
+    enableOnFormTags: ['textbox'],
+    enableOnContentEditable: true,
+  },
+  {
+    action: 'createImage',
+    category: 'prompt',
+    labelKey: 'settingPanel.shortcut.actions.createImage',
+    defaultShortcut: null,
+    enableOnFormTags: ['textbox'],
+    enableOnContentEditable: true,
+  },
+  {
+    action: 'createMusic',
+    category: 'prompt',
+    labelKey: 'settingPanel.shortcut.actions.createMusic',
+    defaultShortcut: null,
+    enableOnFormTags: ['textbox'],
+    enableOnContentEditable: true,
+  },
+  {
+    action: 'openCanvas',
+    category: 'prompt',
+    labelKey: 'settingPanel.shortcut.actions.openCanvas',
+    defaultShortcut: null,
+    enableOnFormTags: ['textbox'],
+    enableOnContentEditable: true,
+  },
+  {
+    action: 'openDeepResearch',
+    category: 'prompt',
+    labelKey: 'settingPanel.shortcut.actions.openDeepResearch',
+    defaultShortcut: null,
     enableOnFormTags: ['textbox'],
     enableOnContentEditable: true,
   },
@@ -111,10 +156,10 @@ export const shortcutDefinitionsByCategory = shortcutCategories.map((category) =
   definitions: shortcutDefinitions.filter((definition) => definition.category === category.id),
 }))
 
-export const defaultShortcutBindings: Record<ShortcutAction, string> = shortcutDefinitions.reduce(
+export const defaultShortcutBindings: Record<ShortcutAction, string | null> = shortcutDefinitions.reduce(
   (bindings, definition) => {
     bindings[definition.action] = definition.defaultShortcut
     return bindings
   },
-  {} as Record<ShortcutAction, string>,
+  {} as Record<ShortcutAction, string | null>,
 )

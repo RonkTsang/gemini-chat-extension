@@ -400,7 +400,7 @@
       "categories": {
         "geminiPowerKit": "Gemini Power Kit",
         "app": "앱",
-        "message": "메시지"
+        "prompt": "프롬프트"
       },
       "actions": {
         "openSettings": "Gemini Power Kit 설정 열기",
@@ -410,7 +410,12 @@
         "openGems": "Gems 열기",
         "focusInput": "입력창에 포커스",
         "toggleSidebar": "사이드바 전환",
-        "cycleModel": "모델 전환"
+        "cycleModel": "모델 전환",
+        "createImage": "이미지 만들기",
+        "createMusic": "음악 만들기",
+        "openCanvas": "Canvas 열기",
+        "openDeepResearch": "Deep Research 열기",
+        "uploadFiles": "파일 업로드"
       },
       "errors": {
         "missingModifier": "Alt, Ctrl, Meta 또는 Shift를 포함하세요",

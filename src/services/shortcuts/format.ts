@@ -47,6 +47,12 @@ export function normalizeShortcutParts(shortcut: string): string[] {
     .filter(Boolean)
 }
 
+export function resolvePlatformShortcut(shortcut: string, isMac = isMacPlatform()): string {
+  return normalizeShortcutParts(shortcut)
+    .map((part) => part === 'mod' ? (isMac ? 'meta' : 'ctrl') : part)
+    .join('+')
+}
+
 export function createShortcutString(keys: Set<string>): string {
   const normalizedKeys = Array.from(keys)
     .map((key) => key.trim().toLowerCase())
@@ -60,7 +66,7 @@ export function createShortcutString(keys: Set<string>): string {
 }
 
 export function formatShortcut(shortcut: string, isMac = isMacPlatform()): FormattedShortcut {
-  const parts = normalizeShortcutParts(shortcut)
+  const parts = normalizeShortcutParts(resolvePlatformShortcut(shortcut, isMac))
   const modifierLabels = isMac ? MAC_MODIFIER_LABELS : DEFAULT_MODIFIER_LABELS
   const displayOrder = isMac ? MAC_DISPLAY_MODIFIER_ORDER : DEFAULT_DISPLAY_MODIFIER_ORDER
   const modifiers = displayOrder

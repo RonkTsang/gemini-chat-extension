@@ -11,6 +11,11 @@ const bindings: Record<ShortcutAction, string | null> = {
   focusInput: 'slash',
   toggleSidebar: 'alt+q',
   cycleModel: 'ctrl+shift+m',
+  createImage: null,
+  createMusic: null,
+  openCanvas: null,
+  openDeepResearch: null,
+  uploadFiles: 'mod+u',
 }
 
 describe('shortcut validation', () => {
@@ -66,6 +71,21 @@ describe('shortcut validation', () => {
       ok: false,
       reason: 'conflict',
       conflictAction: 'openTemporaryChat',
+    })
+  })
+
+  it('treats mod as the current platform primary modifier for conflicts', () => {
+    const bindingsWithUpload: Record<ShortcutAction, string | null> = {
+      ...bindings,
+      uploadFiles: 'mod+u',
+    }
+
+    const result = validateRecordedShortcut(new Set(['ctrl', 'u']), 'openNewChat', bindingsWithUpload)
+
+    expect(result).toEqual({
+      ok: false,
+      reason: 'conflict',
+      conflictAction: 'uploadFiles',
     })
   })
 })

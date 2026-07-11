@@ -10,6 +10,11 @@ export interface ShortcutSettings {
   bindings: Record<ShortcutAction, string | null>
 }
 
+type ShortcutSettingsInput = {
+  enabled?: boolean
+  bindings?: Partial<Record<ShortcutAction, string | null>>
+}
+
 export const defaultShortcutSettings: ShortcutSettings = {
   enabled: true,
   bindings: {
@@ -24,7 +29,7 @@ export const shortcutSettingsStorage = storage.defineItem<ShortcutSettings>(
   },
 )
 
-export function normalizeShortcutSettings(settings?: Partial<ShortcutSettings> | null): ShortcutSettings {
+export function normalizeShortcutSettings(settings?: ShortcutSettingsInput | null): ShortcutSettings {
   const bindings = shortcutActions.reduce(
     (normalized, action) => {
       const value = settings?.bindings?.[action]

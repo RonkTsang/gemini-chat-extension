@@ -40,8 +40,38 @@ describe('shortcut definitions', () => {
         id: 'app',
         actions: ['toggleSidebar', 'openNewChat', 'openTemporaryChat', 'openLibrary', 'openGems'],
       },
-      { id: 'message', actions: ['focusInput', 'cycleModel'] },
+      {
+        id: 'prompt',
+        actions: [
+          'focusInput',
+          'cycleModel',
+          'uploadFiles',
+          'createImage',
+          'createMusic',
+          'openCanvas',
+          'openDeepResearch',
+        ],
+      },
     ])
+  })
+
+  it('leaves the Prompt tools unassigned by default', () => {
+    const definitionsByAction = new Map(shortcutDefinitions.map((definition) => [definition.action, definition]))
+
+    expect(definitionsByAction.get('createImage')).toMatchObject({ defaultShortcut: null })
+    expect(definitionsByAction.get('createMusic')).toMatchObject({ defaultShortcut: null })
+    expect(definitionsByAction.get('openCanvas')).toMatchObject({ defaultShortcut: null })
+    expect(definitionsByAction.get('openDeepResearch')).toMatchObject({ defaultShortcut: null })
+  })
+
+  it('uses the platform primary modifier for Upload Files', () => {
+    const uploadFiles = shortcutDefinitions.find((definition) => definition.action === 'uploadFiles')
+
+    expect(uploadFiles).toMatchObject({
+      defaultShortcut: 'mod+u',
+      enableOnContentEditable: true,
+      enableOnFormTags: ['textbox'],
+    })
   })
 
   it('uses shortcut labels that exist in the English locale', () => {

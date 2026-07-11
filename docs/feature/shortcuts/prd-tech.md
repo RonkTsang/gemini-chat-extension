@@ -17,7 +17,7 @@
 1. SettingPanel > Tools > Shortcut 设置入口。
 2. 快捷键展示、录制、删除、冲突校验。
 3. 快捷键设置实时保存，并立即重新监听。
-4. 八个初始动作：
+4. 十三个初始动作：
    - Open Gemini Power Kit Settings
    - Open New Chat
    - Open Temporary Chat
@@ -26,6 +26,11 @@
    - Focus Input
    - Toggle Sidebar
    - Cycle Model
+   - Create Image
+   - Create Music
+   - Open Canvas
+   - Open Deep Research
+   - Upload Files
 
 本期不包含：
 
@@ -47,8 +52,8 @@ Gemini Power Kit
 App
 [Toggle Sidebar] [Open New Chat] [Toggle Temporary Chat] [Open Library] [Open Gems]
 
-Message
-[Focus Input] [Cycle Model]
+Prompt
+[Focus Input] [Cycle Model] [Upload Files] [Create Image] [Create Music] [Open Canvas] [Open Deep Research]
 ```
 
 每行使用两列：命令名称，以及包含快捷键展示、编辑和删除操作的快捷键区域。
@@ -125,6 +130,11 @@ Message
 | `focusInput` | `/` | 复用 `editorUtils` 聚焦 Gemini 输入框 |
 | `toggleSidebar` | `alt + q` | 根据当前侧边栏状态点击关闭或开启按钮 |
 | `cycleModel` | `ctrl + shift + m` | 切换至模式菜单中当前顺序的下一个模型；可在 Gemini 输入框聚焦时触发 |
+| `createImage` | 未设置 | 打开 Upload & tools，并点击图标名为 `image_create` 的原生工具项 |
+| `createMusic` | 未设置 | 打开 Upload & tools，并点击图标名为 `music` 的原生工具项 |
+| `openCanvas` | 未设置 | 打开 Upload & tools，并点击图标名为 `canvas` 的原生工具项 |
+| `openDeepResearch` | 未设置 | 打开 Upload & tools，并点击图标名为 `deep_research` 的原生工具项；能力不可用时不触发 |
+| `uploadFiles` | macOS: `⌘ U`; Windows: `Ctrl + U` | 打开 Upload & tools，并点击 `uploader button[data-test-id="local-images-files-uploader-button"]` |
 
 ## 6. 技术设计
 ### 6.1 数据结构
@@ -140,14 +150,19 @@ export type ShortcutAction =
   | 'focusInput'
   | 'toggleSidebar'
   | 'cycleModel'
+  | 'createImage'
+  | 'createMusic'
+  | 'openCanvas'
+  | 'openDeepResearch'
+  | 'uploadFiles'
 
-export type ShortcutCategory = 'geminiPowerKit' | 'app' | 'message'
+export type ShortcutCategory = 'geminiPowerKit' | 'app' | 'prompt'
 
 export interface ShortcutDefinition {
   action: ShortcutAction
   category: ShortcutCategory
   labelKey: string
-  defaultShortcut: string
+  defaultShortcut: string | null
   enableOnFormTags: Options['enableOnFormTags']
   enableOnContentEditable: boolean
 }
@@ -176,6 +191,11 @@ storage.defineItem<ShortcutSettings>('sync:shortcutSettings', {
       focusInput: 'slash',
       toggleSidebar: 'alt+q',
       cycleModel: 'ctrl+shift+m',
+      createImage: null,
+      createMusic: null,
+      openCanvas: null,
+      openDeepResearch: null,
+      uploadFiles: 'mod+u',
     },
   },
 })
@@ -206,8 +226,8 @@ function PageShortcutController() {
 每个 `ShortcutRegistration` 内部调用一次 `useHotkeys`。不要在循环中直接调用 hook。
 
 `enableOnContentEditable` 与 `enableOnFormTags` 均由 action 定义控制。Gemini 输入框同时为
-`contenteditable` 和 `role="textbox"`，因此 `cycleModel` 需配置前者为 `true`，并仅放行
-`enableOnFormTags: ['textbox']`；其他 action 保持 `false`，避免干扰文本输入。
+`contenteditable` 和 `role="textbox"`，因此 Prompt 分类中除 Focus Input 外的动作需配置前者为 `true`，并仅放行
+`enableOnFormTags: ['textbox']`；这样用户为模型或工具自定义的组合键可在输入框聚焦时触发。
 
 设置变化后：
 
@@ -227,11 +247,12 @@ function PageShortcutController() {
 | `src/utils/chatActions.ts` | New Chat / Temporary Chat / Library / Gems 页面动作，优先点击原生入口 |
 | `src/utils/editorUtils.ts` | 输入框聚焦等 Gemini editor 动作 |
 | `src/utils/cycleModel.ts` | 读取 Gemini 当前模型菜单，并点击下一个可用模型 |
+| `src/utils/toolboxActions.ts` | 打开 Upload & tools，并按 locale-neutral 图标名启动原生工具 |
 
 ## 7. 验收标准
 1. SettingPanel > Tools 中可进入 Shortcut 页面。
-2. 快捷键按 Gemini Power Kit、App、Message 三组展示，且不显示表头。
-3. 八个默认快捷键在 Gemini 页面内生效。
+2. 快捷键按 Gemini Power Kit、App、Prompt 三组展示，且不显示表头。
+3. 九个默认快捷键在 Gemini 页面内生效；四个 Prompt 工具显示在列表中，但默认未设置快捷键。
 4. 修改或删除快捷键后无需刷新页面即可生效。
 5. 录制期间不会触发已有快捷键动作。
 5. 重复、单字母、特殊键等非法输入会显示 danger 提醒。
@@ -240,3 +261,5 @@ function PageShortcutController() {
 8. Focus Input 使用 `/` 聚焦输入框；Toggle Sidebar 使用 `alt + q` 切换侧边栏。
 9. Cycle Model 使用 `ctrl + shift + m` 切换下一个模型，输入框聚焦时仍可触发。
 10. Open Library 使用 `alt + l`，Open Gems 使用 `alt + g`，均点击 Gemini SideNav 原生入口。
+11. Create Image、Create Music、Canvas、Deep Research 可录制快捷键，并通过 Gemini 原生 Upload & tools 菜单启动。
+12. Upload Files 默认使用 macOS 的 `⌘ U` 与 Windows 的 `Ctrl + U`，并打开 Gemini 原生文件选择器。

@@ -10,6 +10,7 @@ import {
 } from '@/utils/chatActions'
 import { cycleGeminiModel } from '@/utils/cycleModel'
 import { focusContentEditor } from '@/utils/editorUtils'
+import { launchGeminiTool, openUploadFilesDialog } from '@/utils/toolboxActions'
 import { useShortcutSettings } from '@/hooks/useShortcutSettings'
 import {
   shortcutDefinitions,
@@ -157,5 +158,30 @@ async function runShortcutAction(
 
   if (action === 'cycleModel') {
     await cycleGeminiModel()
+    return
+  }
+
+  if (action === 'uploadFiles') {
+    await openUploadFilesDialog()
+    return
+  }
+
+  if (action === 'createImage') {
+    await launchGeminiTool('image')
+    return
+  }
+
+  if (action === 'createMusic') {
+    await launchGeminiTool('music')
+    return
+  }
+
+  if (action === 'openCanvas') {
+    await launchGeminiTool('canvas')
+    return
+  }
+
+  if (action === 'openDeepResearch') {
+    await launchGeminiTool('deepResearch')
   }
 }

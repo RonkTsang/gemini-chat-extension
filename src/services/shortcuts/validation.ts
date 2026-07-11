@@ -1,5 +1,5 @@
 import { shortcutActions, type ShortcutAction } from './definitions'
-import { createShortcutString, normalizeShortcutParts } from './format'
+import { createShortcutString, normalizeShortcutParts, resolvePlatformShortcut } from './format'
 
 export type ShortcutValidationReason =
   | 'missingModifier'
@@ -11,7 +11,7 @@ export type ShortcutValidationResult =
   | { ok: true, shortcut: string }
   | { ok: false, reason: ShortcutValidationReason, conflictAction?: ShortcutAction }
 
-const MODIFIER_KEYS = new Set(['alt', 'ctrl', 'control', 'meta', 'shift'])
+const MODIFIER_KEYS = new Set(['alt', 'ctrl', 'control', 'meta', 'mod', 'shift'])
 
 export const shortcutRecordingBlacklist = [
   'backspace',
@@ -70,7 +70,10 @@ export function validateRecordedShortcut(
     if (action === currentAction) {
       continue
     }
-    if (existingBindings[action] === shortcut) {
+    if (
+      existingBindings[action]
+      && resolvePlatformShortcut(existingBindings[action]) === resolvePlatformShortcut(shortcut)
+    ) {
       return {
         ok: false,
         reason: 'conflict',

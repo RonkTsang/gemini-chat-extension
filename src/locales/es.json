@@ -400,7 +400,7 @@
       "categories": {
         "geminiPowerKit": "Gemini Power Kit",
         "app": "Aplicación",
-        "message": "Mensaje"
+        "prompt": "Prompt"
       },
       "actions": {
         "openSettings": "Abrir la configuración de Gemini Power Kit",
@@ -410,7 +410,12 @@
         "openGems": "Abrir Gems",
         "focusInput": "Enfocar el campo",
         "toggleSidebar": "Alternar barra lateral",
-        "cycleModel": "Cambiar modelo"
+        "cycleModel": "Cambiar modelo",
+        "createImage": "Crear imagen",
+        "createMusic": "Crear música",
+        "openCanvas": "Abrir Canvas",
+        "openDeepResearch": "Abrir Deep Research",
+        "uploadFiles": "Subir archivos"
       },
       "errors": {
         "missingModifier": "Incluye Alt, Ctrl, Meta o Shift",

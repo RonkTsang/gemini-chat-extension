@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createShortcutString, formatShortcut } from './format'
+import { createShortcutString, formatShortcut, resolvePlatformShortcut } from './format'
 
 describe('shortcut format', () => {
   it('creates a stable shortcut string from recorded keys', () => {
@@ -34,5 +34,12 @@ describe('shortcut format', () => {
 
     expect(formatted.tokens).toEqual(['/'])
     expect(formatted.text).toBe('/')
+  })
+
+  it('formats mod as Command on macOS and Ctrl on Windows', () => {
+    expect(formatShortcut('mod+u', true).text).toBe('⌘ U')
+    expect(formatShortcut('mod+u', false).text).toBe('Ctrl + U')
+    expect(resolvePlatformShortcut('mod+u', true)).toBe('meta+u')
+    expect(resolvePlatformShortcut('mod+u', false)).toBe('ctrl+u')
   })
 })

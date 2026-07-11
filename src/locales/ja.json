@@ -400,7 +400,7 @@
       "categories": {
         "geminiPowerKit": "Gemini Power Kit",
         "app": "アプリ",
-        "message": "メッセージ"
+        "prompt": "プロンプト"
       },
       "actions": {
         "openSettings": "Gemini Power Kit の設定を開く",
@@ -410,7 +410,12 @@
         "openGems": "Gems を開く",
         "focusInput": "入力欄をフォーカス",
         "toggleSidebar": "サイドバーを切り替え",
-        "cycleModel": "モデルを切り替え"
+        "cycleModel": "モデルを切り替え",
+        "createImage": "画像を作成",
+        "createMusic": "音楽を作成",
+        "openCanvas": "Canvasを開く",
+        "openDeepResearch": "Deep Researchを開く",
+        "uploadFiles": "ファイルをアップロード"
       },
       "errors": {
         "missingModifier": "Alt、Ctrl、Meta、Shift のいずれかを含めてください",
