@@ -36,6 +36,14 @@ export interface ReleaseNote {
  */
 export const CURRENT_RELEASE_NOTES: ReleaseNote[] = [
   {
+    titleKey: 'whatsnew.backgroundPosition.title',
+    descriptionKey: 'whatsnew.backgroundPosition.description',
+    actionLabelKey: 'whatsnew.backgroundPosition.action',
+    promoAction: {
+      action: 'theme-floating-panel'
+    }
+  },
+  {
     titleKey: 'whatsnew.notification.title',
     descriptionKey: 'whatsnew.notification.description',
     actionLabelKey: 'whatsnew.notification.action',

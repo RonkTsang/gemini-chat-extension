@@ -477,6 +477,11 @@
   "whatsnew": {
     "title": "Was gibt's Neues",
     "releaseNotes": "Neuigkeiten",
+    "backgroundPosition": {
+      "title": "Hintergründe passend platzieren",
+      "description": "Passen Sie im Theme-Panel die Hintergrundposition fein an, damit der wichtige Bildausschnitt im Rahmen bleibt.",
+      "action": "Theme öffnen"
+    },
     "notification": {
       "title": "Wissen, wenn Gemini fertig ist",
       "description": "Arbeite weiter, während Gemini antwortet. Sobald die Antwort bereit ist, erinnert dich eine Desktop-Benachrichtigung.",

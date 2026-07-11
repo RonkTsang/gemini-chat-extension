@@ -29,6 +29,7 @@ Default Gemini styling works for short chats, but longer sessions usually expose
 - you may want Gemini to stay in Light or Dark instead of following the current device state
 - the default color system can feel too plain when you keep many tabs open every day
 - wallpaper improves atmosphere, but it can also reduce contrast if readability controls are missing
+- centered wallpaper cropping can hide the part of an image you wanted to keep visible
 
 Theme solves those issues inside one settings panel, with live preview and automatic saving.
 
@@ -85,6 +86,11 @@ Wallpaper settings are where visual style and readability work together.
     <p class="settings-when">Start low for subtle texture. Raise it when the wallpaper competes with content.</p>
   </article>
   <article class="settings-card">
+    <div class="settings-label">Background Position</div>
+    <p class="settings-detail">Anchors the wallpaper to one of nine positions: top, center, bottom, left, right, or a corner.</p>
+    <p class="settings-when">Use it when the wallpaper subject is being cropped, or when you want a specific part of the image to stay visible.</p>
+  </article>
+  <article class="settings-card">
     <div class="settings-label">Message Glass Effect</div>
     <p class="settings-detail">Adds a glass-like surface to user and model messages so chat content separates more clearly from the wallpaper.</p>
     <p class="settings-when">Turn it on when the chat area feels visually mixed with the background. Keep it off on lower-end devices if you want the lightest rendering cost.</p>
@@ -136,6 +142,7 @@ When you first use wallpaper-related settings, the current defaults are:
 
 - wallpaper is `off`
 - blur starts at `5px`
+- `Background Position` starts at `Center`
 - `Message Glass Effect` is `off`
 - `Sidebar readability scrim` is `on`
 - `Scrim intensity` starts at `20%`
@@ -145,7 +152,7 @@ When you first use wallpaper-related settings, the current defaults are:
 
 - For a clean everyday setup: `System` + a preset color + no wallpaper.
 - For a branded personal workspace: `Light` or `Dark` + preset color + wallpaper.
-- For Light mode with wallpaper: turn on `Sidebar readability scrim`, keep `Welcome greeting readability` on `Auto adapt (first estimate)`, then raise `Blur` if content still feels busy.
+- For Light mode with wallpaper: choose a `Background Position`, turn on `Sidebar readability scrim`, keep `Welcome greeting readability` on `Auto adapt (first estimate)`, then raise `Blur` if content still feels busy.
 - For the best balance between style and clarity: choose a softer wallpaper, keep blur moderate, and only enable `Force light text` when the homepage greeting is still hard to read.
 
 ## Quick Workflow
@@ -155,7 +162,7 @@ When you first use wallpaper-related settings, the current defaults are:
 3. Choose `Appearance` first so Light or Dark behavior is stable.
 4. Pick a color preset that fits your daily workflow.
 5. If you want wallpaper, enable it and upload one image.
-6. Adjust `Blur`, then turn on readability helpers only where needed.
+6. Adjust `Background Position` and `Blur`, then turn on readability helpers only where needed.
 7. Use the live preview to check contrast before returning to chat.
 
 ## Related Features

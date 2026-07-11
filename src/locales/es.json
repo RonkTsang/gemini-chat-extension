@@ -477,6 +477,11 @@
   "whatsnew": {
     "title": "Novedades",
     "releaseNotes": "Novedades",
+    "backgroundPosition": {
+      "title": "Coloca el fondo como quieres",
+      "description": "Ajusta la posición del fondo en el panel de Tema para que la imagen quede bien encuadrada.",
+      "action": "Abrir tema"
+    },
     "notification": {
       "title": "Sabe cuándo Gemini está listo",
       "description": "Sigue con otra cosa mientras Gemini responde. Recibe una notificación de escritorio cuando la respuesta esté lista.",

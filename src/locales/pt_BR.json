@@ -477,6 +477,11 @@
   "whatsnew": {
     "title": "O que há de novo",
     "releaseNotes": "Novidades",
+    "backgroundPosition": {
+      "title": "Ajuste o fundo com precisão",
+      "description": "Ajuste a posição do papel de parede no painel Tema para enquadrar melhor a imagem.",
+      "action": "Abrir tema"
+    },
     "notification": {
       "title": "Saiba quando o Gemini terminar",
       "description": "Faça outra coisa enquanto o Gemini responde. Você recebe uma notificação na área de trabalho quando a resposta ficar pronta.",

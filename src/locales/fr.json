@@ -477,6 +477,11 @@
   "whatsnew": {
     "title": "Quoi de neuf",
     "releaseNotes": "Nouveautés",
+    "backgroundPosition": {
+      "title": "Ajustez le fond au mieux",
+      "description": "Ajustez l’image de fond dans le panneau Thème pour garder l’essentiel bien cadré.",
+      "action": "Ouvrir le thème"
+    },
     "notification": {
       "title": "Savoir quand Gemini est prêt",
       "description": "Faites autre chose pendant que Gemini répond. Une notification de bureau vous prévient dès que la réponse est prête.",
