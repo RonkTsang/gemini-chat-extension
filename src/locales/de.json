@@ -52,6 +52,7 @@
     "entryLabel": "Massenlöschung",
     "selectLatest50": "Neueste 50 auswählen",
     "selectUnpinned": "Nicht angeheftete auswählen",
+    "deselectAll": "Alle abwählen",
     "deleteSelected": "Löschen ($1)",
     "deleteIdle": "Löschen (0)",
     "deleteProgress": "Abgeschlossen $1 / $2",

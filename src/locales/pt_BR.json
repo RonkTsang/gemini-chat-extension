@@ -52,6 +52,7 @@
     "entryLabel": "Exclusão em lote",
     "selectLatest50": "Selecionar 50 mais recentes",
     "selectUnpinned": "Selecionar não fixadas",
+    "deselectAll": "Desmarcar tudo",
     "deleteSelected": "Excluir ($1)",
     "deleteIdle": "Excluir (0)",
     "deleteProgress": "Concluído $1 / $2",

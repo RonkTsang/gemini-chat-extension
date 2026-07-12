@@ -25,6 +25,7 @@ vi.mock('@/utils/i18n', () => ({
       'bulkDelete.deleteIdle': 'Delete (0)',
       'bulkDelete.loading': 'Loading...',
       'bulkDelete.selectConversation': 'Select conversation',
+      'bulkDelete.deselectAll': 'Deselect all',
     }
     return map[id] ?? id
   },
@@ -95,6 +96,7 @@ describe('bulk delete DOM helpers', () => {
     const menu = ensureBulkMenu(header, {
       onSelectLatest: vi.fn(),
       onSelectUnpinned: vi.fn(),
+      onDeselectAll: vi.fn(),
       onDelete: vi.fn(),
     })
 
@@ -102,8 +104,26 @@ describe('bulk delete DOM helpers', () => {
     updateBulkMenu(menu, 3, { loading: false, deleting: false })
 
     const submit = menu.querySelector<HTMLButtonElement>('[data-gpk-bulk-delete-submit]')
+    const deselectAll = menu.querySelector<HTMLButtonElement>('button[data-action="deselect-all"]')
     expect(submit?.textContent).toBe('Delete (3)')
     expect(submit?.disabled).toBe(false)
+    expect(deselectAll?.textContent).toBe('Deselect all')
+    expect(deselectAll?.hidden).toBe(false)
+  })
+
+  it('clears selected chats from the menu without exiting bulk delete mode', () => {
+    renderSidenav()
+    const header = findChatHeader()!
+    __bulkDeleteTestApi.enterBulkDeleteMode()
+    const menu = header.nextElementSibling as HTMLElement
+    const checkbox = document.querySelector<HTMLInputElement>('.gpk-bulk-delete-checkbox')!
+
+    checkbox.click()
+    menu.querySelector<HTMLButtonElement>('button[data-action="deselect-all"]')?.click()
+
+    expect(document.querySelector('[data-gpk-bulk-delete-menu]')).not.toBeNull()
+    expect(document.querySelectorAll('.gpk-bulk-delete-checkbox:checked')).toHaveLength(0)
+    expect(menu.querySelector<HTMLButtonElement>('button[data-action="deselect-all"]')?.hidden).toBe(true)
   })
 
   it('copies the page header font to the bulk menu', () => {
@@ -112,6 +132,7 @@ describe('bulk delete DOM helpers', () => {
     const menu = ensureBulkMenu(header, {
       onSelectLatest: vi.fn(),
       onSelectUnpinned: vi.fn(),
+      onDeselectAll: vi.fn(),
       onDelete: vi.fn(),
     })
 
@@ -124,6 +145,7 @@ describe('bulk delete DOM helpers', () => {
     const menu = ensureBulkMenu(header, {
       onSelectLatest: vi.fn(),
       onSelectUnpinned: vi.fn(),
+      onDeselectAll: vi.fn(),
       onDelete: vi.fn(),
     })
     updateBulkMenu(menu, 3, { loading: false, deleting: false })
@@ -151,6 +173,7 @@ describe('bulk delete DOM helpers', () => {
     const menu = ensureBulkMenu(header, {
       onSelectLatest: vi.fn(),
       onSelectUnpinned: vi.fn(),
+      onDeselectAll: vi.fn(),
       onDelete: vi.fn(),
     })
 

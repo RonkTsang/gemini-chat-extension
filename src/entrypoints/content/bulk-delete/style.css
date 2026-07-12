@@ -41,6 +41,16 @@
   gap: 8px;
 }
 
+[data-gpk-bulk-delete-action-row] {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+[data-gpk-bulk-delete-action-row].is-selection-empty {
+  grid-template-columns: 1fr;
+}
+
 [data-gpk-bulk-delete-menu] button {
   min-height: 32px;
   border: 0;
@@ -64,6 +74,11 @@
 [data-gpk-bulk-delete-menu] [data-gpk-bulk-delete-submit] {
   background: #ef3d30;
   color: white;
+}
+
+[data-gpk-bulk-delete-menu] button[data-action="deselect-all"] {
+  background: var(--mat-sys-surface-container-high, rgba(128, 128, 128, 0.16));
+  color: var(--mat-sys-on-surface, currentColor);
 }
 
 [data-gpk-bulk-delete-row="true"] {

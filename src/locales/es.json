@@ -52,6 +52,7 @@
     "entryLabel": "Eliminación en lote",
     "selectLatest50": "Seleccionar 50 más recientes",
     "selectUnpinned": "Seleccionar no fijados",
+    "deselectAll": "Deseleccionar todo",
     "deleteSelected": "Eliminar ($1)",
     "deleteIdle": "Eliminar (0)",
     "deleteProgress": "Completado $1 / $2",

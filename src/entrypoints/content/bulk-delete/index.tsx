@@ -68,6 +68,7 @@ function updateMenu(): void {
     ? ensureBulkMenu(header, {
       onSelectLatest: () => void selectLatest50(),
       onSelectUnpinned: selectUnpinned,
+      onDeselectAll: clearSelection,
       onDelete: () => void deleteSelected(),
     })
     : findBulkMenu(header)
@@ -185,6 +186,16 @@ function selectUnpinned(): void {
     }
   })
   selectedKeys = nextSelectedKeys
+  reconcileChatCheckboxes(selectedKeys, handleCheckboxChange)
+  updateMenu()
+}
+
+function clearSelection(): void {
+  if (!active || loading || deleting || selectedKeys.size === 0) {
+    return
+  }
+
+  selectedKeys = new Set()
   reconcileChatCheckboxes(selectedKeys, handleCheckboxChange)
   updateMenu()
 }

@@ -101,6 +101,7 @@ export function ensureBulkMenu(
   handlers: {
     onSelectLatest: () => void
     onSelectUnpinned: () => void
+    onDeselectAll: () => void
     onDelete: () => void
   },
 ): HTMLElement {
@@ -145,8 +146,22 @@ export function ensureBulkMenu(
     handlers.onDelete()
   })
 
+  const actionRow = document.createElement('div')
+  actionRow.setAttribute('data-gpk-bulk-delete-action-row', 'true')
+
+  const cancel = document.createElement('button')
+  cancel.type = 'button'
+  cancel.dataset.action = 'deselect-all'
+  cancel.textContent = t('bulkDelete.deselectAll')
+  cancel.addEventListener('click', (event) => {
+    event.preventDefault()
+    event.stopPropagation()
+    handlers.onDeselectAll()
+  })
+
   selectRow.append(selectLatest, selectUnpinned)
-  menu.append(selectRow, submit)
+  actionRow.append(cancel, submit)
+  menu.append(selectRow, actionRow)
   header.insertAdjacentElement('afterend', menu)
   return menu
 }
@@ -165,6 +180,8 @@ export function removeBulkMenu(): void {
 export function updateBulkMenu(menu: HTMLElement, selectedCount: number, options: { loading: boolean, deleting: boolean }): void {
   const selectLatest = menu.querySelector<HTMLButtonElement>('button[data-action="select-latest"]')
   const selectUnpinned = menu.querySelector<HTMLButtonElement>('button[data-action="select-unpinned"]')
+  const actionRow = menu.querySelector<HTMLElement>('[data-gpk-bulk-delete-action-row]')
+  const deselectAll = menu.querySelector<HTMLButtonElement>('button[data-action="deselect-all"]')
   const submit = menu.querySelector<HTMLButtonElement>('[data-gpk-bulk-delete-submit]')
   const disabled = options.loading || options.deleting
 
@@ -174,6 +191,13 @@ export function updateBulkMenu(menu: HTMLElement, selectedCount: number, options
   }
   if (selectUnpinned) {
     setDisabled(selectUnpinned, disabled)
+  }
+  if (actionRow) {
+    toggleClass(actionRow, 'is-selection-empty', selectedCount === 0)
+  }
+  if (deselectAll) {
+    setHidden(deselectAll, selectedCount === 0)
+    setDisabled(deselectAll, disabled)
   }
   if (submit) {
     setDisabled(submit, disabled || selectedCount === 0)
@@ -191,6 +215,12 @@ function setDisabled(button: HTMLButtonElement, disabled: boolean): void {
 function setText(element: HTMLElement, text: string): void {
   if (element.textContent !== text) {
     element.textContent = text
+  }
+}
+
+function setHidden(element: HTMLElement, hidden: boolean): void {
+  if (element.hidden !== hidden) {
+    element.hidden = hidden
   }
 }
 

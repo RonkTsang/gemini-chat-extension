@@ -52,6 +52,7 @@
     "entryLabel": "Bulk delete",
     "selectLatest50": "Select latest 50",
     "selectUnpinned": "Select unpinned",
+    "deselectAll": "Deselect all",
     "deleteSelected": "Delete ($1)",
     "deleteIdle": "Delete (0)",
     "deleteProgress": "Completed $1 / $2",

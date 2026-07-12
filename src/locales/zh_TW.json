@@ -52,6 +52,7 @@
     "entryLabel": "批次刪除",
     "selectLatest50": "選取最近 50 則",
     "selectUnpinned": "選取未釘選",
+    "deselectAll": "取消全選",
     "deleteSelected": "刪除（$1）",
     "deleteIdle": "刪除（0）",
     "deleteProgress": "已完成 $1 / $2",

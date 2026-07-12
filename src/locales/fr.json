@@ -52,6 +52,7 @@
     "entryLabel": "Suppression groupée",
     "selectLatest50": "Sélectionner les 50 plus récentes",
     "selectUnpinned": "Sélectionner les non épinglées",
+    "deselectAll": "Tout désélectionner",
     "deleteSelected": "Supprimer ($1)",
     "deleteIdle": "Supprimer (0)",
     "deleteProgress": "Terminé $1 / $2",

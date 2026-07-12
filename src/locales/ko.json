@@ -52,6 +52,7 @@
     "entryLabel": "일괄 삭제",
     "selectLatest50": "최근 50개 선택",
     "selectUnpinned": "고정되지 않은 대화 선택",
+    "deselectAll": "모두 선택 해제",
     "deleteSelected": "삭제 ($1)",
     "deleteIdle": "삭제 (0)",
     "deleteProgress": "완료 $1 / $2",
