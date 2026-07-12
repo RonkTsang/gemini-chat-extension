@@ -105,8 +105,15 @@
         "tooltip": "Este es el texto que seleccionaste en Gemini"
       }
     },
-    "chatOutline": {
-      "enable": "Habilitar esquema de chat"
+    "enhancements": {
+      "chatOutline": {
+        "title": "Esquema de chat",
+        "description": "Añade un esquema interactivo para navegar conversaciones largas."
+      },
+      "bulkDelete": {
+        "title": "Eliminación en lote",
+        "description": "Selecciona y elimina varios chats a la vez."
+      }
     }
   },
   "settingPanel": {
@@ -349,16 +356,12 @@
           }
         }
       },
-      "chatOutline": {
-        "title": "Esquema de chat",
+      "enhancements": {
+        "title": "Mejoras",
         "views": {
           "index": {
-            "title": "Esquema de chat",
-            "description": "Genera un índice rápido del historial de conversación en el lado izquierdo. Haz clic para saltar al mensaje correspondiente en conversaciones largas."
-          },
-          "detail": {
-            "title": "Detalle del esquema de chat",
-            "description": "Configuración detallada del esquema de chat."
+            "title": "Mejoras",
+            "description": "Administra las mejoras opcionales de Gemini."
           }
         }
       },

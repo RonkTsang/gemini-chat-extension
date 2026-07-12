@@ -1,10 +1,10 @@
 import {
   HiOutlineBell,
   HiOutlineColorSwatch,
-  HiOutlineDocumentText,
   HiOutlineInformationCircle,
   HiOutlineLightningBolt,
-  HiOutlineLink
+  HiOutlineLink,
+  HiOutlineSparkles,
 } from 'react-icons/hi'
 import { ImagePromptIcon } from '@/components/icons'
 import type {
@@ -20,7 +20,7 @@ export type NavigationSection =
   | 'chainPrompt'
   | 'quickFollowup'
   | 'imagePrompt'
-  | 'chatOutline'
+  | 'enhancements'
   | 'notification'
   | 'theme'
   | 'about'
@@ -77,17 +77,17 @@ export const settingSectionDefinitions: SettingSectionDefinition<NavigationSecti
     ]
   },
   {
-    id: 'chatOutline',
-    label: t('settingPanel.config.chatOutline.title'),
+    id: 'enhancements',
+    label: t('settingPanel.config.enhancements.title'),
     group: 'tools',
-    icon: HiOutlineDocumentText,
-    title: t('settingPanel.config.chatOutline.title'),
+    icon: HiOutlineSparkles,
+    title: t('settingPanel.config.enhancements.title'),
     views: [
       {
         id: 'index',
-        title: t('settingPanel.config.chatOutline.views.index.title'),
-        description: t('settingPanel.config.chatOutline.views.index.description'),
-        componentId: 'chat-outline/index'
+        title: t('settingPanel.config.enhancements.views.index.title'),
+        description: t('settingPanel.config.enhancements.views.index.description'),
+        componentId: 'enhancements/index'
       }
     ]
   },

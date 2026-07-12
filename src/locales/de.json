@@ -105,8 +105,15 @@
         "tooltip": "Dies ist der Text, den Sie in Gemini ausgewählt haben"
       }
     },
-    "chatOutline": {
-      "enable": "Chat-Gliederung aktivieren"
+    "enhancements": {
+      "chatOutline": {
+        "title": "Chat-Gliederung",
+        "description": "Fügt eine anklickbare Gliederung hinzu, um lange Unterhaltungen leichter zu navigieren."
+      },
+      "bulkDelete": {
+        "title": "Massenlöschung",
+        "description": "Wählen Sie mehrere Chats aus und löschen Sie sie auf einmal."
+      }
     }
   },
   "settingPanel": {
@@ -349,16 +356,12 @@
           }
         }
       },
-      "chatOutline": {
-        "title": "Chat-Gliederung",
+      "enhancements": {
+        "title": "Erweiterungen",
         "views": {
           "index": {
-            "title": "Chat-Gliederung",
-            "description": "Erstellen Sie einen schnellen Index der Gesprächshistorie auf der linken Seite. Klicken Sie, um zur entsprechenden Nachricht in langen Gesprächen zu springen."
-          },
-          "detail": {
-            "title": "Chat-Gliederung Details",
-            "description": "Detaillierte Konfiguration für Chat-Gliederungen."
+            "title": "Erweiterungen",
+            "description": "Verwalten Sie optionale Erweiterungen für Gemini."
           }
         }
       },

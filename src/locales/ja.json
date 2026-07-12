@@ -105,8 +105,15 @@
         "tooltip": "これは Gemini で選択したテキストです"
       }
     },
-    "chatOutline": {
-      "enable": "チャットアウトラインを有効にする"
+    "enhancements": {
+      "chatOutline": {
+        "title": "チャットアウトライン",
+        "description": "長い会話を見やすくするクリック可能なアウトラインを追加します。"
+      },
+      "bulkDelete": {
+        "title": "一括削除",
+        "description": "複数のチャットをまとめて選択・削除します。"
+      }
     }
   },
   "settingPanel": {
@@ -349,16 +356,12 @@
           }
         }
       },
-      "chatOutline": {
-        "title": "チャットアウトライン",
+      "enhancements": {
+        "title": "拡張機能",
         "views": {
           "index": {
-            "title": "チャットアウトライン",
-            "description": "左側に会話履歴のクイックインデックスを生成します。クリックして長い会話内の対応するメッセージにジャンプします。"
-          },
-          "detail": {
-            "title": "チャットアウトラインの詳細",
-            "description": "チャットアウトラインの詳細設定。"
+            "title": "拡張機能",
+            "description": "Gemini の追加機能を管理します。"
           }
         }
       },

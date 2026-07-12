@@ -105,8 +105,15 @@
         "tooltip": "此处是你在 Gemini 中所选中的内容"
       }
     },
-    "chatOutline": {
-      "enable": "启用对话大纲"
+    "enhancements": {
+      "chatOutline": {
+        "title": "聊天大纲",
+        "description": "添加可点击的大纲，方便浏览长对话。"
+      },
+      "bulkDelete": {
+        "title": "批量删除",
+        "description": "一次选择并删除多条聊天记录。"
+      }
     }
   },
   "settingPanel": {
@@ -349,16 +356,12 @@
           }
         }
       },
-      "chatOutline": {
-        "title": "聊天大纲",
+      "enhancements": {
+        "title": "增强功能",
         "views": {
           "index": {
-            "title": "聊天大纲",
-            "description": "在页面左侧生成历史对话的快速索引。点击即可跳转到长对话中对应的消息。"
-          },
-          "detail": {
-            "title": "聊天大纲详情",
-            "description": "聊天大纲的详细配置。"
+            "title": "增强功能",
+            "description": "管理 Gemini 的可选增强功能。"
           }
         }
       },

@@ -5,10 +5,12 @@ import { browser } from 'wxt/browser'
 import { renderOverlay } from "./overlay"
 import { startPowerKitEntry, stopPowerKitEntry } from './power-kit-entry'
 import { startBulkDelete, stopBulkDelete } from './bulk-delete'
+import { createBulkDeleteSettingsController } from './bulk-delete/settings'
 import { chatChangeDetector } from '@/services/chatChangeDetector'
 import { urlMonitor } from '@/services/urlMonitor'
 import { tabTitleSync } from '@/services/tabTitleSync'
 import { startResponseCompleteNotificationContentProvider } from '@/services/responseCompleteNotificationContent'
+import { enableBulkDelete } from '@/entrypoints/popup/storage'
 import { i18nCache } from '@/utils/i18nCache'
 import { stuffPageModule } from './stuff-page'
 import { initTheme, initThemeBackground } from './gemini-theme'
@@ -144,10 +146,15 @@ export default defineContentScript({
     });
 
     ui.mount();
-    startBulkDelete()
+    const bulkDeleteSettings = createBulkDeleteSettingsController({
+      setting: enableBulkDelete,
+      start: startBulkDelete,
+      stop: stopBulkDelete,
+    })
+    await bulkDeleteSettings.start()
     startPowerKitEntry()
     ctx.onInvalidated(() => {
-      stopBulkDelete()
+      bulkDeleteSettings.stop()
       stopPowerKitEntry()
     })
     console.log('[ContentScript] UI mounted, context still valid:', ctx.isValid)

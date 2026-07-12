@@ -105,8 +105,15 @@
         "tooltip": "Ceci est le texte que vous avez sélectionné dans Gemini"
       }
     },
-    "chatOutline": {
-      "enable": "Activer le plan de discussion"
+    "enhancements": {
+      "chatOutline": {
+        "title": "Plan de discussion",
+        "description": "Ajoute un plan cliquable pour naviguer facilement dans les longues conversations."
+      },
+      "bulkDelete": {
+        "title": "Suppression groupée",
+        "description": "Sélectionnez et supprimez plusieurs discussions à la fois."
+      }
     }
   },
   "settingPanel": {
@@ -349,16 +356,12 @@
           }
         }
       },
-      "chatOutline": {
-        "title": "Plan de chat",
+      "enhancements": {
+        "title": "Améliorations",
         "views": {
           "index": {
-            "title": "Plan de chat",
-            "description": "Générez un index rapide de l'historique des conversations sur le côté gauche. Cliquez pour accéder au message correspondant dans les longues conversations."
-          },
-          "detail": {
-            "title": "Détail du plan de chat",
-            "description": "Configuration détaillée du plan de chat."
+            "title": "Améliorations",
+            "description": "Gérez les améliorations optionnelles de Gemini."
           }
         }
       },

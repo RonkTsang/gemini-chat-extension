@@ -105,8 +105,15 @@
         "tooltip": "Este é o texto que você selecionou no Gemini"
       }
     },
-    "chatOutline": {
-      "enable": "Ativar esboço de chat"
+    "enhancements": {
+      "chatOutline": {
+        "title": "Esboço de chat",
+        "description": "Adiciona um esboço clicável para navegar por conversas longas."
+      },
+      "bulkDelete": {
+        "title": "Exclusão em lote",
+        "description": "Selecione e exclua várias conversas de uma só vez."
+      }
     }
   },
   "settingPanel": {
@@ -349,16 +356,12 @@
           }
         }
       },
-      "chatOutline": {
-        "title": "Esboço de chat",
+      "enhancements": {
+        "title": "Aprimoramentos",
         "views": {
           "index": {
-            "title": "Esboço de chat",
-            "description": "Gere um índice rápido do histórico de conversas no lado esquerdo. Clique para pular para a mensagem correspondente em conversas longas."
-          },
-          "detail": {
-            "title": "Detalhe do esboço de chat",
-            "description": "Configuração detalhada do esboço de chat."
+            "title": "Aprimoramentos",
+            "description": "Gerencie os aprimoramentos opcionais do Gemini."
           }
         }
       },
