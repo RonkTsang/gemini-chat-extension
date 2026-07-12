@@ -478,6 +478,11 @@
   "whatsnew": {
     "title": "What's New",
     "releaseNotes": "What's New",
+    "shortcuts": {
+      "title": "Move through Gemini faster",
+      "description": "Set shortcuts for chats, navigation, prompt tools, and uploads, then keep your most frequent Gemini actions one key press away.",
+      "action": "Set shortcuts"
+    },
     "backgroundPosition": {
       "title": "Place backgrounds just right",
       "description": "Fine-tune wallpaper placement from the Theme panel so your image stays framed where it matters.",

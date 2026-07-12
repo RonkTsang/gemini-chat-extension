@@ -491,6 +491,11 @@
       "title": "Gemini 完成時提醒你",
       "description": "切到其他分頁、視窗或應用程式後，Gemini 完成回覆時會傳送桌面通知，點一下即可回到對話。",
       "action": "設定通知"
+    },
+    "shortcuts": {
+      "title": "更快切換 Gemini 操作",
+      "description": "為聊天、導覽、提示詞工具和上傳設定快捷鍵，讓最常用的 Gemini 操作一鍵就能到位。",
+      "action": "設定快捷鍵"
     }
   }
 }

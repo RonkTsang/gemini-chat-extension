@@ -491,6 +491,11 @@
       "title": "Saiba quando o Gemini terminar",
       "description": "Faça outra coisa enquanto o Gemini responde. Você recebe uma notificação na área de trabalho quando a resposta ficar pronta.",
       "action": "Configurar"
+    },
+    "shortcuts": {
+      "title": "Navegue mais rápido no Gemini",
+      "description": "Configure atalhos para chats, navegação, ferramentas de prompt e uploads e deixe suas ações mais usadas no Gemini a um toque de tecla.",
+      "action": "Configurar atalhos"
     }
   }
 }

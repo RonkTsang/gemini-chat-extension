@@ -491,6 +491,11 @@
       "title": "Savoir quand Gemini est prêt",
       "description": "Faites autre chose pendant que Gemini répond. Une notification de bureau vous prévient dès que la réponse est prête.",
       "action": "Configurer"
+    },
+    "shortcuts": {
+      "title": "Naviguez plus vite dans Gemini",
+      "description": "Définissez des raccourcis pour les chats, la navigation, les outils de prompt et les envois de fichiers, pour garder vos actions Gemini les plus fréquentes à une seule touche.",
+      "action": "Configurer les raccourcis"
     }
   }
 }

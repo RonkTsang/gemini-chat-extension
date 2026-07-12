@@ -60,6 +60,7 @@ export default defineConfig({
 						{ label: 'Chain Prompt', translations: { 'zh-CN': '链式提示词' }, slug: 'features/chain-prompt' },
 						{ label: 'Open in New Tab', translations: { 'zh-CN': '新标签页打开' }, slug: 'features/stuff-open-new-tab' },
 						{ label: 'Tab Title Sync', translations: { 'zh-CN': '标签页标题同步' }, slug: 'features/tab-title-sync' },
+						{ label: 'Keyboard Shortcuts', translations: { 'zh-CN': '快捷键' }, slug: 'features/shortcuts' },
 						{ label: 'Notifications', translations: { 'zh-CN': '回复完成通知' }, slug: 'features/notifications' },
 						{ label: 'Theme', translations: { 'zh-CN': '主题个性化' }, slug: 'features/theme' },
 					],

@@ -491,6 +491,11 @@
       "title": "Wissen, wenn Gemini fertig ist",
       "description": "Arbeite weiter, während Gemini antwortet. Sobald die Antwort bereit ist, erinnert dich eine Desktop-Benachrichtigung.",
       "action": "Einrichten"
+    },
+    "shortcuts": {
+      "title": "Mit Shortcuts schneller durch Gemini",
+      "description": "Lege Shortcuts für Chats, Navigation, Prompt-Tools und Uploads fest, damit du deine häufigsten Gemini-Aktionen mit einem Tastendruck erreichst.",
+      "action": "Shortcuts festlegen"
     }
   }
 }

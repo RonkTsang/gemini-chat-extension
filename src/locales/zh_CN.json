@@ -482,6 +482,11 @@
   "whatsnew": {
     "title": "更新内容",
     "releaseNotes": "最新动态",
+    "shortcuts": {
+      "title": "常用操作一键直达",
+      "description": "为新聊天、导航、提示词工具和上传文件设置快捷键，让常用 Gemini 操作始终一键可达。",
+      "action": "设置快捷键"
+    },
     "backgroundPosition": {
       "title": "背景位置更顺手",
       "description": "在 Theme 中微调壁纸位置，让画面重点停在最合适的位置。",
