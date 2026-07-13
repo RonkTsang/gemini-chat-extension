@@ -50,8 +50,9 @@
   "responseNotificationMessage": "Sua resposta está pronta.",
   "bulkDelete": {
     "entryLabel": "Exclusão em lote",
-    "selectLatest50": "Selecionar 50 mais recentes",
-    "selectUnpinned": "Selecionar não fixadas",
+    "selectRecent": "Selecionar as últimas $1",
+    "change": "Alterar",
+    "deselectPinned": "Desmarcar fixadas",
     "deselectAll": "Desmarcar tudo",
     "deleteSelected": "Excluir ($1)",
     "deleteIdle": "Excluir (0)",
@@ -59,7 +60,7 @@
     "loading": "Carregando...",
     "selectConversation": "Selecionar conversa",
     "confirmDelete": "Excluir $1 chats selecionados? Isso não pode ser desfeito.",
-    "loadFailed": "O Gemini não conseguiu carregar mais chats. Recarregue o Gemini e execute Selecionar 50 mais recentes novamente."
+    "loadFailed": "Não foi possível carregar alguns chats. Você pode selecioná-los novamente ou recarregar o Gemini."
   },
   "quickFollow": {
     "more": "Mais",

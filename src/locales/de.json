@@ -50,8 +50,9 @@
   "responseNotificationMessage": "Ihre Antwort ist bereit.",
   "bulkDelete": {
     "entryLabel": "Massenlöschung",
-    "selectLatest50": "Neueste 50 auswählen",
-    "selectUnpinned": "Nicht angeheftete auswählen",
+    "selectRecent": "Letzte $1 auswählen",
+    "change": "Ändern",
+    "deselectPinned": "Angeheftete abwählen",
     "deselectAll": "Alle abwählen",
     "deleteSelected": "Löschen ($1)",
     "deleteIdle": "Löschen (0)",
@@ -59,7 +60,7 @@
     "loading": "Wird geladen...",
     "selectConversation": "Unterhaltung auswählen",
     "confirmDelete": "$1 ausgewählte Chats löschen? Das kann nicht rückgängig gemacht werden.",
-    "loadFailed": "Gemini konnte keine weiteren Chats laden. Lade Gemini neu und führe „Neueste 50 auswählen“ erneut aus."
+    "loadFailed": "Einige Chats konnten nicht geladen werden. Du kannst sie erneut auswählen oder Gemini neu laden."
   },
   "quickFollow": {
     "more": "Mehr",

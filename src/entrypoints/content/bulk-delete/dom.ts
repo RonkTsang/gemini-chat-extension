@@ -11,6 +11,7 @@ const CONVERSATION_KEY_ATTR = 'data-gpk-conversation-key'
 const CHECKBOX_SELECTOR = '.gpk-bulk-delete-checkbox'
 const LOAD_WARNING_SELECTOR = '#gpk-bulk-delete-load-warning'
 const PROGRESS_OVERLAY_SELECTOR = '[data-gpk-bulk-delete-progress-overlay]'
+const RECENT_LIMIT_OPTIONS = [10, 20, 30, 50] as const
 
 const CHAT_LINK_SELECTORS = [
   'conversations-list a[href^="/app/"]',
@@ -99,8 +100,9 @@ export function findBulkMenu(header: HTMLElement): HTMLElement | null {
 export function ensureBulkMenu(
   header: HTMLElement,
   handlers: {
-    onSelectLatest: () => void
-    onSelectUnpinned: () => void
+    onSelectRecent: () => void
+    onRecentLimitChange: (limit: number) => void
+    onDeselectPinned: () => void
     onDeselectAll: () => void
     onDelete: () => void
   },
@@ -114,27 +116,50 @@ export function ensureBulkMenu(
   menu.setAttribute(MENU_ATTR, 'true')
   syncMenuFont(menu, header)
 
-  const selectRow = document.createElement('div')
-  selectRow.setAttribute('data-gpk-bulk-delete-select-row', 'true')
+  const recentRow = document.createElement('div')
+  recentRow.setAttribute('data-gpk-bulk-delete-recent-row', 'true')
 
-  const selectLatest = document.createElement('button')
-  selectLatest.type = 'button'
-  selectLatest.dataset.action = 'select-latest'
-  selectLatest.textContent = t('bulkDelete.selectLatest50')
-  selectLatest.addEventListener('click', (event) => {
+  const selectRecent = document.createElement('button')
+  selectRecent.type = 'button'
+  selectRecent.dataset.action = 'select-recent'
+  selectRecent.addEventListener('click', (event) => {
     event.preventDefault()
     event.stopPropagation()
-    handlers.onSelectLatest()
+    handlers.onSelectRecent()
   })
 
-  const selectUnpinned = document.createElement('button')
-  selectUnpinned.type = 'button'
-  selectUnpinned.dataset.action = 'select-unpinned'
-  selectUnpinned.textContent = t('bulkDelete.selectUnpinned')
-  selectUnpinned.addEventListener('click', (event) => {
-    event.preventDefault()
-    event.stopPropagation()
-    handlers.onSelectUnpinned()
+  const changeLimit = document.createElement('button')
+  changeLimit.type = 'button'
+  changeLimit.dataset.action = 'change-recent-limit'
+  changeLimit.textContent = t('bulkDelete.change')
+  changeLimit.setAttribute('aria-expanded', 'false')
+  changeLimit.setAttribute('aria-haspopup', 'menu')
+
+  const limitPanel = document.createElement('div')
+  limitPanel.setAttribute('data-gpk-bulk-delete-limit-panel', 'true')
+  limitPanel.setAttribute('role', 'menu')
+  limitPanel.hidden = true
+
+  RECENT_LIMIT_OPTIONS.forEach((limit) => {
+    const option = document.createElement('button')
+    option.type = 'button'
+    option.dataset.action = 'recent-limit-option'
+    option.dataset.limit = String(limit)
+    option.textContent = String(limit)
+    option.setAttribute('role', 'menuitemradio')
+    option.setAttribute('aria-label', t('bulkDelete.selectRecent', String(limit)))
+    option.addEventListener('click', () => {
+      handlers.onRecentLimitChange(limit)
+      limitPanel.hidden = true
+      changeLimit.setAttribute('aria-expanded', 'false')
+    })
+    limitPanel.appendChild(option)
+  })
+
+  changeLimit.addEventListener('click', () => {
+    const isOpen = !limitPanel.hidden
+    limitPanel.hidden = isOpen
+    changeLimit.setAttribute('aria-expanded', String(!isOpen))
   })
 
   const submit = document.createElement('button')
@@ -149,6 +174,16 @@ export function ensureBulkMenu(
   const actionRow = document.createElement('div')
   actionRow.setAttribute('data-gpk-bulk-delete-action-row', 'true')
 
+  const deselectPinned = document.createElement('button')
+  deselectPinned.type = 'button'
+  deselectPinned.dataset.action = 'deselect-pinned'
+  deselectPinned.textContent = t('bulkDelete.deselectPinned')
+  deselectPinned.addEventListener('click', (event) => {
+    event.preventDefault()
+    event.stopPropagation()
+    handlers.onDeselectPinned()
+  })
+
   const cancel = document.createElement('button')
   cancel.type = 'button'
   cancel.dataset.action = 'deselect-all'
@@ -159,9 +194,9 @@ export function ensureBulkMenu(
     handlers.onDeselectAll()
   })
 
-  selectRow.append(selectLatest, selectUnpinned)
-  actionRow.append(cancel, submit)
-  menu.append(selectRow, actionRow)
+  recentRow.append(selectRecent, changeLimit)
+  actionRow.append(deselectPinned, cancel)
+  menu.append(recentRow, limitPanel, actionRow, submit)
   header.insertAdjacentElement('afterend', menu)
   return menu
 }
@@ -177,23 +212,40 @@ export function removeBulkMenu(): void {
   document.querySelectorAll(`[${MENU_ATTR}]`).forEach(element => element.remove())
 }
 
-export function updateBulkMenu(menu: HTMLElement, selectedCount: number, options: { loading: boolean, deleting: boolean }): void {
-  const selectLatest = menu.querySelector<HTMLButtonElement>('button[data-action="select-latest"]')
-  const selectUnpinned = menu.querySelector<HTMLButtonElement>('button[data-action="select-unpinned"]')
+export function updateBulkMenu(menu: HTMLElement, selectedCount: number, options: {
+  loading: boolean
+  deleting: boolean
+  recentLimit: number
+  selectedPinnedCount: number
+}): void {
+  const selectRecent = menu.querySelector<HTMLButtonElement>('button[data-action="select-recent"]')
+  const changeLimit = menu.querySelector<HTMLButtonElement>('button[data-action="change-recent-limit"]')
+  const limitOptions = menu.querySelectorAll<HTMLButtonElement>('button[data-action="recent-limit-option"]')
   const actionRow = menu.querySelector<HTMLElement>('[data-gpk-bulk-delete-action-row]')
+  const deselectPinned = menu.querySelector<HTMLButtonElement>('button[data-action="deselect-pinned"]')
   const deselectAll = menu.querySelector<HTMLButtonElement>('button[data-action="deselect-all"]')
   const submit = menu.querySelector<HTMLButtonElement>('[data-gpk-bulk-delete-submit]')
   const disabled = options.loading || options.deleting
 
-  if (selectLatest) {
-    setDisabled(selectLatest, disabled)
-    setText(selectLatest, options.loading ? t('bulkDelete.loading') : t('bulkDelete.selectLatest50'))
+  if (selectRecent) {
+    setDisabled(selectRecent, disabled)
+    setText(selectRecent, options.loading
+      ? t('bulkDelete.loading')
+      : t('bulkDelete.selectRecent', String(options.recentLimit)))
   }
-  if (selectUnpinned) {
-    setDisabled(selectUnpinned, disabled)
+  if (changeLimit) {
+    setDisabled(changeLimit, disabled)
   }
+  limitOptions.forEach((option) => {
+    setDisabled(option, disabled)
+    setAttribute(option, 'aria-checked', String(option.dataset.limit === String(options.recentLimit)))
+  })
   if (actionRow) {
-    toggleClass(actionRow, 'is-selection-empty', selectedCount === 0)
+    setHidden(actionRow, selectedCount === 0)
+  }
+  if (deselectPinned) {
+    setHidden(deselectPinned, selectedCount === 0)
+    setDisabled(deselectPinned, disabled || options.selectedPinnedCount === 0)
   }
   if (deselectAll) {
     setHidden(deselectAll, selectedCount === 0)
@@ -206,15 +258,21 @@ export function updateBulkMenu(menu: HTMLElement, selectedCount: number, options
   }
 }
 
-function setDisabled(button: HTMLButtonElement, disabled: boolean): void {
-  if (button.disabled !== disabled) {
-    button.disabled = disabled
+function setDisabled(control: HTMLButtonElement, disabled: boolean): void {
+  if (control.disabled !== disabled) {
+    control.disabled = disabled
   }
 }
 
 function setText(element: HTMLElement, text: string): void {
   if (element.textContent !== text) {
     element.textContent = text
+  }
+}
+
+function setAttribute(element: HTMLElement, name: string, value: string): void {
+  if (element.getAttribute(name) !== value) {
+    element.setAttribute(name, value)
   }
 }
 
@@ -505,7 +563,13 @@ async function waitForLoadingHidden(timeoutMs = 7000, signal?: AbortSignal): Pro
   }
 }
 
-export async function loadLatestChatRows(limit: number, selectedKeys: Set<string>, onChange: (key: string, selected: boolean) => void, signal?: AbortSignal): Promise<LoadRowsResult> {
+export async function loadLatestChatRows(
+  limit: number,
+  selectedKeys: Set<string>,
+  onChange: (key: string, selected: boolean) => void,
+  signal?: AbortSignal,
+  matchesRow: (row: ChatRow) => boolean = () => true,
+): Promise<LoadRowsResult> {
   const scroller = findHistoryScroller()
   if (!scroller) {
     return { completed: false, reason: 'scroller-not-found' }
@@ -521,7 +585,7 @@ export async function loadLatestChatRows(limit: number, selectedKeys: Set<string
     }
 
     const rows = reconcileChatCheckboxes(selectedKeys, onChange)
-    if (rows.length >= limit) {
+    if (rows.filter(matchesRow).length >= limit) {
       return { completed: true }
     }
 

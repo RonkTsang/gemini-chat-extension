@@ -29,6 +29,7 @@ let active = false
 let loading = false
 let deleting = false
 let selectedKeys = new Set<string>()
+let recentLimit = 50
 let abortController: AbortController | null = null
 let deleteProgressOverlay: DeleteProgressOverlay | null = null
 
@@ -66,15 +67,21 @@ function updateMenu(): void {
   }
   const menu = active
     ? ensureBulkMenu(header, {
-      onSelectLatest: () => void selectLatest50(),
-      onSelectUnpinned: selectUnpinned,
+      onSelectRecent: () => void selectRecent(),
+      onRecentLimitChange: setRecentLimit,
+      onDeselectPinned: deselectPinned,
       onDeselectAll: clearSelection,
       onDelete: () => void deleteSelected(),
     })
     : findBulkMenu(header)
 
   if (menu) {
-    updateBulkMenu(menu, selectedKeys.size, { loading, deleting })
+    updateBulkMenu(menu, selectedKeys.size, {
+      loading,
+      deleting,
+      recentLimit,
+      selectedPinnedCount: getSelectedPinnedKeys().size,
+    })
   }
 }
 
@@ -133,6 +140,7 @@ function exitBulkDeleteMode(): void {
   loading = false
   deleting = false
   selectedKeys = new Set()
+  recentLimit = 50
   abortController?.abort()
   abortController = null
   deleteProgressOverlay?.destroy()
@@ -142,7 +150,7 @@ function exitBulkDeleteMode(): void {
   renderEntry()
 }
 
-async function selectLatest50(): Promise<void> {
+async function selectRecent(): Promise<void> {
   if (!active || loading || deleting) {
     return
   }
@@ -152,13 +160,22 @@ async function selectLatest50(): Promise<void> {
   abortController = new AbortController()
 
   try {
-    const result = await loadLatestChatRows(50, selectedKeys, handleCheckboxChange, abortController.signal)
+    const result = await loadLatestChatRows(
+      recentLimit,
+      selectedKeys,
+      handleCheckboxChange,
+      abortController.signal,
+    )
     if (!result.completed && result.reason !== 'scroller-not-found') {
       showLoadFailedWarning()
     }
 
     const rows = reconcileChatCheckboxes(selectedKeys, handleCheckboxChange)
-    selectedKeys = new Set(rows.slice(0, 50).map(row => row.key))
+    selectedKeys = new Set(
+      rows
+        .slice(0, recentLimit)
+        .map(row => row.key),
+    )
     reconcileChatCheckboxes(selectedKeys, handleCheckboxChange)
   } catch (error) {
     if (!abortController.signal.aborted) {
@@ -171,21 +188,35 @@ async function selectLatest50(): Promise<void> {
   }
 }
 
-function selectUnpinned(): void {
+function setRecentLimit(limit: number): void {
+  const nextLimit = Math.min(Math.max(Math.trunc(limit), 1), 100)
+  if (!active || loading || deleting || nextLimit === recentLimit) {
+    return
+  }
+
+  recentLimit = nextLimit
+  updateMenu()
+}
+
+function getSelectedPinnedKeys(): Set<string> {
+  return new Set(
+    getChatRows()
+      .filter(row => selectedKeys.has(row.key) && isPinnedChatRow(row.row))
+      .map(row => row.key),
+  )
+}
+
+function deselectPinned(): void {
   if (!active || loading || deleting) {
     return
   }
 
-  const nextSelectedKeys = new Set(selectedKeys)
-  const rows = reconcileChatCheckboxes(selectedKeys, handleCheckboxChange)
-  rows.forEach((row) => {
-    if (isPinnedChatRow(row.row)) {
-      nextSelectedKeys.delete(row.key)
-    } else {
-      nextSelectedKeys.add(row.key)
-    }
-  })
-  selectedKeys = nextSelectedKeys
+  const pinnedKeys = getSelectedPinnedKeys()
+  if (pinnedKeys.size === 0) {
+    return
+  }
+
+  selectedKeys = new Set([...selectedKeys].filter(key => !pinnedKeys.has(key)))
   reconcileChatCheckboxes(selectedKeys, handleCheckboxChange)
   updateMenu()
 }
@@ -283,7 +314,8 @@ export function stopBulkDelete(): void {
 export const __bulkDeleteTestApi = {
   enterBulkDeleteMode,
   exitBulkDeleteMode,
-  selectLatest50,
-  selectUnpinned,
+  selectRecent,
+  setRecentLimit,
+  deselectPinned,
   deleteSelected,
 }

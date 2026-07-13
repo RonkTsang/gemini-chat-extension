@@ -50,8 +50,9 @@
   "responseNotificationMessage": "你的回复已准备好。",
   "bulkDelete": {
     "entryLabel": "批量删除",
-    "selectLatest50": "选择最近 50 条",
-    "selectUnpinned": "选择未固定",
+    "selectRecent": "选择最近 $1 个",
+    "change": "更改",
+    "deselectPinned": "取消选择已固定",
     "deselectAll": "取消全选",
     "deleteSelected": "删除（$1）",
     "deleteIdle": "删除（0）",
@@ -59,7 +60,7 @@
     "loading": "加载中...",
     "selectConversation": "选择对话",
     "confirmDelete": "删除已选中的 $1 个聊天？此操作无法撤销。",
-    "loadFailed": "Gemini 无法加载更多聊天。请重新加载 Gemini，然后再次执行“选择最近 50 条”。"
+    "loadFailed": "部分聊天无法加载。你可以再次选择或重新加载 Gemini。"
   },
   "quickFollow": {
     "more": "更多",
