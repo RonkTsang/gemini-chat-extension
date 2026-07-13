@@ -1,14 +1,11 @@
 import { t } from '@/utils/i18n'
 
 const OVERLAY_ATTR = 'data-gpk-bulk-delete-progress-overlay'
-const STRIKE_DURATION = 320
-const FADE_DURATION = 220
-const SCROLL_DURATION = 320
-const COMPLETE_DURATION = 180
+const SCROLL_DURATION = 200
 
 export interface DeleteProgressOverlay {
-  advance(): Promise<void>
-  discard(): Promise<void>
+  advance(): void
+  discard(): void
   finish(): Promise<void>
   destroy(): void
 }
@@ -24,6 +21,7 @@ export function createDeleteProgressOverlay(titles: string[]): DeleteProgressOve
   const track = document.createElement('div')
   track.dataset.gpkBulkDeleteProgressTrack = 'true'
   titles.forEach(title => track.append(createQueueRow(title)))
+  const queueRows = Array.from(track.children) as HTMLElement[]
   viewport.append(track)
 
   const progress = document.createElement('div')
@@ -34,7 +32,13 @@ export function createDeleteProgressOverlay(titles: string[]): DeleteProgressOve
 
   let completed = 0
   let destroyed = false
+  let nextRowIndex = 0
+  let removing = false
+  let activeAnimations = 0
+  let finishRequested = false
   const pendingDelays = new Set<() => void>()
+  const pendingRemovals = new Set<HTMLElement>()
+  const finishResolvers = new Set<() => void>()
 
   const updateProgress = () => {
     progress.textContent = t('bulkDelete.deleteProgress', [String(completed), String(titles.length)])
@@ -50,30 +54,11 @@ export function createDeleteProgressOverlay(titles: string[]): DeleteProgressOve
     pendingDelays.add(finish)
   })
 
-  const removeCurrent = async (animate: boolean): Promise<void> => {
-    const current = track.firstElementChild as HTMLElement | null
-    if (!current || destroyed) {
-      return
-    }
-
-    if (animate) {
-      current.classList.add('is-striking')
-      await delay(STRIKE_DURATION)
-      if (destroyed) {
-        return
-      }
-
-      current.classList.add('is-leaving')
-      await delay(FADE_DURATION)
-      if (destroyed) {
-        return
-      }
-    }
-
-    const next = current.nextElementSibling
+  const removeRow = async (row: HTMLElement): Promise<void> => {
+    const next = row.nextElementSibling
     if (next) {
       const rowGap = Number.parseFloat(window.getComputedStyle(track).rowGap) || 0
-      const scrollDistance = current.getBoundingClientRect().height + rowGap
+      const scrollDistance = row.getBoundingClientRect().height + rowGap
       track.style.setProperty('--gpk-bulk-delete-scroll-distance', `${scrollDistance}px`)
       track.classList.add('is-scrolling')
       await delay(SCROLL_DURATION)
@@ -82,9 +67,44 @@ export function createDeleteProgressOverlay(titles: string[]): DeleteProgressOve
       }
     }
 
-    current.remove()
+    row.remove()
     track.classList.remove('is-scrolling')
     track.style.removeProperty('--gpk-bulk-delete-scroll-distance')
+  }
+
+  const settleIfFinished = () => {
+    if (!finishRequested || destroyed || activeAnimations > 0 || removing || pendingRemovals.size > 0) {
+      return
+    }
+    destroy()
+  }
+
+  const removePendingRows = async () => {
+    if (removing || destroyed) {
+      return
+    }
+
+    removing = true
+    while (!destroyed) {
+      const row = track.firstElementChild as HTMLElement | null
+      if (!row || !pendingRemovals.has(row)) {
+        break
+      }
+      pendingRemovals.delete(row)
+      await removeRow(row)
+      activeAnimations--
+    }
+    removing = false
+    settleIfFinished()
+  }
+
+  const enqueueRemoval = (row: HTMLElement) => {
+    pendingRemovals.add(row)
+    void removePendingRows()
+  }
+
+  const claimNextRow = (): HTMLElement | null => {
+    return queueRows[nextRowIndex++] ?? null
   }
 
   const destroy = () => {
@@ -94,37 +114,48 @@ export function createDeleteProgressOverlay(titles: string[]): DeleteProgressOve
     destroyed = true
     pendingDelays.forEach(finish => finish())
     pendingDelays.clear()
+    finishResolvers.forEach(resolve => resolve())
+    finishResolvers.clear()
     overlay.remove()
   }
 
-  const finish = async () => {
+  const finish = (): Promise<void> => new Promise((resolve) => {
     if (destroyed) {
+      resolve()
       return
     }
-    overlay.classList.add('is-complete')
-    await delay(COMPLETE_DURATION)
-    destroy()
-  }
+    finishRequested = true
+    finishResolvers.add(resolve)
+    settleIfFinished()
+  })
 
   updateProgress()
 
   return {
-    async advance(): Promise<void> {
-      await removeCurrent(true)
-      if (destroyed) {
+    advance(): void {
+      const row = claimNextRow()
+      if (!row || destroyed) {
         return
       }
 
       completed++
       updateProgress()
+      activeAnimations++
+      row.classList.add('is-striking')
 
-      if (completed === titles.length) {
-        await delay(COMPLETE_DURATION)
-        await finish()
-      }
+      void delay(200).then(() => {
+        if (!destroyed) {
+          enqueueRemoval(row)
+        }
+      })
     },
-    async discard(): Promise<void> {
-      await removeCurrent(false)
+    discard(): void {
+      const row = claimNextRow()
+      if (!row || destroyed) {
+        return
+      }
+      activeAnimations++
+      enqueueRemoval(row)
     },
     finish,
     destroy,
