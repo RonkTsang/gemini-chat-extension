@@ -4,6 +4,7 @@
  */
 
 import notificationImagePath from '@/assets/whatsnew/notification.webp'
+import shortcutsImagePath from '@/assets/whatsnew/shortcuts.webp'
 import type { NavigationSection } from '@/components/setting-panel/config'
 
 export interface SettingPanelPromoAction {
@@ -35,6 +36,18 @@ export interface ReleaseNote {
  * Maximum 2 features recommended for optimal display
  */
 export const CURRENT_RELEASE_NOTES: ReleaseNote[] = [
+  {
+    titleKey: 'whatsnew.shortcuts.title',
+    descriptionKey: 'whatsnew.shortcuts.description',
+    actionLabelKey: 'whatsnew.shortcuts.action',
+    promoImagePath: shortcutsImagePath,
+    promoAction: {
+      action: 'setting-panel',
+      params: {
+        tab: 'shortcuts'
+      }
+    }
+  },
   {
     titleKey: 'whatsnew.backgroundPosition.title',
     descriptionKey: 'whatsnew.backgroundPosition.description',

@@ -378,6 +378,50 @@
             "title": "정보"
           }
         }
+      },
+      "shortcut": {
+        "title": "단축키",
+        "views": {
+          "index": {
+            "title": "단축키"
+          }
+        }
+      }
+    },
+    "shortcut": {
+      "columns": {
+        "command": "명령",
+        "shortcut": "unassigned"
+      },
+      "unassigned": "미설정",
+      "editShortcut": "단축키 수정",
+      "clearShortcut": "단축키 삭제",
+      "recording": "기록 중...",
+      "categories": {
+        "geminiPowerKit": "Gemini Power Kit",
+        "app": "앱",
+        "prompt": "프롬프트"
+      },
+      "actions": {
+        "openSettings": "Gemini Power Kit 설정 열기",
+        "openNewChat": "새 채팅 열기",
+        "openTemporaryChat": "임시 채팅 열기",
+        "openLibrary": "라이브러리 열기",
+        "openGems": "Gems 열기",
+        "focusInput": "입력창에 포커스",
+        "toggleSidebar": "사이드바 전환",
+        "cycleModel": "모델 전환",
+        "createImage": "이미지 만들기",
+        "createMusic": "음악 만들기",
+        "openCanvas": "Canvas 열기",
+        "openDeepResearch": "Deep Research 열기",
+        "uploadFiles": "파일 업로드"
+      },
+      "errors": {
+        "missingModifier": "Alt, Ctrl, Meta 또는 Shift를 포함하세요",
+        "singleLetter": "한 글자 단축키는 지원하지 않아요",
+        "specialKey": "이 키는 단축키로 사용할 수 없어요",
+        "conflict": "이미 사용 중인 단축키예요"
       }
     }
   },
@@ -447,6 +491,11 @@
       "title": "Gemini가 끝나면 바로 확인",
       "description": "Gemini가 답하는 동안 다른 일을 해도 괜찮아요. 답변이 준비되면 데스크톱 알림을 받고 채팅으로 돌아갈 수 있습니다.",
       "action": "알림 설정"
+    },
+    "shortcuts": {
+      "title": "Gemini를 더 빠르게 이동",
+      "description": "채팅, 탐색, 프롬프트 도구, 업로드에 단축키를 설정해 자주 쓰는 Gemini 동작을 한 번의 키 입력으로 바로 실행하세요.",
+      "action": "단축키 설정"
     }
   }
 }

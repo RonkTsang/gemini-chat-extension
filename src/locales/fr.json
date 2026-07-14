@@ -378,6 +378,50 @@
             "title": "À propos"
           }
         }
+      },
+      "shortcut": {
+        "title": "Raccourci",
+        "views": {
+          "index": {
+            "title": "Raccourci"
+          }
+        }
+      }
+    },
+    "shortcut": {
+      "columns": {
+        "command": "Commande",
+        "shortcut": "unassigned"
+      },
+      "unassigned": "Non défini",
+      "editShortcut": "Modifier le raccourci",
+      "clearShortcut": "Supprimer le raccourci",
+      "recording": "Enregistrement...",
+      "categories": {
+        "geminiPowerKit": "Gemini Power Kit",
+        "app": "Application",
+        "prompt": "Prompt"
+      },
+      "actions": {
+        "openSettings": "Ouvrir les paramètres Gemini Power Kit",
+        "openNewChat": "Ouvrir un nouveau chat",
+        "openTemporaryChat": "Ouvrir le chat temporaire",
+        "openLibrary": "Ouvrir la bibliothèque",
+        "openGems": "Ouvrir Gems",
+        "focusInput": "Activer la saisie",
+        "toggleSidebar": "Basculer la barre latérale",
+        "cycleModel": "Changer de modèle",
+        "createImage": "Créer une image",
+        "createMusic": "Créer une musique",
+        "openCanvas": "Ouvrir Canvas",
+        "openDeepResearch": "Ouvrir Deep Research",
+        "uploadFiles": "Importer des fichiers"
+      },
+      "errors": {
+        "missingModifier": "Incluez Alt, Ctrl, Meta ou Maj",
+        "singleLetter": "Les raccourcis à une seule lettre ne sont pas pris en charge",
+        "specialKey": "Cette touche ne peut pas être utilisée comme raccourci",
+        "conflict": "Ce raccourci est déjà utilisé"
       }
     }
   },
@@ -447,6 +491,11 @@
       "title": "Savoir quand Gemini est prêt",
       "description": "Faites autre chose pendant que Gemini répond. Une notification de bureau vous prévient dès que la réponse est prête.",
       "action": "Configurer"
+    },
+    "shortcuts": {
+      "title": "Naviguez plus vite dans Gemini",
+      "description": "Définissez des raccourcis pour les chats, la navigation, les outils de prompt et les envois de fichiers, pour garder vos actions Gemini les plus fréquentes à une seule touche.",
+      "action": "Configurer les raccourcis"
     }
   }
 }

@@ -374,6 +374,50 @@
             "title": "About"
           }
         }
+      },
+      "shortcut": {
+        "title": "Shortcut",
+        "views": {
+          "index": {
+            "title": "Shortcut"
+          }
+        }
+      }
+    },
+    "shortcut": {
+      "columns": {
+        "command": "Command",
+        "shortcut": "Shortcut"
+      },
+      "unassigned": "Unassigned",
+      "editShortcut": "Edit shortcut",
+      "clearShortcut": "Clear shortcut",
+      "recording": "Recording...",
+      "categories": {
+        "geminiPowerKit": "Gemini Power Kit",
+        "app": "App",
+        "prompt": "Prompt"
+      },
+      "actions": {
+        "openSettings": "Open Gemini Power Kit Settings",
+        "openNewChat": "Open New Chat",
+        "openTemporaryChat": "Open Temporary Chat",
+        "openLibrary": "Open Library",
+        "openGems": "Open Gems",
+        "focusInput": "Focus Input",
+        "toggleSidebar": "Toggle Sidebar",
+        "cycleModel": "Cycle Model",
+        "createImage": "Create Image",
+        "createMusic": "Create Music",
+        "openCanvas": "Open Canvas",
+        "openDeepResearch": "Open Deep Research",
+        "uploadFiles": "Upload Files"
+      },
+      "errors": {
+        "missingModifier": "Include Alt, Ctrl, Meta, or Shift",
+        "singleLetter": "Single-letter shortcuts aren't supported",
+        "specialKey": "This key can't be used as a shortcut",
+        "conflict": "This shortcut is already in use"
       }
     }
   },
@@ -434,6 +478,11 @@
   "whatsnew": {
     "title": "What's New",
     "releaseNotes": "What's New",
+    "shortcuts": {
+      "title": "Move through Gemini faster",
+      "description": "Set shortcuts for chats, navigation, prompt tools, and uploads, then keep your most frequent Gemini actions one key press away.",
+      "action": "Set shortcuts"
+    },
     "backgroundPosition": {
       "title": "Place backgrounds just right",
       "description": "Fine-tune wallpaper placement from the Theme panel so your image stays framed where it matters.",

@@ -378,6 +378,50 @@
             "title": "について"
           }
         }
+      },
+      "shortcut": {
+        "title": "ショートカット",
+        "views": {
+          "index": {
+            "title": "ショートカット"
+          }
+        }
+      }
+    },
+    "shortcut": {
+      "columns": {
+        "command": "コマンド",
+        "shortcut": "unassigned"
+      },
+      "unassigned": "未設定",
+      "editShortcut": "ショートカットを編集",
+      "clearShortcut": "ショートカットを削除",
+      "recording": "記録中...",
+      "categories": {
+        "geminiPowerKit": "Gemini Power Kit",
+        "app": "アプリ",
+        "prompt": "プロンプト"
+      },
+      "actions": {
+        "openSettings": "Gemini Power Kit の設定を開く",
+        "openNewChat": "新しいチャットを開く",
+        "openTemporaryChat": "一時チャットを開く",
+        "openLibrary": "ライブラリを開く",
+        "openGems": "Gems を開く",
+        "focusInput": "入力欄をフォーカス",
+        "toggleSidebar": "サイドバーを切り替え",
+        "cycleModel": "モデルを切り替え",
+        "createImage": "画像を作成",
+        "createMusic": "音楽を作成",
+        "openCanvas": "Canvasを開く",
+        "openDeepResearch": "Deep Researchを開く",
+        "uploadFiles": "ファイルをアップロード"
+      },
+      "errors": {
+        "missingModifier": "Alt、Ctrl、Meta、Shift のいずれかを含めてください",
+        "singleLetter": "1文字のショートカットは使えません",
+        "specialKey": "このキーはショートカットに使えません",
+        "conflict": "このショートカットは既に使われています"
       }
     }
   },
@@ -447,6 +491,11 @@
       "title": "Geminiの完了をすぐ受け取る",
       "description": "Geminiに任せて別の作業へ。返信ができたらデスクトップ通知でお知らせし、すぐチャットに戻れます。",
       "action": "通知を設定"
+    },
+    "shortcuts": {
+      "title": "Geminiをもっとすばやく操作",
+      "description": "チャット、ナビゲーション、プロンプトツール、アップロードにショートカットを設定して、よく使うGeminiの操作を1キーで呼び出せます。",
+      "action": "ショートカットを設定"
     }
   }
 }

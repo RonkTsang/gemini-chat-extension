@@ -3,6 +3,7 @@ import {
   HiOutlineColorSwatch,
   HiOutlineDocumentText,
   HiOutlineInformationCircle,
+  HiOutlineKey,
   HiOutlineLightningBolt,
   HiOutlineLink
 } from 'react-icons/hi'
@@ -22,6 +23,7 @@ export type NavigationSection =
   | 'imagePrompt'
   | 'chatOutline'
   | 'notification'
+  | 'shortcuts'
   | 'theme'
   | 'about'
 
@@ -103,6 +105,20 @@ export const settingSectionDefinitions: SettingSectionDefinition<NavigationSecti
         title: t('settingPanel.config.notification.views.index.title'),
         description: t('settingPanel.config.notification.views.index.description'),
         componentId: 'notification/index'
+      }
+    ]
+  },
+  {
+    id: 'shortcuts',
+    label: t('settingPanel.config.shortcut.title'),
+    group: 'tools',
+    icon: HiOutlineKey,
+    title: t('settingPanel.config.shortcut.title'),
+    views: [
+      {
+        id: 'index',
+        title: t('settingPanel.config.shortcut.views.index.title'),
+        componentId: 'shortcuts/index'
       }
     ]
   },

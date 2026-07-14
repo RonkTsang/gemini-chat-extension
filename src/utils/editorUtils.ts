@@ -41,6 +41,35 @@ export function getContentEditor(chatWindow?: Element): HTMLElement | null {
 }
 
 /**
+ * Focus the Gemini content editor and place the cursor at the end.
+ * @param chatWindow Optional chat window to search within
+ * @returns Success status
+ */
+export function focusContentEditor(chatWindow?: Element): boolean {
+  const editor = getContentEditor(chatWindow);
+  if (!editor) {
+    console.warn('Content editor not found');
+    return false;
+  }
+
+  try {
+    editor.focus();
+
+    const range = document.createRange();
+    const selection = window.getSelection();
+    range.selectNodeContents(editor);
+    range.collapse(false);
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+
+    return true;
+  } catch (error) {
+    console.error('Failed to focus content editor:', error);
+    return false;
+  }
+}
+
+/**
  * Get the send button element
  * @param chatWindow Optional chat window to search within
  * @returns Send button element or null if not found

@@ -378,6 +378,50 @@
             "title": "關於"
           }
         }
+      },
+      "shortcut": {
+        "title": "快捷鍵",
+        "views": {
+          "index": {
+            "title": "快捷鍵"
+          }
+        }
+      }
+    },
+    "shortcut": {
+      "columns": {
+        "command": "指令",
+        "shortcut": "unassigned"
+      },
+      "unassigned": "未設定",
+      "editShortcut": "編輯快捷鍵",
+      "clearShortcut": "刪除快捷鍵",
+      "recording": "錄製中...",
+      "categories": {
+        "geminiPowerKit": "Gemini Power Kit",
+        "app": "應用程式",
+        "prompt": "提示詞"
+      },
+      "actions": {
+        "openSettings": "開啟 Gemini Power Kit 設定",
+        "openNewChat": "開啟新聊天",
+        "openTemporaryChat": "開啟臨時聊天",
+        "openLibrary": "開啟資料庫",
+        "openGems": "開啟 Gems",
+        "focusInput": "聚焦輸入框",
+        "toggleSidebar": "切換側邊欄",
+        "cycleModel": "切換模型",
+        "createImage": "建立圖片",
+        "createMusic": "建立音樂",
+        "openCanvas": "開啟畫布",
+        "openDeepResearch": "開啟深度研究",
+        "uploadFiles": "上傳檔案"
+      },
+      "errors": {
+        "missingModifier": "請包含 Alt、Ctrl、Meta 或 Shift",
+        "singleLetter": "不支援單字母快捷鍵",
+        "specialKey": "此按鍵不能作為快捷鍵",
+        "conflict": "此快捷鍵已被其他指令使用"
       }
     }
   },
@@ -447,6 +491,11 @@
       "title": "Gemini 完成時提醒你",
       "description": "切到其他分頁、視窗或應用程式後，Gemini 完成回覆時會傳送桌面通知，點一下即可回到對話。",
       "action": "設定通知"
+    },
+    "shortcuts": {
+      "title": "更快切換 Gemini 操作",
+      "description": "為聊天、導覽、提示詞工具和上傳設定快捷鍵，讓最常用的 Gemini 操作一鍵就能到位。",
+      "action": "設定快捷鍵"
     }
   }
 }

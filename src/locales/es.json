@@ -378,6 +378,50 @@
             "title": "Acerca de"
           }
         }
+      },
+      "shortcut": {
+        "title": "Atajo",
+        "views": {
+          "index": {
+            "title": "Atajo"
+          }
+        }
+      }
+    },
+    "shortcut": {
+      "columns": {
+        "command": "Comando",
+        "shortcut": "unassigned"
+      },
+      "unassigned": "Sin asignar",
+      "editShortcut": "Editar atajo",
+      "clearShortcut": "Eliminar atajo",
+      "recording": "Grabando...",
+      "categories": {
+        "geminiPowerKit": "Gemini Power Kit",
+        "app": "Aplicación",
+        "prompt": "Prompt"
+      },
+      "actions": {
+        "openSettings": "Abrir la configuración de Gemini Power Kit",
+        "openNewChat": "Abrir chat nuevo",
+        "openTemporaryChat": "Abrir chat temporal",
+        "openLibrary": "Abrir biblioteca",
+        "openGems": "Abrir Gems",
+        "focusInput": "Enfocar el campo",
+        "toggleSidebar": "Alternar barra lateral",
+        "cycleModel": "Cambiar modelo",
+        "createImage": "Crear imagen",
+        "createMusic": "Crear música",
+        "openCanvas": "Abrir Canvas",
+        "openDeepResearch": "Abrir Deep Research",
+        "uploadFiles": "Subir archivos"
+      },
+      "errors": {
+        "missingModifier": "Incluye Alt, Ctrl, Meta o Shift",
+        "singleLetter": "No se admiten atajos de una sola letra",
+        "specialKey": "Esta tecla no puede usarse como atajo",
+        "conflict": "Este atajo ya está en uso"
       }
     }
   },
@@ -447,6 +491,11 @@
       "title": "Sabe cuándo Gemini está listo",
       "description": "Sigue con otra cosa mientras Gemini responde. Recibe una notificación de escritorio cuando la respuesta esté lista.",
       "action": "Configurar"
+    },
+    "shortcuts": {
+      "title": "Muévete más rápido por Gemini",
+      "description": "Configura atajos para chats, navegación, herramientas de prompt y subidas, y ten a un toque las acciones que más usas en Gemini.",
+      "action": "Configurar atajos"
     }
   }
 }

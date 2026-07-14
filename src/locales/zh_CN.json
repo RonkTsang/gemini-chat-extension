@@ -378,6 +378,50 @@
             "title": "关于"
           }
         }
+      },
+      "shortcut": {
+        "title": "快捷键",
+        "views": {
+          "index": {
+            "title": "快捷键"
+          }
+        }
+      }
+    },
+    "shortcut": {
+      "columns": {
+        "command": "命令",
+        "shortcut": "unassigned"
+      },
+      "unassigned": "未设置",
+      "editShortcut": "编辑快捷键",
+      "clearShortcut": "删除快捷键",
+      "recording": "录制中...",
+      "categories": {
+        "geminiPowerKit": "Gemini Power Kit",
+        "app": "应用",
+        "prompt": "提示词"
+      },
+      "actions": {
+        "openSettings": "打开 Gemini Power Kit 设置",
+        "openNewChat": "打开新聊天",
+        "openTemporaryChat": "打开临时聊天",
+        "openLibrary": "打开资料库",
+        "openGems": "打开 Gems",
+        "focusInput": "聚焦输入框",
+        "toggleSidebar": "切换侧边栏",
+        "cycleModel": "切换模型",
+        "createImage": "创建图片",
+        "createMusic": "创建音乐",
+        "openCanvas": "打开画布",
+        "openDeepResearch": "打开深度研究",
+        "uploadFiles": "上传文件"
+      },
+      "errors": {
+        "missingModifier": "请包含 Alt、Ctrl、Meta 或 Shift",
+        "singleLetter": "不支持单字母快捷键",
+        "specialKey": "此按键不能作为快捷键",
+        "conflict": "该快捷键已被其他命令使用"
       }
     }
   },
@@ -438,6 +482,11 @@
   "whatsnew": {
     "title": "更新内容",
     "releaseNotes": "最新动态",
+    "shortcuts": {
+      "title": "常用操作一键直达",
+      "description": "为新聊天、导航、提示词工具和上传文件设置快捷键，让常用 Gemini 操作始终一键可达。",
+      "action": "设置快捷键"
+    },
     "backgroundPosition": {
       "title": "背景位置更顺手",
       "description": "在 Theme 中微调壁纸位置，让画面重点停在最合适的位置。",
