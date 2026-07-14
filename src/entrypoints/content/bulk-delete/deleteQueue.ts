@@ -59,6 +59,16 @@ function findFirstVisible(selectors: string[], root: ParentNode = document): HTM
   return null
 }
 
+function findFirst(selectors: string[], root: ParentNode = document): HTMLElement | null {
+  for (const selector of selectors) {
+    const element = root.querySelector<HTMLElement>(selector)
+    if (element && !element.hasAttribute('disabled')) {
+      return element
+    }
+  }
+  return null
+}
+
 function getElementSearchText(element: Element): string {
   return [
     element.getAttribute('aria-label'),
@@ -67,6 +77,18 @@ function getElementSearchText(element: Element): string {
     element.getAttribute('class'),
     element.textContent,
   ].filter(Boolean).join(' ').toLowerCase()
+}
+
+function findFirstVisibleByKeywords(keywords: string[], root: ParentNode = document): HTMLElement | null {
+  const normalizedKeywords = keywords.map(keyword => keyword.toLowerCase())
+  return Array.from(root.querySelectorAll<HTMLElement>('button, [role="button"], [role="menuitem"]'))
+    .find((element) => {
+      if (!isVisibleElement(element) || element.hasAttribute('disabled')) {
+        return false
+      }
+      const text = getElementSearchText(element)
+      return normalizedKeywords.some(keyword => text.includes(keyword))
+    }) ?? null
 }
 
 function dispatchHover(element: Element): void {
@@ -131,13 +153,20 @@ function findActionMenuButton(row: HTMLElement): HTMLElement | null {
     .map(candidate => candidate.button.querySelector<HTMLElement>('button') ?? candidate.button)[0] ?? null
 }
 
-async function waitForActionable(selectors: string[], root: ParentNode = document, timeoutMs = 7000, signal?: AbortSignal): Promise<HTMLElement | null> {
+async function waitForActionable(
+  selectors: string[],
+  root: ParentNode = document,
+  timeoutMs = 7000,
+  signal?: AbortSignal,
+  fallbackKeywords: string[] = [],
+): Promise<HTMLElement | null> {
   const startedAt = Date.now()
   while (Date.now() - startedAt < timeoutMs) {
     if (signal?.aborted) {
       throw new Error('aborted')
     }
     const element = findFirstVisible(selectors, root)
+      ?? (fallbackKeywords.length > 0 ? findFirstVisibleByKeywords(fallbackKeywords, root) : null)
     if (element) {
       return element
     }
@@ -187,8 +216,14 @@ async function deleteOneConversation(row: HTMLElement, signal?: AbortSignal): Pr
   actionButton.click()
   await wait(150, signal)
 
-  const overlay = findFirstVisible(OVERLAY_SELECTORS) ?? document
-  const deleteButton = await waitForActionable(DELETE_MENU_BUTTON_SELECTORS, overlay, 7000, signal)
+  const overlay = findFirst(OVERLAY_SELECTORS) ?? document
+  const deleteButton = await waitForActionable(
+    DELETE_MENU_BUTTON_SELECTORS,
+    overlay,
+    7000,
+    signal,
+    ['delete'],
+  )
   if (!deleteButton) {
     throw new Error('delete menu item not found')
   }
@@ -196,9 +231,15 @@ async function deleteOneConversation(row: HTMLElement, signal?: AbortSignal): Pr
   deleteButton.click()
   await wait(200, signal)
 
-  const dialog = findFirstVisible(['[role="dialog"]'], overlay) ?? overlay
+  const dialog = findFirst(['[role="dialog"]'], overlay) ?? overlay
   const confirmButton = findConfirmDeleteButton(dialog)
-    ?? await waitForActionable(CONFIRM_DELETE_BUTTON_SELECTORS, dialog, 7000, signal)
+    ?? await waitForActionable(
+      CONFIRM_DELETE_BUTTON_SELECTORS,
+      dialog,
+      7000,
+      signal,
+      ['delete', 'confirm', 'yes'],
+    )
   if (!confirmButton) {
     throw new Error('confirm delete button not found')
   }
@@ -256,4 +297,5 @@ export async function deleteConversationRows(
 
 export const __deleteQueueTestApi = {
   findConfirmDeleteButton,
+  findFirst,
 }

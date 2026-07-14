@@ -21,4 +21,23 @@ describe('delete queue confirmation dialog', () => {
 
     expect(confirmButton?.textContent).toBe('Delete')
   })
+
+  it('selects the fixed CDK overlay before an unrelated visible overlay container', () => {
+    document.body.innerHTML = `
+      <div class="cdk-overlay-container" style="position: fixed">
+        <div role="menu"><button data-test-id="delete-button">Delete</button></div>
+      </div>
+      <div class="overlay-container">Image preview</div>
+    `
+
+    const overlay = __deleteQueueTestApi.findFirst([
+      'div.cdk-overlay-container',
+      '[role="dialog"]',
+      '.modal-container',
+      '.overlay-container',
+    ])
+
+    expect(overlay?.classList.contains('cdk-overlay-container')).toBe(true)
+    expect(overlay?.querySelector('[data-test-id="delete-button"]')).not.toBeNull()
+  })
 })

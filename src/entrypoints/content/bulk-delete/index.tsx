@@ -7,6 +7,7 @@ import {
   ensureEntryMount,
   findBulkMenu,
   findChatHeader,
+  findHistoryScroller,
   getChatRows,
   isPinnedChatRow,
   loadLatestChatRows,
@@ -19,6 +20,7 @@ import {
 } from './dom'
 import { deleteConversationRows } from './deleteQueue'
 import { createDeleteProgressOverlay, type DeleteProgressOverlay } from './deleteProgressOverlay'
+import { createStickyActionBar, type StickyActionBar } from './stickyActionBar'
 import './style.css'
 
 let observer: MutationObserver | null = null
@@ -32,6 +34,7 @@ let selectedKeys = new Set<string>()
 let recentLimit = 50
 let abortController: AbortController | null = null
 let deleteProgressOverlay: DeleteProgressOverlay | null = null
+let stickyActionBar: StickyActionBar | null = null
 
 function renderEntry(): void {
   const header = findChatHeader()
@@ -63,6 +66,12 @@ function renderEntry(): void {
 function updateMenu(): void {
   const header = findChatHeader()
   if (!header) {
+    stickyActionBar?.update({
+      source: null,
+      scroller: null,
+      selectedCount: 0,
+      disabled: true,
+    })
     return
   }
   const menu = active
@@ -83,6 +92,13 @@ function updateMenu(): void {
       selectedPinnedCount: getSelectedPinnedKeys().size,
     })
   }
+
+  stickyActionBar?.update({
+    source: active ? menu : null,
+    scroller: active ? findHistoryScroller() : null,
+    selectedCount: active ? selectedKeys.size : 0,
+    disabled: loading || deleting,
+  })
 }
 
 function handleCheckboxChange(key: string, selected: boolean): void {
@@ -130,6 +146,10 @@ function enterBulkDeleteMode(): void {
   active = true
   selectedKeys = new Set()
   abortController = new AbortController()
+  stickyActionBar ??= createStickyActionBar({
+    onDeselectAll: clearSelection,
+    onDelete: () => void deleteSelected(),
+  })
   syncCheckboxes()
   updateMenu()
   renderEntry()
@@ -145,6 +165,8 @@ function exitBulkDeleteMode(): void {
   abortController = null
   deleteProgressOverlay?.destroy()
   deleteProgressOverlay = null
+  stickyActionBar?.destroy()
+  stickyActionBar = null
   removeBulkMenu()
   cleanupChatCheckboxes()
   renderEntry()

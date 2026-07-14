@@ -11,6 +11,7 @@ const CONVERSATION_KEY_ATTR = 'data-gpk-conversation-key'
 const CHECKBOX_SELECTOR = '.gpk-bulk-delete-checkbox'
 const LOAD_WARNING_SELECTOR = '#gpk-bulk-delete-load-warning'
 const PROGRESS_OVERLAY_SELECTOR = '[data-gpk-bulk-delete-progress-overlay]'
+export const STICKY_ACTION_BAR_ATTR = 'data-gpk-bulk-delete-sticky-action-bar'
 const RECENT_LIMIT_OPTIONS = [10, 20, 30, 50] as const
 
 const CHAT_LINK_SELECTORS = [
@@ -296,6 +297,7 @@ function isBulkDeleteOwnedElement(element: Element): boolean {
     CHECKBOX_SELECTOR,
     LOAD_WARNING_SELECTOR,
     PROGRESS_OVERLAY_SELECTOR,
+    `[${STICKY_ACTION_BAR_ATTR}]`,
   ].join(','))
     || Boolean(element.closest([
       `[${ENTRY_SPACER_ATTR}]`,
@@ -303,6 +305,7 @@ function isBulkDeleteOwnedElement(element: Element): boolean {
       CHECKBOX_SELECTOR,
       LOAD_WARNING_SELECTOR,
       PROGRESS_OVERLAY_SELECTOR,
+      `[${STICKY_ACTION_BAR_ATTR}]`,
     ].join(',')))
 }
 

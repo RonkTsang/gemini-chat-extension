@@ -119,6 +119,60 @@
   color: var(--mat-sys-on-surface, currentColor);
 }
 
+[data-gpk-bulk-delete-sticky-action-bar] {
+  position: fixed;
+  z-index: 999;
+  pointer-events: none;
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 140ms ease-out, transform 140ms ease-out, visibility 0s linear 140ms;
+  will-change: opacity, transform;
+}
+
+[data-gpk-bulk-delete-sticky-action-bar].is-visible {
+  pointer-events: auto;
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 140ms ease-out, transform 140ms ease-out;
+}
+
+[data-gpk-bulk-delete-sticky-action-bar-content] {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  min-height: 44px;
+  padding: 6px 12px;
+  box-sizing: border-box;
+  background: var(--lumi-sys-color--surface-bright, var(--gem-sys-color--surface, var(--mat-sys-surface, #1b1b1d)));
+}
+
+[data-gpk-bulk-delete-sticky-action-bar] button {
+  min-width: 0;
+  min-height: 32px;
+  border: 0;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+[data-gpk-bulk-delete-sticky-action-bar] button[data-action="deselect-all"] {
+  background: var(--mat-sys-surface-container-high, rgba(128, 128, 128, 0.16));
+  color: var(--mat-sys-on-surface, currentColor);
+}
+
+[data-gpk-bulk-delete-sticky-action-bar] button[data-action="delete"] {
+  background: #ef3d30;
+  color: white;
+}
+
+[data-gpk-bulk-delete-sticky-action-bar] button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
 [data-gpk-bulk-delete-row="true"] {
   position: relative !important;
 }
@@ -264,5 +318,10 @@
   [data-gpk-bulk-delete-progress-row],
   [data-gpk-bulk-delete-progress-title]::after {
     transition-duration: 140ms !important;
+  }
+
+  [data-gpk-bulk-delete-sticky-action-bar] {
+    transform: none !important;
+    transition: opacity 100ms ease-out, visibility 0s linear 100ms;
   }
 }
