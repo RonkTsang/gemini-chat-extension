@@ -51,7 +51,9 @@
   "bulkDelete": {
     "entryLabel": "Bulk delete",
     "selectRecent": "Select $1 recent",
+    "selectUnpinned": "Select $1 unpinned",
     "change": "Change",
+    "excludePinned": "Exclude pinned",
     "deselectPinned": "Deselect pinned",
     "deselectAll": "Deselect all",
     "deleteSelected": "Delete ($1)",

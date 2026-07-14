@@ -51,7 +51,9 @@
   "bulkDelete": {
     "entryLabel": "批量删除",
     "selectRecent": "选择最近 $1 个",
+    "selectUnpinned": "选择最近 $1 个未置顶聊天",
     "change": "更改",
+    "excludePinned": "排除已置顶聊天",
     "deselectPinned": "取消选择已固定",
     "deselectAll": "取消全选",
     "deleteSelected": "删除（$1）",

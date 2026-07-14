@@ -103,6 +103,7 @@ export function ensureBulkMenu(
   handlers: {
     onSelectRecent: () => void
     onRecentLimitChange: (limit: number) => void
+    onExcludePinnedChange?: (excludePinned: boolean) => void
     onDeselectPinned: () => void
     onDeselectAll: () => void
     onDelete: () => void
@@ -134,12 +135,15 @@ export function ensureBulkMenu(
   changeLimit.dataset.action = 'change-recent-limit'
   changeLimit.textContent = t('bulkDelete.change')
   changeLimit.setAttribute('aria-expanded', 'false')
-  changeLimit.setAttribute('aria-haspopup', 'menu')
 
   const limitPanel = document.createElement('div')
   limitPanel.setAttribute('data-gpk-bulk-delete-limit-panel', 'true')
-  limitPanel.setAttribute('role', 'menu')
+  limitPanel.setAttribute('role', 'group')
+  limitPanel.setAttribute('aria-label', t('bulkDelete.change'))
   limitPanel.hidden = true
+
+  const limitOptions = document.createElement('div')
+  limitOptions.setAttribute('data-gpk-bulk-delete-limit-options', 'true')
 
   RECENT_LIMIT_OPTIONS.forEach((limit) => {
     const option = document.createElement('button')
@@ -147,15 +151,28 @@ export function ensureBulkMenu(
     option.dataset.action = 'recent-limit-option'
     option.dataset.limit = String(limit)
     option.textContent = String(limit)
-    option.setAttribute('role', 'menuitemradio')
+    option.setAttribute('role', 'radio')
     option.setAttribute('aria-label', t('bulkDelete.selectRecent', String(limit)))
     option.addEventListener('click', () => {
       handlers.onRecentLimitChange(limit)
-      limitPanel.hidden = true
-      changeLimit.setAttribute('aria-expanded', 'false')
     })
-    limitPanel.appendChild(option)
+    limitOptions.appendChild(option)
   })
+
+  const excludePinnedLabel = document.createElement('label')
+  excludePinnedLabel.setAttribute('data-gpk-bulk-delete-exclude-pinned', 'true')
+
+  const excludePinned = document.createElement('input')
+  excludePinned.type = 'checkbox'
+  excludePinned.dataset.action = 'exclude-pinned'
+  excludePinned.addEventListener('change', () => {
+    handlers.onExcludePinnedChange?.(excludePinned.checked)
+  })
+
+  const excludePinnedText = document.createElement('span')
+  excludePinnedText.textContent = t('bulkDelete.excludePinned')
+  excludePinnedLabel.append(excludePinned, excludePinnedText)
+  limitPanel.append(limitOptions, excludePinnedLabel)
 
   changeLimit.addEventListener('click', () => {
     const isOpen = !limitPanel.hidden
@@ -217,11 +234,13 @@ export function updateBulkMenu(menu: HTMLElement, selectedCount: number, options
   loading: boolean
   deleting: boolean
   recentLimit: number
+  excludePinned: boolean
   selectedPinnedCount: number
 }): void {
   const selectRecent = menu.querySelector<HTMLButtonElement>('button[data-action="select-recent"]')
   const changeLimit = menu.querySelector<HTMLButtonElement>('button[data-action="change-recent-limit"]')
   const limitOptions = menu.querySelectorAll<HTMLButtonElement>('button[data-action="recent-limit-option"]')
+  const excludePinned = menu.querySelector<HTMLInputElement>('input[data-action="exclude-pinned"]')
   const actionRow = menu.querySelector<HTMLElement>('[data-gpk-bulk-delete-action-row]')
   const deselectPinned = menu.querySelector<HTMLButtonElement>('button[data-action="deselect-pinned"]')
   const deselectAll = menu.querySelector<HTMLButtonElement>('button[data-action="deselect-all"]')
@@ -232,7 +251,7 @@ export function updateBulkMenu(menu: HTMLElement, selectedCount: number, options
     setDisabled(selectRecent, disabled)
     setText(selectRecent, options.loading
       ? t('bulkDelete.loading')
-      : t('bulkDelete.selectRecent', String(options.recentLimit)))
+      : t(options.excludePinned ? 'bulkDelete.selectUnpinned' : 'bulkDelete.selectRecent', String(options.recentLimit)))
   }
   if (changeLimit) {
     setDisabled(changeLimit, disabled)
@@ -241,6 +260,12 @@ export function updateBulkMenu(menu: HTMLElement, selectedCount: number, options
     setDisabled(option, disabled)
     setAttribute(option, 'aria-checked', String(option.dataset.limit === String(options.recentLimit)))
   })
+  if (excludePinned) {
+    setDisabled(excludePinned, disabled)
+    if (excludePinned.checked !== options.excludePinned) {
+      excludePinned.checked = options.excludePinned
+    }
+  }
   if (actionRow) {
     setHidden(actionRow, selectedCount === 0)
   }
@@ -259,7 +284,7 @@ export function updateBulkMenu(menu: HTMLElement, selectedCount: number, options
   }
 }
 
-function setDisabled(control: HTMLButtonElement, disabled: boolean): void {
+function setDisabled(control: HTMLButtonElement | HTMLInputElement, disabled: boolean): void {
   if (control.disabled !== disabled) {
     control.disabled = disabled
   }

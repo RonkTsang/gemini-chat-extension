@@ -51,7 +51,9 @@
   "bulkDelete": {
     "entryLabel": "Massenlöschung",
     "selectRecent": "Letzte $1 auswählen",
+    "selectUnpinned": "Letzte $1 nicht angeheftete auswählen",
     "change": "Ändern",
+    "excludePinned": "Angeheftete ausschließen",
     "deselectPinned": "Angeheftete abwählen",
     "deselectAll": "Alle abwählen",
     "deleteSelected": "Löschen ($1)",

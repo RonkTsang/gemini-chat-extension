@@ -51,7 +51,9 @@
   "bulkDelete": {
     "entryLabel": "일괄 삭제",
     "selectRecent": "최근 $1개 선택",
+    "selectUnpinned": "최근 고정되지 않은 $1개 선택",
     "change": "변경",
+    "excludePinned": "고정된 대화 제외",
     "deselectPinned": "고정된 대화 선택 해제",
     "deselectAll": "모두 선택 해제",
     "deleteSelected": "삭제 ($1)",

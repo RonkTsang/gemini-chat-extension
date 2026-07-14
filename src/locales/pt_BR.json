@@ -51,7 +51,9 @@
   "bulkDelete": {
     "entryLabel": "Exclusão em lote",
     "selectRecent": "Selecionar as últimas $1",
+    "selectUnpinned": "Selecionar as últimas $1 não fixadas",
     "change": "Alterar",
+    "excludePinned": "Excluir fixadas",
     "deselectPinned": "Desmarcar fixadas",
     "deselectAll": "Desmarcar tudo",
     "deleteSelected": "Excluir ($1)",

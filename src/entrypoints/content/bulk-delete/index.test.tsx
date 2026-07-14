@@ -21,6 +21,8 @@ vi.mock('@/utils/i18n', () => ({
     }
     const map: Record<string, string> = {
       'bulkDelete.selectRecent': `Select ${substitutions} recent`,
+      'bulkDelete.selectUnpinned': `Select ${substitutions} unpinned`,
+      'bulkDelete.excludePinned': 'Exclude pinned',
       'bulkDelete.change': 'Change',
       'bulkDelete.deselectPinned': 'Deselect pinned',
       'bulkDelete.deleteIdle': 'Delete (0)',
@@ -36,6 +38,7 @@ const defaultMenuOptions = {
   loading: false,
   deleting: false,
   recentLimit: 50,
+  excludePinned: false,
   selectedPinnedCount: 0,
 }
 
@@ -120,14 +123,16 @@ describe('bulk delete DOM helpers', () => {
     expect(deselectAll?.hidden).toBe(false)
   })
 
-  it('changes the next recent selection count from the Change menu', () => {
+  it('configures the next recent selection from the Change menu', () => {
     renderSidenav()
     const onSelectRecent = vi.fn()
     const onRecentLimitChange = vi.fn()
+    const onExcludePinnedChange = vi.fn()
     const header = findChatHeader()!
     const menu = ensureBulkMenu(header, {
       onSelectRecent,
       onRecentLimitChange,
+      onExcludePinnedChange,
       onDeselectPinned: vi.fn(),
       onDeselectAll: vi.fn(),
       onDelete: vi.fn(),
@@ -136,6 +141,7 @@ describe('bulk delete DOM helpers', () => {
     const limitOption = menu.querySelector<HTMLButtonElement>('button[data-action="recent-limit-option"][data-limit="30"]')!
     const selectRecent = menu.querySelector<HTMLButtonElement>('button[data-action="select-recent"]')!
     const panel = menu.querySelector<HTMLElement>('[data-gpk-bulk-delete-limit-panel]')!
+    const excludePinned = menu.querySelector<HTMLInputElement>('input[data-action="exclude-pinned"]')!
 
     expect(menu.querySelector('input[data-action="recent-limit"]')).toBeNull()
     change.click()
@@ -143,8 +149,11 @@ describe('bulk delete DOM helpers', () => {
     limitOption.click()
 
     expect(onRecentLimitChange).toHaveBeenCalledWith(30)
-    expect(panel.hidden).toBe(true)
+    expect(panel.hidden).toBe(false)
     expect(onSelectRecent).not.toHaveBeenCalled()
+
+    excludePinned.click()
+    expect(onExcludePinnedChange).toHaveBeenCalledWith(true)
 
     selectRecent.click()
 
@@ -178,6 +187,26 @@ describe('bulk delete DOM helpers', () => {
     await __bulkDeleteTestApi.selectRecent()
 
     expect(document.querySelectorAll('.gpk-bulk-delete-checkbox:checked')).toHaveLength(2)
+  })
+
+  it('selects the requested number of unpinned chats when configured', async () => {
+    renderSidenav(3)
+    const rows = getChatRows()
+    rows[0].link.querySelector('.trailing-content')?.insertAdjacentHTML('beforeend', `
+      <mat-icon data-mat-icon-name="push_pin" fonticon="push_pin"></mat-icon>
+    `)
+
+    __bulkDeleteTestApi.enterBulkDeleteMode()
+    __bulkDeleteTestApi.setRecentLimit(2)
+    __bulkDeleteTestApi.setExcludePinned(true)
+    await __bulkDeleteTestApi.selectRecent()
+
+    const checkboxes = document.querySelectorAll<HTMLInputElement>('.gpk-bulk-delete-checkbox')
+    const selectRecent = document.querySelector<HTMLButtonElement>('button[data-action="select-recent"]')!
+    expect(checkboxes[0].checked).toBe(false)
+    expect(checkboxes[1].checked).toBe(true)
+    expect(checkboxes[2].checked).toBe(true)
+    expect(selectRecent.textContent).toBe('Select 2 unpinned')
   })
 
   it('clears selected chats from the menu without exiting bulk delete mode', () => {

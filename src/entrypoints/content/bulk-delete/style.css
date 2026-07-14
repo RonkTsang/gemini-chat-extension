@@ -54,20 +54,26 @@
 }
 
 [data-gpk-bulk-delete-limit-panel] {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
-  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px;
   border-radius: 10px;
   background: var(--mat-sys-surface-container-high, rgba(128, 128, 128, 0.16));
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
+}
+
+[data-gpk-bulk-delete-limit-options] {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
 }
 
 [data-gpk-bulk-delete-limit-panel][hidden] {
   display: none;
 }
 
-[data-gpk-bulk-delete-menu] [data-gpk-bulk-delete-limit-panel] button {
+[data-gpk-bulk-delete-menu] [data-gpk-bulk-delete-limit-options] button {
   width: auto;
   min-width: 0;
   padding: 0;
@@ -76,9 +82,33 @@
   font-size: 12px;
 }
 
-[data-gpk-bulk-delete-menu] [data-gpk-bulk-delete-limit-panel] button[aria-checked="true"] {
+[data-gpk-bulk-delete-menu] [data-gpk-bulk-delete-limit-options] button[aria-checked="true"] {
   background: var(--mat-button-filled-container-color, var(--mat-sys-primary, currentColor));
   color: var(--mat-button-filled-label-text-color, var(--mat-sys-on-primary, white));
+}
+
+[data-gpk-bulk-delete-exclude-pinned] {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 28px;
+  padding: 5px 4px 0;
+  border-top: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+  color: var(--mat-sys-on-surface, currentColor);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+[data-gpk-bulk-delete-exclude-pinned] input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--mat-sys-primary, currentColor);
+  cursor: inherit;
+}
+
+[data-gpk-bulk-delete-exclude-pinned] input:disabled {
+  cursor: default;
 }
 
 [data-gpk-bulk-delete-action-row] {

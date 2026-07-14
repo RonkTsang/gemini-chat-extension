@@ -32,6 +32,7 @@ let loading = false
 let deleting = false
 let selectedKeys = new Set<string>()
 let recentLimit = 50
+let excludePinned = false
 let abortController: AbortController | null = null
 let deleteProgressOverlay: DeleteProgressOverlay | null = null
 let stickyActionBar: StickyActionBar | null = null
@@ -78,6 +79,7 @@ function updateMenu(): void {
     ? ensureBulkMenu(header, {
       onSelectRecent: () => void selectRecent(),
       onRecentLimitChange: setRecentLimit,
+      onExcludePinnedChange: setExcludePinned,
       onDeselectPinned: deselectPinned,
       onDeselectAll: clearSelection,
       onDelete: () => void deleteSelected(),
@@ -89,6 +91,7 @@ function updateMenu(): void {
       loading,
       deleting,
       recentLimit,
+      excludePinned,
       selectedPinnedCount: getSelectedPinnedKeys().size,
     })
   }
@@ -145,6 +148,7 @@ function handleMutations(mutations: MutationRecord[]): void {
 function enterBulkDeleteMode(): void {
   active = true
   selectedKeys = new Set()
+  excludePinned = false
   abortController = new AbortController()
   stickyActionBar ??= createStickyActionBar({
     onDeselectAll: clearSelection,
@@ -161,6 +165,7 @@ function exitBulkDeleteMode(): void {
   deleting = false
   selectedKeys = new Set()
   recentLimit = 50
+  excludePinned = false
   abortController?.abort()
   abortController = null
   deleteProgressOverlay?.destroy()
@@ -187,6 +192,7 @@ async function selectRecent(): Promise<void> {
       selectedKeys,
       handleCheckboxChange,
       abortController.signal,
+      chatRow => !excludePinned || !isPinnedChatRow(chatRow.row),
     )
     if (!result.completed && result.reason !== 'scroller-not-found') {
       showLoadFailedWarning()
@@ -195,6 +201,7 @@ async function selectRecent(): Promise<void> {
     const rows = reconcileChatCheckboxes(selectedKeys, handleCheckboxChange)
     selectedKeys = new Set(
       rows
+        .filter(chatRow => !excludePinned || !isPinnedChatRow(chatRow.row))
         .slice(0, recentLimit)
         .map(row => row.key),
     )
@@ -217,6 +224,15 @@ function setRecentLimit(limit: number): void {
   }
 
   recentLimit = nextLimit
+  updateMenu()
+}
+
+function setExcludePinned(nextExcludePinned: boolean): void {
+  if (!active || loading || deleting || nextExcludePinned === excludePinned) {
+    return
+  }
+
+  excludePinned = nextExcludePinned
   updateMenu()
 }
 
@@ -338,6 +354,7 @@ export const __bulkDeleteTestApi = {
   exitBulkDeleteMode,
   selectRecent,
   setRecentLimit,
+  setExcludePinned,
   deselectPinned,
   deleteSelected,
 }

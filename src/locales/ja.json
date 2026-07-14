@@ -51,7 +51,9 @@
   "bulkDelete": {
     "entryLabel": "一括削除",
     "selectRecent": "最近の$1件を選択",
+    "selectUnpinned": "最近のピン留めされていない$1件を選択",
     "change": "変更",
+    "excludePinned": "ピン留めを除外",
     "deselectPinned": "ピン留めを選択解除",
     "deselectAll": "すべて選択解除",
     "deleteSelected": "削除（$1）",

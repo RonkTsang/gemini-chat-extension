@@ -51,7 +51,9 @@
   "bulkDelete": {
     "entryLabel": "Suppression groupée",
     "selectRecent": "Sélectionner les $1 dernières",
+    "selectUnpinned": "Sélectionner les $1 dernières non épinglées",
     "change": "Modifier",
+    "excludePinned": "Exclure les épinglées",
     "deselectPinned": "Désélectionner les épinglées",
     "deselectAll": "Tout désélectionner",
     "deleteSelected": "Supprimer ($1)",
