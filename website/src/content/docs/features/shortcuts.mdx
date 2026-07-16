@@ -1,0 +1,87 @@
+---
+title: Gemini Keyboard Shortcuts
+description: Customize Gemini keyboard shortcuts for chats, navigation, prompt tools, and uploads with Gemini Power Kit.
+head:
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: |
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "Gemini Keyboard Shortcuts",
+        "description": "Customize Gemini keyboard shortcuts for chats, navigation, prompt tools, and uploads with Gemini Power Kit.",
+        "url": "https://gpk.ronktsang.com/features/shortcuts/",
+        "inLanguage": "en",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Gemini Power Kit",
+          "url": "https://gpk.ronktsang.com/"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "Gemini Power Kit",
+          "applicationCategory": "BrowserApplication",
+          "operatingSystem": "Chrome, Chromium-based browsers"
+        }
+      }
+---
+
+import { Image } from 'astro:assets';
+import shortcutSettingsImg from '../../../assets/features/Shortcut/shortcut_setting.png';
+
+<Image
+  src={shortcutSettingsImg}
+  alt="Gemini Power Kit Shortcut settings grouped by Gemini Power Kit, App, and Prompt actions"
+  class="feature-image"
+/>
+
+## Overview
+
+Keyboard Shortcuts keeps frequent Gemini actions close to hand. Assign combinations for navigation, starting a new or temporary chat, focusing the prompt, opening tools, or uploading files without leaving the Gemini page.
+
+Shortcuts work only on `gemini.google.com`. They are page shortcuts, not browser-wide extension commands.
+
+## Set Up a Shortcut
+
+1. Open **Gemini Power Kit** in the Gemini sidebar.
+2. Choose **Shortcut** under **Tools**.
+3. Hover a command and select the edit icon.
+4. Press a modifier combination, then move focus away to save it.
+5. Use the delete icon to leave a command unassigned.
+
+The panel groups actions by **Gemini Power Kit**, **App**, and **Prompt**, so prompt-area actions such as model switching, file upload, and Gemini tools stay together.
+
+## Everyday Uses
+
+You do not need to assign every command. Start with the repeated actions that interrupt your flow:
+
+- Open a new or temporary chat while comparing answers.
+- Focus the prompt after reading a longer response.
+- Assign a shortcut to **Upload Files** when you often bring documents or data into Gemini.
+- Add your own combination for **Create Image**, **Canvas**, or **Deep Research** when those tools are part of your workflow.
+
+Changes apply immediately. A shortcut you record in the settings panel is available without refreshing Gemini.
+
+## Shortcut Recommendations
+
+Choose combinations that include `Alt`, `Ctrl`, `Command`, or `Shift`. Single-letter shortcuts are intentionally blocked so normal typing stays uninterrupted.
+
+Avoid browser and system combinations that are already familiar:
+
+- **macOS:** avoid `⌘ Q`, `⌘ W`, `⌘ L`, `⌘ R`, `⌘ Tab`, `⌘ Space`, and `⌘ H`.
+- **Windows:** avoid `Ctrl + W`, `Ctrl + L`, `Ctrl + R`, `Ctrl + T`, `Ctrl + U`, and `Ctrl + Shift + I`.
+
+`⌘ U` is the default Upload Files shortcut on macOS. Its Windows equivalent is `Ctrl + U`, which Chrome commonly reserves for viewing page source. Choose a different Windows binding for Upload Files if Chrome opens page source instead.
+
+## Notes
+
+- Gemini may hide some tools based on your account, selected model, or current page state. A shortcut for an unavailable tool does nothing until Gemini makes that tool available.
+- Recording pauses page shortcuts, so the combination you are assigning does not trigger another command at the same time.
+- macOS displays `⌘`, `⌥`, and `⇧`; Windows displays names such as `Ctrl`, `Alt`, and `Shift`.
+
+## Related Features
+
+- [Quick Follow-up](/features/quick-follow-up/)
+- [Chain Prompt](/features/chain-prompt/)
+- [Open in New Tab](/features/stuff-open-new-tab/)

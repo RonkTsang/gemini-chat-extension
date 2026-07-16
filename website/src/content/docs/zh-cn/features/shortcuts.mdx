@@ -1,0 +1,87 @@
+---
+title: Gemini 快捷键设置
+description: 使用 Gemini Power Kit 为 Gemini 的新聊天、导航、提示词工具和文件上传设置自定义快捷键。
+head:
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: |
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "Gemini 快捷键设置",
+        "description": "使用 Gemini Power Kit 为 Gemini 的新聊天、导航、提示词工具和文件上传设置自定义快捷键。",
+        "url": "https://gpk.ronktsang.com/zh-cn/features/shortcuts/",
+        "inLanguage": "zh-CN",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Gemini Power Kit",
+          "url": "https://gpk.ronktsang.com/"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "Gemini Power Kit",
+          "applicationCategory": "BrowserApplication",
+          "operatingSystem": "Chrome, Chromium-based browsers"
+        }
+      }
+---
+
+import { Image } from 'astro:assets';
+import shortcutSettingsImg from '../../../../assets/features/Shortcut/shortcut_setting.png';
+
+<Image
+  src={shortcutSettingsImg}
+  alt="Gemini Power Kit 快捷键设置页面，按 Gemini Power Kit、应用和提示词操作分组"
+  class="feature-image"
+/>
+
+## 功能概览
+
+快捷键让常用 Gemini 操作无需反复点击。你可以为导航、新建聊天、临时聊天、聚焦提示词、打开工具或上传文件分配自己的组合键，并始终在 Gemini 页面内完成操作。
+
+快捷键仅在 `gemini.google.com` 生效，不是浏览器全局快捷键。
+
+## 如何设置
+
+1. 在 Gemini 侧边栏打开 **Gemini Power Kit**。
+2. 在 **Tools** 中进入 **Shortcut**。
+3. 将鼠标移到某个命令，点击编辑图标。
+4. 按下包含修饰键的组合键，输入框失焦后自动保存。
+5. 点击删除图标即可清空该命令的设定。
+
+页面会按 **Gemini Power Kit**、**应用** 和 **提示词** 分组。模型切换、文件上传和 Gemini 工具都在提示词分组中，方便围绕输入流程配置。
+
+## 从常用操作开始
+
+不需要为每个命令都设置快捷键。建议先选择最常打断流程的操作：
+
+- 在对照不同回答时快速新建或打开临时聊天。
+- 阅读长回复后，立即聚焦提示词输入框。
+- 经常向 Gemini 导入文档或数据时，为 **上传文件** 设置组合键。
+- 常用图片生成、Canvas 或 Deep Research 时，为对应工具补充自己的组合键。
+
+保存后无需刷新 Gemini，新的快捷键会立即生效。
+
+## 快捷键建议
+
+请使用包含 `Alt`、`Ctrl`、`Command` 或 `Shift` 的组合键。单字母快捷键会被限制，以免影响正常输入。
+
+避免使用浏览器和系统已经占用的组合：
+
+- **macOS：** `⌘ Q`、`⌘ W`、`⌘ L`、`⌘ R`、`⌘ Tab`、`⌘ Space`、`⌘ H`。
+- **Windows：** `Ctrl + W`、`Ctrl + L`、`Ctrl + R`、`Ctrl + T`、`Ctrl + U`、`Ctrl + Shift + I`。
+
+macOS 的 **上传文件** 默认是 `⌘ U`；Windows 对应 `Ctrl + U`，但 Chrome 通常会把它用于查看网页源代码。若出现这种情况，请为 Windows 的上传文件改用其他组合键。
+
+## 注意事项
+
+- 部分 Gemini 工具是否出现取决于账号、当前模型和页面状态。工具不可用时，对应快捷键不会执行操作。
+- 录制快捷键时，页面原有快捷键会暂停，避免正在录制的组合键同时触发其他命令。
+- macOS 使用 `⌘`、`⌥`、`⇧` 展示按键；Windows 使用 `Ctrl`、`Alt`、`Shift` 等文字。
+
+## 相关功能
+
+- [快速跟进](/zh-cn/features/quick-follow-up/)
+- [链式提示词](/zh-cn/features/chain-prompt/)
+- [新标签页打开](/zh-cn/features/stuff-open-new-tab/)

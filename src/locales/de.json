@@ -397,6 +397,50 @@
             "title": "Über"
           }
         }
+      },
+      "shortcut": {
+        "title": "Tastenkürzel",
+        "views": {
+          "index": {
+            "title": "Tastenkürzel"
+          }
+        }
+      }
+    },
+    "shortcut": {
+      "columns": {
+        "command": "Befehl",
+        "shortcut": "unassigned"
+      },
+      "unassigned": "Nicht festgelegt",
+      "editShortcut": "Tastenkürzel bearbeiten",
+      "clearShortcut": "Tastenkürzel löschen",
+      "recording": "Wird aufgezeichnet...",
+      "categories": {
+        "geminiPowerKit": "Gemini Power Kit",
+        "app": "App",
+        "prompt": "Prompt"
+      },
+      "actions": {
+        "openSettings": "Gemini Power Kit-Einstellungen öffnen",
+        "openNewChat": "Neuen Chat öffnen",
+        "openTemporaryChat": "Temporären Chat öffnen",
+        "openLibrary": "Bibliothek öffnen",
+        "openGems": "Gems öffnen",
+        "focusInput": "Eingabefeld fokussieren",
+        "toggleSidebar": "Seitenleiste umschalten",
+        "cycleModel": "Modell wechseln",
+        "createImage": "Bild erstellen",
+        "createMusic": "Musik erstellen",
+        "openCanvas": "Canvas öffnen",
+        "openDeepResearch": "Deep Research öffnen",
+        "uploadFiles": "Dateien hochladen"
+      },
+      "errors": {
+        "missingModifier": "Alt, Strg, Meta oder Umschalt einfügen",
+        "singleLetter": "Einzelbuchstaben werden nicht unterstützt",
+        "specialKey": "Diese Taste kann nicht als Tastenkürzel verwendet werden",
+        "conflict": "Dieses Tastenkürzel wird bereits verwendet"
       }
     }
   },
@@ -466,6 +510,11 @@
       "title": "Wissen, wenn Gemini fertig ist",
       "description": "Arbeite weiter, während Gemini antwortet. Sobald die Antwort bereit ist, erinnert dich eine Desktop-Benachrichtigung.",
       "action": "Einrichten"
+    },
+    "shortcuts": {
+      "title": "Mit Shortcuts schneller durch Gemini",
+      "description": "Lege Shortcuts für Chats, Navigation, Prompt-Tools und Uploads fest, damit du deine häufigsten Gemini-Aktionen mit einem Tastendruck erreichst.",
+      "action": "Shortcuts festlegen"
     }
   }
 }
