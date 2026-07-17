@@ -24,6 +24,7 @@ This website documents the public product, installation flow, feature behavior, 
 - [Open in New Tab](https://gpk.ronktsang.com/features/stuff-open-new-tab/): Open Gemini Library items in new tabs without interrupting the current page.
 - [Tab Title Sync](https://gpk.ronktsang.com/features/tab-title-sync/): Sync browser tab titles with Gemini conversation titles.
 - [Gemini Reply Completion Notifications](https://gpk.ronktsang.com/features/notifications/): Receive system notifications when Gemini finishes replying.
+- [Gemini Bulk Delete Chats](https://gpk.ronktsang.com/features/bulk-delete/): Select multiple recent Gemini chats, exclude pinned conversations, and delete an intentional batch at once.
 - [Theme Customizer](https://gpk.ronktsang.com/features/theme/): Customize Gemini appearance with themes, colors, wallpaper, and readability controls.
 
 ## Support And Policy

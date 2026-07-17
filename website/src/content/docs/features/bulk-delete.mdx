@@ -1,0 +1,156 @@
+---
+title: Gemini Bulk Delete Chats
+description: "Delete multiple Google Gemini chats at once with Gemini Power Kit. Select recent chats, protect pinned conversations, review the count, and clean up your Gemini history faster."
+head:
+  - tag: meta
+    attrs:
+      property: og:image
+      content: https://gpk.ronktsang.com/og/bulk-delete.jpeg
+  - tag: meta
+    attrs:
+      property: og:image:alt
+      content: Gemini Power Kit Bulk Delete controls in the Google Gemini chat sidebar
+  - tag: meta
+    attrs:
+      name: twitter:image
+      content: https://gpk.ronktsang.com/og/bulk-delete.jpeg
+  - tag: meta
+    attrs:
+      name: twitter:image:alt
+      content: Gemini Power Kit Bulk Delete controls in the Google Gemini chat sidebar
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: |
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "Gemini Bulk Delete Chats",
+        "description": "Delete multiple Google Gemini chats at once with Gemini Power Kit. Select recent chats, protect pinned conversations, review the count, and clean up your Gemini history faster.",
+        "url": "https://gpk.ronktsang.com/features/bulk-delete/",
+        "image": "https://gpk.ronktsang.com/og/bulk-delete.jpeg",
+        "inLanguage": "en",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Gemini Power Kit",
+          "url": "https://gpk.ronktsang.com/"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "Gemini Power Kit",
+          "applicationCategory": "BrowserApplication",
+          "operatingSystem": "Chrome, Chromium-based browsers"
+        }
+      }
+---
+
+import { Image } from 'astro:assets';
+import bulkDeleteEntryImg from '../../../assets/features/bulk-delete/entry.jpeg';
+import bulkDeleteSelectionImg from '../../../assets/features/bulk-delete/selection-panel.jpeg';
+
+## Clean Up Gemini Chats Without Repeating the Same Delete Flow
+
+**Bulk Delete** adds multi-select controls to the Google Gemini chat sidebar, so you can remove several unwanted conversations in one deliberate pass instead of opening each chat menu separately. It is designed for cleaning up drafts, one-off research, test prompts, or a long list of finished conversations while keeping the chats you still need easy to find.
+
+The feature works on `gemini.google.com` in the **Recents** section. It does not remove anything until you select chats, press **Delete**, and confirm Gemini Power Kit's warning.
+
+## Where to Find Bulk Delete
+
+In the Gemini sidebar, find **Recents** and select the small trash icon beside its heading. Gemini Power Kit opens Bulk Delete mode directly in the sidebar and adds a checkbox to each available chat.
+
+<Image
+  src={bulkDeleteEntryImg}
+  alt="Bulk Delete entry: the trash icon beside Recents in the Google Gemini chat sidebar"
+  class="feature-image feature-image-full"
+/>
+
+*Bulk Delete entry — select the trash icon beside **Recents**.*
+
+Press the same icon again, or press <kbd>Esc</kbd>, to leave Bulk Delete mode. Leaving the mode only clears the current selection; it does not delete a chat.
+
+## Bulk Delete Panel and Controls
+
+<Image
+  src={bulkDeleteSelectionImg}
+  alt="Bulk Delete panel: Select recent, count choices, Exclude pinned, checkboxes, and Delete controls in Google Gemini"
+  class="feature-image feature-image-full"
+/>
+
+*Bulk Delete panel — choose a recent batch, protect pinned chats, review checkboxes, then delete the selected conversations.*
+
+## What Each Control Does
+
+<div class="settings-card-grid">
+  <article class="settings-card">
+    <div class="settings-label">Select individual chats</div>
+    <p class="settings-detail">Use the checkbox beside any loaded Gemini conversation to build a precise deletion list. The Delete button always shows the number currently selected.</p>
+    <p class="settings-when">Best for removing a few experiments, duplicates, or chats you have reviewed one by one.</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">Select recent chats</div>
+    <p class="settings-detail">Select the newest conversations in the Recents list in one action. Choose a batch size of 10, 20, 30, or 50 before selecting.</p>
+    <p class="settings-when">Use it after a focused work session, prompt-testing run, or temporary research task has created many chats.</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">Exclude pinned</div>
+    <p class="settings-detail">Turn on Exclude pinned before selecting recent chats to use <strong>Select unpinned</strong>. Pinned conversations are then left out of that batch selection.</p>
+    <p class="settings-when">Recommended when pinned chats are your ongoing projects, references, or reusable prompt workspaces.</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">Deselect pinned</div>
+    <p class="settings-detail">If a pinned chat is already part of your selection, remove all selected pinned chats from the current deletion list with one click.</p>
+    <p class="settings-when">Use this as a quick safety check before deleting a mixed selection.</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">Deselect all</div>
+    <p class="settings-detail">Clear every checkbox while staying in Bulk Delete mode. You can then make a smaller, more intentional selection without reopening the tool.</p>
+    <p class="settings-when">Use it when the current batch is broader than you intended.</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">Delete with confirmation and progress</div>
+    <p class="settings-detail">The Delete button is disabled until chats are selected and shows the selected count. Confirm the final prompt to begin; larger batches show progress while the chats are removed.</p>
+    <p class="settings-when">Review the count and any pinned chats first. Deleted Gemini conversations cannot be restored through Bulk Delete.</p>
+  </article>
+</div>
+
+## How to Delete Multiple Gemini Chats
+
+1. Open [gemini.google.com](https://gemini.google.com).
+2. In the Gemini sidebar, expand **Recents** if needed and select the **Bulk Delete** trash icon.
+3. Select chats individually, or choose **Select recent**.
+4. For a recent batch, select 10, 20, 30, or 50 under **Change**. Turn on **Exclude pinned** first when you want to preserve pinned chats.
+5. Check the number on **Delete**. Use **Deselect pinned** or **Deselect all** if you need to adjust the batch.
+6. Select **Delete** and confirm the irreversible action.
+7. Wait for the progress indicator to finish. The tool returns to Bulk Delete mode with no chats selected, ready for another review.
+
+## When Bulk Delete Is Useful
+
+- **After prompt experiments:** remove throwaway conversations created while comparing prompts, models, or outputs.
+- **After research sprints:** clear finished searches and short investigations without disturbing your pinned reference chats.
+- **Before sharing your screen:** reduce sidebar clutter and remove private, irrelevant, or duplicate chat titles from view.
+- **For regular history maintenance:** select the newest 10–50 chats, exclude pinned work, and keep Recents focused on active conversations.
+
+## Turn Bulk Delete On or Off
+
+Bulk Delete is enabled by default. To change that setting:
+
+1. Open [gemini.google.com](https://gemini.google.com).
+2. In Gemini's left navigation, select **Gemini Power Kit** above **Settings & help** to open the extension settings panel.
+3. Under **Tools**, open **Enhancements**.
+4. Turn **Bulk Delete** on to show the Recents trash-icon entry, or off to remove the entry and its sidebar controls.
+
+Turning the setting off does not delete Gemini chats. It only disables Gemini Power Kit's Bulk Delete interface. Turn it back on in the same place whenever you need it again.
+
+## Important Notes
+
+- Bulk Delete only acts on chats you explicitly select in the current session.
+- A confirmation is required before deletion starts.
+- Use **Exclude pinned** before batch selection when you want to protect pinned conversations automatically.
+- If Gemini cannot load all requested recent chats, select again or reload the Gemini page before deleting.
+- Gemini's chat interface can change over time; keep Gemini Power Kit updated for the latest compatibility fixes.
+
+## Related Features
+
+- [Chat Outline](/features/chat-outline/)
+- [Tab Title Sync](/features/tab-title-sync/)
+- [Gemini Keyboard Shortcuts](/features/shortcuts/)

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Website Feature Docs"
+  short_description: "Create clear, search-ready Gemini feature pages"
+  default_prompt: "Use $gemini-power-kit-website-feature-docs to create a complete website page for a Gemini Power Kit feature."

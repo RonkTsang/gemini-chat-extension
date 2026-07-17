@@ -246,6 +246,11 @@ header.header {
   display: block;
 }
 
+.feature-image-full {
+  aspect-ratio: auto;
+  object-fit: contain;
+}
+
 .release-image {
   display: block;
   width: 100%;
