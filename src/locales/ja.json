@@ -50,6 +50,11 @@
   "responseNotificationMessage": "返信の準備ができました。",
   "bulkDelete": {
     "entryLabel": "一括削除",
+    "entryHint": {
+      "title": "一括削除",
+      "description": "複数のチャットを選んで、不要な会話をまとめて削除できます。",
+      "dismiss": "閉じる"
+    },
     "selectRecent": "最近の$1件を選択",
     "selectUnpinned": "最近のピン留めされていない$1件を選択",
     "change": "変更",
@@ -500,21 +505,16 @@
   },
   "whatsnew": {
     "title": "新機能",
-    "releaseNotes": "最新情報",
-    "backgroundPosition": {
-      "title": "背景をちょうどよく配置",
-      "description": "Theme パネルから壁紙の位置を細かく調整して、見せたい部分をきれいに収められます。",
-      "action": "テーマを開く"
-    },
-    "notification": {
-      "title": "Geminiの完了をすぐ受け取る",
-      "description": "Geminiに任せて別の作業へ。返信ができたらデスクトップ通知でお知らせし、すぐチャットに戻れます。",
-      "action": "通知を設定"
-    },
+    "releaseNotes": "リリースノート",
     "shortcuts": {
       "title": "Geminiをもっとすばやく操作",
       "description": "チャット、ナビゲーション、プロンプトツール、アップロードにショートカットを設定して、よく使うGeminiの操作を1キーで呼び出せます。",
       "action": "ショートカットを設定"
+    },
+    "bulkDelete": {
+      "title": "不要なチャットをすばやく整理",
+      "description": "複数の Gemini チャットを選び、選択を調整して、不要な会話をまとめて削除できます。",
+      "action": "一括削除"
     }
   }
 }

@@ -10,6 +10,11 @@
   align-items: center;
 }
 
+.gpk-bulk-delete-entry-anchor {
+  position: relative;
+  display: inline-flex;
+}
+
 .gpk-bulk-delete-entry-button {
   width: 32px;
   height: 32px;
@@ -25,6 +30,98 @@
 
 .gpk-bulk-delete-entry-button:hover {
   background: rgba(128, 128, 128, 0.12);
+}
+
+[data-gpk-bulk-delete-entry-hint] {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 1000;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 24px;
+  gap: 8px;
+  width: min(264px, calc(100vw - 24px));
+  box-sizing: border-box;
+  padding: 10px 8px 10px 12px;
+  border: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+  border-left: 3px solid var(--gem-sys-color--primary, var(--mat-sys-primary, #8ab4f8));
+  border-radius: 12px;
+  background: var(
+    --lumi-sys-color--surface-bright,
+    var(--gem-sys-color--surface-container, var(--mat-sys-surface-container, #ffffff))
+  );
+  color: var(--gem-sys-color--on-surface, var(--mat-sys-on-surface, #1b1b1d));
+  box-shadow: 0 12px 24px -16px rgba(0, 0, 0, 0.42);
+  font-family: "Google Sans Flex", "Google Sans", system-ui, sans-serif;
+  animation: gpk-bulk-delete-entry-hint-in 160ms cubic-bezier(.2, .8, .2, 1) both;
+}
+
+[data-gpk-bulk-delete-entry-hint]::before {
+  position: absolute;
+  top: -6px;
+  right: calc((32px - 10px) / 2);
+  width: 10px;
+  height: 10px;
+  border-top: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+  border-left: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+  background: inherit;
+  content: "";
+  transform: rotate(45deg);
+}
+
+[data-gpk-bulk-delete-entry-hint-copy] {
+  min-width: 0;
+}
+
+[data-gpk-bulk-delete-entry-hint-title] {
+  color: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 18px;
+}
+
+[data-gpk-bulk-delete-entry-hint-description] {
+  margin-top: 2px;
+  color: color-mix(in srgb, currentColor 72%, transparent);
+  font-size: 12px;
+  line-height: 17px;
+}
+
+[data-gpk-bulk-delete-entry-hint-close] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: color-mix(in srgb, currentColor 58%, transparent);
+  cursor: pointer;
+}
+
+[data-gpk-bulk-delete-entry-hint-close]:hover {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  color: inherit;
+}
+
+[data-gpk-bulk-delete-entry-hint-close]:focus-visible {
+  outline: 2px solid var(--gem-sys-color--primary, var(--mat-sys-primary, #8ab4f8));
+  outline-offset: 2px;
+}
+
+@keyframes gpk-bulk-delete-entry-hint-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 [data-gpk-bulk-delete-menu] {

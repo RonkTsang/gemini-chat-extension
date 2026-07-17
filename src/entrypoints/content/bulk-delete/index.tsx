@@ -1,6 +1,6 @@
 import { createRoot, type Root } from 'react-dom/client'
 import { t } from '@/utils/i18n'
-import { BulkDeleteEntry } from './BulkDeleteEntry'
+import { BulkDeleteEntryHint } from './BulkDeleteEntryHint'
 import {
   cleanupChatCheckboxes,
   ensureBulkMenu,
@@ -51,7 +51,7 @@ function renderEntry(): void {
   }
 
   entryRoot?.render(
-    <BulkDeleteEntry
+    <BulkDeleteEntryHint
       active={active}
       onToggle={() => {
         if (active) {

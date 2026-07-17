@@ -50,6 +50,11 @@
   "responseNotificationMessage": "您的回覆已準備好。",
   "bulkDelete": {
     "entryLabel": "批次刪除",
+    "entryHint": {
+      "title": "批次刪除",
+      "description": "一次勾選多則對話，更快清理不需要的紀錄。",
+      "dismiss": "關閉"
+    },
     "selectRecent": "選取最近 $1 則",
     "selectUnpinned": "選取最近 $1 則未釘選聊天",
     "change": "變更",
@@ -500,21 +505,16 @@
   },
   "whatsnew": {
     "title": "更新內容",
-    "releaseNotes": "最新動態",
-    "backgroundPosition": {
-      "title": "背景位置更順手",
-      "description": "在 Theme 中微調桌布位置，讓畫面重點停在最合適的位置。",
-      "action": "打開主題"
-    },
-    "notification": {
-      "title": "Gemini 完成時提醒你",
-      "description": "切到其他分頁、視窗或應用程式後，Gemini 完成回覆時會傳送桌面通知，點一下即可回到對話。",
-      "action": "設定通知"
-    },
+    "releaseNotes": "更新說明",
     "shortcuts": {
       "title": "更快切換 Gemini 操作",
       "description": "為聊天、導覽、提示詞工具和上傳設定快捷鍵，讓最常用的 Gemini 操作一鍵就能到位。",
       "action": "設定快捷鍵"
+    },
+    "bulkDelete": {
+      "title": "更快清理無用對話",
+      "description": "勾選多個 Gemini 對話，調整選取後一次刪除無用記錄，清理歷史更有效率。",
+      "action": "批量刪除"
     }
   }
 }

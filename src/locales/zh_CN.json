@@ -50,6 +50,11 @@
   "responseNotificationMessage": "你的回复已准备好。",
   "bulkDelete": {
     "entryLabel": "批量删除",
+    "entryHint": {
+      "title": "批量删除",
+      "description": "一次勾选多条对话，更快清理无用记录。",
+      "dismiss": "关闭"
+    },
     "selectRecent": "选择最近 $1 个",
     "selectUnpinned": "选择最近 $1 个未置顶聊天",
     "change": "更改",
@@ -500,21 +505,16 @@
   },
   "whatsnew": {
     "title": "更新内容",
-    "releaseNotes": "最新动态",
+    "releaseNotes": "更新说明",
     "shortcuts": {
       "title": "常用操作一键直达",
       "description": "为新聊天、导航、提示词工具和上传文件设置快捷键，让常用 Gemini 操作始终一键可达。",
       "action": "设置快捷键"
     },
-    "backgroundPosition": {
-      "title": "背景位置更顺手",
-      "description": "在 Theme 中微调壁纸位置，让画面重点停在最合适的位置。",
-      "action": "打开主题"
-    },
-    "notification": {
-      "title": "Gemini 回复好时提醒你",
-      "description": "切到其他标签页、窗口或应用后，Gemini 完成回复时会发送桌面通知，点击即可回到对话。",
-      "action": "设置通知"
+    "bulkDelete": {
+      "title": "更快清理无用对话",
+      "description": "勾选多条 Gemini 对话，调整选择后一次性删除无用记录，清理历史更高效。",
+      "action": "批量删除"
     }
   }
 }

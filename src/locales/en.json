@@ -50,6 +50,11 @@
   "responseNotificationMessage": "Your response is ready.",
   "bulkDelete": {
     "entryLabel": "Bulk delete",
+    "entryHint": {
+      "title": "Bulk Delete",
+      "description": "Select several chats, then clear unwanted conversations in one go.",
+      "dismiss": "Dismiss"
+    },
     "selectRecent": "Select $1 recent",
     "selectUnpinned": "Select $1 unpinned",
     "change": "Change",
@@ -496,21 +501,16 @@
   },
   "whatsnew": {
     "title": "What's New",
-    "releaseNotes": "What's New",
+    "releaseNotes": "Release notes",
     "shortcuts": {
       "title": "Move through Gemini faster",
       "description": "Set shortcuts for chats, navigation, prompt tools, and uploads, then keep your most frequent Gemini actions one key press away.",
       "action": "Set shortcuts"
     },
-    "backgroundPosition": {
-      "title": "Place backgrounds just right",
-      "description": "Fine-tune wallpaper placement from the Theme panel so your image stays framed where it matters.",
-      "action": "Open Theme"
-    },
-    "notification": {
-      "title": "Know when Gemini is ready",
-      "description": "Step away while Gemini works. Get a desktop notification when the reply is ready, then click back to the chat.",
-      "action": "Set up notifications"
+    "bulkDelete": {
+      "title": "Clear unwanted chats faster",
+      "description": "Select multiple Gemini chats, adjust your selection, and delete unwanted conversations together in one focused flow.",
+      "action": "Use Bulk Delete"
     }
   }
 }

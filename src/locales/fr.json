@@ -50,6 +50,11 @@
   "responseNotificationMessage": "Votre réponse est prête.",
   "bulkDelete": {
     "entryLabel": "Suppression groupée",
+    "entryHint": {
+      "title": "Suppression groupée",
+      "description": "Sélectionnez plusieurs chats, puis supprimez d'un coup les conversations indésirables.",
+      "dismiss": "Fermer"
+    },
     "selectRecent": "Sélectionner les $1 dernières",
     "selectUnpinned": "Sélectionner les $1 dernières non épinglées",
     "change": "Modifier",
@@ -500,21 +505,16 @@
   },
   "whatsnew": {
     "title": "Quoi de neuf",
-    "releaseNotes": "Nouveautés",
-    "backgroundPosition": {
-      "title": "Ajustez le fond au mieux",
-      "description": "Ajustez l’image de fond dans le panneau Thème pour garder l’essentiel bien cadré.",
-      "action": "Ouvrir le thème"
-    },
-    "notification": {
-      "title": "Savoir quand Gemini est prêt",
-      "description": "Faites autre chose pendant que Gemini répond. Une notification de bureau vous prévient dès que la réponse est prête.",
-      "action": "Configurer"
-    },
+    "releaseNotes": "Notes de version",
     "shortcuts": {
       "title": "Naviguez plus vite dans Gemini",
       "description": "Définissez des raccourcis pour les chats, la navigation, les outils de prompt et les envois de fichiers, pour garder vos actions Gemini les plus fréquentes à une seule touche.",
       "action": "Configurer les raccourcis"
+    },
+    "bulkDelete": {
+      "title": "Nettoyez plus vite les chats inutiles",
+      "description": "Sélectionnez plusieurs chats Gemini, ajustez votre sélection, puis supprimez les conversations inutiles en une seule fois.",
+      "action": "Supprimer en lot"
     }
   }
 }

@@ -35,7 +35,6 @@ export function WhatsNewToast({ version, features, onClose }: WhatsNewToastProps
 
   const handleReleaseNotesClick = () => {
     window.open(EXTERNAL_LINKS.RELEASE_NOTES, '_blank', 'noopener,noreferrer')
-    onClose()
   }
 
   const handlePromoActionClick = (action?: ReleaseNotePromoAction) => {
@@ -47,7 +46,6 @@ export function WhatsNewToast({ version, features, onClose }: WhatsNewToastProps
         open: true,
         module: action.params.tab,
       })
-      onClose()
       return
     }
 
@@ -55,7 +53,6 @@ export function WhatsNewToast({ version, features, onClose }: WhatsNewToastProps
       emitSync('theme-floating-panel:open', {
         source: 'whats-new',
       })
-      onClose()
     }
   }
 
@@ -65,13 +62,12 @@ export function WhatsNewToast({ version, features, onClose }: WhatsNewToastProps
         position="fixed"
         bottom="4"
         right="4"
-        zIndex="toast"
+        zIndex="banner"
         maxW="300px"
       >
         <Card.Root
           borderWidth="1px"
           variant="elevated"
-          maxH="280px"
           display="flex"
           flexDirection="column"
         >
