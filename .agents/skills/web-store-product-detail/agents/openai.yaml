@@ -1,0 +1,4 @@
+interface:
+  display_name: "Web Store Product Detail"
+  short_description: "Draft, localize, and validate store details"
+  default_prompt: "Use $web-store-product-detail to update this feature in the Web Store product detail."
