@@ -48,6 +48,32 @@
   "responseNotificationTestMessage": "알림이 정상적으로 작동합니다.",
   "responseNotificationTitle": "Gemini 답변이 완료되었습니다",
   "responseNotificationMessage": "답변이 준비되었습니다.",
+  "bulkDelete": {
+    "entryLabel": "일괄 삭제",
+    "entryHint": {
+      "title": "일괄 삭제",
+      "description": "여러 채팅을 선택해 원치 않는 대화를 한 번에 정리하세요.",
+      "dismiss": "닫기"
+    },
+    "selectRecent": "최근 $1개 선택",
+    "selectUnpinned": "최근 고정되지 않은 $1개 선택",
+    "change": "변경",
+    "excludePinned": "고정된 대화 제외",
+    "deselectPinned": "고정된 대화 선택 해제",
+    "deselectAll": "모두 선택 해제",
+    "deleteSelected": "삭제 ($1)",
+    "deleteIdle": "삭제 (0)",
+    "deleteProgress": "완료 $1 / $2",
+    "deleteProgressComplete": "삭제 완료",
+    "deleteProgressTitle": "채팅 삭제 중",
+    "deleteProgressEscapeHint": "Esc를 눌러 중지하고 종료하세요",
+    "loading": "불러오는 중...",
+    "selectConversation": "대화 선택",
+    "confirmDelete": "선택한 채팅 $1개를 삭제할까요? 이 작업은 되돌릴 수 없습니다.",
+    "loadFailed": "일부 채팅을 불러오지 못했습니다. 다시 선택하거나 Gemini를 새로고침하세요.",
+    "deleteFailed": "삭제 실패",
+    "deleteFailedDescription": "선택한 채팅을 삭제하지 못했습니다."
+  },
   "quickFollow": {
     "more": "더보기",
     "moreAriaLabel": "더 많은 프롬프트 표시"
@@ -92,8 +118,15 @@
         "tooltip": "Gemini에서 선택한 텍스트입니다"
       }
     },
-    "chatOutline": {
-      "enable": "채팅 개요 활성화"
+    "enhancements": {
+      "chatOutline": {
+        "title": "채팅 개요",
+        "description": "긴 대화를 쉽게 탐색할 수 있는 클릭 가능한 개요를 추가합니다."
+      },
+      "bulkDelete": {
+        "title": "일괄 삭제",
+        "description": "여러 채팅을 한 번에 선택하고 삭제합니다."
+      }
     }
   },
   "settingPanel": {
@@ -336,16 +369,12 @@
           }
         }
       },
-      "chatOutline": {
-        "title": "채팅 개요",
+      "enhancements": {
+        "title": "기능 향상",
         "views": {
           "index": {
-            "title": "채팅 개요",
-            "description": "왼쪽에 대화 기록의 빠른 인덱스를 생성합니다. 클릭하여 긴 대화에서 해당 메시지로 이동합니다."
-          },
-          "detail": {
-            "title": "채팅 개요 상세",
-            "description": "채팅 개요의 상세 구성."
+            "title": "기능 향상",
+            "description": "Gemini의 선택적 향상 기능을 관리합니다."
           }
         }
       },
@@ -404,6 +433,8 @@
       },
       "actions": {
         "openSettings": "Gemini Power Kit 설정 열기",
+        "toggleBulkDelete": "일괄 삭제 전환",
+        "toggleBulkDeleteDisabledInfo": "일괄 삭제가 꺼져 있습니다. 설정에서 켠 다음 이 단축키를 사용하세요.",
         "openNewChat": "새 채팅 열기",
         "openTemporaryChat": "임시 채팅 열기",
         "openLibrary": "라이브러리 열기",
@@ -481,21 +512,16 @@
   },
   "whatsnew": {
     "title": "새로운 기능",
-    "releaseNotes": "새로운 소식",
-    "backgroundPosition": {
-      "title": "배경 위치를 딱 맞게",
-      "description": "테마 패널에서 배경 이미지를 미세 조정해 중요한 부분이 잘 보이게 맞출 수 있어요.",
-      "action": "테마 열기"
-    },
-    "notification": {
-      "title": "Gemini가 끝나면 바로 확인",
-      "description": "Gemini가 답하는 동안 다른 일을 해도 괜찮아요. 답변이 준비되면 데스크톱 알림을 받고 채팅으로 돌아갈 수 있습니다.",
-      "action": "알림 설정"
-    },
+    "releaseNotes": "릴리스 노트",
     "shortcuts": {
       "title": "Gemini를 더 빠르게 이동",
       "description": "채팅, 탐색, 프롬프트 도구, 업로드에 단축키를 설정해 자주 쓰는 Gemini 동작을 한 번의 키 입력으로 바로 실행하세요.",
       "action": "단축키 설정"
+    },
+    "bulkDelete": {
+      "title": "불필요한 채팅을 더 빠르게 정리",
+      "description": "여러 Gemini 채팅을 선택하고 선택을 조정한 뒤, 불필요한 대화를 한 번에 삭제하세요.",
+      "action": "일괄 삭제"
     }
   }
 }

@@ -48,6 +48,32 @@
   "responseNotificationTestMessage": "通知已正常工作。",
   "responseNotificationTitle": "Gemini 已完成回复",
   "responseNotificationMessage": "你的回复已准备好。",
+  "bulkDelete": {
+    "entryLabel": "批量删除",
+    "entryHint": {
+      "title": "批量删除",
+      "description": "一次勾选多条对话，更快清理无用记录。",
+      "dismiss": "关闭"
+    },
+    "selectRecent": "选择最近 $1 个",
+    "selectUnpinned": "选择最近 $1 个未置顶聊天",
+    "change": "更改",
+    "excludePinned": "排除已置顶聊天",
+    "deselectPinned": "取消选择已固定",
+    "deselectAll": "取消全选",
+    "deleteSelected": "删除（$1）",
+    "deleteIdle": "删除（0）",
+    "deleteProgress": "已完成 $1 / $2",
+    "deleteProgressComplete": "删除完成",
+    "deleteProgressTitle": "正在删除聊天",
+    "deleteProgressEscapeHint": "按 Esc 可停止并退出",
+    "loading": "加载中...",
+    "selectConversation": "选择对话",
+    "confirmDelete": "删除已选中的 $1 个聊天？此操作无法撤销。",
+    "loadFailed": "部分聊天无法加载。你可以再次选择或重新加载 Gemini。",
+    "deleteFailed": "删除失败",
+    "deleteFailedDescription": "无法删除所选聊天。"
+  },
   "quickFollow": {
     "more": "更多",
     "moreAriaLabel": "显示更多提示"
@@ -92,8 +118,15 @@
         "tooltip": "此处是你在 Gemini 中所选中的内容"
       }
     },
-    "chatOutline": {
-      "enable": "启用对话大纲"
+    "enhancements": {
+      "chatOutline": {
+        "title": "聊天大纲",
+        "description": "添加可点击的大纲，方便浏览长对话。"
+      },
+      "bulkDelete": {
+        "title": "批量删除",
+        "description": "一次选择并删除多条聊天记录。"
+      }
     }
   },
   "settingPanel": {
@@ -336,16 +369,12 @@
           }
         }
       },
-      "chatOutline": {
-        "title": "聊天大纲",
+      "enhancements": {
+        "title": "增强功能",
         "views": {
           "index": {
-            "title": "聊天大纲",
-            "description": "在页面左侧生成历史对话的快速索引。点击即可跳转到长对话中对应的消息。"
-          },
-          "detail": {
-            "title": "聊天大纲详情",
-            "description": "聊天大纲的详细配置。"
+            "title": "增强功能",
+            "description": "管理 Gemini 的可选增强功能。"
           }
         }
       },
@@ -404,6 +433,8 @@
       },
       "actions": {
         "openSettings": "打开 Gemini Power Kit 设置",
+        "toggleBulkDelete": "切换批量删除",
+        "toggleBulkDeleteDisabledInfo": "批量删除已关闭。请先在设置中开启，再使用此快捷键。",
         "openNewChat": "打开新聊天",
         "openTemporaryChat": "打开临时聊天",
         "openLibrary": "打开资料库",
@@ -481,21 +512,16 @@
   },
   "whatsnew": {
     "title": "更新内容",
-    "releaseNotes": "最新动态",
+    "releaseNotes": "更新说明",
     "shortcuts": {
       "title": "常用操作一键直达",
       "description": "为新聊天、导航、提示词工具和上传文件设置快捷键，让常用 Gemini 操作始终一键可达。",
       "action": "设置快捷键"
     },
-    "backgroundPosition": {
-      "title": "背景位置更顺手",
-      "description": "在 Theme 中微调壁纸位置，让画面重点停在最合适的位置。",
-      "action": "打开主题"
-    },
-    "notification": {
-      "title": "Gemini 回复好时提醒你",
-      "description": "切到其他标签页、窗口或应用后，Gemini 完成回复时会发送桌面通知，点击即可回到对话。",
-      "action": "设置通知"
+    "bulkDelete": {
+      "title": "更快清理无用对话",
+      "description": "勾选多条 Gemini 对话，调整选择后一次性删除无用记录，清理历史更高效。",
+      "action": "批量删除"
     }
   }
 }

@@ -15,6 +15,11 @@ Arrêtez de faire défiler sans fin les longues conversations.
   ● Navigation en un clic : Accédez directement à n'importe quelle partie du chat.
   ● Mode épinglé : Gardez le plan toujours visible pendant les longues sessions de recherche.
 
+🗑️ BULK DELETE — CHATS GEMINI PAR LOTS
+Supprimez les chats par lots, épinglés exclus.
+  ● Exclure les épinglés : Activez « Exclure les épinglés » pour sauter les chats épinglés lors du choix d’un lot récent.
+  ● Bon lot : Choisissez 10, 20, 30 ou 50 chats récents, ajustez si besoin, puis confirmez et suivez la progression.
+
 🔔 NOTIFICATIONS DE RÉPONSE — ÉLOIGNEZ-VOUS SEREINEMENT
 Laissez Gemini travailler en arrière-plan sans vérifier l'onglet en permanence.
   ● Alertes de disponibilité : Recevez une notification de bureau lorsqu'une réponse standard, une image, une vidéo ou un rapport Deep Research est prêt.

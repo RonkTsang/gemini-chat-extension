@@ -3,7 +3,7 @@
  * Defines the release notes for the current version
  */
 
-import notificationImagePath from '@/assets/whatsnew/notification.webp'
+import bulkDeleteImagePath from '@/assets/whatsnew/bulk-delete.webp'
 import shortcutsImagePath from '@/assets/whatsnew/shortcuts.webp'
 import type { NavigationSection } from '@/components/setting-panel/config'
 
@@ -49,23 +49,9 @@ export const CURRENT_RELEASE_NOTES: ReleaseNote[] = [
     }
   },
   {
-    titleKey: 'whatsnew.backgroundPosition.title',
-    descriptionKey: 'whatsnew.backgroundPosition.description',
-    actionLabelKey: 'whatsnew.backgroundPosition.action',
-    promoAction: {
-      action: 'theme-floating-panel'
-    }
-  },
-  {
-    titleKey: 'whatsnew.notification.title',
-    descriptionKey: 'whatsnew.notification.description',
-    actionLabelKey: 'whatsnew.notification.action',
-    promoImagePath: notificationImagePath,
-    promoAction: {
-      action: 'setting-panel',
-      params: {
-        tab: 'notification'
-      }
-    }
+    titleKey: 'whatsnew.bulkDelete.title',
+    descriptionKey: 'whatsnew.bulkDelete.description',
+    actionLabelKey: 'whatsnew.bulkDelete.action',
+    promoImagePath: bulkDeleteImagePath
   }
 ]

@@ -27,3 +27,7 @@ stats-*.json
 *.sw?
 .env
 .original
+
+# python
+__pycache__/
+*.py[cod]

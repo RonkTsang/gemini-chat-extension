@@ -5,7 +5,7 @@ import { DefaultDetailView } from './default/detail'
 import { ChainPromptListView } from './chain-prompt/index'
 import { ChainPromptEditorView } from './chain-prompt/editor'
 import { QuickFollowSettingsView } from './quick-follow-up/index'
-import { ChatOutlineSettingsView } from './chat-outline/index'
+import { EnhancementsSettingsView } from './enhancements/index'
 import { NotificationSettingsView } from './notification/index'
 import { ShortcutSettingsView } from './shortcuts/index'
 import { ThemeSettingsView } from './theme/index'
@@ -16,7 +16,7 @@ const defaultDetailView = DefaultDetailView as SettingViewComponent<NavigationSe
 const chainPromptListView = ChainPromptListView as SettingViewComponent<NavigationSection>
 const chainPromptEditorView = ChainPromptEditorView as SettingViewComponent<NavigationSection>
 const quickFollowSettingsView = QuickFollowSettingsView as SettingViewComponent<NavigationSection>
-const chatOutlineSettingsView = ChatOutlineSettingsView as SettingViewComponent<NavigationSection>
+const enhancementsSettingsView = EnhancementsSettingsView as SettingViewComponent<NavigationSection>
 const notificationSettingsView = NotificationSettingsView as SettingViewComponent<NavigationSection>
 const shortcutSettingsView = ShortcutSettingsView as SettingViewComponent<NavigationSection>
 const themeSettingsView = ThemeSettingsView as SettingViewComponent<NavigationSection>
@@ -28,7 +28,7 @@ export function registerDefaultViews() {
   registerView('chain-prompt/index', chainPromptListView)
   registerView('chain-prompt/editor', chainPromptEditorView)
   registerView('quick-follow-up/index', quickFollowSettingsView)
-  registerView('chat-outline/index', chatOutlineSettingsView)
+  registerView('enhancements/index', enhancementsSettingsView)
   registerView('notification/index', notificationSettingsView)
   registerView('shortcuts/index', shortcutSettingsView)
   registerView('theme/index', themeSettingsView)

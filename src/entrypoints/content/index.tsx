@@ -2,12 +2,17 @@ import './lagecy/content';
 import './prompt';
 
 import { browser } from 'wxt/browser'
+import { GEM_DEV_EVENTS } from '@/common/event'
 import { renderOverlay } from "./overlay"
 import { startPowerKitEntry, stopPowerKitEntry } from './power-kit-entry'
+import { startBulkDelete, stopBulkDelete } from './bulk-delete'
+import { setDevForceBulkDeleteFailure } from './bulk-delete/deleteQueue'
+import { createBulkDeleteSettingsController } from './bulk-delete/settings'
 import { chatChangeDetector } from '@/services/chatChangeDetector'
 import { urlMonitor } from '@/services/urlMonitor'
 import { tabTitleSync } from '@/services/tabTitleSync'
 import { startResponseCompleteNotificationContentProvider } from '@/services/responseCompleteNotificationContent'
+import { enableBulkDelete } from '@/entrypoints/popup/storage'
 import { i18nCache } from '@/utils/i18nCache'
 import { stuffPageModule } from './stuff-page'
 import { initTheme, initThemeBackground } from './gemini-theme'
@@ -21,6 +26,8 @@ import {
 } from '@/types/runtime-messages'
 
 type PageScriptPath = '/url-monitor-main-world.js' | '/theme-sync-main-world.js'
+
+const DEV_FORCE_BULK_DELETE_FAILURE_ATTR = 'data-gpk-dev-force-bulk-delete-failure'
 
 async function injectPageScript(path: PageScriptPath): Promise<void> {
   const url = browser.runtime.getURL(path)
@@ -96,6 +103,20 @@ export default defineContentScript({
     await injectPageScript('/url-monitor-main-world.js')
     console.log('[ContentScript] Main world script injected')
 
+    const handleBulkDeleteFailureDebugChange = (event: Event) => {
+      const detail = (event as CustomEvent<{ enabled?: boolean }>).detail
+      setDevForceBulkDeleteFailure(Boolean(detail?.enabled))
+    }
+    if (import.meta.env.DEV) {
+      setDevForceBulkDeleteFailure(
+        document.documentElement.getAttribute(DEV_FORCE_BULK_DELETE_FAILURE_ATTR) === 'true',
+      )
+      window.addEventListener(
+        GEM_DEV_EVENTS.DEV_BULK_DELETE_FORCE_FAILURE_CHANGE,
+        handleBulkDeleteFailureDebugChange,
+      )
+    }
+
     // 1.1 Inject theme sync bridge script (main world)
     console.log('[ContentScript] Injecting theme sync main world script...')
     await injectPageScript('/theme-sync-main-world.js')
@@ -143,8 +164,21 @@ export default defineContentScript({
     });
 
     ui.mount();
+    const bulkDeleteSettings = createBulkDeleteSettingsController({
+      setting: enableBulkDelete,
+      start: startBulkDelete,
+      stop: stopBulkDelete,
+    })
+    await bulkDeleteSettings.start()
     startPowerKitEntry()
     ctx.onInvalidated(() => {
+      if (import.meta.env.DEV) {
+        window.removeEventListener(
+          GEM_DEV_EVENTS.DEV_BULK_DELETE_FORCE_FAILURE_CHANGE,
+          handleBulkDeleteFailureDebugChange,
+        )
+      }
+      bulkDeleteSettings.stop()
       stopPowerKitEntry()
     })
     console.log('[ContentScript] UI mounted, context still valid:', ctx.isValid)

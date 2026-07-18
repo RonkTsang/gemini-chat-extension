@@ -62,6 +62,7 @@ export default defineConfig({
 						{ label: 'Tab Title Sync', translations: { 'zh-CN': '标签页标题同步' }, slug: 'features/tab-title-sync' },
 						{ label: 'Keyboard Shortcuts', translations: { 'zh-CN': '快捷键' }, slug: 'features/shortcuts' },
 						{ label: 'Notifications', translations: { 'zh-CN': '回复完成通知' }, slug: 'features/notifications' },
+						{ label: 'Bulk Delete', translations: { 'zh-CN': '批量删除' }, slug: 'features/bulk-delete' },
 						{ label: 'Theme', translations: { 'zh-CN': '主题个性化' }, slug: 'features/theme' },
 					],
 				},

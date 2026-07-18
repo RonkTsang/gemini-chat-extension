@@ -2,6 +2,7 @@ import type { Options } from 'react-hotkeys-hook'
 
 export const shortcutActions = [
   'openSettings',
+  'toggleBulkDelete',
   'openNewChat',
   'openTemporaryChat',
   'openLibrary',
@@ -42,6 +43,7 @@ export interface ShortcutDefinition {
   defaultShortcut: string | null
   enableOnFormTags: Options['enableOnFormTags']
   enableOnContentEditable: boolean
+  ignoreEventWhen?: Options['ignoreEventWhen']
 }
 
 export const shortcutDefinitions: ShortcutDefinition[] = [
@@ -52,6 +54,17 @@ export const shortcutDefinitions: ShortcutDefinition[] = [
     defaultShortcut: 'alt+comma',
     enableOnFormTags: false,
     enableOnContentEditable: false,
+  },
+  {
+    action: 'toggleBulkDelete',
+    category: 'geminiPowerKit',
+    labelKey: 'settingPanel.shortcut.actions.toggleBulkDelete',
+    defaultShortcut: null,
+    enableOnFormTags: ['input'],
+    enableOnContentEditable: false,
+    ignoreEventWhen: (event) => (
+      event.target instanceof HTMLInputElement && event.target.type !== 'checkbox'
+    ),
   },
   {
     action: 'toggleSidebar',

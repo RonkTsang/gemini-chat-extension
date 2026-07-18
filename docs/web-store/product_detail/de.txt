@@ -15,6 +15,11 @@ Höre auf, endlos durch lange Unterhaltungen zu scrollen.
   ● Navigation mit einem Klick: Springe direkt zu jeder Stelle im Chat.
   ● Angehefteter Modus: Halte die Gliederung bei umfangreichen Recherche-Sitzungen immer sichtbar.
 
+🗑️ BULK DELETE — GEMINI-CHATS AUFRÄUMEN, OHNE ANGEHEFTETE ZU BERÜHREN
+Räume temporäre Unterhaltungen in Stapeln auf und lasse angeheftete Chats außen vor.
+  ● Angeheftete Chats mit einem Schalter ausschließen: Aktiviere „Angeheftete ausschließen“, um sie bei der Auswahl eines aktuellen Stapels zu überspringen.
+  ● Die passende Menge löschen: Wähle die 10, 20, 30 oder 50 neuesten Chats, passe die Auswahl bei Bedarf einzeln an und verfolge danach den Löschfortschritt.
+
 🔔 ANTWORT-BENACHRICHTIGUNGEN — SICHER WEGGEHEN
 Lass Gemini im Hintergrund arbeiten, ohne ständig den Tab zu prüfen.
   ● Fertig-Hinweise: Erhalte eine Desktop-Benachrichtigung, wenn eine Standardantwort, ein Bild, ein Video oder ein Deep Research-Bericht bereit ist.

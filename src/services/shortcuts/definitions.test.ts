@@ -35,7 +35,7 @@ describe('shortcut definitions', () => {
       id,
       actions: definitions.map((definition) => definition.action),
     }))).toEqual([
-      { id: 'geminiPowerKit', actions: ['openSettings'] },
+      { id: 'geminiPowerKit', actions: ['openSettings', 'toggleBulkDelete'] },
       {
         id: 'app',
         actions: ['toggleSidebar', 'openNewChat', 'openTemporaryChat', 'openLibrary', 'openGems'],
@@ -62,6 +62,29 @@ describe('shortcut definitions', () => {
     expect(definitionsByAction.get('createMusic')).toMatchObject({ defaultShortcut: null })
     expect(definitionsByAction.get('openCanvas')).toMatchObject({ defaultShortcut: null })
     expect(definitionsByAction.get('openDeepResearch')).toMatchObject({ defaultShortcut: null })
+  })
+
+  it('adds an unassigned Bulk Delete toggle shortcut to Gemini Power Kit', () => {
+    const bulkDelete = shortcutDefinitions.find((definition) => definition.action === 'toggleBulkDelete')
+
+    expect(bulkDelete).toMatchObject({
+      category: 'geminiPowerKit',
+      defaultShortcut: null,
+      enableOnFormTags: ['input'],
+      enableOnContentEditable: false,
+    })
+
+    const checkbox = document.createElement('input')
+    checkbox.type = 'checkbox'
+    const checkboxEvent = new KeyboardEvent('keydown')
+    Object.defineProperty(checkboxEvent, 'target', { value: checkbox })
+    expect(bulkDelete?.ignoreEventWhen?.(checkboxEvent)).toBe(false)
+
+    const textInput = document.createElement('input')
+    textInput.type = 'text'
+    const textInputEvent = new KeyboardEvent('keydown')
+    Object.defineProperty(textInputEvent, 'target', { value: textInput })
+    expect(bulkDelete?.ignoreEventWhen?.(textInputEvent)).toBe(true)
   })
 
   it('uses the platform primary modifier for Upload Files', () => {

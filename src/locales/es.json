@@ -48,6 +48,32 @@
   "responseNotificationTestMessage": "Las notificaciones funcionan.",
   "responseNotificationTitle": "Gemini terminó de responder",
   "responseNotificationMessage": "Tu respuesta está lista.",
+  "bulkDelete": {
+    "entryLabel": "Eliminación en lote",
+    "entryHint": {
+      "title": "Eliminación masiva",
+      "description": "Selecciona varios chats y borra de una vez las conversaciones que no quieras.",
+      "dismiss": "Cerrar"
+    },
+    "selectRecent": "Seleccionar los últimos $1",
+    "selectUnpinned": "Seleccionar los últimos $1 sin fijar",
+    "change": "Cambiar",
+    "excludePinned": "Excluir fijados",
+    "deselectPinned": "Deseleccionar fijados",
+    "deselectAll": "Deseleccionar todo",
+    "deleteSelected": "Eliminar ($1)",
+    "deleteIdle": "Eliminar (0)",
+    "deleteProgress": "Completado $1 / $2",
+    "deleteProgressComplete": "Eliminación completada",
+    "deleteProgressTitle": "Eliminando chats",
+    "deleteProgressEscapeHint": "Pulsa Esc para detener y salir",
+    "loading": "Cargando...",
+    "selectConversation": "Selecciona una conversación",
+    "confirmDelete": "¿Eliminar los $1 chats seleccionados? No se puede deshacer.",
+    "loadFailed": "No se pudieron cargar algunos chats. Puedes volver a seleccionarlos o recargar Gemini.",
+    "deleteFailed": "Error al eliminar",
+    "deleteFailedDescription": "No se pudieron eliminar los chats seleccionados."
+  },
   "quickFollow": {
     "more": "Más",
     "moreAriaLabel": "Mostrar más prompts"
@@ -92,8 +118,15 @@
         "tooltip": "Este es el texto que seleccionaste en Gemini"
       }
     },
-    "chatOutline": {
-      "enable": "Habilitar esquema de chat"
+    "enhancements": {
+      "chatOutline": {
+        "title": "Esquema de chat",
+        "description": "Añade un esquema interactivo para navegar conversaciones largas."
+      },
+      "bulkDelete": {
+        "title": "Eliminación en lote",
+        "description": "Selecciona y elimina varios chats a la vez."
+      }
     }
   },
   "settingPanel": {
@@ -336,16 +369,12 @@
           }
         }
       },
-      "chatOutline": {
-        "title": "Esquema de chat",
+      "enhancements": {
+        "title": "Mejoras",
         "views": {
           "index": {
-            "title": "Esquema de chat",
-            "description": "Genera un índice rápido del historial de conversación en el lado izquierdo. Haz clic para saltar al mensaje correspondiente en conversaciones largas."
-          },
-          "detail": {
-            "title": "Detalle del esquema de chat",
-            "description": "Configuración detallada del esquema de chat."
+            "title": "Mejoras",
+            "description": "Administra las mejoras opcionales de Gemini."
           }
         }
       },
@@ -404,6 +433,8 @@
       },
       "actions": {
         "openSettings": "Abrir la configuración de Gemini Power Kit",
+        "toggleBulkDelete": "Alternar eliminación en lote",
+        "toggleBulkDeleteDisabledInfo": "La eliminación en lote está desactivada. Actívala en Ajustes para usar este atajo.",
         "openNewChat": "Abrir chat nuevo",
         "openTemporaryChat": "Abrir chat temporal",
         "openLibrary": "Abrir biblioteca",
@@ -481,21 +512,16 @@
   },
   "whatsnew": {
     "title": "Novedades",
-    "releaseNotes": "Novedades",
-    "backgroundPosition": {
-      "title": "Coloca el fondo como quieres",
-      "description": "Ajusta la posición del fondo en el panel de Tema para que la imagen quede bien encuadrada.",
-      "action": "Abrir tema"
-    },
-    "notification": {
-      "title": "Sabe cuándo Gemini está listo",
-      "description": "Sigue con otra cosa mientras Gemini responde. Recibe una notificación de escritorio cuando la respuesta esté lista.",
-      "action": "Configurar"
-    },
+    "releaseNotes": "Notas de la versión",
     "shortcuts": {
       "title": "Muévete más rápido por Gemini",
       "description": "Configura atajos para chats, navegación, herramientas de prompt y subidas, y ten a un toque las acciones que más usas en Gemini.",
       "action": "Configurar atajos"
+    },
+    "bulkDelete": {
+      "title": "Borra chats no deseados más rápido",
+      "description": "Selecciona varios chats de Gemini, ajusta la selección y borra conversaciones no deseadas juntas en un flujo claro.",
+      "action": "Eliminar en lote"
     }
   }
 }

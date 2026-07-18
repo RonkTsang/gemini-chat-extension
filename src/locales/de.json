@@ -48,6 +48,32 @@
   "responseNotificationTestMessage": "Benachrichtigungen funktionieren.",
   "responseNotificationTitle": "Gemini hat fertig geantwortet",
   "responseNotificationMessage": "Ihre Antwort ist bereit.",
+  "bulkDelete": {
+    "entryLabel": "Massenlöschung",
+    "entryHint": {
+      "title": "Mehrfach löschen",
+      "description": "Wähle mehrere Chats aus und lösche unerwünschte Unterhaltungen auf einmal.",
+      "dismiss": "Schließen"
+    },
+    "selectRecent": "Letzte $1 auswählen",
+    "selectUnpinned": "Letzte $1 nicht angeheftete auswählen",
+    "change": "Ändern",
+    "excludePinned": "Angeheftete ausschließen",
+    "deselectPinned": "Angeheftete abwählen",
+    "deselectAll": "Alle abwählen",
+    "deleteSelected": "Löschen ($1)",
+    "deleteIdle": "Löschen (0)",
+    "deleteProgress": "Abgeschlossen $1 / $2",
+    "deleteProgressComplete": "Löschen abgeschlossen",
+    "deleteProgressTitle": "Chats werden gelöscht",
+    "deleteProgressEscapeHint": "Drücken Sie Esc, um zu stoppen und zu schließen",
+    "loading": "Wird geladen...",
+    "selectConversation": "Unterhaltung auswählen",
+    "confirmDelete": "$1 ausgewählte Chats löschen? Das kann nicht rückgängig gemacht werden.",
+    "loadFailed": "Einige Chats konnten nicht geladen werden. Du kannst sie erneut auswählen oder Gemini neu laden.",
+    "deleteFailed": "Löschen fehlgeschlagen",
+    "deleteFailedDescription": "Die ausgewählten Chats konnten nicht gelöscht werden."
+  },
   "quickFollow": {
     "more": "Mehr",
     "moreAriaLabel": "Weitere Prompts anzeigen"
@@ -92,8 +118,15 @@
         "tooltip": "Dies ist der Text, den Sie in Gemini ausgewählt haben"
       }
     },
-    "chatOutline": {
-      "enable": "Chat-Gliederung aktivieren"
+    "enhancements": {
+      "chatOutline": {
+        "title": "Chat-Gliederung",
+        "description": "Fügt eine anklickbare Gliederung hinzu, um lange Unterhaltungen leichter zu navigieren."
+      },
+      "bulkDelete": {
+        "title": "Massenlöschung",
+        "description": "Wählen Sie mehrere Chats aus und löschen Sie sie auf einmal."
+      }
     }
   },
   "settingPanel": {
@@ -336,16 +369,12 @@
           }
         }
       },
-      "chatOutline": {
-        "title": "Chat-Gliederung",
+      "enhancements": {
+        "title": "Erweiterungen",
         "views": {
           "index": {
-            "title": "Chat-Gliederung",
-            "description": "Erstellen Sie einen schnellen Index der Gesprächshistorie auf der linken Seite. Klicken Sie, um zur entsprechenden Nachricht in langen Gesprächen zu springen."
-          },
-          "detail": {
-            "title": "Chat-Gliederung Details",
-            "description": "Detaillierte Konfiguration für Chat-Gliederungen."
+            "title": "Erweiterungen",
+            "description": "Verwalten Sie optionale Erweiterungen für Gemini."
           }
         }
       },
@@ -404,6 +433,8 @@
       },
       "actions": {
         "openSettings": "Gemini Power Kit-Einstellungen öffnen",
+        "toggleBulkDelete": "Massenlöschung umschalten",
+        "toggleBulkDeleteDisabledInfo": "Massenlöschung ist aus. Aktiviere sie in den Einstellungen, um diesen Shortcut zu verwenden.",
         "openNewChat": "Neuen Chat öffnen",
         "openTemporaryChat": "Temporären Chat öffnen",
         "openLibrary": "Bibliothek öffnen",
@@ -481,21 +512,16 @@
   },
   "whatsnew": {
     "title": "Was gibt's Neues",
-    "releaseNotes": "Neuigkeiten",
-    "backgroundPosition": {
-      "title": "Hintergründe passend platzieren",
-      "description": "Passen Sie im Theme-Panel die Hintergrundposition fein an, damit der wichtige Bildausschnitt im Rahmen bleibt.",
-      "action": "Theme öffnen"
-    },
-    "notification": {
-      "title": "Wissen, wenn Gemini fertig ist",
-      "description": "Arbeite weiter, während Gemini antwortet. Sobald die Antwort bereit ist, erinnert dich eine Desktop-Benachrichtigung.",
-      "action": "Einrichten"
-    },
+    "releaseNotes": "Versionshinweise",
     "shortcuts": {
       "title": "Mit Shortcuts schneller durch Gemini",
       "description": "Lege Shortcuts für Chats, Navigation, Prompt-Tools und Uploads fest, damit du deine häufigsten Gemini-Aktionen mit einem Tastendruck erreichst.",
       "action": "Shortcuts festlegen"
+    },
+    "bulkDelete": {
+      "title": "Unerwünschte Chats schneller löschen",
+      "description": "Wähle mehrere Gemini-Chats aus, passe die Auswahl an und lösche unerwünschte Unterhaltungen gesammelt in einem klaren Ablauf.",
+      "action": "Bulk löschen"
     }
   }
 }

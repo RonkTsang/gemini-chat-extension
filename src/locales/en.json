@@ -48,6 +48,32 @@
   "responseNotificationTestMessage": "Notifications are working.",
   "responseNotificationTitle": "Gemini finished replying",
   "responseNotificationMessage": "Your response is ready.",
+  "bulkDelete": {
+    "entryLabel": "Bulk delete",
+    "entryHint": {
+      "title": "Bulk Delete",
+      "description": "Select several chats, then clear unwanted conversations in one go.",
+      "dismiss": "Dismiss"
+    },
+    "selectRecent": "Select $1 recent",
+    "selectUnpinned": "Select $1 unpinned",
+    "change": "Change",
+    "excludePinned": "Exclude pinned",
+    "deselectPinned": "Deselect pinned",
+    "deselectAll": "Deselect all",
+    "deleteSelected": "Delete ($1)",
+    "deleteIdle": "Delete (0)",
+    "deleteProgress": "Completed $1 / $2",
+    "deleteProgressComplete": "Deletion complete",
+    "deleteProgressTitle": "Deleting chats",
+    "deleteProgressEscapeHint": "Press Esc to stop and exit",
+    "loading": "Loading...",
+    "selectConversation": "Select conversation",
+    "confirmDelete": "Delete $1 selected chats? This cannot be undone.",
+    "loadFailed": "Some chats could not be loaded. You can select again or reload Gemini.",
+    "deleteFailed": "Failed to delete",
+    "deleteFailedDescription": "Could not delete the selected chats."
+  },
   "quickFollow": {
     "more": "More",
     "moreAriaLabel": "Show more prompts"
@@ -92,8 +118,15 @@
         "tooltip": "This is the text you selected in Gemini"
       }
     },
-    "chatOutline": {
-      "enable": "Enable Chat Outline"
+    "enhancements": {
+      "chatOutline": {
+        "title": "Chat Outline",
+        "description": "Adds a clickable outline to help you navigate long conversations."
+      },
+      "bulkDelete": {
+        "title": "Bulk Delete",
+        "description": "Select and delete multiple chats at once."
+      }
     }
   },
   "settingPanel": {
@@ -336,16 +369,12 @@
           }
         }
       },
-      "chatOutline": {
-        "title": "Chat Outline",
+      "enhancements": {
+        "title": "Enhancements",
         "views": {
           "index": {
-            "title": "Chat Outline",
-            "description": "Generate a quick index of conversation history on the left side. Click and jump to the corresponding message in long conversations."
-          },
-          "detail": {
-            "title": "Chat Outline Detail",
-            "description": "Detailed configuration for chat outlines."
+            "title": "Enhancements",
+            "description": "Manage optional enhancements for Gemini."
           }
         }
       },
@@ -400,6 +429,8 @@
       },
       "actions": {
         "openSettings": "Open Gemini Power Kit Settings",
+        "toggleBulkDelete": "Toggle Bulk Delete",
+        "toggleBulkDeleteDisabledInfo": "Bulk Delete is off. Turn it on in Settings to use this shortcut.",
         "openNewChat": "Open New Chat",
         "openTemporaryChat": "Open Temporary Chat",
         "openLibrary": "Open Library",
@@ -477,21 +508,16 @@
   },
   "whatsnew": {
     "title": "What's New",
-    "releaseNotes": "What's New",
+    "releaseNotes": "Release notes",
     "shortcuts": {
       "title": "Move through Gemini faster",
       "description": "Set shortcuts for chats, navigation, prompt tools, and uploads, then keep your most frequent Gemini actions one key press away.",
       "action": "Set shortcuts"
     },
-    "backgroundPosition": {
-      "title": "Place backgrounds just right",
-      "description": "Fine-tune wallpaper placement from the Theme panel so your image stays framed where it matters.",
-      "action": "Open Theme"
-    },
-    "notification": {
-      "title": "Know when Gemini is ready",
-      "description": "Step away while Gemini works. Get a desktop notification when the reply is ready, then click back to the chat.",
-      "action": "Set up notifications"
+    "bulkDelete": {
+      "title": "Clear unwanted chats faster",
+      "description": "Select multiple Gemini chats, adjust your selection, and delete unwanted conversations together in one focused flow.",
+      "action": "Use Bulk Delete"
     }
   }
 }

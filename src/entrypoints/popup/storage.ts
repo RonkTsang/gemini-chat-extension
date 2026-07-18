@@ -15,12 +15,22 @@ export const enableQuickQuote = storage.defineItem<boolean>(
   }
 );
 
+export const enableBulkDelete = storage.defineItem<boolean>(
+  'sync:enableBulkDelete',
+  {
+    fallback: true,
+  }
+);
+
 // Helper functions for individual settings
 export const getChatOutlineEnabled = () => enableChatOutline.getValue();
 export const setChatOutlineEnabled = (enabled: boolean) => enableChatOutline.setValue(enabled);
 
 export const getQuickQuoteEnabled = () => enableQuickQuote.getValue();
 export const setQuickQuoteEnabled = (enabled: boolean) => enableQuickQuote.setValue(enabled);
+
+export const getBulkDeleteEnabled = () => enableBulkDelete.getValue();
+export const setBulkDeleteEnabled = (enabled: boolean) => enableBulkDelete.setValue(enabled);
 
 // Helper function to get all settings at once
 export const getAllSettings = async () => {

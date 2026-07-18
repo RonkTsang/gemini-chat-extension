@@ -48,6 +48,32 @@
   "responseNotificationTestMessage": "通知は正常に動作しています。",
   "responseNotificationTitle": "Gemini の返信が完了しました",
   "responseNotificationMessage": "返信の準備ができました。",
+  "bulkDelete": {
+    "entryLabel": "一括削除",
+    "entryHint": {
+      "title": "一括削除",
+      "description": "複数のチャットを選んで、不要な会話をまとめて削除できます。",
+      "dismiss": "閉じる"
+    },
+    "selectRecent": "最近の$1件を選択",
+    "selectUnpinned": "最近のピン留めされていない$1件を選択",
+    "change": "変更",
+    "excludePinned": "ピン留めを除外",
+    "deselectPinned": "ピン留めを選択解除",
+    "deselectAll": "すべて選択解除",
+    "deleteSelected": "削除（$1）",
+    "deleteIdle": "削除（0）",
+    "deleteProgress": "完了 $1 / $2",
+    "deleteProgressComplete": "削除完了",
+    "deleteProgressTitle": "チャットを削除中",
+    "deleteProgressEscapeHint": "Esc で停止して終了します",
+    "loading": "読み込み中...",
+    "selectConversation": "会話を選択",
+    "confirmDelete": "選択したチャット $1 件を削除しますか？この操作は元に戻せません。",
+    "loadFailed": "一部のチャットを読み込めませんでした。もう一度選択するか、Gemini を再読み込みしてください。",
+    "deleteFailed": "削除に失敗しました",
+    "deleteFailedDescription": "選択したチャットを削除できませんでした。"
+  },
   "quickFollow": {
     "more": "もっと見る",
     "moreAriaLabel": "さらにプロンプトを表示"
@@ -92,8 +118,15 @@
         "tooltip": "これは Gemini で選択したテキストです"
       }
     },
-    "chatOutline": {
-      "enable": "チャットアウトラインを有効にする"
+    "enhancements": {
+      "chatOutline": {
+        "title": "チャットアウトライン",
+        "description": "長い会話を見やすくするクリック可能なアウトラインを追加します。"
+      },
+      "bulkDelete": {
+        "title": "一括削除",
+        "description": "複数のチャットをまとめて選択・削除します。"
+      }
     }
   },
   "settingPanel": {
@@ -336,16 +369,12 @@
           }
         }
       },
-      "chatOutline": {
-        "title": "チャットアウトライン",
+      "enhancements": {
+        "title": "拡張機能",
         "views": {
           "index": {
-            "title": "チャットアウトライン",
-            "description": "左側に会話履歴のクイックインデックスを生成します。クリックして長い会話内の対応するメッセージにジャンプします。"
-          },
-          "detail": {
-            "title": "チャットアウトラインの詳細",
-            "description": "チャットアウトラインの詳細設定。"
+            "title": "拡張機能",
+            "description": "Gemini の追加機能を管理します。"
           }
         }
       },
@@ -404,6 +433,8 @@
       },
       "actions": {
         "openSettings": "Gemini Power Kit の設定を開く",
+        "toggleBulkDelete": "一括削除を切り替え",
+        "toggleBulkDeleteDisabledInfo": "一括削除はオフです。設定で有効にしてからこのショートカットを使ってください。",
         "openNewChat": "新しいチャットを開く",
         "openTemporaryChat": "一時チャットを開く",
         "openLibrary": "ライブラリを開く",
@@ -481,21 +512,16 @@
   },
   "whatsnew": {
     "title": "新機能",
-    "releaseNotes": "最新情報",
-    "backgroundPosition": {
-      "title": "背景をちょうどよく配置",
-      "description": "Theme パネルから壁紙の位置を細かく調整して、見せたい部分をきれいに収められます。",
-      "action": "テーマを開く"
-    },
-    "notification": {
-      "title": "Geminiの完了をすぐ受け取る",
-      "description": "Geminiに任せて別の作業へ。返信ができたらデスクトップ通知でお知らせし、すぐチャットに戻れます。",
-      "action": "通知を設定"
-    },
+    "releaseNotes": "リリースノート",
     "shortcuts": {
       "title": "Geminiをもっとすばやく操作",
       "description": "チャット、ナビゲーション、プロンプトツール、アップロードにショートカットを設定して、よく使うGeminiの操作を1キーで呼び出せます。",
       "action": "ショートカットを設定"
+    },
+    "bulkDelete": {
+      "title": "不要なチャットをすばやく整理",
+      "description": "複数の Gemini チャットを選び、選択を調整して、不要な会話をまとめて削除できます。",
+      "action": "一括削除"
     }
   }
 }

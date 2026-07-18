@@ -48,6 +48,32 @@
   "responseNotificationTestMessage": "通知已正常運作。",
   "responseNotificationTitle": "Gemini 已完成回覆",
   "responseNotificationMessage": "您的回覆已準備好。",
+  "bulkDelete": {
+    "entryLabel": "批次刪除",
+    "entryHint": {
+      "title": "批次刪除",
+      "description": "一次勾選多則對話，更快清理不需要的紀錄。",
+      "dismiss": "關閉"
+    },
+    "selectRecent": "選取最近 $1 則",
+    "selectUnpinned": "選取最近 $1 則未釘選聊天",
+    "change": "變更",
+    "excludePinned": "排除已釘選聊天",
+    "deselectPinned": "取消選取已釘選",
+    "deselectAll": "取消全選",
+    "deleteSelected": "刪除（$1）",
+    "deleteIdle": "刪除（0）",
+    "deleteProgress": "已完成 $1 / $2",
+    "deleteProgressComplete": "刪除完成",
+    "deleteProgressTitle": "正在刪除聊天",
+    "deleteProgressEscapeHint": "按 Esc 可停止並退出",
+    "loading": "載入中...",
+    "selectConversation": "選取對話",
+    "confirmDelete": "要刪除 $1 個已選取的聊天嗎？此操作無法復原。",
+    "loadFailed": "部分對話無法載入。你可以再次選取或重新載入 Gemini。",
+    "deleteFailed": "刪除失敗",
+    "deleteFailedDescription": "無法刪除所選對話。"
+  },
   "quickFollow": {
     "more": "更多",
     "moreAriaLabel": "顯示更多提示"
@@ -92,8 +118,15 @@
         "tooltip": "此處是你在 Gemini 中所選取的內容"
       }
     },
-    "chatOutline": {
-      "enable": "啟用對話大綱"
+    "enhancements": {
+      "chatOutline": {
+        "title": "聊天大綱",
+        "description": "加入可點擊的大綱，方便瀏覽較長的對話。"
+      },
+      "bulkDelete": {
+        "title": "批次刪除",
+        "description": "一次選取並刪除多則對話。"
+      }
     }
   },
   "settingPanel": {
@@ -336,16 +369,12 @@
           }
         }
       },
-      "chatOutline": {
-        "title": "聊天大綱",
+      "enhancements": {
+        "title": "增強功能",
         "views": {
           "index": {
-            "title": "聊天大綱",
-            "description": "在頁面左側生成歷史對話的快速索引。點擊即可跳轉到長對話中對應的消息。"
-          },
-          "detail": {
-            "title": "聊天大綱詳情",
-            "description": "聊天大綱的詳細設定。"
+            "title": "增強功能",
+            "description": "管理 Gemini 的可選增強功能。"
           }
         }
       },
@@ -404,6 +433,8 @@
       },
       "actions": {
         "openSettings": "開啟 Gemini Power Kit 設定",
+        "toggleBulkDelete": "切換批次刪除",
+        "toggleBulkDeleteDisabledInfo": "批次刪除已關閉。請先在設定中開啟，再使用此快捷鍵。",
         "openNewChat": "開啟新聊天",
         "openTemporaryChat": "開啟臨時聊天",
         "openLibrary": "開啟資料庫",
@@ -481,21 +512,16 @@
   },
   "whatsnew": {
     "title": "更新內容",
-    "releaseNotes": "最新動態",
-    "backgroundPosition": {
-      "title": "背景位置更順手",
-      "description": "在 Theme 中微調桌布位置，讓畫面重點停在最合適的位置。",
-      "action": "打開主題"
-    },
-    "notification": {
-      "title": "Gemini 完成時提醒你",
-      "description": "切到其他分頁、視窗或應用程式後，Gemini 完成回覆時會傳送桌面通知，點一下即可回到對話。",
-      "action": "設定通知"
-    },
+    "releaseNotes": "更新說明",
     "shortcuts": {
       "title": "更快切換 Gemini 操作",
       "description": "為聊天、導覽、提示詞工具和上傳設定快捷鍵，讓最常用的 Gemini 操作一鍵就能到位。",
       "action": "設定快捷鍵"
+    },
+    "bulkDelete": {
+      "title": "更快清理無用對話",
+      "description": "勾選多個 Gemini 對話，調整選取後一次刪除無用記錄，清理歷史更有效率。",
+      "action": "批量刪除"
     }
   }
 }

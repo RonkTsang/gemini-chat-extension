@@ -15,6 +15,11 @@ Stop scrolling endlessly through long threads.
   ● One-Click Navigation: Jump directly to any part of the chat.
   ● Pinned Mode: Keep your outline always visible for heavy research sessions.
 
+🗑️ BULK DELETE — CLEAN UP GEMINI CHATS WITHOUT TOUCHING PINNED ONES
+Clear temporary conversations in batches, while leaving the chats you pinned out of the cleanup.
+  ● Exclude pinned chats in one action: Turn on Exclude pinned to skip pinned conversations when selecting a recent batch—no need to manually remove them from the selection.
+  ● Delete the right-sized batch: Choose the 10, 20, 30, or 50 most recent chats, adjust individual selections if needed, then confirm and track deletion progress.
+
 🔔 REPLY NOTIFICATIONS — STEP AWAY WITH CONFIDENCE
 Let Gemini work in the background without constantly checking the tab.
   ● Ready Alerts: Get a desktop notification when a standard reply, image, video, or Deep Research report is ready.
