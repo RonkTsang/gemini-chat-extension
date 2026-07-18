@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bulk Delete Overlay</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --surface: #1b1b1f;
+        --on-surface: #e5e2e8;
+        --muted: #aaa6af;
+        --faint: #77737c;
+        --accent: #a8c7fa;
+        --success: #07b481;
+        --track: #34333a;
+        --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+        --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+        --ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        display: grid;
+        min-height: 100dvh;
+        margin: 0;
+        place-items: center;
+        background: #111114;
+        color: var(--on-surface);
+        font-family: "Google Sans", "Google Sans Text", system-ui, sans-serif;
+      }
+
+      .entry-button {
+        padding: 10px 14px;
+        border: 0;
+        border-radius: 8px;
+        background: var(--on-surface);
+        color: #1b1b1f;
+        cursor: pointer;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 560;
+        transition: transform 140ms var(--ease-out), background-color 140ms ease;
+      }
+
+      @media (hover: hover) and (pointer: fine) {
+        .entry-button:hover {
+          background: #fff;
+        }
+      }
+
+      .entry-button:active {
+        transform: scale(0.97);
+      }
+
+      .entry-button:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 3px;
+      }
+
+      .delete-overlay {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100dvh;
+        min-height: 100dvh;
+        max-width: none;
+        max-height: none;
+        margin: 0;
+        padding: clamp(32px, 8dvh, 96px) 32px;
+        border: 0;
+        background: var(--surface);
+        color: var(--on-surface);
+      }
+
+      .delete-overlay::backdrop {
+        background: var(--surface);
+      }
+
+      .delete-overlay[open] {
+        display: grid;
+        place-items: center;
+      }
+
+      .overlay-content {
+        width: min(100%, 480px);
+        opacity: 0;
+        transform: translateY(8px) scale(0.98);
+        transition: opacity 180ms var(--ease-out), transform 180ms var(--ease-out);
+      }
+
+      .delete-overlay.is-visible .overlay-content {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+
+      .overlay-stage {
+        position: relative;
+      }
+
+      .processing-state {
+        opacity: 1;
+        transform: scale(1);
+        transition: opacity 160ms var(--ease-out), transform 160ms var(--ease-out);
+      }
+
+      .overlay-stage.is-transitioning .processing-state {
+        opacity: 0;
+        transform: scale(0.96);
+      }
+
+      .progress-header {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        column-gap: 24px;
+        row-gap: 12px;
+        align-items: baseline;
+      }
+
+      h1,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: 18px;
+        font-weight: 520;
+        letter-spacing: -0.02em;
+        line-height: 24px;
+      }
+
+      .progress-count {
+        color: var(--muted);
+        font-size: 14px;
+        font-variant-numeric: tabular-nums;
+        line-height: 20px;
+      }
+
+      .progress-track {
+        grid-column: 1 / -1;
+        height: 2px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: var(--track);
+      }
+
+      .progress-value {
+        width: 100%;
+        height: 100%;
+        border-radius: inherit;
+        background: var(--accent);
+        transform: scaleX(.4);
+        transform-origin: left;
+        transition: transform 260ms var(--ease-out);
+      }
+
+      .task-list {
+        display: grid;
+        gap: 14px;
+        margin: 38px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .task {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        color: var(--muted);
+        font-size: 15px;
+        letter-spacing: -0.01em;
+        line-height: 22px;
+      }
+
+      .task::before {
+        flex: none;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: currentcolor;
+        content: "";
+      }
+
+      .task span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .task--complete {
+        color: var(--faint);
+      }
+
+      .task--complete span {
+        text-decoration: line-through;
+        text-decoration-color: color-mix(in srgb, var(--faint), transparent 30%);
+      }
+
+      .task--current {
+        color: var(--on-surface);
+      }
+
+      .task--current::before {
+        background: var(--accent);
+      }
+
+      .success-state {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        pointer-events: none;
+        visibility: hidden;
+      }
+
+      .overlay-stage.is-complete .success-state {
+        visibility: visible;
+      }
+
+      .success-mark {
+        width: 115px;
+        height: 115px;
+      }
+
+      .success-group,
+      .success-outline {
+        transform-box: fill-box;
+        transform-origin: center;
+      }
+
+      .success-outline,
+      .success-check {
+        fill: none;
+      }
+
+      .success-outline {
+        stroke: var(--success);
+        stroke-width: 4;
+        stroke-dasharray: 0 342.434px;
+      }
+
+      .success-check {
+        stroke: #fff;
+        stroke-width: 5.5;
+        opacity: 0;
+        stroke-dasharray: 75px 75px;
+        stroke-dashoffset: 75px;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .success-fill {
+        fill: var(--success);
+        opacity: 0;
+      }
+
+      .overlay-stage.is-complete .success-group {
+        animation: success-group 440ms var(--ease-settle) 1040ms both;
+      }
+
+      .overlay-stage.is-complete .success-outline {
+        animation: success-outline 560ms var(--ease-out) forwards;
+      }
+
+      .overlay-stage.is-complete .success-fill {
+        animation: success-fill 180ms var(--ease-out) 560ms forwards;
+      }
+
+      .overlay-stage.is-complete .success-check {
+        animation: success-check 340ms var(--ease-out) 700ms forwards;
+      }
+
+      @keyframes success-outline {
+        from {
+          stroke-dasharray: 0 342.434px;
+        }
+
+        to {
+          stroke-dasharray: 342.434px 342.434px;
+        }
+      }
+
+      @keyframes success-check {
+        from {
+          opacity: 1;
+          stroke-dashoffset: 75px;
+        }
+
+        to {
+          opacity: 1;
+          stroke-dashoffset: 0;
+        }
+      }
+
+      @keyframes success-fill {
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes success-group {
+        42% {
+          transform: scale(1.055);
+        }
+
+        70% {
+          transform: scale(0.988);
+        }
+
+        86% {
+          transform: scale(1.012);
+        }
+      }
+
+      .escape-hint {
+        margin-top: 42px;
+        color: var(--faint);
+        font-size: 13px;
+        line-height: 18px;
+      }
+
+      @media (max-width: 480px) {
+        .delete-overlay {
+          padding: 24px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .overlay-content,
+        .processing-state,
+        .progress-value {
+          transform: none;
+          transition: opacity 100ms ease;
+        }
+
+        .overlay-stage.is-complete .success-group,
+        .overlay-stage.is-complete .success-fill,
+        .overlay-stage.is-complete .success-outline,
+        .overlay-stage.is-complete .success-check {
+          animation: none;
+        }
+
+        .success-outline {
+          stroke-dasharray: 342.434px 342.434px;
+        }
+
+        .success-fill {
+          opacity: 1;
+        }
+
+        .success-check {
+          opacity: 1;
+          stroke-dashoffset: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <button class="entry-button" id="open-overlay" type="button">Open Bulk Delete</button>
+
+    <dialog class="delete-overlay" id="delete-overlay" aria-labelledby="overlay-title">
+      <section class="overlay-content">
+        <div class="overlay-stage" id="overlay-stage">
+          <div class="processing-state" id="processing-state">
+            <header class="progress-header">
+              <h1 id="overlay-title">Deleting chats</h1>
+              <p class="progress-count" id="progress-count">2 / 5</p>
+              <div
+                class="progress-track"
+                id="progress-track"
+                role="progressbar"
+                aria-label="Deletion progress"
+                aria-valuemin="0"
+                aria-valuemax="5"
+                aria-valuenow="2"
+              >
+                <div class="progress-value" id="progress-value"></div>
+              </div>
+            </header>
+
+            <ol class="task-list" aria-label="Chats in the deletion queue">
+              <li class="task task--complete"><span>Product roadmap</span></li>
+              <li class="task task--complete"><span>Summer travel plans</span></li>
+              <li class="task task--current" id="current-task"><span>Research notes</span></li>
+              <li class="task"><span>Untitled conversation</span></li>
+              <li class="task"><span>Weekly planning</span></li>
+            </ol>
+
+            <footer class="escape-hint">
+              Press Esc to stop and exit
+            </footer>
+          </div>
+
+          <div class="success-state" aria-label="Deletion complete" role="status">
+            <svg class="success-mark" aria-hidden="true" viewBox="0 0 133 133">
+              <g class="success-group">
+                <circle class="success-fill" cx="66.5" cy="66.5" r="54.5"></circle>
+                <circle
+                  class="success-outline"
+                  cx="66.5"
+                  cy="66.5"
+                  r="54.5"
+                ></circle>
+                <polyline
+                  class="success-check"
+                  points="41 70 56 85 92 49"
+                ></polyline>
+              </g>
+            </svg>
+          </div>
+        </div>
+      </section>
+    </dialog>
+
+    <script>
+      const openButton = document.querySelector('#open-overlay')
+      const overlay = document.querySelector('#delete-overlay')
+      const stage = document.querySelector('#overlay-stage')
+      const progressCount = document.querySelector('#progress-count')
+      const progressTrack = document.querySelector('#progress-track')
+      const progressValue = document.querySelector('#progress-value')
+      const currentTask = document.querySelector('#current-task')
+      let completeTimer
+      let dismissTimer
+
+      function resetDemo() {
+        window.clearTimeout(completeTimer)
+        window.clearTimeout(dismissTimer)
+        stage.classList.remove('is-transitioning', 'is-complete')
+        progressCount.textContent = '2 / 5'
+        progressTrack.setAttribute('aria-valuenow', '2')
+        progressValue.style.transform = 'scaleX(.4)'
+        currentTask.classList.add('task--current')
+        currentTask.classList.remove('task--complete')
+      }
+
+      function closeOverlay() {
+        window.clearTimeout(completeTimer)
+        window.clearTimeout(dismissTimer)
+        overlay.classList.remove('is-visible')
+        overlay.close()
+      }
+
+      function completeDemo() {
+        progressCount.textContent = '5 / 5'
+        progressTrack.setAttribute('aria-valuenow', '5')
+        progressValue.style.transform = 'scaleX(1)'
+        currentTask.classList.remove('task--current')
+        currentTask.classList.add('task--complete')
+
+        window.setTimeout(() => {
+          stage.classList.add('is-transitioning')
+          window.setTimeout(() => stage.classList.add('is-complete'), 160)
+        }, 180)
+
+        dismissTimer = window.setTimeout(closeOverlay, 2400)
+      }
+
+      openButton.addEventListener('click', () => {
+        resetDemo()
+        overlay.showModal()
+        window.requestAnimationFrame(() => overlay.classList.add('is-visible'))
+        completeTimer = window.setTimeout(completeDemo, 1800)
+      })
+
+      overlay.addEventListener('cancel', event => {
+        event.preventDefault()
+        closeOverlay()
+      })
+    </script>
+  </body>
+</html>
