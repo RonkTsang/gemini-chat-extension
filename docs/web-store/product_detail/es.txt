@@ -15,6 +15,11 @@ Deja de desplazarte sin fin por conversaciones largas.
   ● Navegación con un clic: Salta directamente a cualquier parte del chat.
   ● Modo fijado: Mantiene el índice siempre visible durante sesiones de investigación extensas.
 
+🗑️ BULK DELETE — LIMPIA CHATS DE GEMINI SIN TOCAR LOS FIJADOS
+Borra conversaciones temporales por lotes y deja fuera de la limpieza los chats fijados.
+  ● Excluye los chats fijados con una sola acción: Activa “Excluir fijados” para omitir las conversaciones fijadas al seleccionar un lote reciente, sin tener que quitarlas a mano.
+  ● Borra el lote justo: Elige los 10, 20, 30 o 50 chats más recientes, ajusta selecciones individuales si hace falta y luego confirma y sigue el progreso del borrado.
+
 🔔 NOTIFICACIONES DE RESPUESTA — ALÉJATE CON CONFIANZA
 Deja que Gemini trabaje en segundo plano sin revisar la pestaña constantemente.
   ● Avisos de listo: Recibe una notificación de escritorio cuando una respuesta normal, imagen, video o informe de Deep Research esté listo.

@@ -15,6 +15,11 @@ Pare de rolar sem fim por conversas longas.
   ● Navegação com um clique: Pule diretamente para qualquer parte do chat.
   ● Modo fixado: Mantenha o outline sempre visível em sessões longas de pesquisa.
 
+🗑️ BULK DELETE — LIMPE O CHAT DO GEMINI SEM TOCAR NOS FIXADOS
+Exclua conversas temporárias em lotes, deixando os chats fixados fora da limpeza.
+  ● Exclua chats fixados de uma vez: Ative “Excluir fixados” para pular conversas fixadas ao selecionar um lote recente, sem precisar removê-las manualmente da seleção.
+  ● Exclua o lote certo: Escolha os 10, 20, 30 ou 50 chats mais recentes, ajuste seleções individuais se precisar, depois confirme e acompanhe o progresso da exclusão.
+
 🔔 NOTIFICAÇÕES DE RESPOSTA — SAIA DA ABA COM CONFIANÇA
 Deixe o Gemini trabalhar em segundo plano sem verificar a aba o tempo todo.
   ● Alertas de pronto: Receba uma notificação na área de trabalho quando uma resposta comum, imagem, vídeo ou relatório do Deep Research estiver pronto.
