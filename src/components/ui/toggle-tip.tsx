@@ -4,18 +4,20 @@ import { FiInfo } from "react-icons/fi"
 
 export interface ToggleTipProps extends Popover.RootProps {
   content?: ReactNode
+  contentProps?: Popover.ContentProps
+  bodyProps?: Popover.BodyProps
 }
 
 export const ToggleTip = (props: ToggleTipProps) => {
-  const { content, children, ...rest } = props
+  const { content, children, contentProps, bodyProps, ...rest } = props
   return (
     <Popover.Root {...rest}>
       <Popover.Trigger asChild>{children}</Popover.Trigger>
       <Portal>
         <Popover.Positioner>
-          <Popover.Content maxWidth="320px">
+          <Popover.Content maxWidth="320px" {...contentProps}>
             <Popover.Arrow />
-            <Popover.Body fontSize="sm">{content}</Popover.Body>
+            <Popover.Body fontSize="sm" {...bodyProps}>{content}</Popover.Body>
           </Popover.Content>
         </Popover.Positioner>
       </Portal>

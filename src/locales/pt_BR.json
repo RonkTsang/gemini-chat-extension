@@ -431,6 +431,8 @@
       },
       "actions": {
         "openSettings": "Abrir configurações do Gemini Power Kit",
+        "toggleBulkDelete": "Alternar exclusão em lote",
+        "toggleBulkDeleteDisabledInfo": "A exclusão em lote está desativada. Ative-a em Configurações para usar este atalho.",
         "openNewChat": "Abrir novo chat",
         "openTemporaryChat": "Abrir chat temporário",
         "openLibrary": "Abrir biblioteca",

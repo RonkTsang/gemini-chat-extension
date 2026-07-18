@@ -431,6 +431,8 @@
       },
       "actions": {
         "openSettings": "開啟 Gemini Power Kit 設定",
+        "toggleBulkDelete": "切換批次刪除",
+        "toggleBulkDeleteDisabledInfo": "批次刪除已關閉。請先在設定中開啟，再使用此快捷鍵。",
         "openNewChat": "開啟新聊天",
         "openTemporaryChat": "開啟臨時聊天",
         "openLibrary": "開啟資料庫",

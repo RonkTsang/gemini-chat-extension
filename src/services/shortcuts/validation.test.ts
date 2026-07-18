@@ -4,6 +4,7 @@ import { validateRecordedShortcut } from './validation'
 
 const bindings: Record<ShortcutAction, string | null> = {
   openSettings: 'alt+comma',
+  toggleBulkDelete: null,
   openNewChat: 'alt+n',
   openTemporaryChat: 'alt+t',
   openLibrary: 'alt+l',

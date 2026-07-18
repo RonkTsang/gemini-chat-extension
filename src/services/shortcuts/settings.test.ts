@@ -33,6 +33,16 @@ describe('shortcut settings', () => {
     expect(settings.bindings.uploadFiles).toBe('mod+u')
   })
 
+  it('leaves the Bulk Delete toggle unassigned for existing users', () => {
+    const { toggleBulkDelete: _toggleBulkDelete, ...bindingsWithoutBulkDelete } = defaultShortcutSettings.bindings
+    const settings = normalizeShortcutSettings({
+      enabled: true,
+      bindings: bindingsWithoutBulkDelete,
+    })
+
+    expect(settings.bindings.toggleBulkDelete).toBeNull()
+  })
+
   it('preserves an existing Cycle Model binding', () => {
     const settings = normalizeShortcutSettings({
       enabled: true,

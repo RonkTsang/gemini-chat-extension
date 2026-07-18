@@ -427,6 +427,8 @@
       },
       "actions": {
         "openSettings": "Open Gemini Power Kit Settings",
+        "toggleBulkDelete": "Toggle Bulk Delete",
+        "toggleBulkDeleteDisabledInfo": "Bulk Delete is off. Turn it on in Settings to use this shortcut.",
         "openNewChat": "Open New Chat",
         "openTemporaryChat": "Open Temporary Chat",
         "openLibrary": "Open Library",

@@ -431,6 +431,8 @@
       },
       "actions": {
         "openSettings": "Gemini Power Kit-Einstellungen öffnen",
+        "toggleBulkDelete": "Massenlöschung umschalten",
+        "toggleBulkDeleteDisabledInfo": "Massenlöschung ist aus. Aktiviere sie in den Einstellungen, um diesen Shortcut zu verwenden.",
         "openNewChat": "Neuen Chat öffnen",
         "openTemporaryChat": "Temporären Chat öffnen",
         "openLibrary": "Bibliothek öffnen",

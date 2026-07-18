@@ -9,6 +9,7 @@ import {
   toggleSidebar,
 } from '@/utils/chatActions'
 import { cycleGeminiModel } from '@/utils/cycleModel'
+import { toggleBulkDeleteMode } from '@/entrypoints/content/bulk-delete'
 import { focusContentEditor } from '@/utils/editorUtils'
 import { launchGeminiTool, openUploadFilesDialog } from '@/utils/toolboxActions'
 import { useShortcutSettings } from '@/hooks/useShortcutSettings'
@@ -123,6 +124,11 @@ async function runShortcutAction(
       open: true,
       module: 'shortcuts',
     })
+    return
+  }
+
+  if (action === 'toggleBulkDelete') {
+    toggleBulkDeleteMode()
     return
   }
 

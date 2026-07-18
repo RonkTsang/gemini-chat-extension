@@ -349,6 +349,19 @@ export function stopBulkDelete(): void {
   }
 }
 
+export function toggleBulkDeleteMode(): void {
+  if (!observer) {
+    return
+  }
+
+  if (active) {
+    exitBulkDeleteMode()
+    return
+  }
+
+  enterBulkDeleteMode()
+}
+
 export const __bulkDeleteTestApi = {
   enterBulkDeleteMode,
   exitBulkDeleteMode,

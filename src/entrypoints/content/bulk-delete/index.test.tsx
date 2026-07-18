@@ -11,7 +11,7 @@ import {
   shouldIgnoreBulkDeleteMutations,
   updateBulkMenu,
 } from './dom'
-import { __bulkDeleteTestApi, stopBulkDelete } from './index'
+import { __bulkDeleteTestApi, startBulkDelete, stopBulkDelete, toggleBulkDeleteMode } from './index'
 
 vi.mock('@/utils/i18n', () => ({
   t: (id: string, substitutions?: string | string[]) => {
@@ -99,6 +99,26 @@ describe('bulk delete DOM helpers', () => {
 
     expect(first).toBe(second)
     expect(header!.querySelectorAll('[data-gpk-bulk-delete-entry-spacer]')).toHaveLength(1)
+  })
+
+  it('toggles Bulk Delete mode only while the feature controller is running', () => {
+    renderSidenav()
+
+    toggleBulkDeleteMode()
+    expect(document.querySelector('[data-gpk-bulk-delete-menu]')).toBeNull()
+
+    startBulkDelete()
+    toggleBulkDeleteMode()
+    expect(document.querySelector('[data-gpk-bulk-delete-menu]')).not.toBeNull()
+
+    const checkbox = document.querySelector<HTMLInputElement>('.gpk-bulk-delete-checkbox')!
+    checkbox.checked = true
+    checkbox.dispatchEvent(new Event('change', { bubbles: true }))
+    expect(checkbox.checked).toBe(true)
+
+    toggleBulkDeleteMode()
+    expect(document.querySelector('[data-gpk-bulk-delete-menu]')).toBeNull()
+    expect(document.querySelector('.gpk-bulk-delete-checkbox')).toBeNull()
   })
 
   it('inserts and updates the bulk menu after the chats header', () => {

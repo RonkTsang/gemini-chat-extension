@@ -431,6 +431,8 @@
       },
       "actions": {
         "openSettings": "Gemini Power Kit の設定を開く",
+        "toggleBulkDelete": "一括削除を切り替え",
+        "toggleBulkDeleteDisabledInfo": "一括削除はオフです。設定で有効にしてからこのショートカットを使ってください。",
         "openNewChat": "新しいチャットを開く",
         "openTemporaryChat": "一時チャットを開く",
         "openLibrary": "ライブラリを開く",

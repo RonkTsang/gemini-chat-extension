@@ -1,13 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Box, Container, HStack, IconButton, Input, Kbd, Stack, Table, Text } from '@chakra-ui/react'
+import { Box, Button, Container, HStack, IconButton, Input, Kbd, Stack, Table, Text } from '@chakra-ui/react'
 import { useRecordHotkeys } from 'react-hotkeys-hook'
 import { HiOutlinePencil, HiOutlineTrash } from 'react-icons/hi'
+import { LuInfo } from 'react-icons/lu'
+import { ToggleTip } from '@/components/ui/toggle-tip'
+import { enableBulkDelete } from '@/entrypoints/popup/storage'
 import { t } from '@/utils/i18n'
 import { useShortcutSettings } from '@/hooks/useShortcutSettings'
 import {
   shortcutDefinitionsByCategory,
   type ShortcutAction,
 } from '@/services/shortcuts/definitions'
+import type { NavigationSection } from '@/components/setting-panel/config'
+import type { SettingViewComponentProps } from '@/components/setting-panel/types'
 import { createShortcutString, formatShortcut } from '@/services/shortcuts/format'
 import {
   shortcutRecordingBlacklist,
@@ -37,9 +42,10 @@ const RECORDED_KEY_ALIASES: Record<string, string> = {
   controlright: 'ctrl',
 }
 
-export function ShortcutSettingsView() {
+export function ShortcutSettingsView({ navigateToSection }: SettingViewComponentProps<NavigationSection>) {
   const { settings, updateBinding } = useShortcutSettings()
   const setGlobalRecording = useShortcutRecordingStore((state) => state.setRecording)
+  const [bulkDeleteEnabled, setBulkDeleteEnabled] = useState(true)
   const [activeAction, setActiveAction] = useState<ShortcutAction | null>(null)
   const [hoveredAction, setHoveredAction] = useState<ShortcutAction | null>(null)
   const [errors, setErrors] = useState<Partial<Record<ShortcutAction, ShortcutError>>>({})
@@ -49,6 +55,26 @@ export function ShortcutSettingsView() {
   const finalizeTimerRef = useRef<number | null>(null)
   const [capturedKeys, setCapturedKeys] = useState<Set<string>>(new Set())
   const [recordedKeys, recorder] = useRecordHotkeys(false, shortcutRecordingBlacklist)
+
+  useEffect(() => {
+    let isMounted = true
+
+    void enableBulkDelete.getValue().then((enabled) => {
+      if (isMounted) {
+        setBulkDeleteEnabled(enabled)
+      }
+    })
+    const unwatch = enableBulkDelete.watch((enabled) => {
+      if (isMounted) {
+        setBulkDeleteEnabled(enabled)
+      }
+    })
+
+    return () => {
+      isMounted = false
+      unwatch()
+    }
+  }, [])
 
   useEffect(() => {
     recordedKeysRef.current = recordedKeys
@@ -276,6 +302,7 @@ export function ShortcutSettingsView() {
                         const error = errors[action]
                         const isHovered = hoveredAction === action
                         const isLastRow = index === category.definitions.length - 1
+                        const showBulkDeleteDisabledInfo = action === 'toggleBulkDelete' && !bulkDeleteEnabled
 
                         return (
                           <Table.Row
@@ -289,9 +316,40 @@ export function ShortcutSettingsView() {
                               borderBottomWidth={isLastRow ? 0 : '1px'}
                               borderColor="border.muted"
                             >
-                              <Text fontSize="sm" fontWeight="normal">
-                                {t(definition.labelKey)}
-                              </Text>
+                              <HStack gap={1}>
+                                <Text fontSize="sm" fontWeight="normal">
+                                  {t(definition.labelKey)}
+                                </Text>
+                                {showBulkDeleteDisabledInfo ? (
+                                  <ToggleTip
+                                    content={(
+                                      <Stack align="start" gap={1}>
+                                        <Text>{t('settingPanel.shortcut.actions.toggleBulkDeleteDisabledInfo')}</Text>
+                                        <Button
+                                          variant="plain"
+                                          size="xs"
+                                          px={0}
+                                          minHeight="auto"
+                                          onClick={() => navigateToSection('enhancements')}
+                                        >
+                                          {t('settingPanel.config.enhancements.title')}
+                                        </Button>
+                                      </Stack>
+                                    )}
+                                    contentProps={{ maxWidth: '260px' }}
+                                    bodyProps={{ fontSize: 'xs', px: 2, py: 1.5 }}
+                                  >
+                                    <IconButton
+                                      aria-label={t('settingPanel.shortcut.actions.toggleBulkDeleteDisabledInfo')}
+                                      variant="ghost"
+                                      size="xs"
+                                      color="fg.muted"
+                                    >
+                                      <LuInfo />
+                                    </IconButton>
+                                  </ToggleTip>
+                                ) : null}
+                              </HStack>
                             </Table.Cell>
                             <Table.Cell
                               py={2}
