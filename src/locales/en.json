@@ -436,6 +436,7 @@
         "openLibrary": "Open Library",
         "openGems": "Open Gems",
         "focusInput": "Focus Input",
+        "toggleSpeechDictation": "Toggle Speech Dictation",
         "toggleSidebar": "Toggle Sidebar",
         "cycleModel": "Cycle Model",
         "createImage": "Create Image",
@@ -511,7 +512,7 @@
     "releaseNotes": "Release notes",
     "shortcuts": {
       "title": "Move through Gemini faster",
-      "description": "Set shortcuts for chats, navigation, prompt tools, and uploads, then keep your most frequent Gemini actions one key press away.",
+      "description": "Set shortcuts for chats, navigation, and tool menu actions, then keep your most frequent Gemini actions one key press away.",
       "action": "Set shortcuts"
     },
     "bulkDelete": {

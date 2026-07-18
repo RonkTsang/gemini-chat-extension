@@ -446,6 +446,7 @@
         "createMusic": "Musik erstellen",
         "openCanvas": "Canvas öffnen",
         "openDeepResearch": "Deep Research öffnen",
+        "toggleSpeechDictation": "Sprachdiktat umschalten",
         "uploadFiles": "Dateien hochladen"
       },
       "errors": {
@@ -515,7 +516,7 @@
     "releaseNotes": "Versionshinweise",
     "shortcuts": {
       "title": "Mit Shortcuts schneller durch Gemini",
-      "description": "Lege Shortcuts für Chats, Navigation, Prompt-Tools und Uploads fest, damit du deine häufigsten Gemini-Aktionen mit einem Tastendruck erreichst.",
+      "description": "Lege Shortcuts für Chats, Navigation und Aktionen im Tool-Menü fest, damit du deine häufigsten Gemini-Aktionen mit einem Tastendruck erreichst.",
       "action": "Shortcuts festlegen"
     },
     "bulkDelete": {

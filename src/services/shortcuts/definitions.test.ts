@@ -19,12 +19,17 @@ describe('shortcut definitions', () => {
       defaultShortcut: 'alt+g',
       enableOnContentEditable: false,
     })
+    expect(definitionsByAction.get('toggleSidebar')).toMatchObject({
+      defaultShortcut: 'alt+b',
+      enableOnContentEditable: false,
+    })
   })
 
   it('allows cycle model to run while a contenteditable is focused', () => {
     const cycleModel = shortcutDefinitions.find((definition) => definition.action === 'cycleModel')
 
     expect(cycleModel).toMatchObject({
+      defaultShortcut: 'alt+m',
       enableOnContentEditable: true,
       enableOnFormTags: ['textbox'],
     })
@@ -44,6 +49,7 @@ describe('shortcut definitions', () => {
         id: 'prompt',
         actions: [
           'focusInput',
+          'toggleSpeechDictation',
           'cycleModel',
           'uploadFiles',
           'createImage',
@@ -55,21 +61,29 @@ describe('shortcut definitions', () => {
     ])
   })
 
-  it('leaves the Prompt tools unassigned by default', () => {
+  it('assigns default shortcuts to Prompt tools', () => {
     const definitionsByAction = new Map(shortcutDefinitions.map((definition) => [definition.action, definition]))
 
-    expect(definitionsByAction.get('createImage')).toMatchObject({ defaultShortcut: null })
-    expect(definitionsByAction.get('createMusic')).toMatchObject({ defaultShortcut: null })
-    expect(definitionsByAction.get('openCanvas')).toMatchObject({ defaultShortcut: null })
-    expect(definitionsByAction.get('openDeepResearch')).toMatchObject({ defaultShortcut: null })
+    expect(definitionsByAction.get('createImage')).toMatchObject({ defaultShortcut: 'alt+shift+i' })
+    expect(definitionsByAction.get('createMusic')).toMatchObject({ defaultShortcut: 'alt+shift+m' })
+    expect(definitionsByAction.get('openCanvas')).toMatchObject({ defaultShortcut: 'alt+shift+c' })
+    expect(definitionsByAction.get('openDeepResearch')).toMatchObject({ defaultShortcut: 'alt+shift+r' })
   })
 
-  it('adds an unassigned Bulk Delete toggle shortcut to Gemini Power Kit', () => {
+  it('keeps all default shortcuts unique', () => {
+    const assignedShortcuts = shortcutDefinitions
+      .map((definition) => definition.defaultShortcut)
+      .filter((shortcut): shortcut is string => shortcut !== null)
+
+    expect(new Set(assignedShortcuts)).toHaveLength(assignedShortcuts.length)
+  })
+
+  it('assigns a Bulk Delete toggle shortcut outside text inputs', () => {
     const bulkDelete = shortcutDefinitions.find((definition) => definition.action === 'toggleBulkDelete')
 
     expect(bulkDelete).toMatchObject({
       category: 'geminiPowerKit',
-      defaultShortcut: null,
+      defaultShortcut: 'alt+shift+d',
       enableOnFormTags: ['input'],
       enableOnContentEditable: false,
     })
@@ -87,11 +101,21 @@ describe('shortcut definitions', () => {
     expect(bulkDelete?.ignoreEventWhen?.(textInputEvent)).toBe(true)
   })
 
-  it('uses the platform primary modifier for Upload Files', () => {
+  it('uses the Power Kit modifier for Upload Files', () => {
     const uploadFiles = shortcutDefinitions.find((definition) => definition.action === 'uploadFiles')
 
     expect(uploadFiles).toMatchObject({
-      defaultShortcut: 'mod+u',
+      defaultShortcut: 'alt+u',
+      enableOnContentEditable: true,
+      enableOnFormTags: ['textbox'],
+    })
+  })
+
+  it('allows speech dictation to run while the prompt editor is focused', () => {
+    const dictation = shortcutDefinitions.find((definition) => definition.action === 'toggleSpeechDictation')
+
+    expect(dictation).toMatchObject({
+      defaultShortcut: 'alt+d',
       enableOnContentEditable: true,
       enableOnFormTags: ['textbox'],
     })

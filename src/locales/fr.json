@@ -446,6 +446,7 @@
         "createMusic": "Créer une musique",
         "openCanvas": "Ouvrir Canvas",
         "openDeepResearch": "Ouvrir Deep Research",
+        "toggleSpeechDictation": "Basculer la dictée vocale",
         "uploadFiles": "Importer des fichiers"
       },
       "errors": {
@@ -515,7 +516,7 @@
     "releaseNotes": "Notes de version",
     "shortcuts": {
       "title": "Naviguez plus vite dans Gemini",
-      "description": "Définissez des raccourcis pour les chats, la navigation, les outils de prompt et les envois de fichiers, pour garder vos actions Gemini les plus fréquentes à une seule touche.",
+      "description": "Définissez des raccourcis pour les chats, la navigation et les actions du menu d'outils, pour garder vos actions Gemini les plus fréquentes à une seule touche.",
       "action": "Configurer les raccourcis"
     },
     "bulkDelete": {

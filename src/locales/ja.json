@@ -446,6 +446,7 @@
         "createMusic": "音楽を作成",
         "openCanvas": "Canvasを開く",
         "openDeepResearch": "Deep Researchを開く",
+        "toggleSpeechDictation": "音声入力を切り替え",
         "uploadFiles": "ファイルをアップロード"
       },
       "errors": {
@@ -515,7 +516,7 @@
     "releaseNotes": "リリースノート",
     "shortcuts": {
       "title": "Geminiをもっとすばやく操作",
-      "description": "チャット、ナビゲーション、プロンプトツール、アップロードにショートカットを設定して、よく使うGeminiの操作を1キーで呼び出せます。",
+      "description": "チャット、ナビゲーション、ツールメニューの操作にショートカットを設定して、よく使う Gemini の操作を1キーで呼び出せます。",
       "action": "ショートカットを設定"
     },
     "bulkDelete": {

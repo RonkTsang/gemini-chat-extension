@@ -17,13 +17,15 @@
 1. SettingPanel > Tools > Shortcut 设置入口。
 2. 快捷键展示、录制、删除、冲突校验。
 3. 快捷键设置实时保存，并立即重新监听。
-4. 十三个初始动作：
+4. 十五个初始动作：
    - Open Gemini Power Kit Settings
+   - Toggle Bulk Delete
    - Open New Chat
    - Open Temporary Chat
    - Open Library
    - Open Gems
    - Focus Input
+   - Toggle Speech Dictation
    - Toggle Sidebar
    - Cycle Model
    - Create Image
@@ -47,13 +49,13 @@ Shortcut 面板按 action 分类展示。每个分类使用左对齐的小标题
 
 ```text
 Gemini Power Kit
-[Toggle Gemini Power Kit Settings]
+[Toggle Gemini Power Kit Settings] [Toggle Bulk Delete]
 
 App
 [Toggle Sidebar] [Open New Chat] [Toggle Temporary Chat] [Open Library] [Open Gems]
 
 Prompt
-[Focus Input] [Cycle Model] [Upload Files] [Create Image] [Create Music] [Open Canvas] [Open Deep Research]
+[Focus Input] [Toggle Speech Dictation] [Cycle Model] [Upload Files] [Create Image] [Create Music] [Open Canvas] [Open Deep Research]
 ```
 
 每行使用两列：命令名称，以及包含快捷键展示、编辑和删除操作的快捷键区域。
@@ -123,18 +125,20 @@ Prompt
 | Action | Default Shortcut | Behavior |
 | :--- | :--- | :--- |
 | `openSettings` | `alt + ,` | Toggle Gemini Power Kit Settings：已打开时关闭；未打开时打开并切换至 Shortcut 设置页 |
+| `toggleBulkDelete` | `alt + shift + d` | 开启或退出 Bulk Delete 模式；仅在非文本输入状态触发 |
 | `openNewChat` | `alt + n` | 优先点击 Gemini 原生 New chat 入口，失败后切换至 `/app` 兜底 |
 | `openTemporaryChat` | `alt + t` | Toggle Temporary Chat：当前路径为 `/app` 时直接点击 `temp-chat-button > gem-icon-button`；其他页面复用 `openNewChat` 后延迟 500ms 点击 |
 | `openLibrary` | `alt + l` | 点击 SideNav 中原生的 Library 入口 |
 | `openGems` | `alt + g` | 点击 SideNav 中原生的 Gems 入口 |
 | `focusInput` | `/` | 复用 `editorUtils` 聚焦 Gemini 输入框 |
-| `toggleSidebar` | `alt + q` | 根据当前侧边栏状态点击关闭或开启按钮 |
-| `cycleModel` | `ctrl + shift + m` | 切换至模式菜单中当前顺序的下一个模型；可在 Gemini 输入框聚焦时触发 |
-| `createImage` | 未设置 | 打开 Upload & tools，并点击图标名为 `image_create` 的原生工具项 |
-| `createMusic` | 未设置 | 打开 Upload & tools，并点击图标名为 `music` 的原生工具项 |
-| `openCanvas` | 未设置 | 打开 Upload & tools，并点击图标名为 `canvas` 的原生工具项 |
-| `openDeepResearch` | 未设置 | 打开 Upload & tools，并点击图标名为 `deep_research` 的原生工具项；能力不可用时不触发 |
-| `uploadFiles` | macOS: `⌘ U`; Windows: `Ctrl + U` | 打开 Upload & tools，并点击 `uploader button[data-test-id="local-images-files-uploader-button"]` |
+| `toggleSidebar` | `alt + b` | 根据当前侧边栏状态点击关闭或开启按钮 |
+| `toggleSpeechDictation` | `alt + d` | 切换 Gemini 原生听写；可在 Gemini 输入框聚焦时触发 |
+| `cycleModel` | `alt + m` | 切换至模式菜单中当前顺序的下一个模型；可在 Gemini 输入框聚焦时触发 |
+| `uploadFiles` | `alt + u` | 打开 Upload & tools，并点击 `uploader button[data-test-id="local-images-files-uploader-button"]` |
+| `createImage` | `alt + shift + i` | 打开 Upload & tools，并点击图标名为 `image_create` 的原生工具项 |
+| `createMusic` | `alt + shift + m` | 打开 Upload & tools，并点击图标名为 `music` 的原生工具项 |
+| `openCanvas` | `alt + shift + c` | 打开 Upload & tools，并点击图标名为 `canvas` 的原生工具项 |
+| `openDeepResearch` | `alt + shift + r` | 打开 Upload & tools，并点击图标名为 `deep_research` 的原生工具项；能力不可用时不触发 |
 
 ## 6. 技术设计
 ### 6.1 数据结构
@@ -143,11 +147,13 @@ Prompt
 ```ts
 export type ShortcutAction =
   | 'openSettings'
+  | 'toggleBulkDelete'
   | 'openNewChat'
   | 'openTemporaryChat'
   | 'openLibrary'
   | 'openGems'
   | 'focusInput'
+  | 'toggleSpeechDictation'
   | 'toggleSidebar'
   | 'cycleModel'
   | 'createImage'
@@ -184,18 +190,20 @@ storage.defineItem<ShortcutSettings>('sync:shortcutSettings', {
     enabled: true,
     bindings: {
       openSettings: 'alt+comma',
+      toggleBulkDelete: 'alt+shift+d',
       openNewChat: 'alt+n',
       openTemporaryChat: 'alt+t',
       openLibrary: 'alt+l',
       openGems: 'alt+g',
       focusInput: 'slash',
-      toggleSidebar: 'alt+q',
-      cycleModel: 'ctrl+shift+m',
-      createImage: null,
-      createMusic: null,
-      openCanvas: null,
-      openDeepResearch: null,
-      uploadFiles: 'mod+u',
+      toggleSpeechDictation: 'alt+d',
+      toggleSidebar: 'alt+b',
+      cycleModel: 'alt+m',
+      createImage: 'alt+shift+i',
+      createMusic: 'alt+shift+m',
+      openCanvas: 'alt+shift+c',
+      openDeepResearch: 'alt+shift+r',
+      uploadFiles: 'alt+u',
     },
   },
 })
@@ -252,14 +260,14 @@ function PageShortcutController() {
 ## 7. 验收标准
 1. SettingPanel > Tools 中可进入 Shortcut 页面。
 2. 快捷键按 Gemini Power Kit、App、Prompt 三组展示，且不显示表头。
-3. 九个默认快捷键在 Gemini 页面内生效；四个 Prompt 工具显示在列表中，但默认未设置快捷键。
+3. 所有十五个默认快捷键在 Gemini 页面内生效；`Alt` / `Option` 用于直接动作，`Alt + Shift` / `Option + Shift` 用于工具与 Bulk Delete。
 4. 修改或删除快捷键后无需刷新页面即可生效。
 5. 录制期间不会触发已有快捷键动作。
 5. 重复、单字母、特殊键等非法输入会显示 danger 提醒。
 6. 快捷键按当前系统格式展示，并使用 Chakra `Kbd`。
 7. Temporary Chat 动作复用 `openNewChat` 打开新聊天后点击 `temp-chat-button > gem-icon-button`，不描述为转换已有聊天。
-8. Focus Input 使用 `/` 聚焦输入框；Toggle Sidebar 使用 `alt + q` 切换侧边栏。
-9. Cycle Model 使用 `ctrl + shift + m` 切换下一个模型，输入框聚焦时仍可触发。
+8. Focus Input 使用 `/` 聚焦输入框；Toggle Sidebar 使用 `alt + b` 切换侧边栏。
+9. Toggle Speech Dictation 使用 `alt + d`，Cycle Model 使用 `alt + m`，输入框聚焦时仍可触发。
 10. Open Library 使用 `alt + l`，Open Gems 使用 `alt + g`，均点击 Gemini SideNav 原生入口。
-11. Create Image、Create Music、Canvas、Deep Research 可录制快捷键，并通过 Gemini 原生 Upload & tools 菜单启动。
-12. Upload Files 默认使用 macOS 的 `⌘ U` 与 Windows 的 `Ctrl + U`，并打开 Gemini 原生文件选择器。
+11. Create Image、Create Music、Canvas、Deep Research 默认使用 `alt + shift + i/m/c/r`，并通过 Gemini 原生 Upload & tools 菜单启动。
+12. Upload Files 默认使用 `alt + u`，并打开 Gemini 原生文件选择器；Bulk Delete 默认使用 `alt + shift + d`，且不在文本输入时触发。
