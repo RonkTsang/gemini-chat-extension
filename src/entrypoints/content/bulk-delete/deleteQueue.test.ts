@@ -1,9 +1,14 @@
-import { afterEach, describe, expect, it } from 'vitest'
-import { __deleteQueueTestApi } from './deleteQueue'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import {
+  __deleteQueueTestApi,
+  deleteConversationRows,
+  setDevForceBulkDeleteFailure,
+} from './deleteQueue'
 
 describe('delete queue confirmation dialog', () => {
   afterEach(() => {
     document.body.innerHTML = ''
+    setDevForceBulkDeleteFailure(false)
   })
 
   it('selects Gemini’s focused Delete action instead of the preceding Cancel action', () => {
@@ -39,5 +44,21 @@ describe('delete queue confirmation dialog', () => {
 
     expect(overlay?.classList.contains('cdk-overlay-container')).toBe(true)
     expect(overlay?.querySelector('[data-test-id="delete-button"]')).not.toBeNull()
+  })
+
+  it('returns a failure without dispatching a synthetic Escape event', async () => {
+    const row = document.createElement('div')
+    document.body.append(row)
+    setDevForceBulkDeleteFailure(true)
+    const onFailed = vi.fn()
+    const onKeyDown = vi.fn()
+    document.addEventListener('keydown', onKeyDown)
+
+    const result = await deleteConversationRows([row], undefined, { onFailed })
+
+    expect(result).toMatchObject({ status: 'failed', succeeded: 0 })
+    expect(onFailed).toHaveBeenCalledOnce()
+    expect(onKeyDown).not.toHaveBeenCalled()
+    document.removeEventListener('keydown', onKeyDown)
   })
 })

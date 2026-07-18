@@ -70,7 +70,9 @@
     "loading": "Chargement...",
     "selectConversation": "Sélectionner une conversation",
     "confirmDelete": "Supprimer les $1 chats sélectionnés ? Cette action est irréversible.",
-    "loadFailed": "Certains chats n’ont pas pu être chargés. Vous pouvez refaire votre sélection ou recharger Gemini."
+    "loadFailed": "Certains chats n’ont pas pu être chargés. Vous pouvez refaire votre sélection ou recharger Gemini.",
+    "deleteFailed": "Échec de la suppression",
+    "deleteFailedDescription": "Impossible de supprimer les chats sélectionnés."
   },
   "quickFollow": {
     "more": "Plus",

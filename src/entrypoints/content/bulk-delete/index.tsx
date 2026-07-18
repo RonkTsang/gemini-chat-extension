@@ -1,6 +1,7 @@
 import { createRoot, type Root } from 'react-dom/client'
 import { t } from '@/utils/i18n'
 import { BulkDeleteEntryHint } from './BulkDeleteEntryHint'
+import { toaster } from '@/components/ui/toaster'
 import {
   cleanupChatCheckboxes,
   ensureBulkMenu,
@@ -36,6 +37,10 @@ let excludePinned = false
 let abortController: AbortController | null = null
 let deleteProgressOverlay: DeleteProgressOverlay | null = null
 let stickyActionBar: StickyActionBar | null = null
+
+function isCurrentOperation(controller: AbortController): boolean {
+  return abortController === controller
+}
 
 function renderEntry(): void {
   const header = findChatHeader()
@@ -149,7 +154,6 @@ function enterBulkDeleteMode(): void {
   active = true
   selectedKeys = new Set()
   excludePinned = false
-  abortController = new AbortController()
   stickyActionBar ??= createStickyActionBar({
     onDeselectAll: clearSelection,
     onDelete: () => void deleteSelected(),
@@ -184,16 +188,21 @@ async function selectRecent(): Promise<void> {
 
   loading = true
   updateMenu()
-  abortController = new AbortController()
+  const controller = new AbortController()
+  abortController = controller
 
   try {
     const result = await loadLatestChatRows(
       recentLimit,
       selectedKeys,
       handleCheckboxChange,
-      abortController.signal,
+      controller.signal,
       chatRow => !excludePinned || !isPinnedChatRow(chatRow.row),
     )
+    if (!isCurrentOperation(controller) || controller.signal.aborted) {
+      return
+    }
+
     if (!result.completed && result.reason !== 'scroller-not-found') {
       showLoadFailedWarning()
     }
@@ -207,11 +216,16 @@ async function selectRecent(): Promise<void> {
     )
     reconcileChatCheckboxes(selectedKeys, handleCheckboxChange)
   } catch (error) {
-    if (!abortController.signal.aborted) {
+    if (isCurrentOperation(controller) && !controller.signal.aborted) {
       console.warn('[BulkDelete] Failed to select latest chats:', error)
       showLoadFailedWarning()
     }
   } finally {
+    if (!isCurrentOperation(controller)) {
+      return
+    }
+
+    abortController = null
     loading = false
     updateMenu()
   }
@@ -281,7 +295,8 @@ async function deleteSelected(): Promise<void> {
 
   deleting = true
   updateMenu()
-  abortController = new AbortController()
+  const controller = new AbortController()
+  abortController = controller
 
   try {
     const rowsToDelete = getChatRows()
@@ -293,16 +308,40 @@ async function deleteSelected(): Promise<void> {
     deleteProgressOverlay = elementsToDelete.length >= 2
       ? createDeleteProgressOverlay(titlesInDeleteOrder)
       : null
-    await deleteConversationRows(elementsToDelete, abortController.signal, {
+    const result = await deleteConversationRows(elementsToDelete, controller.signal, {
       onDeleted: () => deleteProgressOverlay?.advance(),
       onFailed: () => deleteProgressOverlay?.discard(),
       onSkipped: () => deleteProgressOverlay?.discard(),
     })
+
+    if (controller.signal.aborted || result.status === 'cancelled') {
+      return
+    }
+
+    if (result.status === 'failed') {
+      console.warn('[BulkDelete] Failed to delete conversation:', result.error)
+      exitBulkDeleteMode()
+      toaster.create({
+        id: 'bulk-delete-failed',
+        type: 'error',
+        title: t('bulkDelete.deleteFailed'),
+        description: t('bulkDelete.deleteFailedDescription'),
+        closable: true,
+        duration: 5000,
+      })
+      return
+    }
+
     await deleteProgressOverlay?.finish()
   } finally {
+    if (!isCurrentOperation(controller)) {
+      return
+    }
+
     deleteProgressOverlay?.destroy()
     deleteProgressOverlay = null
     deleting = false
+    abortController = null
     selectedKeys = new Set()
     cleanupChatCheckboxes()
     syncCheckboxes()
@@ -311,7 +350,7 @@ async function deleteSelected(): Promise<void> {
 }
 
 function handleKeyDown(event: KeyboardEvent): void {
-  if (!active || event.key !== 'Escape' || event.metaKey || event.ctrlKey || event.altKey) {
+  if (!event.isTrusted || !active || event.key !== 'Escape' || event.metaKey || event.ctrlKey || event.altKey) {
     return
   }
   event.preventDefault()

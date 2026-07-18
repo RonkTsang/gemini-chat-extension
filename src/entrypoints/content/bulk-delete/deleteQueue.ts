@@ -27,6 +27,14 @@ const CONFIRM_DELETE_BUTTON_SELECTORS = [
 
 const OVERLAY_SELECTORS = ['div.cdk-overlay-container', '[role="dialog"]', '.modal-container', '.overlay-container']
 
+let forceBulkDeleteFailureForDev = false
+
+export function setDevForceBulkDeleteFailure(enabled: boolean): void {
+  if (import.meta.env.DEV) {
+    forceBulkDeleteFailureForDev = enabled
+  }
+}
+
 function wait(ms: number, signal?: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
     if (signal?.aborted) {
@@ -248,9 +256,16 @@ async function deleteOneConversation(row: HTMLElement, signal?: AbortSignal): Pr
   await waitForRowRemoved(row, 15000, signal)
 }
 
-export interface DeleteQueueResult {
+export type DeleteQueueResult = {
+  status: 'completed'
   succeeded: number
-  failed: number
+} | {
+  status: 'cancelled'
+  succeeded: number
+} | {
+  status: 'failed'
+  succeeded: number
+  error: unknown
 }
 
 export interface DeleteQueueCallbacks {
@@ -264,35 +279,33 @@ export async function deleteConversationRows(
   signal?: AbortSignal,
   callbacks: DeleteQueueCallbacks = {},
 ): Promise<DeleteQueueResult> {
-  const result: DeleteQueueResult = { succeeded: 0, failed: 0 }
+  let succeeded = 0
 
   for (const row of Array.from(rows).reverse()) {
     if (signal?.aborted) {
-      break
+      return { status: 'cancelled', succeeded }
     }
     if (!document.body.contains(row)) {
       await callbacks.onSkipped?.()
       continue
     }
     try {
+      if (import.meta.env.DEV && forceBulkDeleteFailureForDev) {
+        throw new Error('Bulk Delete failure forced by development debug flag')
+      }
       await deleteOneConversation(row, signal)
-      result.succeeded++
+      succeeded++
       await callbacks.onDeleted?.()
     } catch (error) {
-      result.failed++
+      if (signal?.aborted) {
+        return { status: 'cancelled', succeeded }
+      }
       await callbacks.onFailed?.()
-      document.body.dispatchEvent(new KeyboardEvent('keydown', {
-        key: 'Escape',
-        code: 'Escape',
-        bubbles: true,
-        cancelable: true,
-      }))
-      await wait(100, signal).catch(() => undefined)
-      console.warn('[BulkDelete] Failed to delete conversation:', error)
+      return { status: 'failed', succeeded, error }
     }
   }
 
-  return result
+  return { status: 'completed', succeeded }
 }
 
 export const __deleteQueueTestApi = {

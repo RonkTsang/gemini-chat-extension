@@ -70,7 +70,9 @@
     "loading": "加载中...",
     "selectConversation": "选择对话",
     "confirmDelete": "删除已选中的 $1 个聊天？此操作无法撤销。",
-    "loadFailed": "部分聊天无法加载。你可以再次选择或重新加载 Gemini。"
+    "loadFailed": "部分聊天无法加载。你可以再次选择或重新加载 Gemini。",
+    "deleteFailed": "删除失败",
+    "deleteFailedDescription": "无法删除所选聊天。"
   },
   "quickFollow": {
     "more": "更多",

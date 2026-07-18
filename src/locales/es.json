@@ -70,7 +70,9 @@
     "loading": "Cargando...",
     "selectConversation": "Selecciona una conversación",
     "confirmDelete": "¿Eliminar los $1 chats seleccionados? No se puede deshacer.",
-    "loadFailed": "No se pudieron cargar algunos chats. Puedes volver a seleccionarlos o recargar Gemini."
+    "loadFailed": "No se pudieron cargar algunos chats. Puedes volver a seleccionarlos o recargar Gemini.",
+    "deleteFailed": "Error al eliminar",
+    "deleteFailedDescription": "No se pudieron eliminar los chats seleccionados."
   },
   "quickFollow": {
     "more": "Más",

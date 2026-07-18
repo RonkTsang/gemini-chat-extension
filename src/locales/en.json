@@ -70,7 +70,9 @@
     "loading": "Loading...",
     "selectConversation": "Select conversation",
     "confirmDelete": "Delete $1 selected chats? This cannot be undone.",
-    "loadFailed": "Some chats could not be loaded. You can select again or reload Gemini."
+    "loadFailed": "Some chats could not be loaded. You can select again or reload Gemini.",
+    "deleteFailed": "Failed to delete",
+    "deleteFailedDescription": "Could not delete the selected chats."
   },
   "quickFollow": {
     "more": "More",

@@ -70,7 +70,9 @@
     "loading": "Carregando...",
     "selectConversation": "Selecionar conversa",
     "confirmDelete": "Excluir $1 chats selecionados? Isso não pode ser desfeito.",
-    "loadFailed": "Não foi possível carregar alguns chats. Você pode selecioná-los novamente ou recarregar o Gemini."
+    "loadFailed": "Não foi possível carregar alguns chats. Você pode selecioná-los novamente ou recarregar o Gemini.",
+    "deleteFailed": "Falha ao excluir",
+    "deleteFailedDescription": "Não foi possível excluir os chats selecionados."
   },
   "quickFollow": {
     "more": "Mais",

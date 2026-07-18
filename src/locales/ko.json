@@ -70,7 +70,9 @@
     "loading": "불러오는 중...",
     "selectConversation": "대화 선택",
     "confirmDelete": "선택한 채팅 $1개를 삭제할까요? 이 작업은 되돌릴 수 없습니다.",
-    "loadFailed": "일부 채팅을 불러오지 못했습니다. 다시 선택하거나 Gemini를 새로고침하세요."
+    "loadFailed": "일부 채팅을 불러오지 못했습니다. 다시 선택하거나 Gemini를 새로고침하세요.",
+    "deleteFailed": "삭제 실패",
+    "deleteFailedDescription": "선택한 채팅을 삭제하지 못했습니다."
   },
   "quickFollow": {
     "more": "더보기",

@@ -70,7 +70,9 @@
     "loading": "Wird geladen...",
     "selectConversation": "Unterhaltung auswählen",
     "confirmDelete": "$1 ausgewählte Chats löschen? Das kann nicht rückgängig gemacht werden.",
-    "loadFailed": "Einige Chats konnten nicht geladen werden. Du kannst sie erneut auswählen oder Gemini neu laden."
+    "loadFailed": "Einige Chats konnten nicht geladen werden. Du kannst sie erneut auswählen oder Gemini neu laden.",
+    "deleteFailed": "Löschen fehlgeschlagen",
+    "deleteFailedDescription": "Die ausgewählten Chats konnten nicht gelöscht werden."
   },
   "quickFollow": {
     "more": "Mehr",

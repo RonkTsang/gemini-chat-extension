@@ -13,6 +13,24 @@ import {
 } from './dom'
 import { __bulkDeleteTestApi, startBulkDelete, stopBulkDelete, toggleBulkDeleteMode } from './index'
 
+const {
+  deleteConversationRowsMock,
+  toasterCreateMock,
+} = vi.hoisted(() => ({
+  deleteConversationRowsMock: vi.fn(),
+  toasterCreateMock: vi.fn(),
+}))
+
+vi.mock('./deleteQueue', () => ({
+  deleteConversationRows: deleteConversationRowsMock,
+}))
+
+vi.mock('@/components/ui/toaster', () => ({
+  toaster: {
+    create: toasterCreateMock,
+  },
+}))
+
 vi.mock('@/utils/i18n', () => ({
   t: (id: string, substitutions?: string | string[]) => {
     if (id === 'bulkDelete.deleteSelected') {
@@ -79,6 +97,7 @@ function renderSidenav(count = 3): void {
 describe('bulk delete DOM helpers', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
+    deleteConversationRowsMock.mockResolvedValue({ status: 'completed', succeeded: 0 })
   })
 
   afterEach(() => {
@@ -87,6 +106,8 @@ describe('bulk delete DOM helpers', () => {
     removeBulkMenu()
     document.body.innerHTML = ''
     vi.restoreAllMocks()
+    deleteConversationRowsMock.mockReset()
+    toasterCreateMock.mockReset()
   })
 
   it('injects the entry mount into the chats header without duplicates', () => {
@@ -381,5 +402,33 @@ describe('bulk delete DOM helpers', () => {
     expect(checkboxes[1].checked).toBe(true)
     expect(deselectPinned.hidden).toBe(false)
     expect(deselectPinned.disabled).toBe(true)
+  })
+
+  it('exits Bulk Delete and shows an error toast when the delete queue fails', async () => {
+    renderSidenav(1)
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    Object.defineProperty(window, 'confirm', {
+      configurable: true,
+      value: vi.fn(() => true),
+    })
+    deleteConversationRowsMock.mockResolvedValue({
+      status: 'failed',
+      succeeded: 0,
+      error: new Error('delete menu item not found'),
+    })
+    __bulkDeleteTestApi.enterBulkDeleteMode()
+    const checkbox = document.querySelector<HTMLInputElement>('.gpk-bulk-delete-checkbox')!
+    checkbox.click()
+
+    await __bulkDeleteTestApi.deleteSelected()
+
+    expect(document.querySelector('[data-gpk-bulk-delete-menu]')).toBeNull()
+    expect(document.querySelector('[data-gpk-bulk-delete-progress-overlay]')).toBeNull()
+    expect(toasterCreateMock).toHaveBeenCalledWith(expect.objectContaining({
+      id: 'bulk-delete-failed',
+      type: 'error',
+      title: 'bulkDelete.deleteFailed',
+      description: 'bulkDelete.deleteFailedDescription',
+    }))
   })
 })

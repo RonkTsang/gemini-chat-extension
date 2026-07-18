@@ -20,6 +20,10 @@ export const GEM_EXT_EVENTS = {
   THEME_APPEARANCE_APPLY: 'gem-ext:theme-appearance-apply',
 } as const
 
+export const GEM_DEV_EVENTS = {
+  DEV_BULK_DELETE_FORCE_FAILURE_CHANGE: 'gem-dev:bulk-delete-force-failure-change',
+} as const
+
 export const EVENTS = {
   QUICK_FOLLOW_UP_SHOW: 'quick-follow-up:show',
   QUICK_FOLLOW_UP_HIDE: 'quick-follow-up:hide',
