@@ -4,6 +4,9 @@ description: Follow the latest Gemini Power Kit releases, feature updates, and v
 ---
 
 import { Image } from 'astro:assets';
+import bulkDeleteEntry from '../../../assets/features/bulk-delete/entry.jpeg';
+import bulkDeleteSelection from '../../../assets/features/bulk-delete/selection-panel.jpeg';
+import shortcutSettings from '../../../assets/features/Shortcut/shortcut_setting.png';
 import notificationSettings from '../../../assets/features/notification/setting-panel.png';
 import glassEffectControls from '../../../assets/releases/whats-new/v0.7.0-glass-effect-control-display.png';
 import themeGuide from '../../../assets/releases/whats-new/v0.6.0-theme-guide.jpg';
@@ -14,6 +17,41 @@ import openInNewTabVideo from '../../../assets/releases/whats-new/v0.5.0-open-in
 import chatOutlinePreview from '../../../assets/releases/whats-new/v0.5.0-chat-outline-preview.png';
 
 Keep up with the latest releases, improvements, and fixes.
+
+## v0.10.0 Bulk Delete and Keyboard Shortcuts
+
+*July 19, 2026*
+
+Clean up Gemini history faster and keep frequent actions within reach.
+
+### Bulk Delete
+
+<div class="release-image-grid">
+  <Image
+    src={bulkDeleteEntry}
+    alt="Bulk Delete entry: the trash icon beside Recents in the Google Gemini chat sidebar"
+    class="release-image"
+  />
+  <Image
+    src={bulkDeleteSelection}
+    alt="Bulk Delete panel with recent-chat selection, pinned-chat protection, checkboxes, and Delete controls"
+    class="release-image"
+  />
+</div>
+
+Bulk Delete adds a multi-select workflow to Gemini's **Recents** sidebar. Select the trash icon, choose chats individually or as a recent batch, then review the selected count before you delete.
+
+Use **Exclude pinned** to leave pinned conversations out of a recent batch, or use **Deselect pinned** and **Deselect all** to review the selection again. Deletion requires confirmation and shows progress for larger batches; deleted chats cannot be restored through Bulk Delete.
+
+### Keyboard Shortcuts
+
+<Image
+  src={shortcutSettings}
+  alt="Gemini Power Kit Shortcut settings grouped by Gemini Power Kit, App, and Prompt actions"
+  class="release-image"
+/>
+
+Keyboard Shortcuts lets you set combinations for frequent Gemini actions, including new and temporary chats, navigation, prompt tools, model cycling, file uploads, and Bulk Delete. Open **Gemini Power Kit** in the sidebar, then choose **Tools** → **Shortcut** to edit a binding. Changes apply immediately on Gemini without a refresh.
 
 ## v0.9.0 Background Position
 

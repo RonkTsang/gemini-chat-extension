@@ -260,6 +260,33 @@ header.header {
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
 }
 
+.release-image-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1rem 0 1.5rem;
+}
+
+.release-image-grid .release-image {
+  aspect-ratio: 5 / 4;
+  height: 100%;
+  margin: 0;
+  object-fit: cover;
+  object-position: left top;
+}
+
+@media (max-width: 640px) {
+  .release-image-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .release-image-grid .release-image {
+    aspect-ratio: auto;
+    height: auto;
+    object-fit: contain;
+  }
+}
+
 .release-video {
   display: block;
   width: 100%;
