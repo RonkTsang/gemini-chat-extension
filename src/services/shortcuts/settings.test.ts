@@ -15,17 +15,17 @@ describe('shortcut settings', () => {
         openGems: 'alt+g',
         focusInput: 'slash',
         toggleSidebar: 'alt+b',
-        cycleModel: 'alt+shift+m',
+        cycleModel: 'alt+m',
         uploadFiles: 'alt+u',
       },
     }, false)
 
     expect(settings.bindings).toMatchObject({
-      createImage: 'alt+i',
-      createVideo: 'alt+v',
-      createMusic: 'alt+m',
-      openCanvas: 'alt+c',
-      openDeepResearch: 'alt+r',
+      createImage: 'alt+shift+i',
+      createVideo: 'alt+shift+v',
+      createMusic: 'alt+shift+m',
+      openCanvas: 'alt+shift+c',
+      openDeepResearch: 'alt+shift+r',
       toggleSpeechDictation: 'alt+d',
     })
   })

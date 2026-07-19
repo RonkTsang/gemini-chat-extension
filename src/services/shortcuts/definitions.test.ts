@@ -30,7 +30,7 @@ describe('shortcut definitions', () => {
     const cycleModel = shortcutDefinitions.find((definition) => definition.action === 'cycleModel')
 
     expect(cycleModel).toMatchObject({
-      defaultShortcut: { default: 'alt+shift+m', mac: 'ctrl+shift+m' },
+      defaultShortcut: { default: 'alt+m', mac: 'ctrl+shift+m' },
       enableOnContentEditable: true,
       enableOnFormTags: ['textbox'],
     })
@@ -66,11 +66,11 @@ describe('shortcut definitions', () => {
   it('assigns default shortcuts to Prompt tools', () => {
     const definitionsByAction = new Map(shortcutDefinitions.map((definition) => [definition.action, definition]))
 
-    expect(definitionsByAction.get('createImage')).toMatchObject({ defaultShortcut: { default: 'alt+i', mac: 'ctrl+i' } })
-    expect(definitionsByAction.get('createVideo')).toMatchObject({ defaultShortcut: { default: 'alt+v', mac: 'ctrl+v' } })
-    expect(definitionsByAction.get('createMusic')).toMatchObject({ defaultShortcut: { default: 'alt+m', mac: 'ctrl+m' } })
-    expect(definitionsByAction.get('openCanvas')).toMatchObject({ defaultShortcut: { default: 'alt+c', mac: 'ctrl+c' } })
-    expect(definitionsByAction.get('openDeepResearch')).toMatchObject({ defaultShortcut: { default: 'alt+r', mac: 'ctrl+r' } })
+    expect(definitionsByAction.get('createImage')).toMatchObject({ defaultShortcut: { default: 'alt+shift+i', mac: 'ctrl+i' } })
+    expect(definitionsByAction.get('createVideo')).toMatchObject({ defaultShortcut: { default: 'alt+shift+v', mac: 'ctrl+v' } })
+    expect(definitionsByAction.get('createMusic')).toMatchObject({ defaultShortcut: { default: 'alt+shift+m', mac: 'ctrl+m' } })
+    expect(definitionsByAction.get('openCanvas')).toMatchObject({ defaultShortcut: { default: 'alt+shift+c', mac: 'ctrl+c' } })
+    expect(definitionsByAction.get('openDeepResearch')).toMatchObject({ defaultShortcut: { default: 'alt+shift+r', mac: 'ctrl+r' } })
   })
 
   it('keeps platform defaults unique', () => {
@@ -93,12 +93,12 @@ describe('shortcut definitions', () => {
       focusInput: 'slash',
       toggleSpeechDictation: 'alt+d',
       toggleSidebar: 'alt+b',
-      cycleModel: 'alt+shift+m',
-      createImage: 'alt+i',
-      createVideo: 'alt+v',
-      createMusic: 'alt+m',
-      openCanvas: 'alt+c',
-      openDeepResearch: 'alt+r',
+      cycleModel: 'alt+m',
+      createImage: 'alt+shift+i',
+      createVideo: 'alt+shift+v',
+      createMusic: 'alt+shift+m',
+      openCanvas: 'alt+shift+c',
+      openDeepResearch: 'alt+shift+r',
       uploadFiles: 'alt+u',
     })
     expect(getDefaultShortcutBindings(true)).toEqual({

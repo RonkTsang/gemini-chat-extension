@@ -53,10 +53,10 @@ export interface ShortcutDefinition {
   ignoreEventWhen?: Options['ignoreEventWhen']
 }
 
-function withPlatformModifier(keys: string): ShortcutDefault {
+function withPlatformModifier(defaultKeys: string, macKeys = defaultKeys): ShortcutDefault {
   return {
-    default: `alt+${keys}`,
-    mac: `ctrl+${keys}`,
+    default: `alt+${defaultKeys}`,
+    mac: `ctrl+${macKeys}`,
   }
 }
 
@@ -140,7 +140,7 @@ export const shortcutDefinitions: ShortcutDefinition[] = [
     action: 'cycleModel',
     category: 'prompt',
     labelKey: 'settingPanel.shortcut.actions.cycleModel',
-    defaultShortcut: withPlatformModifier('shift+m'),
+    defaultShortcut: withPlatformModifier('m', 'shift+m'),
     enableOnFormTags: ['textbox'],
     enableOnContentEditable: true,
   },
@@ -156,7 +156,7 @@ export const shortcutDefinitions: ShortcutDefinition[] = [
     action: 'createImage',
     category: 'prompt',
     labelKey: 'settingPanel.shortcut.actions.createImage',
-    defaultShortcut: withPlatformModifier('i'),
+    defaultShortcut: withPlatformModifier('shift+i', 'i'),
     enableOnFormTags: ['textbox'],
     enableOnContentEditable: true,
   },
@@ -164,7 +164,7 @@ export const shortcutDefinitions: ShortcutDefinition[] = [
     action: 'createVideo',
     category: 'prompt',
     labelKey: 'settingPanel.shortcut.actions.createVideo',
-    defaultShortcut: withPlatformModifier('v'),
+    defaultShortcut: withPlatformModifier('shift+v', 'v'),
     enableOnFormTags: ['textbox'],
     enableOnContentEditable: true,
   },
@@ -172,7 +172,7 @@ export const shortcutDefinitions: ShortcutDefinition[] = [
     action: 'createMusic',
     category: 'prompt',
     labelKey: 'settingPanel.shortcut.actions.createMusic',
-    defaultShortcut: withPlatformModifier('m'),
+    defaultShortcut: withPlatformModifier('shift+m', 'm'),
     enableOnFormTags: ['textbox'],
     enableOnContentEditable: true,
   },
@@ -180,7 +180,7 @@ export const shortcutDefinitions: ShortcutDefinition[] = [
     action: 'openCanvas',
     category: 'prompt',
     labelKey: 'settingPanel.shortcut.actions.openCanvas',
-    defaultShortcut: withPlatformModifier('c'),
+    defaultShortcut: withPlatformModifier('shift+c', 'c'),
     enableOnFormTags: ['textbox'],
     enableOnContentEditable: true,
   },
@@ -188,7 +188,7 @@ export const shortcutDefinitions: ShortcutDefinition[] = [
     action: 'openDeepResearch',
     category: 'prompt',
     labelKey: 'settingPanel.shortcut.actions.openDeepResearch',
-    defaultShortcut: withPlatformModifier('r'),
+    defaultShortcut: withPlatformModifier('shift+r', 'r'),
     enableOnFormTags: ['textbox'],
     enableOnContentEditable: true,
   },

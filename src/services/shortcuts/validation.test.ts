@@ -12,12 +12,12 @@ const bindings: Record<ShortcutAction, string | null> = {
   focusInput: 'slash',
   toggleSpeechDictation: 'alt+d',
   toggleSidebar: 'alt+b',
-  cycleModel: 'alt+shift+m',
-  createImage: 'alt+i',
-  createVideo: 'alt+v',
-  createMusic: 'alt+m',
-  openCanvas: 'alt+c',
-  openDeepResearch: 'alt+r',
+  cycleModel: 'alt+m',
+  createImage: 'alt+shift+i',
+  createVideo: 'alt+shift+v',
+  createMusic: 'alt+shift+m',
+  openCanvas: 'alt+shift+c',
+  openDeepResearch: 'alt+shift+r',
   uploadFiles: 'alt+u',
 }
 
@@ -92,7 +92,7 @@ describe('shortcut validation', () => {
       reason: 'conflict',
       conflictAction: 'toggleSpeechDictation',
     })
-    expect(validateRecordedShortcut(new Set(['alt', 'shift', 'm']), 'openNewChat', bindings)).toMatchObject({
+    expect(validateRecordedShortcut(new Set(['alt', 'm']), 'openNewChat', bindings)).toMatchObject({
       reason: 'conflict',
       conflictAction: 'cycleModel',
     })
@@ -100,7 +100,7 @@ describe('shortcut validation', () => {
       reason: 'conflict',
       conflictAction: 'toggleBulkDelete',
     })
-    expect(validateRecordedShortcut(new Set(['alt', 'v']), 'openNewChat', bindings)).toMatchObject({
+    expect(validateRecordedShortcut(new Set(['alt', 'shift', 'v']), 'openNewChat', bindings)).toMatchObject({
       reason: 'conflict',
       conflictAction: 'createVideo',
     })
