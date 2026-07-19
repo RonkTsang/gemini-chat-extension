@@ -1,3 +1,12 @@
+# [0.10.0](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.9.0...v0.10.0) (2026-07-19)
+
+
+### Features
+
+* add Gemini bulk delete ([#41](https://github.com/RonkTsang/gemini-chat-extension/issues/41)) ([2f5276a](https://github.com/RonkTsang/gemini-chat-extension/commit/2f5276ab13cdd84d224dcc95dbfd8e6c37e09c43)), closes [#25](https://github.com/RonkTsang/gemini-chat-extension/issues/25)
+* add toggle speech dictation and update default shortcuts ([#42](https://github.com/RonkTsang/gemini-chat-extension/issues/42)) ([f57c03b](https://github.com/RonkTsang/gemini-chat-extension/commit/f57c03bdec040b41c820b20248b6555e24ebaf8f))
+* **shortcuts:** add Gemini page shortcuts ([#36](https://github.com/RonkTsang/gemini-chat-extension/issues/36)) ([#40](https://github.com/RonkTsang/gemini-chat-extension/issues/40)) ([4f1d37f](https://github.com/RonkTsang/gemini-chat-extension/commit/4f1d37fada84c969cb1c52ce395cd290a40ade61))
+
 # [0.9.0](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.8.3...v0.9.0) (2026-07-06)
 
 
