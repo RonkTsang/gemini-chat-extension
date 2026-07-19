@@ -56,7 +56,7 @@
       "dismiss": "Schließen"
     },
     "selectRecent": "Letzte $1 auswählen",
-    "selectUnpinned": "Letzte $1 nicht angeheftete auswählen",
+    "selectUnpinned": "Die letzten $1 nicht angehefteten Chats auswählen",
     "change": "Ändern",
     "excludePinned": "Angeheftete ausschließen",
     "deselectPinned": "Angeheftete abwählen",
@@ -444,6 +444,7 @@
         "cycleModel": "Modell wechseln",
         "createImage": "Bild erstellen",
         "createMusic": "Musik erstellen",
+        "createVideo": "Video erstellen",
         "openCanvas": "Canvas öffnen",
         "openDeepResearch": "Deep Research öffnen",
         "toggleSpeechDictation": "Sprachdiktat umschalten",

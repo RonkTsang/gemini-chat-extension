@@ -1,9 +1,10 @@
 import { storage } from '#imports'
 import {
-  defaultShortcutBindings,
+  getDefaultShortcutBindings,
   shortcutActions,
   type ShortcutAction,
 } from './definitions'
+import { isMacPlatform } from './format'
 
 export interface ShortcutSettings {
   enabled: boolean
@@ -15,21 +16,25 @@ type ShortcutSettingsInput = {
   bindings?: Partial<Record<ShortcutAction, string | null>>
 }
 
-export const defaultShortcutSettings: ShortcutSettings = {
-  enabled: true,
-  bindings: {
-    ...defaultShortcutBindings,
-  },
+export function createDefaultShortcutSettings(isMac = isMacPlatform()): ShortcutSettings {
+  return {
+    enabled: true,
+    bindings: getDefaultShortcutBindings(isMac),
+  }
 }
 
 export const shortcutSettingsStorage = storage.defineItem<ShortcutSettings>(
-  'sync:shortcutSettings',
+  'local:shortcutSettings',
   {
-    fallback: defaultShortcutSettings,
+    fallback: createDefaultShortcutSettings(),
   },
 )
 
-export function normalizeShortcutSettings(settings?: ShortcutSettingsInput | null): ShortcutSettings {
+export function normalizeShortcutSettings(
+  settings?: ShortcutSettingsInput | null,
+  isMac = isMacPlatform(),
+): ShortcutSettings {
+  const defaultSettings = createDefaultShortcutSettings(isMac)
   const bindings = shortcutActions.reduce(
     (normalized, action) => {
       const value = settings?.bindings?.[action]
@@ -43,11 +48,11 @@ export function normalizeShortcutSettings(settings?: ShortcutSettingsInput | nul
     if (settings?.bindings && Object.prototype.hasOwnProperty.call(settings.bindings, action)) {
       continue
     }
-    bindings[action] = defaultShortcutSettings.bindings[action]
+    bindings[action] = defaultSettings.bindings[action]
   }
 
   return {
-    enabled: settings?.enabled ?? defaultShortcutSettings.enabled,
+    enabled: settings?.enabled ?? defaultSettings.enabled,
     bindings,
   }
 }

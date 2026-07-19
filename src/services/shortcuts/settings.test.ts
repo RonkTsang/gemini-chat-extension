@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { defaultShortcutSettings, normalizeShortcutSettings } from './settings'
+import { createDefaultShortcutSettings, normalizeShortcutSettings } from './settings'
 
 describe('shortcut settings', () => {
   it('adds default shortcuts for Prompt tools missing from existing settings', () => {
@@ -14,62 +14,70 @@ describe('shortcut settings', () => {
         openLibrary: 'alt+l',
         openGems: 'alt+g',
         focusInput: 'slash',
-        toggleSidebar: 'alt+q',
-        cycleModel: 'ctrl+shift+m',
-        uploadFiles: 'mod+u',
+        toggleSidebar: 'alt+b',
+        cycleModel: 'alt+shift+m',
+        uploadFiles: 'alt+u',
       },
-    })
+    }, false)
 
     expect(settings.bindings).toMatchObject({
-      createImage: 'alt+shift+i',
-      createMusic: 'alt+shift+m',
-      openCanvas: 'alt+shift+c',
-      openDeepResearch: 'alt+shift+r',
+      createImage: 'alt+i',
+      createVideo: 'alt+v',
+      createMusic: 'alt+m',
+      openCanvas: 'alt+c',
+      openDeepResearch: 'alt+r',
       toggleSpeechDictation: 'alt+d',
     })
   })
 
-  it('adds the Upload Files default binding to existing settings', () => {
-    const { uploadFiles: _uploadFiles, ...bindingsWithoutUploadFiles } = defaultShortcutSettings.bindings
+  it('resolves platform defaults when bindings are missing', () => {
+    const {
+      uploadFiles: _uploadFiles,
+      createImage: _createImage,
+      createVideo: _createVideo,
+      ...bindingsWithoutPlatformDefaults
+    } = createDefaultShortcutSettings(false).bindings
     const settings = normalizeShortcutSettings({
       enabled: true,
-      bindings: bindingsWithoutUploadFiles,
-    })
+      bindings: bindingsWithoutPlatformDefaults,
+    }, true)
 
-    expect(settings.bindings.uploadFiles).toBe('alt+u')
+    expect(settings.bindings.uploadFiles).toBe('ctrl+u')
+    expect(settings.bindings.createImage).toBe('ctrl+i')
+    expect(settings.bindings.createVideo).toBe('ctrl+v')
   })
 
-  it('adds the Bulk Delete toggle default binding to existing settings', () => {
-    const { toggleBulkDelete: _toggleBulkDelete, ...bindingsWithoutBulkDelete } = defaultShortcutSettings.bindings
+  it('adds the Bulk Delete toggle default binding to missing local settings', () => {
+    const { toggleBulkDelete: _toggleBulkDelete, ...bindingsWithoutBulkDelete } = createDefaultShortcutSettings(false).bindings
     const settings = normalizeShortcutSettings({
       enabled: true,
       bindings: bindingsWithoutBulkDelete,
-    })
+    }, true)
 
-    expect(settings.bindings.toggleBulkDelete).toBe('alt+shift+d')
+    expect(settings.bindings.toggleBulkDelete).toBe('ctrl+shift+d')
   })
 
-  it('preserves an existing Cycle Model binding', () => {
+  it('preserves a user-selected local binding', () => {
     const settings = normalizeShortcutSettings({
       enabled: true,
       bindings: {
-        ...defaultShortcutSettings.bindings,
-        cycleModel: 'alt+m',
+        ...createDefaultShortcutSettings(true).bindings,
+        cycleModel: 'ctrl+period',
       },
-    })
+    }, true)
 
-    expect(settings.bindings.cycleModel).toBe('alt+m')
+    expect(settings.bindings.cycleModel).toBe('ctrl+period')
   })
 
-  it('preserves a user-selected cycle model shortcut', () => {
+  it('preserves an explicitly cleared local binding', () => {
     const settings = normalizeShortcutSettings({
       enabled: true,
       bindings: {
-        ...defaultShortcutSettings.bindings,
-        cycleModel: 'meta+shift+m',
+        ...createDefaultShortcutSettings(false).bindings,
+        createImage: null,
       },
-    })
+    }, false)
 
-    expect(settings.bindings.cycleModel).toBe('meta+shift+m')
+    expect(settings.bindings.createImage).toBeNull()
   })
 })

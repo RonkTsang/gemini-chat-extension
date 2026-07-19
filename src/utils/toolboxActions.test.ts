@@ -58,6 +58,16 @@ describe('launchGeminiTool', () => {
     expect(clickSpy).toHaveBeenCalledTimes(1)
   })
 
+  it('clicks Video by its movie icon', async () => {
+    const videoButton = renderToolbox('movie')
+    const clickSpy = vi.fn()
+    videoButton.addEventListener('click', clickSpy)
+
+    await expect(launchGeminiTool('video')).resolves.toBe(true)
+
+    expect(clickSpy).toHaveBeenCalledTimes(1)
+  })
+
   it('opens the Tools menu before selecting a tool', async () => {
     document.body.innerHTML = `
       <simplified-input-menu>

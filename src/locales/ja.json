@@ -444,6 +444,7 @@
         "cycleModel": "モデルを切り替え",
         "createImage": "画像を作成",
         "createMusic": "音楽を作成",
+        "createVideo": "動画を作成",
         "openCanvas": "Canvasを開く",
         "openDeepResearch": "Deep Researchを開く",
         "toggleSpeechDictation": "音声入力を切り替え",

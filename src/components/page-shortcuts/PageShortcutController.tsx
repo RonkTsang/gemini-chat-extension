@@ -184,6 +184,11 @@ async function runShortcutAction(
     return
   }
 
+  if (action === 'createVideo') {
+    await launchGeminiTool('video')
+    return
+  }
+
   if (action === 'createMusic') {
     await launchGeminiTool('music')
     return

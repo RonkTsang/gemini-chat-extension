@@ -56,7 +56,7 @@
       "dismiss": "Fermer"
     },
     "selectRecent": "Sélectionner les $1 dernières",
-    "selectUnpinned": "Sélectionner les $1 dernières non épinglées",
+    "selectUnpinned": "Sélectionner les $1 derniers chats non épinglés",
     "change": "Modifier",
     "excludePinned": "Exclure les épinglées",
     "deselectPinned": "Désélectionner les épinglées",
@@ -444,6 +444,7 @@
         "cycleModel": "Changer de modèle",
         "createImage": "Créer une image",
         "createMusic": "Créer une musique",
+        "createVideo": "Créer une vidéo",
         "openCanvas": "Ouvrir Canvas",
         "openDeepResearch": "Ouvrir Deep Research",
         "toggleSpeechDictation": "Basculer la dictée vocale",

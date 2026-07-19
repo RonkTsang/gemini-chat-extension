@@ -12,11 +12,12 @@ const bindings: Record<ShortcutAction, string | null> = {
   focusInput: 'slash',
   toggleSpeechDictation: 'alt+d',
   toggleSidebar: 'alt+b',
-  cycleModel: 'alt+m',
-  createImage: 'alt+shift+i',
-  createMusic: 'alt+shift+m',
-  openCanvas: 'alt+shift+c',
-  openDeepResearch: 'alt+shift+r',
+  cycleModel: 'alt+shift+m',
+  createImage: 'alt+i',
+  createVideo: 'alt+v',
+  createMusic: 'alt+m',
+  openCanvas: 'alt+c',
+  openDeepResearch: 'alt+r',
   uploadFiles: 'alt+u',
 }
 
@@ -83,6 +84,25 @@ describe('shortcut validation', () => {
       ok: false,
       reason: 'conflict',
       conflictAction: 'uploadFiles',
+    })
+  })
+
+  it('rejects shortcuts assigned to Speech Dictation, Cycle Model, Bulk Delete, and Video', () => {
+    expect(validateRecordedShortcut(new Set(['alt', 'd']), 'openNewChat', bindings)).toMatchObject({
+      reason: 'conflict',
+      conflictAction: 'toggleSpeechDictation',
+    })
+    expect(validateRecordedShortcut(new Set(['alt', 'shift', 'm']), 'openNewChat', bindings)).toMatchObject({
+      reason: 'conflict',
+      conflictAction: 'cycleModel',
+    })
+    expect(validateRecordedShortcut(new Set(['alt', 'shift', 'd']), 'openNewChat', bindings)).toMatchObject({
+      reason: 'conflict',
+      conflictAction: 'toggleBulkDelete',
+    })
+    expect(validateRecordedShortcut(new Set(['alt', 'v']), 'openNewChat', bindings)).toMatchObject({
+      reason: 'conflict',
+      conflictAction: 'createVideo',
     })
   })
 })

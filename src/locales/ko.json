@@ -444,6 +444,7 @@
         "cycleModel": "모델 전환",
         "createImage": "이미지 만들기",
         "createMusic": "음악 만들기",
+        "createVideo": "동영상 만들기",
         "openCanvas": "Canvas 열기",
         "openDeepResearch": "Deep Research 열기",
         "toggleSpeechDictation": "음성 받아쓰기 전환",

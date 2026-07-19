@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import en from '@/locales/en.json'
 import {
+  getDefaultShortcutBindings,
   shortcutCategories,
   shortcutDefinitions,
   shortcutDefinitionsByCategory,
@@ -12,15 +13,15 @@ describe('shortcut definitions', () => {
     const definitionsByAction = new Map(shortcutDefinitions.map((definition) => [definition.action, definition]))
 
     expect(definitionsByAction.get('openLibrary')).toMatchObject({
-      defaultShortcut: 'alt+l',
+      defaultShortcut: { default: 'alt+l', mac: 'ctrl+l' },
       enableOnContentEditable: false,
     })
     expect(definitionsByAction.get('openGems')).toMatchObject({
-      defaultShortcut: 'alt+g',
+      defaultShortcut: { default: 'alt+g', mac: 'ctrl+g' },
       enableOnContentEditable: false,
     })
     expect(definitionsByAction.get('toggleSidebar')).toMatchObject({
-      defaultShortcut: 'alt+b',
+      defaultShortcut: { default: 'alt+b', mac: 'ctrl+b' },
       enableOnContentEditable: false,
     })
   })
@@ -29,7 +30,7 @@ describe('shortcut definitions', () => {
     const cycleModel = shortcutDefinitions.find((definition) => definition.action === 'cycleModel')
 
     expect(cycleModel).toMatchObject({
-      defaultShortcut: 'alt+m',
+      defaultShortcut: { default: 'alt+shift+m', mac: 'ctrl+shift+m' },
       enableOnContentEditable: true,
       enableOnFormTags: ['textbox'],
     })
@@ -53,6 +54,7 @@ describe('shortcut definitions', () => {
           'cycleModel',
           'uploadFiles',
           'createImage',
+          'createVideo',
           'createMusic',
           'openCanvas',
           'openDeepResearch',
@@ -64,18 +66,59 @@ describe('shortcut definitions', () => {
   it('assigns default shortcuts to Prompt tools', () => {
     const definitionsByAction = new Map(shortcutDefinitions.map((definition) => [definition.action, definition]))
 
-    expect(definitionsByAction.get('createImage')).toMatchObject({ defaultShortcut: 'alt+shift+i' })
-    expect(definitionsByAction.get('createMusic')).toMatchObject({ defaultShortcut: 'alt+shift+m' })
-    expect(definitionsByAction.get('openCanvas')).toMatchObject({ defaultShortcut: 'alt+shift+c' })
-    expect(definitionsByAction.get('openDeepResearch')).toMatchObject({ defaultShortcut: 'alt+shift+r' })
+    expect(definitionsByAction.get('createImage')).toMatchObject({ defaultShortcut: { default: 'alt+i', mac: 'ctrl+i' } })
+    expect(definitionsByAction.get('createVideo')).toMatchObject({ defaultShortcut: { default: 'alt+v', mac: 'ctrl+v' } })
+    expect(definitionsByAction.get('createMusic')).toMatchObject({ defaultShortcut: { default: 'alt+m', mac: 'ctrl+m' } })
+    expect(definitionsByAction.get('openCanvas')).toMatchObject({ defaultShortcut: { default: 'alt+c', mac: 'ctrl+c' } })
+    expect(definitionsByAction.get('openDeepResearch')).toMatchObject({ defaultShortcut: { default: 'alt+r', mac: 'ctrl+r' } })
   })
 
-  it('keeps all default shortcuts unique', () => {
-    const assignedShortcuts = shortcutDefinitions
-      .map((definition) => definition.defaultShortcut)
-      .filter((shortcut): shortcut is string => shortcut !== null)
+  it('keeps platform defaults unique', () => {
+    for (const isMac of [false, true]) {
+      const assignedShortcuts = Object.values(getDefaultShortcutBindings(isMac))
+        .filter((shortcut): shortcut is string => shortcut !== null)
 
-    expect(new Set(assignedShortcuts)).toHaveLength(assignedShortcuts.length)
+      expect(new Set(assignedShortcuts)).toHaveLength(assignedShortcuts.length)
+    }
+  })
+
+  it('resolves the complete default key map for each platform', () => {
+    expect(getDefaultShortcutBindings(false)).toEqual({
+      openSettings: 'alt+comma',
+      toggleBulkDelete: 'alt+shift+d',
+      openNewChat: 'alt+n',
+      openTemporaryChat: 'alt+t',
+      openLibrary: 'alt+l',
+      openGems: 'alt+g',
+      focusInput: 'slash',
+      toggleSpeechDictation: 'alt+d',
+      toggleSidebar: 'alt+b',
+      cycleModel: 'alt+shift+m',
+      createImage: 'alt+i',
+      createVideo: 'alt+v',
+      createMusic: 'alt+m',
+      openCanvas: 'alt+c',
+      openDeepResearch: 'alt+r',
+      uploadFiles: 'alt+u',
+    })
+    expect(getDefaultShortcutBindings(true)).toEqual({
+      openSettings: 'ctrl+comma',
+      toggleBulkDelete: 'ctrl+shift+d',
+      openNewChat: 'ctrl+n',
+      openTemporaryChat: 'ctrl+t',
+      openLibrary: 'ctrl+l',
+      openGems: 'ctrl+g',
+      focusInput: 'slash',
+      toggleSpeechDictation: 'ctrl+d',
+      toggleSidebar: 'ctrl+b',
+      cycleModel: 'ctrl+shift+m',
+      createImage: 'ctrl+i',
+      createVideo: 'ctrl+v',
+      createMusic: 'ctrl+m',
+      openCanvas: 'ctrl+c',
+      openDeepResearch: 'ctrl+r',
+      uploadFiles: 'ctrl+u',
+    })
   })
 
   it('assigns a Bulk Delete toggle shortcut outside text inputs', () => {
@@ -83,7 +126,7 @@ describe('shortcut definitions', () => {
 
     expect(bulkDelete).toMatchObject({
       category: 'geminiPowerKit',
-      defaultShortcut: 'alt+shift+d',
+      defaultShortcut: { default: 'alt+shift+d', mac: 'ctrl+shift+d' },
       enableOnFormTags: ['input'],
       enableOnContentEditable: false,
     })
@@ -105,7 +148,7 @@ describe('shortcut definitions', () => {
     const uploadFiles = shortcutDefinitions.find((definition) => definition.action === 'uploadFiles')
 
     expect(uploadFiles).toMatchObject({
-      defaultShortcut: 'alt+u',
+      defaultShortcut: { default: 'alt+u', mac: 'ctrl+u' },
       enableOnContentEditable: true,
       enableOnFormTags: ['textbox'],
     })
@@ -115,7 +158,7 @@ describe('shortcut definitions', () => {
     const dictation = shortcutDefinitions.find((definition) => definition.action === 'toggleSpeechDictation')
 
     expect(dictation).toMatchObject({
-      defaultShortcut: 'alt+d',
+      defaultShortcut: { default: 'alt+d', mac: 'ctrl+d' },
       enableOnContentEditable: true,
       enableOnFormTags: ['textbox'],
     })

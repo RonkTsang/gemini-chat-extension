@@ -10,6 +10,7 @@ const MENU_MUTATION_ATTRIBUTES = ['aria-hidden', 'aria-disabled', 'class', 'styl
 
 const TOOL_ICON_NAMES = {
   image: 'image_create',
+  video: 'movie',
   music: 'music',
   canvas: 'canvas',
   deepResearch: 'deep_research',
