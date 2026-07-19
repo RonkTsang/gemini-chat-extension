@@ -39,146 +39,114 @@ head:
         }
       }
 hero:
-  tagline: Stop repeating, start creating. Chat Outline, Quick Follow-up, and Chain Prompt for maximum productivity.
+  title: Make Gemini easier to work in.
+  tagline: Navigate long conversations, ask from selected text, and turn repeated tasks into reusable flows.
   image:
-    file: ../../assets/icon-512.png
+    file: ../../assets/hero/gemini-power-kit-conversation-v2.png
+    alt: Gemini Power Kit workflow controls for following up, navigating chats, and running prompt steps
   actions:
-    - text: Quick Start
-      link: /guide/quick-start/
-      icon: right-arrow
-      variant: primary
     - text: Add to Chrome
       link: https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn
-      icon: external
+      variant: primary
+    - text: Get for Firefox
+      link: https://addons.mozilla.org/en-US/firefox/addon/gemini-power-kit/
+      variant: secondary
 ---
 
-import { Icon } from '@astrojs/starlight/components';
 import { Image } from 'astro:assets';
 import chatOutlineImg from '../../assets/features/chat-outline/interface.png';
 import quickFollowUpImg from '../../assets/features/quick-follow-up.png';
 import chainPromptImg from '../../assets/features/chain-prompt.png';
 import themeImg from '../../assets/features/theme-wallpaper.jpg';
 
-## What is Gemini Power Kit?
-
-Gemini Power Kit is a Chrome extension for Google Gemini. It helps people customize Gemini with visual themes and wallpaper, navigate long chats with Chat Outline, ask follow-up questions from selected text, and automate repeated prompt workflows. It is built for users who keep Gemini open for deep work, research, writing, coding, and daily productivity. Core settings and workflow data stay local on your device.
-
-<div class="value-band">
-  <div class="value-pill">
-    <span class="value-pill-label">For daily use</span>
-    <strong>Ask selected text instantly</strong>
-    <p>Turn any sentence, paragraph, or code block into a follow-up without copy-paste.</p>
-  </div>
-  <div class="value-pill">
-    <span class="value-pill-label">For long chats</span>
-    <strong>Jump through complex conversations</strong>
-    <p>Use Chat Outline to scan history, pin the panel, and move without endless scrolling.</p>
-  </div>
-  <div class="value-pill">
-    <span class="value-pill-label">For repeatable work</span>
-    <strong>Build a Gemini workspace that stays readable</strong>
-    <p>Theme, wallpaper, and prompt tools keep long sessions clearer and less repetitive.</p>
-  </div>
-</div>
-
-<section class="showcase-section">
-  <div class="section-heading">
-    <p class="section-kicker">Built for real Gemini work</p>
-    <h2>Four focused tools that remove the repetitive parts</h2>
-    <p>Small tools that make Gemini faster to navigate, easier to operate, and calmer to keep open all day.</p>
+<section class="home-features" id="workflows">
+  <div class="home-section-heading">
+    <p class="home-eyebrow">Built for the work inside Gemini</p>
+    <h2>Tools that stay out of the way.</h2>
+    <p>Each one solves a specific interruption, then gets back to the conversation.</p>
   </div>
 
-  <div class="showcase-grid">
-    <a href="/features/theme/" class="showcase-card showcase-card-wide">
-      <div class="showcase-copy">
-        <span class="showcase-meta">Comfort</span>
-        <h3>Visual Themes</h3>
-        <p>Switch modes, add wallpaper, and keep Light mode readable.</p>
+  <div class="home-feature-grid">
+    <a href="/features/quick-follow-up/" class="home-feature">
+      <div class="home-feature-copy">
+        <p class="home-feature-label">Quick Follow-up</p>
+        <h3>Turn a selection into the next question.</h3>
+        <p>Ask about any sentence, paragraph, or code block without interrupting the thread.</p>
+        <span>Explore Quick Follow-up</span>
       </div>
-      <Image src={themeImg} alt="Theme settings with wallpaper and readability controls" class="feature-image" />
+      <div class="home-media">
+        <Image src={quickFollowUpImg} alt="Quick Follow-up prompt actions inside Gemini Power Kit" />
+      </div>
     </a>
 
-    <a href="/features/quick-follow-up/" class="showcase-card showcase-card-large">
-      <div class="showcase-copy">
-        <span class="showcase-meta">Fastest workflow win</span>
-        <h3>Quick Follow-up</h3>
-        <p>Select text and ask the next question without copy-paste.</p>
+    <a href="/features/chat-outline/" class="home-feature">
+      <div class="home-feature-copy">
+        <p class="home-feature-label">Chat Outline</p>
+        <h3>Know where you are in a long conversation.</h3>
+        <p>Scan the structure, then jump directly to the context you need.</p>
+        <span>Explore Chat Outline</span>
       </div>
-      <Image src={quickFollowUpImg} alt="Quick Follow-up prompt actions inside Gemini Power Kit" class="feature-image" />
+      <div class="home-media">
+        <Image src={chatOutlineImg} alt="Chat Outline preview for navigating long Gemini conversations" />
+      </div>
     </a>
 
-    <a href="/features/chat-outline/" class="showcase-card">
-      <div class="showcase-copy">
-        <span class="showcase-meta">Navigation</span>
-        <h3>Chat Outline</h3>
-        <p>See structure, jump faster, and keep context in long threads.</p>
+    <a href="/features/chain-prompt/" class="home-feature">
+      <div class="home-feature-copy">
+        <p class="home-feature-label">Chain Prompt</p>
+        <h3>Keep a good process ready to run.</h3>
+        <p>Turn repeated multi-step work into a reusable prompt flow.</p>
+        <span>Explore Chain Prompt</span>
       </div>
-      <Image src={chatOutlineImg} alt="Chat Outline preview for navigating long Gemini conversations" class="feature-image" />
+      <div class="home-media">
+        <Image src={chainPromptImg} alt="Chain Prompt builder for multi-step Gemini workflows" />
+      </div>
     </a>
 
-    <a href="/features/chain-prompt/" class="showcase-card">
-      <div class="showcase-copy">
-        <span class="showcase-meta">Automation</span>
-        <h3>Chain Prompt</h3>
-        <p>Save repeatable prompt steps as one reusable flow.</p>
+    <a href="/features/theme/" class="home-feature">
+      <div class="home-feature-copy">
+        <p class="home-feature-label">Visual Themes</p>
+        <h3>Make the workspace easier to keep open.</h3>
+        <p>Adjust appearance, wallpaper, and readability for the way you work.</p>
+        <span>Explore Visual Themes</span>
       </div>
-      <Image src={chainPromptImg} alt="Chain Prompt builder for multi-step Gemini workflows" class="feature-image" />
+      <div class="home-media">
+        <Image src={themeImg} alt="Theme settings with wallpaper and readability controls" />
+      </div>
     </a>
   </div>
 </section>
 
-<section class="proof-section">
-  <div class="section-heading">
-    <p class="section-kicker">Why people keep it enabled</p>
-    <h2>Useful changes, not filler features</h2>
+<section class="home-assurance" aria-label="Privacy and feedback">
+  <div>
+    <p class="home-eyebrow">Privacy by default</p>
+    <h2>Your prompts stay on your device.</h2>
+    <p>Settings and workflow data stay in browser-managed storage on your device. Gemini Power Kit does not collect or receive your prompts.</p>
+    <a href="/privacy-policy/">Read the privacy policy</a>
   </div>
-
-  <div class="about-grid">
-    <div class="about-card">
-      <h3><Icon name="star" color="var(--sl-color-accent)" size="1.2rem" /> Privacy first</h3>
-      <p>All processing stays local on your machine. Your prompts and workflow data do not leave your device.</p>
-      <div class="about-actions">
-        <span class="about-link">Local processing</span>
-      </div>
-    </div>
-
-    <div class="about-card">
-      <h3><Icon name="comment" color="var(--sl-color-accent)" size="1.2rem" /> Built from workflow pain</h3>
-      <p>The kit targets repetitive actions inside Gemini itself: finding context, asking follow-ups, and keeping the interface readable.</p>
-      <div class="about-actions">
-        <a href="/guide/quick-start/" class="about-link primary">See quick start</a>
-      </div>
-    </div>
-
-    <div class="about-card">
-      <h3><Icon name="heart" color="var(--sl-color-accent)" size="1.2rem" /> Open feedback loop</h3>
-      <p>Feature requests and bug reports directly shape what gets refined next. The product stays close to daily user needs.</p>
-      <div class="about-actions">
-        <a href="https://forms.gle/DiHqtVFnxQr4Epvy6" class="about-link primary">Feature request</a>
-        <a href="https://github.com/RonkTsang/gemini-chat-extension/issues/new" class="about-link">Bug report</a>
-      </div>
-    </div>
+  <div>
+    <p class="home-eyebrow">Built in the open</p>
+    <h2>Tell us what still gets in your way.</h2>
+    <p>Requests and bug reports guide the work that gets refined next.</p>
+    <a href="https://forms.gle/DiHqtVFnxQr4Epvy6">Share feedback</a>
   </div>
 </section>
 
-<div class="final-cta-section">
-  <div class="cta-box">
-    <h3>Start with the docs</h3>
-    <p>Read the quick start, then open the feature pages only when you want a deeper workflow.</p>
-    <a href="/guide/quick-start/" class="cta-btn cta-btn-outline">Read docs <Icon name="right-arrow" size="1.2rem" /></a>
+<section class="home-final-cta">
+  <p class="home-eyebrow">Ready when you are</p>
+  <h2>Use Gemini with less friction.</h2>
+  <p>Install Gemini Power Kit, then shape the workspace around the work you already do.</p>
+  <div class="home-final-actions">
+    <a class="home-store-badge" href="https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn" aria-label="Install Gemini Power Kit for Chrome"><span class="store-badge-label">Install for Chrome</span><img src="/store-badges/chrome-web-store.png" alt="" aria-hidden="true" /></a>
+    <a class="home-store-badge" href="https://addons.mozilla.org/en-US/firefox/addon/gemini-power-kit/" aria-label="Install Gemini Power Kit for Firefox"><span class="store-badge-label">Install for Firefox</span><img src="/store-badges/firefox.png" alt="" aria-hidden="true" /></a>
   </div>
-
-  <div class="cta-box">
-    <h3>Install and use it today</h3>
-    <p>Add Gemini Power Kit to Chrome and remove the friction points from your next Gemini session.</p>
-    <a href="https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn" class="cta-btn">Install extension <Icon name="external" size="1.2rem" /></a>
-  </div>
-</div>
+  <p class="home-secondary-action"><a href="/guide/quick-start/">Read the quick start</a></p>
+</section>
 
 <footer class="custom-footer">
   <div class="footer-content">
     <div class="footer-left">
-      © 2024-2025 Gemini Power Kit. Built by <a href="https://github.com/RonkTsang" class="footer-link">RonkTsang</a>.
+      © 2024–2026 Gemini Power Kit. Built by <a href="https://github.com/RonkTsang" class="footer-link">RonkTsang</a>.
     </div>
     <div class="footer-right">
       <a href="/privacy-policy/" class="footer-link">Privacy Policy</a>

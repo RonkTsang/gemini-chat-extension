@@ -17,6 +17,10 @@ export default defineConfig({
 	},
 	integrations: [
 		starlight({
+			components: {
+				Hero: './src/components/HomeHero.astro',
+				Header: './src/components/WebsiteHeader.astro',
+			},
 			title: {
 				en: 'Gemini Power Kit',
 				'zh-CN': 'Gemini Power Kit',

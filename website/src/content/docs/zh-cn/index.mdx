@@ -3,142 +3,114 @@ title: 让您的 Google Gemini 效率翻倍的专业套件
 description: 极简侧边栏工具，专为深度对话导航、提示词自动化及个性化 Gemini 体验而设计。
 template: splash
 hero:
-  tagline: 停止重复，开始创作。为您提供对话大纲、快速跟进和链式提示词，打造极致生产力。
+  title: 让 Gemini 更顺手。
+  tagline: 在长对话中快速定位，选中文本即可追问，把重复任务整理为可复用的工作流。
   image:
-    file: ../../../assets/icon-512.png
+    file: ../../../assets/hero/gemini-power-kit-conversation-v2.png
+    alt: Gemini Power Kit 的追问、对话导航与提示词工作流控制界面
   actions:
-    - text: 快速开始
-      link: /zh-cn/guide/quick-start/
-      icon: right-arrow
-      variant: primary
-    - text: 添加到 Chrome
+    - text: 安装到 Chrome
       link: https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn
-      icon: external
+      variant: primary
+    - text: 安装到 Firefox
+      link: https://addons.mozilla.org/en-US/firefox/addon/gemini-power-kit/
+      variant: secondary
 ---
 
-import { Icon } from '@astrojs/starlight/components';
 import { Image } from 'astro:assets';
 import chatOutlineImg from '../../../assets/features/chat-outline/interface.png';
 import quickFollowUpImg from '../../../assets/features/quick-follow-up.png';
 import chainPromptImg from '../../../assets/features/chain-prompt.png';
 import themeImg from '../../../assets/features/theme-wallpaper.jpg';
 
-<div class="value-band">
-  <div class="value-pill">
-    <span class="value-pill-label">高频操作</span>
-    <strong>选中文本后立即追问</strong>
-    <p>把任意一句话、一段文字或代码块，直接变成下一步提问，不再反复复制粘贴。</p>
-  </div>
-  <div class="value-pill">
-    <span class="value-pill-label">长对话场景</span>
-    <strong>快速定位复杂上下文</strong>
-    <p>通过对话大纲扫描历史内容、固定面板，并在长线程里准确跳转。</p>
-  </div>
-  <div class="value-pill">
-    <span class="value-pill-label">长期使用体验</span>
-    <strong>让 Gemini 更适合日常工作</strong>
-    <p>通过主题、壁纸和提示词工具，把 Gemini 调整成更清晰、更顺手的工作台。</p>
-  </div>
-</div>
-
-<section class="showcase-section">
-  <div class="section-heading">
-    <p class="section-kicker">围绕真实使用场景设计</p>
-    <h2>四个足够聚焦的功能，去掉那些重复动作</h2>
-    <p>功能不多，但足够让 Gemini 更好找、更好问，也更适合长时间保持打开。</p>
+<section class="home-features" id="workflows">
+  <div class="home-section-heading">
+    <p class="home-eyebrow">为 Gemini 中的真实工作而做</p>
+    <h2>工具存在，但不打扰。</h2>
+    <p>每一项只解决一个具体阻碍，然后让你回到正在进行的对话。</p>
   </div>
 
-  <div class="showcase-grid">
-    <a href="/zh-cn/features/theme/" class="showcase-card showcase-card-wide">
-      <div class="showcase-copy">
-        <span class="showcase-meta">长期舒适度</span>
-        <h3>视觉主题</h3>
-        <p>切换模式、加入壁纸，并让 Light 模式更清晰可读。</p>
+  <div class="home-feature-grid">
+    <a href="/zh-cn/features/quick-follow-up/" class="home-feature">
+      <div class="home-feature-copy">
+        <p class="home-feature-label">快速跟进</p>
+        <h3>把选中的内容变成下一步问题。</h3>
+        <p>针对任意一句话、一段文字或代码块继续追问，不打断当前线程。</p>
+        <span>查看快速跟进</span>
       </div>
-      <Image src={themeImg} alt="主题设置中的壁纸与可读性控制面板" class="feature-image" />
+      <div class="home-media">
+        <Image src={quickFollowUpImg} alt="快速跟进功能中的快捷提示词操作界面" />
+      </div>
     </a>
 
-    <a href="/zh-cn/features/quick-follow-up/" class="showcase-card showcase-card-large">
-      <div class="showcase-copy">
-        <span class="showcase-meta">最直接的效率提升</span>
-        <h3>快速跟进</h3>
-        <p>选中文本后直接继续提问，不再来回复制粘贴。</p>
+    <a href="/zh-cn/features/chat-outline/" class="home-feature">
+      <div class="home-feature-copy">
+        <p class="home-feature-label">对话大纲</p>
+        <h3>在长对话中始终知道自己在哪里。</h3>
+        <p>先看结构，再直接跳到需要的上下文。</p>
+        <span>查看对话大纲</span>
       </div>
-      <Image src={quickFollowUpImg} alt="快速跟进功能中的快捷提示词操作界面" class="feature-image" />
+      <div class="home-media">
+        <Image src={chatOutlineImg} alt="对话大纲帮助快速定位长篇 Gemini 对话内容" />
+      </div>
     </a>
 
-    <a href="/zh-cn/features/chat-outline/" class="showcase-card">
-      <div class="showcase-copy">
-        <span class="showcase-meta">导航能力</span>
-        <h3>对话大纲</h3>
-        <p>快速看结构、跳转位置，并在长对话里保持上下文。</p>
+    <a href="/zh-cn/features/chain-prompt/" class="home-feature">
+      <div class="home-feature-copy">
+        <p class="home-feature-label">链式提示词</p>
+        <h3>把好用的流程留在随手可用的位置。</h3>
+        <p>把重复的多步骤工作整理为可复用的提示词流。</p>
+        <span>查看链式提示词</span>
       </div>
-      <Image src={chatOutlineImg} alt="对话大纲帮助快速定位长篇 Gemini 对话内容" class="feature-image" />
+      <div class="home-media">
+        <Image src={chainPromptImg} alt="链式提示词用于构建多步骤 Gemini 工作流" />
+      </div>
     </a>
 
-    <a href="/zh-cn/features/chain-prompt/" class="showcase-card">
-      <div class="showcase-copy">
-        <span class="showcase-meta">自动化</span>
-        <h3>链式提示词</h3>
-        <p>把重复的多步骤 Prompt 保存成一条可复用链路。</p>
+    <a href="/zh-cn/features/theme/" class="home-feature">
+      <div class="home-feature-copy">
+        <p class="home-feature-label">视觉主题</p>
+        <h3>让工作台更适合持续打开。</h3>
+        <p>根据自己的使用方式调整外观、壁纸和可读性。</p>
+        <span>查看视觉主题</span>
       </div>
-      <Image src={chainPromptImg} alt="链式提示词用于构建多步骤 Gemini 工作流" class="feature-image" />
+      <div class="home-media">
+        <Image src={themeImg} alt="主题设置中的壁纸与可读性控制面板" />
+      </div>
     </a>
   </div>
 </section>
 
-<section class="proof-section">
-  <div class="section-heading">
-    <p class="section-kicker">为什么会一直开着它</p>
-    <h2>有用的改动，而不是堆出来的功能列表</h2>
+<section class="home-assurance" aria-label="隐私与反馈">
+  <div>
+    <p class="home-eyebrow">隐私默认如此</p>
+    <h2>你的提示词留在设备上。</h2>
+    <p>设置和工作流数据保存在设备上的浏览器管理存储中。Gemini Power Kit 不会收集或接收你的提示词。</p>
+    <a href="/zh-cn/privacy-policy/">阅读隐私政策</a>
   </div>
-
-  <div class="about-grid">
-    <div class="about-card">
-      <h3><Icon name="star" color="var(--sl-color-accent)" size="1.2rem" /> 隐私优先</h3>
-      <p>所有处理都在本地完成。你的 Prompt 和工作流数据不会离开设备。</p>
-      <div class="about-actions">
-        <span class="about-link">本地处理</span>
-      </div>
-    </div>
-
-    <div class="about-card">
-      <h3><Icon name="comment" color="var(--sl-color-accent)" size="1.2rem" /> 来自真实使用痛点</h3>
-      <p>这个工具包解决的是 Gemini 内部最常见的重复动作：找上下文、继续追问、以及保持界面清晰。</p>
-      <div class="about-actions">
-        <a href="/zh-cn/guide/quick-start/" class="about-link primary">查看快速开始</a>
-      </div>
-    </div>
-
-    <div class="about-card">
-      <h3><Icon name="heart" color="var(--sl-color-accent)" size="1.2rem" /> 持续反馈迭代</h3>
-      <p>功能建议和问题反馈会直接影响下一步优化方向，产品会持续贴近真实使用需求。</p>
-      <div class="about-actions">
-        <a href="https://forms.gle/DiHqtVFnxQr4Epvy6" class="about-link primary">功能建议</a>
-        <a href="https://github.com/RonkTsang/gemini-chat-extension/issues/new" class="about-link">问题反馈</a>
-      </div>
-    </div>
+  <div>
+    <p class="home-eyebrow">持续开放迭代</p>
+    <h2>告诉我们还有什么在妨碍你。</h2>
+    <p>功能建议和问题反馈会直接影响下一步优化。</p>
+    <a href="https://forms.gle/DiHqtVFnxQr4Epvy6">提交反馈</a>
   </div>
 </section>
 
-<div class="final-cta-section">
-  <div class="cta-box">
-    <h3>先从文档开始</h3>
-    <p>先看快速开始，再按需进入各个功能页了解更细的工作流用法。</p>
-    <a href="/zh-cn/guide/quick-start/" class="cta-btn cta-btn-outline">阅读文档 <Icon name="right-arrow" size="1.2rem" /></a>
+<section class="home-final-cta">
+  <p class="home-eyebrow">现在开始</p>
+  <h2>用更少摩擦完成 Gemini 工作。</h2>
+  <p>安装 Gemini Power Kit，再按你已经在做的工作方式布置工作台。</p>
+  <div class="home-final-actions">
+    <a class="home-store-badge" href="https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn" aria-label="安装 Gemini Power Kit 到 Chrome"><span class="store-badge-label">安装到 Chrome</span><img src="/store-badges/chrome-web-store.png" alt="" aria-hidden="true" /></a>
+    <a class="home-store-badge" href="https://addons.mozilla.org/en-US/firefox/addon/gemini-power-kit/" aria-label="安装 Gemini Power Kit 到 Firefox"><span class="store-badge-label">安装到 Firefox</span><img src="/store-badges/firefox.png" alt="" aria-hidden="true" /></a>
   </div>
-
-  <div class="cta-box">
-    <h3>现在就开始使用</h3>
-    <p>把 Gemini Power Kit 安装到 Chrome，让下一次 Gemini 会话少掉那些重复摩擦。</p>
-    <a href="https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn" class="cta-btn">安装插件 <Icon name="external" size="1.2rem" /></a>
-  </div>
-</div>
+  <p class="home-secondary-action"><a href="/zh-cn/guide/quick-start/">阅读快速开始</a></p>
+</section>
 
 <footer class="custom-footer">
   <div class="footer-content">
     <div class="footer-left">
-      © 2024-2025 Gemini Power Kit. 由 <a href="https://github.com/RonkTsang" class="footer-link">RonkTsang</a> 维护
+      © 2024–2026 Gemini Power Kit. 由 <a href="https://github.com/RonkTsang" class="footer-link">RonkTsang</a> 维护
     </div>
     <div class="footer-right">
       <a href="/zh-cn/privacy-policy/" class="footer-link">隐私政策</a>
