@@ -56,7 +56,7 @@
       "dismiss": "Fermer"
     },
     "selectRecent": "Sélectionner les $1 dernières",
-    "selectUnpinned": "Sélectionner les $1 dernières non épinglées",
+    "selectUnpinned": "Sélectionner les $1 derniers chats non épinglés",
     "change": "Modifier",
     "excludePinned": "Exclure les épinglées",
     "deselectPinned": "Désélectionner les épinglées",
@@ -444,8 +444,10 @@
         "cycleModel": "Changer de modèle",
         "createImage": "Créer une image",
         "createMusic": "Créer une musique",
+        "createVideo": "Créer une vidéo",
         "openCanvas": "Ouvrir Canvas",
         "openDeepResearch": "Ouvrir Deep Research",
+        "toggleSpeechDictation": "Basculer la dictée vocale",
         "uploadFiles": "Importer des fichiers"
       },
       "errors": {
@@ -515,7 +517,7 @@
     "releaseNotes": "Notes de version",
     "shortcuts": {
       "title": "Naviguez plus vite dans Gemini",
-      "description": "Définissez des raccourcis pour les chats, la navigation, les outils de prompt et les envois de fichiers, pour garder vos actions Gemini les plus fréquentes à une seule touche.",
+      "description": "Définissez des raccourcis pour les chats, la navigation et les actions du menu d'outils, pour garder vos actions Gemini les plus fréquentes à une seule touche.",
       "action": "Configurer les raccourcis"
     },
     "bulkDelete": {

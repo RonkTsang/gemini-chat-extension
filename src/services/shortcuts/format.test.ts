@@ -15,6 +15,10 @@ describe('shortcut format', () => {
     expect(formatted.text).toBe('⌘⇧ S')
   })
 
+  it('formats Control shortcuts for macOS', () => {
+    expect(formatShortcut('ctrl+i', true).text).toBe('⌃ I')
+  })
+
   it('formats shortcuts for non-mac platforms', () => {
     const formatted = formatShortcut('ctrl+shift+s', false)
 

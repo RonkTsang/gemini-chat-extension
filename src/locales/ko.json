@@ -444,8 +444,10 @@
         "cycleModel": "모델 전환",
         "createImage": "이미지 만들기",
         "createMusic": "음악 만들기",
+        "createVideo": "동영상 만들기",
         "openCanvas": "Canvas 열기",
         "openDeepResearch": "Deep Research 열기",
+        "toggleSpeechDictation": "음성 받아쓰기 전환",
         "uploadFiles": "파일 업로드"
       },
       "errors": {
@@ -515,7 +517,7 @@
     "releaseNotes": "릴리스 노트",
     "shortcuts": {
       "title": "Gemini를 더 빠르게 이동",
-      "description": "채팅, 탐색, 프롬프트 도구, 업로드에 단축키를 설정해 자주 쓰는 Gemini 동작을 한 번의 키 입력으로 바로 실행하세요.",
+      "description": "채팅, 탐색, 도구 메뉴 작업에 단축키를 설정해 자주 쓰는 Gemini 동작을 한 번의 키 입력으로 바로 실행하세요.",
       "action": "단축키 설정"
     },
     "bulkDelete": {

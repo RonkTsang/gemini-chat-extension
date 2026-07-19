@@ -444,8 +444,10 @@
         "cycleModel": "切换模型",
         "createImage": "创建图片",
         "createMusic": "创建音乐",
+        "createVideo": "创建视频",
         "openCanvas": "打开画布",
         "openDeepResearch": "打开深度研究",
+        "toggleSpeechDictation": "切换语音听写",
         "uploadFiles": "上传文件"
       },
       "errors": {
@@ -515,7 +517,7 @@
     "releaseNotes": "更新说明",
     "shortcuts": {
       "title": "常用操作一键直达",
-      "description": "为新聊天、导航、提示词工具和上传文件设置快捷键，让常用 Gemini 操作始终一键可达。",
+      "description": "为聊天、导航和工具菜单操作设置快捷键，让常用 Gemini 操作始终一键可达。",
       "action": "设置快捷键"
     },
     "bulkDelete": {

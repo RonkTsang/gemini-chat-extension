@@ -444,8 +444,10 @@
         "cycleModel": "切換模型",
         "createImage": "建立圖片",
         "createMusic": "建立音樂",
+        "createVideo": "建立影片",
         "openCanvas": "開啟畫布",
         "openDeepResearch": "開啟深度研究",
+        "toggleSpeechDictation": "切換語音聽寫",
         "uploadFiles": "上傳檔案"
       },
       "errors": {
@@ -515,7 +517,7 @@
     "releaseNotes": "更新說明",
     "shortcuts": {
       "title": "更快切換 Gemini 操作",
-      "description": "為聊天、導覽、提示詞工具和上傳設定快捷鍵，讓最常用的 Gemini 操作一鍵就能到位。",
+      "description": "為聊天、導覽和工具選單操作設定快捷鍵，讓最常用的 Gemini 操作一鍵就能到位。",
       "action": "設定快捷鍵"
     },
     "bulkDelete": {

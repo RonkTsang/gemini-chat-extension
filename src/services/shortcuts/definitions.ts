@@ -8,9 +8,11 @@ export const shortcutActions = [
   'openLibrary',
   'openGems',
   'focusInput',
+  'toggleSpeechDictation',
   'toggleSidebar',
   'cycleModel',
   'createImage',
+  'createVideo',
   'createMusic',
   'openCanvas',
   'openDeepResearch',
@@ -36,14 +38,26 @@ export const shortcutCategories = [
 
 export type ShortcutCategory = typeof shortcutCategories[number]['id']
 
+export interface ShortcutDefault {
+  default: string | null
+  mac?: string | null
+}
+
 export interface ShortcutDefinition {
   action: ShortcutAction
   category: ShortcutCategory
   labelKey: string
-  defaultShortcut: string | null
+  defaultShortcut: ShortcutDefault
   enableOnFormTags: Options['enableOnFormTags']
   enableOnContentEditable: boolean
   ignoreEventWhen?: Options['ignoreEventWhen']
+}
+
+function withPlatformModifier(defaultKeys: string, macKeys = defaultKeys): ShortcutDefault {
+  return {
+    default: `alt+${defaultKeys}`,
+    mac: `ctrl+${macKeys}`,
+  }
 }
 
 export const shortcutDefinitions: ShortcutDefinition[] = [
@@ -51,7 +65,7 @@ export const shortcutDefinitions: ShortcutDefinition[] = [
     action: 'openSettings',
     category: 'geminiPowerKit',
     labelKey: 'settingPanel.shortcut.actions.openSettings',
-    defaultShortcut: 'alt+comma',
+    defaultShortcut: withPlatformModifier('comma'),
     enableOnFormTags: false,
     enableOnContentEditable: false,
   },
@@ -59,7 +73,7 @@ export const shortcutDefinitions: ShortcutDefinition[] = [
     action: 'toggleBulkDelete',
     category: 'geminiPowerKit',
     labelKey: 'settingPanel.shortcut.actions.toggleBulkDelete',
-    defaultShortcut: null,
+    defaultShortcut: withPlatformModifier('shift+d'),
     enableOnFormTags: ['input'],
     enableOnContentEditable: false,
     ignoreEventWhen: (event) => (
@@ -70,7 +84,7 @@ export const shortcutDefinitions: ShortcutDefinition[] = [
     action: 'toggleSidebar',
     category: 'app',
     labelKey: 'settingPanel.shortcut.actions.toggleSidebar',
-    defaultShortcut: 'alt+q',
+    defaultShortcut: withPlatformModifier('b'),
     enableOnFormTags: false,
     enableOnContentEditable: false,
   },
@@ -78,7 +92,7 @@ export const shortcutDefinitions: ShortcutDefinition[] = [
     action: 'openNewChat',
     category: 'app',
     labelKey: 'settingPanel.shortcut.actions.openNewChat',
-    defaultShortcut: 'alt+n',
+    defaultShortcut: withPlatformModifier('n'),
     enableOnFormTags: false,
     enableOnContentEditable: false,
   },
@@ -86,7 +100,7 @@ export const shortcutDefinitions: ShortcutDefinition[] = [
     action: 'openTemporaryChat',
     category: 'app',
     labelKey: 'settingPanel.shortcut.actions.openTemporaryChat',
-    defaultShortcut: 'alt+t',
+    defaultShortcut: withPlatformModifier('t'),
     enableOnFormTags: false,
     enableOnContentEditable: false,
   },
@@ -94,7 +108,7 @@ export const shortcutDefinitions: ShortcutDefinition[] = [
     action: 'openLibrary',
     category: 'app',
     labelKey: 'settingPanel.shortcut.actions.openLibrary',
-    defaultShortcut: 'alt+l',
+    defaultShortcut: withPlatformModifier('l'),
     enableOnFormTags: false,
     enableOnContentEditable: false,
   },
@@ -102,7 +116,7 @@ export const shortcutDefinitions: ShortcutDefinition[] = [
     action: 'openGems',
     category: 'app',
     labelKey: 'settingPanel.shortcut.actions.openGems',
-    defaultShortcut: 'alt+g',
+    defaultShortcut: withPlatformModifier('g'),
     enableOnFormTags: false,
     enableOnContentEditable: false,
   },
@@ -110,15 +124,23 @@ export const shortcutDefinitions: ShortcutDefinition[] = [
     action: 'focusInput',
     category: 'prompt',
     labelKey: 'settingPanel.shortcut.actions.focusInput',
-    defaultShortcut: 'slash',
+    defaultShortcut: { default: 'slash' },
     enableOnFormTags: false,
     enableOnContentEditable: false,
+  },
+  {
+    action: 'toggleSpeechDictation',
+    category: 'prompt',
+    labelKey: 'settingPanel.shortcut.actions.toggleSpeechDictation',
+    defaultShortcut: withPlatformModifier('d'),
+    enableOnFormTags: ['textbox'],
+    enableOnContentEditable: true,
   },
   {
     action: 'cycleModel',
     category: 'prompt',
     labelKey: 'settingPanel.shortcut.actions.cycleModel',
-    defaultShortcut: 'ctrl+shift+m',
+    defaultShortcut: withPlatformModifier('m', 'shift+m'),
     enableOnFormTags: ['textbox'],
     enableOnContentEditable: true,
   },
@@ -126,7 +148,7 @@ export const shortcutDefinitions: ShortcutDefinition[] = [
     action: 'uploadFiles',
     category: 'prompt',
     labelKey: 'settingPanel.shortcut.actions.uploadFiles',
-    defaultShortcut: 'mod+u',
+    defaultShortcut: withPlatformModifier('u'),
     enableOnFormTags: ['textbox'],
     enableOnContentEditable: true,
   },
@@ -134,7 +156,15 @@ export const shortcutDefinitions: ShortcutDefinition[] = [
     action: 'createImage',
     category: 'prompt',
     labelKey: 'settingPanel.shortcut.actions.createImage',
-    defaultShortcut: null,
+    defaultShortcut: withPlatformModifier('shift+i', 'i'),
+    enableOnFormTags: ['textbox'],
+    enableOnContentEditable: true,
+  },
+  {
+    action: 'createVideo',
+    category: 'prompt',
+    labelKey: 'settingPanel.shortcut.actions.createVideo',
+    defaultShortcut: withPlatformModifier('shift+v', 'v'),
     enableOnFormTags: ['textbox'],
     enableOnContentEditable: true,
   },
@@ -142,7 +172,7 @@ export const shortcutDefinitions: ShortcutDefinition[] = [
     action: 'createMusic',
     category: 'prompt',
     labelKey: 'settingPanel.shortcut.actions.createMusic',
-    defaultShortcut: null,
+    defaultShortcut: withPlatformModifier('shift+m', 'm'),
     enableOnFormTags: ['textbox'],
     enableOnContentEditable: true,
   },
@@ -150,7 +180,7 @@ export const shortcutDefinitions: ShortcutDefinition[] = [
     action: 'openCanvas',
     category: 'prompt',
     labelKey: 'settingPanel.shortcut.actions.openCanvas',
-    defaultShortcut: null,
+    defaultShortcut: withPlatformModifier('shift+c', 'c'),
     enableOnFormTags: ['textbox'],
     enableOnContentEditable: true,
   },
@@ -158,7 +188,7 @@ export const shortcutDefinitions: ShortcutDefinition[] = [
     action: 'openDeepResearch',
     category: 'prompt',
     labelKey: 'settingPanel.shortcut.actions.openDeepResearch',
-    defaultShortcut: null,
+    defaultShortcut: withPlatformModifier('shift+r', 'r'),
     enableOnFormTags: ['textbox'],
     enableOnContentEditable: true,
   },
@@ -169,10 +199,19 @@ export const shortcutDefinitionsByCategory = shortcutCategories.map((category) =
   definitions: shortcutDefinitions.filter((definition) => definition.category === category.id),
 }))
 
-export const defaultShortcutBindings: Record<ShortcutAction, string | null> = shortcutDefinitions.reduce(
-  (bindings, definition) => {
-    bindings[definition.action] = definition.defaultShortcut
-    return bindings
-  },
-  {} as Record<ShortcutAction, string | null>,
-)
+export function resolveDefaultShortcut(
+  defaultShortcut: ShortcutDefault,
+  isMac: boolean,
+): string | null {
+  return isMac ? defaultShortcut.mac ?? defaultShortcut.default : defaultShortcut.default
+}
+
+export function getDefaultShortcutBindings(isMac: boolean): Record<ShortcutAction, string | null> {
+  return shortcutDefinitions.reduce(
+    (bindings, definition) => {
+      bindings[definition.action] = resolveDefaultShortcut(definition.defaultShortcut, isMac)
+      return bindings
+    },
+    {} as Record<ShortcutAction, string | null>,
+  )
+}

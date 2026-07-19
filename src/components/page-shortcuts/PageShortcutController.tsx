@@ -12,6 +12,7 @@ import { cycleGeminiModel } from '@/utils/cycleModel'
 import { toggleBulkDeleteMode } from '@/entrypoints/content/bulk-delete'
 import { focusContentEditor } from '@/utils/editorUtils'
 import { launchGeminiTool, openUploadFilesDialog } from '@/utils/toolboxActions'
+import { toggleSpeechDictation } from '@/utils/dictationActions'
 import { useShortcutSettings } from '@/hooks/useShortcutSettings'
 import {
   shortcutDefinitions,
@@ -69,7 +70,7 @@ function ShortcutRegistration({
   shortcut,
   settingsOpenRef,
 }: ShortcutRegistrationProps) {
-  const { action, enableOnContentEditable, enableOnFormTags } = definition
+  const { action, enableOnContentEditable, enableOnFormTags, ignoreEventWhen } = definition
 
   useHotkeys(
     [shortcut],
@@ -91,6 +92,7 @@ function ShortcutRegistration({
       enabled: Boolean(shortcut),
       enableOnFormTags,
       enableOnContentEditable,
+      ignoreEventWhen,
       eventListenerOptions: { capture: true },
       preventDefault: true,
     },
@@ -157,6 +159,11 @@ async function runShortcutAction(
     return
   }
 
+  if (action === 'toggleSpeechDictation') {
+    toggleSpeechDictation()
+    return
+  }
+
   if (action === 'toggleSidebar') {
     toggleSidebar()
     return
@@ -174,6 +181,11 @@ async function runShortcutAction(
 
   if (action === 'createImage') {
     await launchGeminiTool('image')
+    return
+  }
+
+  if (action === 'createVideo') {
+    await launchGeminiTool('video')
     return
   }
 

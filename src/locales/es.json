@@ -444,8 +444,10 @@
         "cycleModel": "Cambiar modelo",
         "createImage": "Crear imagen",
         "createMusic": "Crear música",
+        "createVideo": "Crear vídeo",
         "openCanvas": "Abrir Canvas",
         "openDeepResearch": "Abrir Deep Research",
+        "toggleSpeechDictation": "Alternar dictado de voz",
         "uploadFiles": "Subir archivos"
       },
       "errors": {
@@ -515,7 +517,7 @@
     "releaseNotes": "Notas de la versión",
     "shortcuts": {
       "title": "Muévete más rápido por Gemini",
-      "description": "Configura atajos para chats, navegación, herramientas de prompt y subidas, y ten a un toque las acciones que más usas en Gemini.",
+      "description": "Configura atajos para chats, navegación y acciones del menú de herramientas, y ten a un toque las acciones que más usas en Gemini.",
       "action": "Configurar atajos"
     },
     "bulkDelete": {

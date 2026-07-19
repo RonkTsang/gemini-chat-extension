@@ -4,19 +4,21 @@ import { validateRecordedShortcut } from './validation'
 
 const bindings: Record<ShortcutAction, string | null> = {
   openSettings: 'alt+comma',
-  toggleBulkDelete: null,
+  toggleBulkDelete: 'alt+shift+d',
   openNewChat: 'alt+n',
   openTemporaryChat: 'alt+t',
   openLibrary: 'alt+l',
   openGems: 'alt+g',
   focusInput: 'slash',
-  toggleSidebar: 'alt+q',
-  cycleModel: 'ctrl+shift+m',
-  createImage: null,
-  createMusic: null,
-  openCanvas: null,
-  openDeepResearch: null,
-  uploadFiles: 'mod+u',
+  toggleSpeechDictation: 'alt+d',
+  toggleSidebar: 'alt+b',
+  cycleModel: 'alt+m',
+  createImage: 'alt+shift+i',
+  createVideo: 'alt+shift+v',
+  createMusic: 'alt+shift+m',
+  openCanvas: 'alt+shift+c',
+  openDeepResearch: 'alt+shift+r',
+  uploadFiles: 'alt+u',
 }
 
 describe('shortcut validation', () => {
@@ -75,18 +77,32 @@ describe('shortcut validation', () => {
     })
   })
 
-  it('treats mod as the current platform primary modifier for conflicts', () => {
-    const bindingsWithUpload: Record<ShortcutAction, string | null> = {
-      ...bindings,
-      uploadFiles: 'mod+u',
-    }
-
-    const result = validateRecordedShortcut(new Set(['ctrl', 'u']), 'openNewChat', bindingsWithUpload)
+  it('rejects a shortcut already assigned to Upload Files', () => {
+    const result = validateRecordedShortcut(new Set(['alt', 'u']), 'openNewChat', bindings)
 
     expect(result).toEqual({
       ok: false,
       reason: 'conflict',
       conflictAction: 'uploadFiles',
+    })
+  })
+
+  it('rejects shortcuts assigned to Speech Dictation, Cycle Model, Bulk Delete, and Video', () => {
+    expect(validateRecordedShortcut(new Set(['alt', 'd']), 'openNewChat', bindings)).toMatchObject({
+      reason: 'conflict',
+      conflictAction: 'toggleSpeechDictation',
+    })
+    expect(validateRecordedShortcut(new Set(['alt', 'm']), 'openNewChat', bindings)).toMatchObject({
+      reason: 'conflict',
+      conflictAction: 'cycleModel',
+    })
+    expect(validateRecordedShortcut(new Set(['alt', 'shift', 'd']), 'openNewChat', bindings)).toMatchObject({
+      reason: 'conflict',
+      conflictAction: 'toggleBulkDelete',
+    })
+    expect(validateRecordedShortcut(new Set(['alt', 'shift', 'v']), 'openNewChat', bindings)).toMatchObject({
+      reason: 'conflict',
+      conflictAction: 'createVideo',
     })
   })
 })
