@@ -25,7 +25,7 @@ export const enableBulkDelete = storage.defineItem<boolean>(
 export const enableGemAvatar = storage.defineItem<boolean>(
   'sync:enableGemAvatar',
   {
-    fallback: true,
+    fallback: false,
   }
 );
 

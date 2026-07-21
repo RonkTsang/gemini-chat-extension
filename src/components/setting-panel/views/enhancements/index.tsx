@@ -51,7 +51,7 @@ function FeatureToggleCard({
 export function EnhancementsSettingsView() {
   const [chatOutlineEnabled, setChatOutlineEnabled] = useState(true)
   const [bulkDeleteEnabled, setBulkDeleteEnabled] = useState(true)
-  const [gemAvatarEnabled, setGemAvatarEnabled] = useState(true)
+  const [gemAvatarEnabled, setGemAvatarEnabled] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {

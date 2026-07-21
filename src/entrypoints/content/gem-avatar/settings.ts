@@ -39,11 +39,11 @@ export function createGemAvatarSettingsController({
 
       isStarted = true
 
-      let enabled = true
+      let enabled = false
       try {
         enabled = await setting.getValue()
       } catch (error) {
-        console.warn('[GemAvatar] Failed to load setting; enabling by default', error)
+        console.warn('[GemAvatar] Failed to load setting; disabling by default', error)
       }
 
       if (!isStarted) {

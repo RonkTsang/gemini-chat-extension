@@ -66,4 +66,23 @@ describe('GemAvatarSettingsController', () => {
     expect(start).toHaveBeenCalledTimes(2)
     expect(stop).toHaveBeenCalledTimes(2)
   })
+
+  it('keeps Gem Avatar disabled when reading the setting fails', async () => {
+    const setting: GemAvatarBooleanSetting = {
+      getValue: vi.fn(async () => {
+        throw new Error('storage unavailable')
+      }),
+      watch: vi.fn(() => () => undefined),
+    }
+    const start = vi.fn()
+    const stop = vi.fn()
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    const controller = createGemAvatarSettingsController({ setting, start, stop })
+
+    await controller.start()
+
+    expect(start).not.toHaveBeenCalled()
+    expect(stop).toHaveBeenCalledOnce()
+    warning.mockRestore()
+  })
 })
