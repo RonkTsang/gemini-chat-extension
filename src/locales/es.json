@@ -123,6 +123,10 @@
         "title": "Esquema de chat",
         "description": "Añade un esquema interactivo para navegar conversaciones largas."
       },
+      "gemAvatar": {
+        "title": "Avatar de Gem",
+        "description": "Usa avatares personalizados para tus Gems."
+      },
       "bulkDelete": {
         "title": "Eliminación en lote",
         "description": "Selecciona y elimina varios chats a la vez."

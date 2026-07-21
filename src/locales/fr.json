@@ -123,6 +123,10 @@
         "title": "Plan de discussion",
         "description": "Ajoute un plan cliquable pour naviguer facilement dans les longues conversations."
       },
+      "gemAvatar": {
+        "title": "Avatar des Gems",
+        "description": "Utilisez des avatars personnalisés pour vos Gems."
+      },
       "bulkDelete": {
         "title": "Suppression groupée",
         "description": "Sélectionnez et supprimez plusieurs discussions à la fois."

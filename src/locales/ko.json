@@ -123,6 +123,10 @@
         "title": "채팅 개요",
         "description": "긴 대화를 쉽게 탐색할 수 있는 클릭 가능한 개요를 추가합니다."
       },
+      "gemAvatar": {
+        "title": "Gem 아바타",
+        "description": "Gem에 사용자 지정 아바타를 사용합니다."
+      },
       "bulkDelete": {
         "title": "일괄 삭제",
         "description": "여러 채팅을 한 번에 선택하고 삭제합니다."

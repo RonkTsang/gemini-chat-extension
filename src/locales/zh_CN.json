@@ -123,6 +123,10 @@
         "title": "聊天大纲",
         "description": "添加可点击的大纲，方便浏览长对话。"
       },
+      "gemAvatar": {
+        "title": "Gem 头像",
+        "description": "为你的 Gems 使用自定义头像。"
+      },
       "bulkDelete": {
         "title": "批量删除",
         "description": "一次选择并删除多条聊天记录。"

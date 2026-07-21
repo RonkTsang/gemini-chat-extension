@@ -12,10 +12,12 @@ import { chatChangeDetector } from '@/services/chatChangeDetector'
 import { urlMonitor } from '@/services/urlMonitor'
 import { tabTitleSync } from '@/services/tabTitleSync'
 import { startResponseCompleteNotificationContentProvider } from '@/services/responseCompleteNotificationContent'
-import { enableBulkDelete } from '@/entrypoints/popup/storage'
+import { enableBulkDelete, enableGemAvatar } from '@/entrypoints/popup/storage'
 import { i18nCache } from '@/utils/i18nCache'
 import { stuffPageModule } from './stuff-page'
 import { initTheme, initThemeBackground } from './gemini-theme'
+import { gemAvatarModule } from './gem-avatar'
+import { createGemAvatarSettingsController } from './gem-avatar/settings'
 import {
   FIREFOX_INSTANCE_ID_ATTR,
   markFirefoxReloadRequired,
@@ -170,6 +172,12 @@ export default defineContentScript({
       stop: stopBulkDelete,
     })
     await bulkDeleteSettings.start()
+    const gemAvatarSettings = createGemAvatarSettingsController({
+      setting: enableGemAvatar,
+      start: () => gemAvatarModule.start(),
+      stop: () => gemAvatarModule.stop(),
+    })
+    await gemAvatarSettings.start()
     startPowerKitEntry()
     ctx.onInvalidated(() => {
       if (import.meta.env.DEV) {
@@ -179,6 +187,7 @@ export default defineContentScript({
         )
       }
       bulkDeleteSettings.stop()
+      gemAvatarSettings.stop()
       stopPowerKitEntry()
     })
     console.log('[ContentScript] UI mounted, context still valid:', ctx.isValid)

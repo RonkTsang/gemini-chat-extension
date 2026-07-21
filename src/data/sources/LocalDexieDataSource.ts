@@ -9,6 +9,7 @@ import {
   type QuickFollowPromptRow,
   type QuickFollowSettingsRow
 } from '../db'
+import type { GemAvatarAssetRow } from '@/domain/gem-avatar/types'
 
 export class LocalDexieDataSource {
   async getAllChainPrompts(): Promise<ChainPromptRow[]> {
@@ -98,8 +99,19 @@ export class LocalDexieDataSource {
     await db.quick_follow_settings.put(next)
     return next
   }
+
+  async getGemAvatarByGemId(gemId: string): Promise<GemAvatarAssetRow | undefined> {
+    return await db.gem_avatar_assets.get(gemId)
+  }
+
+  async putGemAvatarAsset(data: GemAvatarAssetRow): Promise<GemAvatarAssetRow> {
+    await db.gem_avatar_assets.put(data)
+    return data
+  }
+
+  async deleteGemAvatarAsset(gemId: string): Promise<void> {
+    await db.gem_avatar_assets.delete(gemId)
+  }
 }
 
 export const localDexieDataSource = new LocalDexieDataSource()
-
-

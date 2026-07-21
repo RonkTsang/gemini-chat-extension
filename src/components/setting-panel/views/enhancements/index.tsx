@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Box, Container, Stack, Switch, Text } from '@chakra-ui/react'
-import { enableBulkDelete, enableChatOutline } from '@/entrypoints/popup/storage'
+import {
+  enableBulkDelete,
+  enableChatOutline,
+  enableGemAvatar,
+} from '@/entrypoints/popup/storage'
 import { toaster } from '@/components/ui/toaster'
 import { t } from '@/utils/i18n'
 
@@ -47,6 +51,7 @@ function FeatureToggleCard({
 export function EnhancementsSettingsView() {
   const [chatOutlineEnabled, setChatOutlineEnabled] = useState(true)
   const [bulkDeleteEnabled, setBulkDeleteEnabled] = useState(true)
+  const [gemAvatarEnabled, setGemAvatarEnabled] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -54,9 +59,10 @@ export function EnhancementsSettingsView() {
 
     const loadSettings = async () => {
       try {
-        const [chatOutline, bulkDelete] = await Promise.all([
+        const [chatOutline, bulkDelete, gemAvatar] = await Promise.all([
           enableChatOutline.getValue(),
           enableBulkDelete.getValue(),
+          enableGemAvatar.getValue(),
         ])
         if (!isMounted) {
           return
@@ -64,6 +70,7 @@ export function EnhancementsSettingsView() {
 
         setChatOutlineEnabled(chatOutline)
         setBulkDeleteEnabled(bulkDelete)
+        setGemAvatarEnabled(gemAvatar)
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Failed to load settings'
         toaster.create({ type: 'error', title: message })
@@ -85,11 +92,17 @@ export function EnhancementsSettingsView() {
         setBulkDeleteEnabled(enabled)
       }
     })
+    const unwatchGemAvatar = enableGemAvatar.watch((enabled) => {
+      if (isMounted) {
+        setGemAvatarEnabled(enabled)
+      }
+    })
 
     return () => {
       isMounted = false
       unwatchChatOutline()
       unwatchBulkDelete()
+      unwatchGemAvatar()
     }
   }, [])
 
@@ -105,6 +118,15 @@ export function EnhancementsSettingsView() {
   const updateBulkDeleteEnabled = async (enabled: boolean) => {
     try {
       await enableBulkDelete.setValue(enabled)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to update setting'
+      toaster.create({ type: 'error', title: message })
+    }
+  }
+
+  const updateGemAvatarEnabled = async (enabled: boolean) => {
+    try {
+      await enableGemAvatar.setValue(enabled)
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to update setting'
       toaster.create({ type: 'error', title: message })
@@ -135,6 +157,13 @@ export function EnhancementsSettingsView() {
               checked={bulkDeleteEnabled}
               disabled={isLoading}
               onCheckedChange={(enabled) => void updateBulkDeleteEnabled(enabled)}
+            />
+            <FeatureToggleCard
+              title={t('settings.enhancements.gemAvatar.title')}
+              description={t('settings.enhancements.gemAvatar.description')}
+              checked={gemAvatarEnabled}
+              disabled={isLoading}
+              onCheckedChange={(enabled) => void updateGemAvatarEnabled(enabled)}
             />
           </Stack>
         </Container>
