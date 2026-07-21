@@ -123,6 +123,10 @@
         "title": "Chat Outline",
         "description": "Adds a clickable outline to help you navigate long conversations."
       },
+      "gemAvatar": {
+        "title": "Gem Avatar",
+        "description": "Use custom avatars for your Gems."
+      },
       "bulkDelete": {
         "title": "Bulk Delete",
         "description": "Select and delete multiple chats at once."

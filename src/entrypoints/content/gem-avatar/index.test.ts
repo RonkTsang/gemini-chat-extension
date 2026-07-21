@@ -141,6 +141,36 @@ describe('gemAvatarModule', () => {
       .toBe('blob:gem-avatar')
   })
 
+  it('removes injected avatars and layout classes when stopped, then restores them when restarted', async () => {
+    setPath('/gem/gem-1/chat-1')
+    setupChatDom()
+    const previewScroller = document.createElement('infinite-scroller')
+    previewScroller.classList.add('gpk-gem-avatar-edit-preview-scroller')
+    document.body.append(previewScroller)
+
+    gemAvatarModule.start()
+    await flush()
+
+    gemAvatarModule.stop()
+
+    expect(document.querySelector('[data-gpk-gem-avatar-injected="true"]')).toBeNull()
+    expect(document.querySelector('bot-logo')?.classList.contains('gpk-gem-avatar-logo-anchor'))
+      .toBe(false)
+    expect(document.querySelector('user-query-content > div.user-query-container')?.classList.contains('gpk-gem-avatar-anchor'))
+      .toBe(false)
+    expect(previewScroller.classList.contains('gpk-gem-avatar-edit-preview-scroller'))
+      .toBe(false)
+
+    gemAvatarModule.start()
+    await flush()
+
+    expect(document.querySelector('[data-gpk-gem-avatar-injected="true"]')).not.toBeNull()
+    expect(document.querySelector('bot-logo')?.classList.contains('gpk-gem-avatar-logo-anchor'))
+      .toBe(true)
+    expect(document.querySelector('user-query-content > div.user-query-container')?.classList.contains('gpk-gem-avatar-anchor'))
+      .toBe(true)
+  })
+
   it('opens the Gem editor from the chat-page Gem logo avatar', async () => {
     setPath('/gem/gem-1/chat-1')
     setupChatDom()

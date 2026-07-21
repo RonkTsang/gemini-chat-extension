@@ -123,6 +123,10 @@
         "title": "チャットアウトライン",
         "description": "長い会話を見やすくするクリック可能なアウトラインを追加します。"
       },
+      "gemAvatar": {
+        "title": "Gemアバター",
+        "description": "Gem にカスタムアバターを使います。"
+      },
       "bulkDelete": {
         "title": "一括削除",
         "description": "複数のチャットをまとめて選択・削除します。"

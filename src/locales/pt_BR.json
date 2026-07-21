@@ -123,6 +123,10 @@
         "title": "Esboço de chat",
         "description": "Adiciona um esboço clicável para navegar por conversas longas."
       },
+      "gemAvatar": {
+        "title": "Avatar do Gem",
+        "description": "Use avatares personalizados nos seus Gems."
+      },
       "bulkDelete": {
         "title": "Exclusão em lote",
         "description": "Selecione e exclua várias conversas de uma só vez."

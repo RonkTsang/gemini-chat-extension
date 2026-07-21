@@ -1,4 +1,5 @@
 import {
+  EDIT_PREVIEW_SCROLLER_CLASS,
   INJECTED_ATTR,
   LOGO_AVATAR_CLASS,
   LOGO_AVATAR_CLICKABLE_CLASS,
@@ -223,6 +224,19 @@ export function removeInjectedAvatars(root: ParentNode = document): void {
   root.querySelectorAll(`[${INJECTED_ATTR}="true"]`).forEach((node) => {
     node.remove()
   })
+
+  const cleanupClass = (className: string): void => {
+    if (root instanceof Element && root.classList.contains(className)) {
+      root.classList.remove(className)
+    }
+    root.querySelectorAll(`.${className}`).forEach((element) => {
+      element.classList.remove(className)
+    })
+  }
+
+  cleanupClass('gpk-gem-avatar-anchor')
+  cleanupClass('gpk-gem-avatar-logo-anchor')
+  cleanupClass(EDIT_PREVIEW_SCROLLER_CLASS)
 }
 
 export function ensureMatchingTargets(

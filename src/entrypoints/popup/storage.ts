@@ -22,6 +22,13 @@ export const enableBulkDelete = storage.defineItem<boolean>(
   }
 );
 
+export const enableGemAvatar = storage.defineItem<boolean>(
+  'sync:enableGemAvatar',
+  {
+    fallback: true,
+  }
+);
+
 // Helper functions for individual settings
 export const getChatOutlineEnabled = () => enableChatOutline.getValue();
 export const setChatOutlineEnabled = (enabled: boolean) => enableChatOutline.setValue(enabled);
@@ -31,6 +38,9 @@ export const setQuickQuoteEnabled = (enabled: boolean) => enableQuickQuote.setVa
 
 export const getBulkDeleteEnabled = () => enableBulkDelete.getValue();
 export const setBulkDeleteEnabled = (enabled: boolean) => enableBulkDelete.setValue(enabled);
+
+export const getGemAvatarEnabled = () => enableGemAvatar.getValue();
+export const setGemAvatarEnabled = (enabled: boolean) => enableGemAvatar.setValue(enabled);
 
 // Helper function to get all settings at once
 export const getAllSettings = async () => {

@@ -122,6 +122,7 @@ class GemAvatarModule {
     this.unsubscribeUrlChange = null
     this.disconnectAllObservers()
     this.cancelScheduledWork()
+    removeInjectedAvatars()
     this.clearPendingAvatar()
     this.clearActiveGemAvatar()
     this.clearListAvatarUrls()

@@ -123,6 +123,10 @@
         "title": "Chat-Gliederung",
         "description": "Fügt eine anklickbare Gliederung hinzu, um lange Unterhaltungen leichter zu navigieren."
       },
+      "gemAvatar": {
+        "title": "Gem-Avatar",
+        "description": "Benutzerdefinierte Avatare für Ihre Gems aktivieren."
+      },
       "bulkDelete": {
         "title": "Massenlöschung",
         "description": "Wählen Sie mehrere Chats aus und löschen Sie sie auf einmal."
