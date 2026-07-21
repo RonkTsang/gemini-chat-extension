@@ -69,7 +69,7 @@ export function ChatTextColorControl({
     >
       <Box minW={0} flex="1">
         <Text fontSize="sm" color="gemOnSurface" minW={0}>
-          {tt('settingPanel.theme.chatTextColor', 'Chat text color')}
+          {tt('settingPanel.theme.chatTextColor', 'Message text color')}
         </Text>
         <Text fontSize="xs" color="gemOnSurfaceVariant" mt={0.5}>
           {modeDescription}
@@ -94,7 +94,7 @@ export function ChatTextColorControl({
           <ColorPicker.HiddenInput />
           <ColorPicker.Control>
             <ColorPicker.Trigger
-              aria-label={tt('settingPanel.theme.chatTextColor', 'Chat text color')}
+              aria-label={tt('settingPanel.theme.chatTextColor', 'Message text color')}
               p={0}
               borderWidth={0}
               bg="transparent"

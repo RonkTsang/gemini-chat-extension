@@ -178,7 +178,7 @@
       "glassTransparency": "ガラスの透明度",
       "glassBlur": "ガラスのぼかし",
       "resetGlassSettings": "ガラス設定をリセット",
-      "chatTextColor": "チャット文字色",
+      "chatTextColor": "メッセージ文字色",
       "chatTextColorModeDescription": "モード: $1",
       "resetChatTextColor": "リセット",
       "invalidFileType": "PNG/JPG/WebPのみサポートされています",

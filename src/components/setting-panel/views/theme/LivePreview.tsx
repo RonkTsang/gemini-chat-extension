@@ -18,6 +18,7 @@ interface LivePreviewProps {
   messageGlassBackgroundVisibility: number
   messageGlassBlurPx: number
   messageGlassBlurCustomized: boolean
+  messageTextColor: string
 }
 
 function clampInteger(value: number, min: number, max: number): number {
@@ -82,6 +83,7 @@ export function LivePreview({
   messageGlassBackgroundVisibility,
   messageGlassBlurPx,
   messageGlassBlurCustomized,
+  messageTextColor,
 }: LivePreviewProps) {
   const { colorMode } = useColorMode()
   const isDark = colorMode === 'dark'
@@ -260,10 +262,10 @@ export function LivePreview({
                 backdropFilter={messageGlassEnabled ? `blur(${userGlassBlurPx}px)` : undefined}
                 border={messageGlassEnabled && !isDark ? '1px solid #f2f2f2' : undefined}
                 boxShadow={messageGlassEnabled ? 'inset 0 0 1px 0 #ffffff' : undefined}
-                color="gemOnSurface"
+                color={messageTextColor}
                 fontSize="xs"
                 lineHeight="1.4"
-                transition="background-color 0.16s ease, backdrop-filter 0.16s ease"
+                transition="background-color 0.16s ease, color 0.16s ease, backdrop-filter 0.16s ease"
               >
                 Summarize Gemini Power Kit updates.
               </Box>
@@ -289,10 +291,10 @@ export function LivePreview({
                 backdropFilter={messageGlassEnabled ? `blur(${modelGlassBlurPx}px)` : undefined}
                 border={messageGlassEnabled && !isDark ? '1px solid #f2f2f2' : undefined}
                 boxShadow={messageGlassEnabled && isDark ? '0 0 1px 0 #ffffff' : undefined}
-                color="gemOnSurface"
+                color={messageTextColor}
                 fontSize="xs"
                 lineHeight="1.45"
-                transition="background-color 0.16s ease, backdrop-filter 0.16s ease"
+                transition="background-color 0.16s ease, color 0.16s ease, backdrop-filter 0.16s ease"
               >
                 Added chat outline, quick follow-up, and prompt chaining support.
               </Box>

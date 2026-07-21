@@ -178,7 +178,7 @@
       "glassTransparency": "玻璃透明度",
       "glassBlur": "玻璃模糊",
       "resetGlassSettings": "重置玻璃设置",
-      "chatTextColor": "聊天文字颜色",
+      "chatTextColor": "消息文字颜色",
       "chatTextColorModeDescription": "模式：$1",
       "resetChatTextColor": "重置",
       "invalidFileType": "仅支持 PNG/JPG/WebP",

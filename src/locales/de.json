@@ -178,7 +178,7 @@
       "glassTransparency": "Glas-Transparenz",
       "glassBlur": "Glas-Unschärfe",
       "resetGlassSettings": "Glaseinstellungen zurücksetzen",
-      "chatTextColor": "Chat-Textfarbe",
+      "chatTextColor": "Textfarbe der Nachrichten",
       "chatTextColorModeDescription": "Modus: $1",
       "resetChatTextColor": "Zurücksetzen",
       "invalidFileType": "Nur PNG/JPG/WebP wird unterstützt",

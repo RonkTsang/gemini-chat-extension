@@ -648,6 +648,16 @@ export function CustomBackground(props: CustomBackgroundProps) {
             </VStack>
           )}
 
+          <ChatTextColorControl
+            variant={props.variant}
+            mode={props.effectiveTheme}
+            value={props.chatTextColor}
+            defaultValue={props.defaultChatTextColor}
+            disabled={props.isLoading || isFilePending}
+            onChange={props.onChatTextColorChange}
+            onReset={props.onResetChatTextColor}
+          />
+
           <HStack justify="space-between" mt={sectionGap} mb={4} gap={3}>
             <HStack gap={1} minW={0} flex="1">
               <Text fontSize="sm" color="gemOnSurface" minW={0}>
@@ -789,15 +799,6 @@ export function CustomBackground(props: CustomBackgroundProps) {
             </NativeSelect.Root>
           </Stack>
 
-          <ChatTextColorControl
-            variant={props.variant}
-            mode={props.effectiveTheme}
-            value={props.chatTextColor}
-            defaultValue={props.defaultChatTextColor}
-            disabled={props.isLoading || isFilePending}
-            onChange={props.onChatTextColorChange}
-            onReset={props.onResetChatTextColor}
-          />
         </>
       )}
     </Box>

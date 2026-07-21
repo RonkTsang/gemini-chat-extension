@@ -178,7 +178,7 @@
       "glassTransparency": "Transparence du verre",
       "glassBlur": "Flou du verre",
       "resetGlassSettings": "Réinitialiser les réglages du verre",
-      "chatTextColor": "Couleur du texte du chat",
+      "chatTextColor": "Couleur du texte des messages",
       "chatTextColorModeDescription": "Mode : $1",
       "resetChatTextColor": "Réinitialiser",
       "invalidFileType": "Seuls les formats PNG/JPG/WebP sont pris en charge",

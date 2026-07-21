@@ -3,7 +3,7 @@ version = 1
 name = "gemini-chrome-plugin"
 
 [setup]
-script = ""
+script = "pnpm install"
 
 [[actions]]
 name = "预览website"
