@@ -148,6 +148,8 @@
       },
       "backToSettings": "Retour aux paramètres",
       "closeThemePanel": "Fermer le panneau de thème",
+      "upgradeReminders": "Rappels de mise à niveau",
+      "hideUpgradeReminder": "Masquer le rappel de mise à niveau Gemini",
       "enableBackgroundImage": "Activer le fond d'écran",
       "backgroundImageUpload": "Téléchargement de l'image de fond",
       "dropBackground": "Déposez votre image ici",

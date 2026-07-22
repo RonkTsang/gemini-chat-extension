@@ -9,7 +9,7 @@ import {
   MESSAGE_GLASS_BACKGROUND_VISIBILITY_MIN,
 } from './messageGlassVisibility'
 
-export const THEME_BACKGROUND_VERSION = 5 as const
+export const THEME_BACKGROUND_VERSION = 6 as const
 
 export const BACKGROUND_BLUR_MIN = 0
 export const BACKGROUND_BLUR_MAX = 20
@@ -91,6 +91,7 @@ export interface ThemeBackgroundSettings {
   messageGlassBlurCustomized: boolean
   sidebarScrimEnabled: boolean
   sidebarScrimIntensity: number
+  hideUpgradeReminder: boolean
   chatTextLightColor: string | null
   chatTextDarkColor: string | null
   welcomeGreetingReadabilityMode: WelcomeGreetingReadabilityMode
@@ -118,6 +119,7 @@ export interface ThemeBackgroundPatch {
   messageGlassBlurCustomized?: boolean
   sidebarScrimEnabled?: boolean
   sidebarScrimIntensity?: number
+  hideUpgradeReminder?: boolean
   chatTextLightColor?: string | null
   chatTextDarkColor?: string | null
   welcomeGreetingReadabilityMode?: WelcomeGreetingReadabilityMode
@@ -164,6 +166,7 @@ export const DEFAULT_THEME_BACKGROUND_SETTINGS: ThemeBackgroundSettings = {
   messageGlassBlurCustomized: false,
   sidebarScrimEnabled: true,
   sidebarScrimIntensity: 20,
+  hideUpgradeReminder: true,
   chatTextLightColor: null,
   chatTextDarkColor: null,
   welcomeGreetingReadabilityMode: 'auto',
@@ -351,6 +354,9 @@ export function normalizeThemeBackgroundSettings(
   const sidebarScrimEnabled = typeof source.sidebarScrimEnabled === 'boolean'
     ? source.sidebarScrimEnabled
     : DEFAULT_THEME_BACKGROUND_SETTINGS.sidebarScrimEnabled
+  const hideUpgradeReminder = typeof source.hideUpgradeReminder === 'boolean'
+    ? source.hideUpgradeReminder
+    : DEFAULT_THEME_BACKGROUND_SETTINGS.hideUpgradeReminder
   const chatTextLightColor = normalizeChatTextColor(source.chatTextLightColor)
   const chatTextDarkColor = normalizeChatTextColor(source.chatTextDarkColor)
   const welcomeGreetingReadabilityMode = normalizeWelcomeGreetingMode(
@@ -404,6 +410,7 @@ export function normalizeThemeBackgroundSettings(
     messageGlassBlurCustomized: source.messageGlassBlurCustomized === true,
     sidebarScrimEnabled,
     sidebarScrimIntensity,
+    hideUpgradeReminder,
     chatTextLightColor,
     chatTextDarkColor,
     welcomeGreetingReadabilityMode,

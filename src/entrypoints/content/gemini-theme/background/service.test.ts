@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { ThemeBackgroundSettings } from './types'
+import { THEME_BACKGROUND_VERSION, type ThemeBackgroundSettings } from './types'
 
 const {
   mockGet,
@@ -73,7 +73,7 @@ import { BACKGROUND_FILE_SIZE_LIMIT } from './types'
 
 function createSettings(overrides: Partial<ThemeBackgroundSettings> = {}): ThemeBackgroundSettings {
   return {
-    version: 5,
+    version: THEME_BACKGROUND_VERSION,
     backgroundImageEnabled: false,
     backgroundBlurPx: 5,
     backgroundImagePosition: 'center',
@@ -91,6 +91,7 @@ function createSettings(overrides: Partial<ThemeBackgroundSettings> = {}): Theme
     messageGlassBlurCustomized: false,
     sidebarScrimEnabled: true,
     sidebarScrimIntensity: 20,
+    hideUpgradeReminder: false,
     chatTextLightColor: null,
     chatTextDarkColor: null,
     welcomeGreetingReadabilityMode: 'auto',

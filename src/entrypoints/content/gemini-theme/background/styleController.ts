@@ -12,6 +12,7 @@ const ROOT_MSG_GLASS_TRANSPARENCY_CUSTOMIZED_ATTR
 const ROOT_MSG_GLASS_BLUR_CUSTOMIZED_ATTR
   = 'data-gpk-msg-glass-blur-customized'
 const ROOT_SIDEBAR_SCRIM_ENABLED_ATTR = 'data-gpk-sidebar-scrim-enabled'
+const ROOT_HIDE_UPGRADE_REMINDER_ATTR = 'data-gpk-hide-upgrade-reminder'
 const ROOT_FIREFOX_ATTR = 'data-gpk-firefox'
 const ROOT_BG_IMAGE_VAR = '--gpk-bg-image'
 const ROOT_BG_BLUR_VAR = '--gpk-bg-blur'
@@ -119,6 +120,10 @@ export function applyThemeBackgroundStyle(
     ROOT_SIDEBAR_SCRIM_ENABLED_ATTR,
     state.settings.sidebarScrimEnabled ? 'true' : 'false',
   )
+  root.toggleAttribute(
+    ROOT_HIDE_UPGRADE_REMINDER_ATTR,
+    state.settings.hideUpgradeReminder,
+  )
   root.style.setProperty(
     ROOT_BG_IMAGE_VAR,
     toCssImageValue(state.resolvedBackgroundUrl),
@@ -215,6 +220,7 @@ export function clearThemeBackgroundStyle(): void {
   root.removeAttribute(ROOT_MSG_GLASS_TRANSPARENCY_CUSTOMIZED_ATTR)
   root.removeAttribute(ROOT_MSG_GLASS_BLUR_CUSTOMIZED_ATTR)
   root.removeAttribute(ROOT_SIDEBAR_SCRIM_ENABLED_ATTR)
+  root.removeAttribute(ROOT_HIDE_UPGRADE_REMINDER_ATTR)
   root.removeAttribute(ROOT_FIREFOX_ATTR)
   root.style.removeProperty(ROOT_BG_IMAGE_VAR)
   root.style.removeProperty(ROOT_BG_BLUR_VAR)

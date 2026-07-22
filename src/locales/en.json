@@ -148,6 +148,8 @@
       },
       "backToSettings": "Back to settings",
       "closeThemePanel": "Close theme panel",
+      "upgradeReminders": "Upgrade reminders",
+      "hideUpgradeReminder": "Hide Gemini upgrade reminder",
       "enableBackgroundImage": "Enable wallpaper",
       "backgroundImageUpload": "Background Image Upload",
       "dropBackground": "Drop your image here",

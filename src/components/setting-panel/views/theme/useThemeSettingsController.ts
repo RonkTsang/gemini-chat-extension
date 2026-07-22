@@ -44,6 +44,7 @@ export interface ThemeSettingsController {
   ) => Promise<void>
   handleToggleSidebarScrim: (enabled: boolean) => Promise<void>
   handleSidebarScrimIntensityChange: (value: number) => Promise<void>
+  handleHideUpgradeReminderChange: (enabled: boolean) => Promise<void>
   handleToggleMessageGlass: (enabled: boolean) => Promise<void>
   handleMessageGlassBackgroundVisibilityChange: (value: number) => Promise<void>
   handleMessageGlassBlurChange: (value: number) => Promise<void>
@@ -266,6 +267,17 @@ export function useThemeSettingsController(
     }
   }, [])
 
+  const handleHideUpgradeReminderChange = useCallback(async (enabled: boolean) => {
+    try {
+      const state = await updateThemeBackgroundSettings({
+        hideUpgradeReminder: enabled,
+      })
+      setBackgroundState(state)
+    } catch (error) {
+      toaster.create({ type: 'error', title: getBackgroundErrorMessage(error) })
+    }
+  }, [])
+
   const handleSidebarScrimIntensityChange = useCallback(async (value: number) => {
     try {
       const state = await updateThemeBackgroundSettings({
@@ -448,6 +460,7 @@ export function useThemeSettingsController(
     handleBackgroundPositionChange,
     handleToggleSidebarScrim,
     handleSidebarScrimIntensityChange,
+    handleHideUpgradeReminderChange,
     handleToggleMessageGlass,
     handleMessageGlassBackgroundVisibilityChange,
     handleMessageGlassBlurChange,

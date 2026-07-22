@@ -148,6 +148,8 @@
       },
       "backToSettings": "설정으로 돌아가기",
       "closeThemePanel": "테마 패널 닫기",
+      "upgradeReminders": "업그레이드 알림",
+      "hideUpgradeReminder": "Gemini 업그레이드 알림 숨기기",
       "enableBackgroundImage": "배경화면 활성화",
       "backgroundImageUpload": "배경 이미지 업로드",
       "dropBackground": "여기에 이미지 드롭",

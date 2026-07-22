@@ -148,6 +148,8 @@
       },
       "backToSettings": "返回设置",
       "closeThemePanel": "关闭主题面板",
+      "upgradeReminders": "升级提醒",
+      "hideUpgradeReminder": "隐藏 Gemini 升级提醒",
       "enableBackgroundImage": "启用壁纸",
       "backgroundImageUpload": "背景图上传",
       "dropBackground": "将图片拖放到这里",

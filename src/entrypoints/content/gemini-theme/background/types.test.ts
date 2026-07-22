@@ -50,6 +50,7 @@ describe('theme background settings normalize', () => {
     expect(result.sidebarScrimIntensity).toBe(
       DEFAULT_THEME_BACKGROUND_SETTINGS.sidebarScrimIntensity,
     )
+    expect(result.hideUpgradeReminder).toBe(true)
     expect(result.chatTextLightColor).toBeNull()
     expect(result.chatTextDarkColor).toBeNull()
     expect(result.welcomeGreetingReadabilityMode).toBe(
@@ -65,6 +66,15 @@ describe('theme background settings normalize', () => {
     expect(result.version).toBe(DEFAULT_THEME_BACKGROUND_SETTINGS.version)
     expect(typeof result.updatedAt).toBe('string')
     expect(result.updatedAt.length).toBeGreaterThan(0)
+  })
+
+  it('uses the default when the upgrade reminder setting is invalid', () => {
+    expect(normalizeThemeBackgroundSettings({ hideUpgradeReminder: true }).hideUpgradeReminder)
+      .toBe(true)
+    expect(normalizeThemeBackgroundSettings({ hideUpgradeReminder: false }).hideUpgradeReminder)
+      .toBe(false)
+    expect(normalizeThemeBackgroundSettings({ hideUpgradeReminder: 'true' }).hideUpgradeReminder)
+      .toBe(true)
   })
 
   it('clamps blur value to valid range', () => {
