@@ -287,6 +287,20 @@ describe('styleController', () => {
     expect(css).toContain('!important')
   })
 
+  it('keeps the luminous mode sidenav transparent when a background is enabled', () => {
+    const css = readFileSync(
+      join(
+        process.cwd(),
+        'src/entrypoints/content/gemini-theme/background/style.css',
+      ),
+      'utf8',
+    )
+
+    expect(css).toMatch(
+      /:root\[data-gpk-bg-enabled="true"\] :where\(\.lm-component-theme\) mat-sidenav-container \{\s*background-color: transparent !important;/,
+    )
+  })
+
   it('clears style tag, root attributes and background layer', () => {
     applyThemeBackgroundStyle(createState())
     clearThemeBackgroundStyle()

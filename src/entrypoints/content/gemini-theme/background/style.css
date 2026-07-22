@@ -355,6 +355,10 @@
   }
 }
 
+:root[data-gpk-bg-enabled="true"] :where(.lm-component-theme) mat-sidenav-container {
+  background-color: transparent !important;
+}
+
 pending-response>response-container>div.response-container {
   background-color: transparent !important;
 }
