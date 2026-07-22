@@ -295,7 +295,11 @@
 }
 
 :root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] input-container input-area-v2 {
-  background-color: color-mix(in srgb, var(--gem-sys-color--surface-bright), transparent 40%) !important;
+  background-color: color-mix(
+    in srgb,
+    var(--gem-sys-color--surface-bright),
+    transparent var(--gpk-input-area-transparency, 40%)
+  ) !important;
   backdrop-filter: blur(10px);
 }
 

@@ -30,6 +30,7 @@ function createSettings(
     messageGlassDarkTransparency: 90,
     messageGlassBackgroundVisibility: 5,
     messageGlassBlurPx: 20,
+    inputAreaTransparency: 40,
     messageGlassTransparencyCustomized: false,
     messageGlassLightTransparencyCustomized: false,
     messageGlassDarkTransparencyCustomized: false,

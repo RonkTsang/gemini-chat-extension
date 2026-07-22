@@ -18,6 +18,7 @@ interface LivePreviewProps {
   messageGlassBackgroundVisibility: number
   messageGlassBlurPx: number
   messageGlassBlurCustomized: boolean
+  inputAreaTransparency: number
   messageTextColor: string
 }
 
@@ -83,6 +84,7 @@ export function LivePreview({
   messageGlassBackgroundVisibility,
   messageGlassBlurPx,
   messageGlassBlurCustomized,
+  inputAreaTransparency,
   messageTextColor,
 }: LivePreviewProps) {
   const { colorMode } = useColorMode()
@@ -117,6 +119,9 @@ export function LivePreview({
   const modelGlassBlurPx = messageGlassBlurCustomized ? glassBlurPx : 20
   const userGlassBackground = `color-mix(in srgb, ${userGlassSurface.surfaceColor}, transparent ${userGlassSurface.transparency}%)`
   const modelGlassBackground = `color-mix(in srgb, ${modelGlassSurface.surfaceColor}, transparent ${modelGlassSurface.transparency}%)`
+  const inputAreaBackground = canRenderBackground && messageGlassEnabled
+    ? `color-mix(in srgb, var(--gem-sys-color--surface-bright), transparent ${clampInteger(inputAreaTransparency, 0, 100)}%)`
+    : 'var(--gem-sys-color--surface-bright, var(--gem-sys-color--surface-container, #eef2ef))'
   const previewTitle = t('settingPanel.theme.livePreview')
 
   return (
@@ -306,7 +311,11 @@ export function LivePreview({
               gap={2}
               p={2}
               borderRadius="full"
-              bg="var(--gem-sys-color--surface-bright, var(--gem-sys-color--surface-container, #eef2ef))"
+              bg={inputAreaBackground}
+              backdropFilter={canRenderBackground && messageGlassEnabled
+                ? 'blur(10px)'
+                : undefined}
+              transition="background-color 0.16s ease, backdrop-filter 0.16s ease"
             >
               <Box
                 flex="1"

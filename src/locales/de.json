@@ -177,6 +177,7 @@
       "messageGlassBackgroundVisibility": "Hintergrundsichtbarkeit",
       "glassTransparency": "Glas-Transparenz",
       "glassBlur": "Glas-Unschärfe",
+      "inputTransparency": "Eingabefeld-Transparenz",
       "resetGlassSettings": "Glaseinstellungen zurücksetzen",
       "chatTextColor": "Textfarbe der Nachrichten",
       "chatTextColorModeDescription": "Modus: $1",

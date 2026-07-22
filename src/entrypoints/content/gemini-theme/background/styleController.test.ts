@@ -22,6 +22,7 @@ function createState(
       messageGlassDarkTransparency: 90,
       messageGlassBackgroundVisibility: 5,
       messageGlassBlurPx: 20,
+      inputAreaTransparency: 40,
       messageGlassTransparencyCustomized: false,
       messageGlassLightTransparencyCustomized: false,
       messageGlassDarkTransparencyCustomized: false,
@@ -67,6 +68,7 @@ describe('styleController', () => {
           messageGlassTransparency: 72,
           messageGlassBackgroundVisibility: 4,
           messageGlassBlurPx: 8,
+          inputAreaTransparency: 65,
           messageGlassTransparencyCustomized: true,
           messageGlassBackgroundVisibilityCustomized: true,
           messageGlassBlurCustomized: true,
@@ -149,6 +151,11 @@ describe('styleController', () => {
     expect(document.documentElement.style.getPropertyValue('--gpk-msg-glass-blur')).toBe(
       '8px',
     )
+    expect(
+      document.documentElement.style.getPropertyValue(
+        '--gpk-input-area-transparency',
+      ),
+    ).toBe('65%')
     expect(
       document.documentElement.style.getPropertyValue(
         '--gpk-msg-glass-transparency-customized',
@@ -262,6 +269,24 @@ describe('styleController', () => {
     expect(css).toContain('--gem-sys-color--on-surface: var(--gpk-chat-text-dark-color)')
   })
 
+  it('scopes input transparency to renderable message glass', () => {
+    const css = readFileSync(
+      join(
+        process.cwd(),
+        'src/entrypoints/content/gemini-theme/background/style.css',
+      ),
+      'utf8',
+    )
+
+    expect(css).toContain(
+      ':root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] input-container input-area-v2',
+    )
+    expect(css).toContain(
+      'transparent var(--gpk-input-area-transparency, 40%)',
+    )
+    expect(css).toContain('!important')
+  })
+
   it('clears style tag, root attributes and background layer', () => {
     applyThemeBackgroundStyle(createState())
     clearThemeBackgroundStyle()
@@ -331,6 +356,11 @@ describe('styleController', () => {
       ),
     ).toBe('')
     expect(document.documentElement.style.getPropertyValue('--gpk-msg-glass-blur')).toBe('')
+    expect(
+      document.documentElement.style.getPropertyValue(
+        '--gpk-input-area-transparency',
+      ),
+    ).toBe('')
     expect(
       document.documentElement.style.getPropertyValue(
         '--gpk-msg-glass-transparency-customized',

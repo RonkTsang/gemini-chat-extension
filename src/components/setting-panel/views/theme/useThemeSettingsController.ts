@@ -47,6 +47,8 @@ export interface ThemeSettingsController {
   handleToggleMessageGlass: (enabled: boolean) => Promise<void>
   handleMessageGlassBackgroundVisibilityChange: (value: number) => Promise<void>
   handleMessageGlassBlurChange: (value: number) => Promise<void>
+  handleInputAreaTransparencyPreviewChange: (value: number) => void
+  handleInputAreaTransparencyChange: (value: number) => Promise<void>
   handleResetGlassSettings: () => Promise<void>
   handleChatTextColorChange: (color: string) => Promise<void>
   handleResetChatTextColor: () => Promise<void>
@@ -310,6 +312,31 @@ export function useThemeSettingsController(
     }
   }, [])
 
+  const handleInputAreaTransparencyChange = useCallback(async (value: number) => {
+    try {
+      const state = await updateThemeBackgroundSettings({
+        inputAreaTransparency: value,
+      })
+      setBackgroundState(state)
+    } catch (error) {
+      toaster.create({ type: 'error', title: getBackgroundErrorMessage(error) })
+    }
+  }, [])
+
+  const handleInputAreaTransparencyPreviewChange = useCallback((value: number) => {
+    setBackgroundState((current) => {
+      if (!current) return current
+
+      return {
+        ...current,
+        settings: {
+          ...current.settings,
+          inputAreaTransparency: value,
+        },
+      }
+    })
+  }, [])
+
   const handleResetGlassSettings = useCallback(async () => {
     try {
       const state = await updateThemeBackgroundSettings({
@@ -318,6 +345,8 @@ export function useThemeSettingsController(
         messageGlassTransparency:
           DEFAULT_THEME_BACKGROUND_SETTINGS.messageGlassTransparency,
         messageGlassBlurPx: DEFAULT_THEME_BACKGROUND_SETTINGS.messageGlassBlurPx,
+        inputAreaTransparency:
+          DEFAULT_THEME_BACKGROUND_SETTINGS.inputAreaTransparency,
         messageGlassBackgroundVisibilityCustomized: false,
         messageGlassTransparencyCustomized: false,
         messageGlassLightTransparencyCustomized: false,
@@ -422,6 +451,8 @@ export function useThemeSettingsController(
     handleToggleMessageGlass,
     handleMessageGlassBackgroundVisibilityChange,
     handleMessageGlassBlurChange,
+    handleInputAreaTransparencyPreviewChange,
+    handleInputAreaTransparencyChange,
     handleResetGlassSettings,
     handleChatTextColorChange,
     handleResetChatTextColor,

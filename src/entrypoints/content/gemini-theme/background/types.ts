@@ -25,6 +25,9 @@ export const MESSAGE_GLASS_LIGHT_TRANSPARENCY_DEFAULT = 40
 export const MESSAGE_GLASS_DARK_TRANSPARENCY_DEFAULT = 90
 export const MESSAGE_GLASS_BLUR_MIN = 0
 export const MESSAGE_GLASS_BLUR_MAX = 20
+export const INPUT_AREA_TRANSPARENCY_MIN = 0
+export const INPUT_AREA_TRANSPARENCY_DEFAULT = 40
+export const INPUT_AREA_TRANSPARENCY_MAX = 100
 export const SIDEBAR_SCRIM_INTENSITY_MIN = 0
 export const SIDEBAR_SCRIM_INTENSITY_MAX = 100
 const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i
@@ -80,6 +83,7 @@ export interface ThemeBackgroundSettings {
   messageGlassDarkTransparency: number
   messageGlassBackgroundVisibility: number
   messageGlassBlurPx: number
+  inputAreaTransparency: number
   messageGlassTransparencyCustomized: boolean
   messageGlassLightTransparencyCustomized: boolean
   messageGlassDarkTransparencyCustomized: boolean
@@ -106,6 +110,7 @@ export interface ThemeBackgroundPatch {
   messageGlassDarkTransparency?: number
   messageGlassBackgroundVisibility?: number
   messageGlassBlurPx?: number
+  inputAreaTransparency?: number
   messageGlassTransparencyCustomized?: boolean
   messageGlassLightTransparencyCustomized?: boolean
   messageGlassDarkTransparencyCustomized?: boolean
@@ -151,6 +156,7 @@ export const DEFAULT_THEME_BACKGROUND_SETTINGS: ThemeBackgroundSettings = {
   messageGlassDarkTransparency: MESSAGE_GLASS_DARK_TRANSPARENCY_DEFAULT,
   messageGlassBackgroundVisibility: MESSAGE_GLASS_BACKGROUND_VISIBILITY_DEFAULT,
   messageGlassBlurPx: 20,
+  inputAreaTransparency: INPUT_AREA_TRANSPARENCY_DEFAULT,
   messageGlassTransparencyCustomized: false,
   messageGlassLightTransparencyCustomized: false,
   messageGlassDarkTransparencyCustomized: false,
@@ -197,6 +203,13 @@ function clampMessageGlassBlur(value: number): number {
   return Math.min(
     MESSAGE_GLASS_BLUR_MAX,
     Math.max(MESSAGE_GLASS_BLUR_MIN, Math.round(value)),
+  )
+}
+
+function clampInputAreaTransparency(value: number): number {
+  return Math.min(
+    INPUT_AREA_TRANSPARENCY_MAX,
+    Math.max(INPUT_AREA_TRANSPARENCY_MIN, Math.round(value)),
   )
 }
 
@@ -323,6 +336,11 @@ export function normalizeThemeBackgroundSettings(
     ? clampMessageGlassBlur(glassBlurCandidate)
     : DEFAULT_THEME_BACKGROUND_SETTINGS.messageGlassBlurPx
 
+  const inputAreaTransparencyCandidate = Number(source.inputAreaTransparency)
+  const inputAreaTransparency = Number.isFinite(inputAreaTransparencyCandidate)
+    ? clampInputAreaTransparency(inputAreaTransparencyCandidate)
+    : DEFAULT_THEME_BACKGROUND_SETTINGS.inputAreaTransparency
+
   const scrimIntensityCandidate = Number(source.sidebarScrimIntensity)
   const sidebarScrimIntensity = Number.isFinite(scrimIntensityCandidate)
     ? clampSidebarScrimIntensity(scrimIntensityCandidate)
@@ -366,6 +384,7 @@ export function normalizeThemeBackgroundSettings(
     messageGlassDarkTransparency,
     messageGlassBackgroundVisibility,
     messageGlassBlurPx,
+    inputAreaTransparency,
     messageGlassTransparencyCustomized:
       globalTransparencyCustomized,
     messageGlassLightTransparencyCustomized:

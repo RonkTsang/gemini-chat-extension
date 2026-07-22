@@ -36,6 +36,7 @@ const ROOT_MSG_GLASS_DUAL_LIGHT_TRANSPARENCY_VAR
 const ROOT_MSG_GLASS_DUAL_DARK_TRANSPARENCY_VAR
   = '--gpk-msg-glass-dual-dark-transparency'
 const ROOT_MSG_GLASS_BLUR_VAR = '--gpk-msg-glass-blur'
+const ROOT_INPUT_AREA_TRANSPARENCY_VAR = '--gpk-input-area-transparency'
 const ROOT_MSG_GLASS_TRANSPARENCY_CUSTOMIZED_VAR
   = '--gpk-msg-glass-transparency-customized'
 const ROOT_MSG_GLASS_BLUR_CUSTOMIZED_VAR
@@ -173,6 +174,10 @@ export function applyThemeBackgroundStyle(
     ROOT_MSG_GLASS_BLUR_VAR,
     `${state.settings.messageGlassBlurPx}px`,
   )
+  root.style.setProperty(
+    ROOT_INPUT_AREA_TRANSPARENCY_VAR,
+    `${state.settings.inputAreaTransparency}%`,
+  )
   root.style.removeProperty(ROOT_MSG_GLASS_TRANSPARENCY_VAR)
   root.style.removeProperty(ROOT_MSG_GLASS_TRANSPARENCY_CUSTOMIZED_VAR)
   root.style.setProperty(
@@ -225,6 +230,7 @@ export function clearThemeBackgroundStyle(): void {
   root.style.removeProperty(ROOT_MSG_GLASS_DUAL_LIGHT_TRANSPARENCY_VAR)
   root.style.removeProperty(ROOT_MSG_GLASS_DUAL_DARK_TRANSPARENCY_VAR)
   root.style.removeProperty(ROOT_MSG_GLASS_BLUR_VAR)
+  root.style.removeProperty(ROOT_INPUT_AREA_TRANSPARENCY_VAR)
   root.style.removeProperty(ROOT_MSG_GLASS_TRANSPARENCY_CUSTOMIZED_VAR)
   root.style.removeProperty(ROOT_MSG_GLASS_BLUR_CUSTOMIZED_VAR)
   root.style.removeProperty(ROOT_SIDEBAR_SCRIM_ALPHA_VAR)

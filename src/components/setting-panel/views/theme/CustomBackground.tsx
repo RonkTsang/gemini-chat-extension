@@ -27,6 +27,9 @@ import type {
 } from '@/entrypoints/content/gemini-theme'
 import {
   BACKGROUND_IMAGE_POSITIONS,
+  INPUT_AREA_TRANSPARENCY_DEFAULT,
+  INPUT_AREA_TRANSPARENCY_MAX,
+  INPUT_AREA_TRANSPARENCY_MIN,
   MESSAGE_GLASS_BACKGROUND_VISIBILITY_DEFAULT,
 } from '@/entrypoints/content/gemini-theme'
 import { Tooltip } from '@/components/ui/tooltip'
@@ -47,6 +50,8 @@ interface CustomBackgroundProps {
   onToggleMessageGlass: (enabled: boolean) => Promise<void>
   onMessageGlassBackgroundVisibilityChange: (value: number) => Promise<void>
   onMessageGlassBlurChange: (value: number) => Promise<void>
+  onInputAreaTransparencyPreviewChange: (value: number) => void
+  onInputAreaTransparencyChange: (value: number) => Promise<void>
   onResetGlassSettings: () => Promise<void>
   effectiveTheme: GeminiTheme
   chatTextColor: string | null
@@ -195,6 +200,7 @@ function BackgroundPositionPicker({
 
 export function CustomBackground(props: CustomBackgroundProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const inputAreaTransparencyRef = useRef(INPUT_AREA_TRANSPARENCY_DEFAULT)
   const [isFilePending, setIsFilePending] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
   const isCompact = props.variant === 'compact'
@@ -215,6 +221,8 @@ export function CustomBackground(props: CustomBackgroundProps) {
     settings?.messageGlassBackgroundVisibility
     ?? MESSAGE_GLASS_BACKGROUND_VISIBILITY_DEFAULT
   const messageGlassBlurPx = settings?.messageGlassBlurPx ?? 20
+  const inputAreaTransparency = settings?.inputAreaTransparency
+    ?? INPUT_AREA_TRANSPARENCY_DEFAULT
   const sidebarScrimEnabled = settings?.sidebarScrimEnabled ?? true
   const sidebarScrimIntensity = settings?.sidebarScrimIntensity ?? 20
   const welcomeGreetingReadabilityMode
@@ -230,6 +238,9 @@ export function CustomBackground(props: CustomBackgroundProps) {
   ] = useState(messageGlassBackgroundVisibility)
   const [localGlassBlurValue, setLocalGlassBlurValue] = useState(
     messageGlassBlurPx,
+  )
+  const [localInputAreaTransparency, setLocalInputAreaTransparency] = useState(
+    inputAreaTransparency,
   )
 
   useEffect(() => {
@@ -247,6 +258,11 @@ export function CustomBackground(props: CustomBackgroundProps) {
   useEffect(() => {
     setLocalGlassBlurValue(messageGlassBlurPx)
   }, [messageGlassBlurPx])
+
+  useEffect(() => {
+    inputAreaTransparencyRef.current = inputAreaTransparency
+    setLocalInputAreaTransparency(inputAreaTransparency)
+  }, [inputAreaTransparency])
 
   const hasImage = settings?.imageRef.kind === 'asset' && Boolean(previewUrl)
   const primaryTextColor = hasImage ? 'whiteAlpha.900' : 'gemOnSurface'
@@ -632,6 +648,82 @@ export function CustomBackground(props: CustomBackgroundProps) {
                     textAlign="right"
                   >
                     {localGlassBlurValue}px
+                  </Text>
+                </HStack>
+              </Stack>
+
+              <Stack
+                direction={isCompact ? 'column' : 'row'}
+                justify="space-between"
+                align={isCompact ? 'stretch' : 'center'}
+                gap={isCompact ? 2 : 4}
+              >
+                <Text fontSize="sm" color="gemOnSurface" minW={0}>
+                  {tt(
+                    'settingPanel.theme.inputTransparency',
+                    'Input transparency',
+                  )}
+                </Text>
+                <HStack
+                  gap={3}
+                  flexShrink={0}
+                  width={isCompact ? '100%' : undefined}
+                >
+                  <Slider.Root
+                    min={INPUT_AREA_TRANSPARENCY_MIN}
+                    max={INPUT_AREA_TRANSPARENCY_MAX}
+                    step={1}
+                    value={[localInputAreaTransparency]}
+                    onValueChange={(details) => {
+                      const value = details.value[0]
+                        ?? INPUT_AREA_TRANSPARENCY_DEFAULT
+                      inputAreaTransparencyRef.current = value
+                      setLocalInputAreaTransparency(value)
+                      props.onInputAreaTransparencyPreviewChange(value)
+                    }}
+                    onValueChangeEnd={() => {
+                      void props.onInputAreaTransparencyChange(
+                        inputAreaTransparencyRef.current,
+                      )
+                    }}
+                    disabled={props.isLoading || isFilePending}
+                    width={narrowControlWidth}
+                  >
+                    <Slider.Control>
+                      <Slider.Track>
+                        <Slider.Range />
+                      </Slider.Track>
+                      <Slider.Thumb
+                        index={0}
+                        aria-label={tt(
+                          'settingPanel.theme.inputTransparency',
+                          'Input transparency',
+                        )}
+                      >
+                        <Slider.DraggingIndicator
+                          layerStyle="fill.solid"
+                          top="6"
+                          rounded="sm"
+                          px="1.5"
+                          fontSize="xs"
+                          zIndex={2}
+                        >
+                          <HStack gap="0.5">
+                            <Slider.ValueText />
+                            <Box as="span">%</Box>
+                          </HStack>
+                        </Slider.DraggingIndicator>
+                      </Slider.Thumb>
+                    </Slider.Control>
+                  </Slider.Root>
+                  <Text
+                    as="output"
+                    fontSize="sm"
+                    color="gemOnSurface"
+                    minW="38px"
+                    textAlign="right"
+                  >
+                    {localInputAreaTransparency}%
                   </Text>
                 </HStack>
               </Stack>

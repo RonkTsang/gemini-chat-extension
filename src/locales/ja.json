@@ -177,6 +177,7 @@
       "messageGlassBackgroundVisibility": "背景の見え方",
       "glassTransparency": "ガラスの透明度",
       "glassBlur": "ガラスのぼかし",
+      "inputTransparency": "入力欄の透明度",
       "resetGlassSettings": "ガラス設定をリセット",
       "chatTextColor": "メッセージ文字色",
       "chatTextColorModeDescription": "モード: $1",

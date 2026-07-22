@@ -177,6 +177,7 @@
       "messageGlassBackgroundVisibility": "背景透出",
       "glassTransparency": "玻璃透明度",
       "glassBlur": "玻璃模糊",
+      "inputTransparency": "輸入透明度",
       "resetGlassSettings": "重設玻璃設定",
       "chatTextColor": "訊息文字顏色",
       "chatTextColorModeDescription": "模式：$1",

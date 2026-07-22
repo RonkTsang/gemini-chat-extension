@@ -177,6 +177,7 @@
       "messageGlassBackgroundVisibility": "배경 보임 정도",
       "glassTransparency": "유리 투명도",
       "glassBlur": "유리 흐림",
+      "inputTransparency": "입력창 투명도",
       "resetGlassSettings": "유리 설정 초기화",
       "chatTextColor": "메시지 텍스트 색상",
       "chatTextColorModeDescription": "모드: $1",

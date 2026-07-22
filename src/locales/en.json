@@ -177,6 +177,7 @@
       "messageGlassBackgroundVisibility": "Background visibility",
       "glassTransparency": "Glass transparency",
       "glassBlur": "Glass blur",
+      "inputTransparency": "Input transparency",
       "resetGlassSettings": "Reset glass settings",
       "chatTextColor": "Message text color",
       "chatTextColorModeDescription": "Mode: $1",

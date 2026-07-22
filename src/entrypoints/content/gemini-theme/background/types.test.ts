@@ -5,6 +5,9 @@ import {
   BACKGROUND_BLUR_MAX,
   BACKGROUND_BLUR_MIN,
   DEFAULT_THEME_BACKGROUND_SETTINGS,
+  INPUT_AREA_TRANSPARENCY_DEFAULT,
+  INPUT_AREA_TRANSPARENCY_MAX,
+  INPUT_AREA_TRANSPARENCY_MIN,
   MESSAGE_GLASS_BLUR_MAX,
   MESSAGE_GLASS_BLUR_MIN,
   MESSAGE_GLASS_BACKGROUND_VISIBILITY_DEFAULT,
@@ -37,6 +40,7 @@ describe('theme background settings normalize', () => {
     expect(result.messageGlassBlurPx).toBe(
       DEFAULT_THEME_BACKGROUND_SETTINGS.messageGlassBlurPx,
     )
+    expect(result.inputAreaTransparency).toBe(INPUT_AREA_TRANSPARENCY_DEFAULT)
     expect(result.messageGlassTransparencyCustomized).toBe(false)
     expect(result.messageGlassBackgroundVisibilityCustomized).toBe(false)
     expect(result.messageGlassBlurCustomized).toBe(false)
@@ -151,6 +155,18 @@ describe('theme background settings normalize', () => {
     expect(invalid.messageGlassBlurPx).toBe(
       DEFAULT_THEME_BACKGROUND_SETTINGS.messageGlassBlurPx,
     )
+  })
+
+  it('clamps input area transparency to valid range', () => {
+    const low = normalizeThemeBackgroundSettings({ inputAreaTransparency: -100 })
+    const high = normalizeThemeBackgroundSettings({ inputAreaTransparency: 999 })
+    const invalid = normalizeThemeBackgroundSettings({
+      inputAreaTransparency: Number.NaN,
+    })
+
+    expect(low.inputAreaTransparency).toBe(INPUT_AREA_TRANSPARENCY_MIN)
+    expect(high.inputAreaTransparency).toBe(INPUT_AREA_TRANSPARENCY_MAX)
+    expect(invalid.inputAreaTransparency).toBe(INPUT_AREA_TRANSPARENCY_DEFAULT)
   })
 
   it('normalizes message glass customization flags', () => {
