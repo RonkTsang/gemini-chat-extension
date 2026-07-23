@@ -10,6 +10,7 @@ import { useThemeSettingsController } from '@/components/setting-panel/views/the
 export function ThemeFloatingPanel() {
   const [open, setOpen] = useState(false)
   const [returnToSettings, setReturnToSettings] = useState(false)
+  const [showPrimaryAction, setShowPrimaryAction] = useState(true)
   const { emitSync } = useEventEmitter()
 
   useEvent('theme-floating-panel:open', (data) => {
@@ -18,6 +19,7 @@ export function ThemeFloatingPanel() {
       reason: 'open-theme-studio',
     })
     setReturnToSettings(data.returnToSettings ?? false)
+    setShowPrimaryAction(data.source !== 'top-bar-action')
     setOpen(true)
   })
 
@@ -56,6 +58,7 @@ export function ThemeFloatingPanel() {
   return (
     <ThemeFloatingPanelContent
       returnToSettings={returnToSettings}
+      showPrimaryAction={showPrimaryAction}
       onPrimaryAction={handlePrimaryAction}
     />
   )
@@ -63,9 +66,11 @@ export function ThemeFloatingPanel() {
 
 function ThemeFloatingPanelContent({
   returnToSettings,
+  showPrimaryAction,
   onPrimaryAction,
 }: {
   returnToSettings: boolean
+  showPrimaryAction: boolean
   onPrimaryAction: () => void
 }) {
   const { emitSync } = useEventEmitter()
@@ -119,16 +124,18 @@ function ThemeFloatingPanelContent({
           flexShrink={0}
         >
           <Flex align="center" gap={1.5} minW={0}>
-            <Tooltip content={actionLabel}>
-              <IconButton
-                aria-label={actionLabel}
-                size="xs"
-                variant="ghost"
-                onClick={onPrimaryAction}
-              >
-                <HiOutlineArrowLeft />
-              </IconButton>
-            </Tooltip>
+            {showPrimaryAction && (
+              <Tooltip content={actionLabel}>
+                <IconButton
+                  aria-label={actionLabel}
+                  size="xs"
+                  variant="ghost"
+                  onClick={onPrimaryAction}
+                >
+                  <HiOutlineArrowLeft />
+                </IconButton>
+              </Tooltip>
+            )}
             <Heading size="sm" truncate>
               {tt('settingPanel.config.theme.title', 'Theme')}
             </Heading>
