@@ -52,7 +52,7 @@
     "entryLabel": "Bulk delete",
     "entryHint": {
       "title": "Bulk Delete",
-      "description": "Select several chats, then clear unwanted conversations in one go.",
+      "description": "Click to enter multi-select mode. Select the chats you want to delete, then confirm.",
       "dismiss": "Dismiss"
     },
     "selectRecent": "Select $1 recent",

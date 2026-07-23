@@ -52,7 +52,7 @@
     "entryLabel": "Exclusão em lote",
     "entryHint": {
       "title": "Exclusão em massa",
-      "description": "Selecione vários chats e apague de uma vez as conversas indesejadas.",
+      "description": "Toque para entrar no modo de seleção múltipla. Selecione os chats que deseja excluir e confirme.",
       "dismiss": "Fechar"
     },
     "selectRecent": "Selecionar as últimas $1",

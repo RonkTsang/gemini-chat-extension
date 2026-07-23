@@ -52,7 +52,7 @@
     "entryLabel": "批量删除",
     "entryHint": {
       "title": "批量删除",
-      "description": "一次勾选多条对话，更快清理无用记录。",
+      "description": "点击进入多选模式。选择要删除的聊天，然后确认。",
       "dismiss": "关闭"
     },
     "selectRecent": "选择最近 $1 个",

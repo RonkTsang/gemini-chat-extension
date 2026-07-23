@@ -52,7 +52,7 @@
     "entryLabel": "일괄 삭제",
     "entryHint": {
       "title": "일괄 삭제",
-      "description": "여러 채팅을 선택해 원치 않는 대화를 한 번에 정리하세요.",
+      "description": "다중 선택 모드로 들어가려면 누르세요. 삭제할 채팅을 선택한 다음 확인하세요.",
       "dismiss": "닫기"
     },
     "selectRecent": "최근 $1개 선택",

@@ -52,7 +52,7 @@
     "entryLabel": "一括削除",
     "entryHint": {
       "title": "一括削除",
-      "description": "複数のチャットを選んで、不要な会話をまとめて削除できます。",
+      "description": "タップして複数選択モードを開始し、削除したいチャットを選んで確定します。",
       "dismiss": "閉じる"
     },
     "selectRecent": "最近の$1件を選択",
