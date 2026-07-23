@@ -1,4 +1,5 @@
-import { LuTrash, LuX } from 'react-icons/lu'
+import { LuX } from 'react-icons/lu'
+import { MdOutlineLibraryAddCheck } from 'react-icons/md'
 import { t } from '@/utils/i18n'
 
 interface BulkDeleteEntryProps {
@@ -20,7 +21,7 @@ export function BulkDeleteEntry({ active, onToggle }: BulkDeleteEntryProps) {
         onToggle()
       }}
     >
-      {active ? <LuX aria-hidden="true" size={16} /> : <LuTrash aria-hidden="true" size={16} />}
+      {active ? <LuX aria-hidden="true" size={16} /> : <MdOutlineLibraryAddCheck aria-hidden="true" size={16} />}
     </button>
   )
 }

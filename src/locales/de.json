@@ -52,7 +52,7 @@
     "entryLabel": "Massenlöschung",
     "entryHint": {
       "title": "Mehrfach löschen",
-      "description": "Wähle mehrere Chats aus und lösche unerwünschte Unterhaltungen auf einmal.",
+      "description": "Tippe, um den Mehrfachauswahlmodus zu aktivieren. Wähle die Chats aus, die du löschen möchtest, und bestätige dann.",
       "dismiss": "Schließen"
     },
     "selectRecent": "Letzte $1 auswählen",

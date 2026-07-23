@@ -52,7 +52,7 @@
     "entryLabel": "Eliminación en lote",
     "entryHint": {
       "title": "Eliminación masiva",
-      "description": "Selecciona varios chats y borra de una vez las conversaciones que no quieras.",
+      "description": "Pulsa para entrar en el modo de selección múltiple. Selecciona los chats que quieras borrar y confirma.",
       "dismiss": "Cerrar"
     },
     "selectRecent": "Seleccionar los últimos $1",

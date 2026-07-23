@@ -52,7 +52,7 @@
     "entryLabel": "批次刪除",
     "entryHint": {
       "title": "批次刪除",
-      "description": "一次勾選多則對話，更快清理不需要的紀錄。",
+      "description": "點擊進入多選模式。選擇要刪除的聊天室，然後確認。",
       "dismiss": "關閉"
     },
     "selectRecent": "選取最近 $1 則",

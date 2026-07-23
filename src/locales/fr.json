@@ -52,7 +52,7 @@
     "entryLabel": "Suppression groupée",
     "entryHint": {
       "title": "Suppression groupée",
-      "description": "Sélectionnez plusieurs chats, puis supprimez d'un coup les conversations indésirables.",
+      "description": "Cliquez pour passer en mode multi-sélection. Sélectionnez les chats à supprimer, puis confirmez.",
       "dismiss": "Fermer"
     },
     "selectRecent": "Sélectionner les $1 dernières",
