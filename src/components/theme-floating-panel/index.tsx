@@ -98,10 +98,10 @@ function ThemeFloatingPanelContent({
         top="auto"
         right={{ base: 0, md: 4 }}
         bottom={{ base: 0, md: 4 }}
-        width={{ base: '100%', md: '300px' }}
+        width={{ base: '100%', md: '320px' }}
         maxWidth={{ base: '100%', md: 'calc(100vw - 32px)' }}
-        height="min(500px, 50dvh)"
-        maxHeight="50dvh"
+        height="min(550px, 70dvh)"
+        maxHeight="70dvh"
         display="flex"
         flexDirection="column"
         pointerEvents="auto"

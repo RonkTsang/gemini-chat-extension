@@ -783,50 +783,58 @@ export function CustomBackground(props: CustomBackgroundProps) {
           </HStack>
 
           {sidebarScrimEnabled && (
-            <Stack
-              direction={isCompact ? 'column' : 'row'}
-              justify="space-between"
-              align={isCompact ? 'stretch' : 'center'}
+            <VStack
+              align="stretch"
+              gap={4}
               mb={sectionGap}
-              gap={isCompact ? 2 : 4}
-              position="relative"
-              zIndex={1}
+              pl={3}
+              borderLeft="1px solid"
+              borderColor="border"
             >
-              <Text fontSize="sm" color="gemOnSurface" minW={0}>
-                {tt('settingPanel.theme.sidebarScrimIntensity', 'Scrim intensity')}
-              </Text>
-              <Slider.Root
-                min={0}
-                max={100}
-                step={1}
-                value={[localSidebarScrimValue]}
-                onValueChange={(details) => setLocalSidebarScrimValue(details.value[0] ?? 0)}
-                onValueChangeEnd={(details) => void props.onSidebarScrimIntensityChange(details.value[0] ?? 0)}
-                disabled={props.isLoading || isFilePending}
-                width={wideControlWidth}
+              <Stack
+                direction={isCompact ? 'column' : 'row'}
+                justify="space-between"
+                align={isCompact ? 'stretch' : 'center'}
+                gap={isCompact ? 2 : 4}
+                position="relative"
+                zIndex={1}
               >
-                <Slider.Control>
-                  <Slider.Track>
-                    <Slider.Range />
-                  </Slider.Track>
-                  <Slider.Thumb index={0}>
-                    <Slider.DraggingIndicator
-                      layerStyle="fill.solid"
-                      top="6"
-                      rounded="sm"
-                      px="1.5"
-                      fontSize="xs"
-                      zIndex={2}
-                    >
-                      <HStack gap="0.5">
-                        <Slider.ValueText />
-                        <Box as="span">%</Box>
-                      </HStack>
-                    </Slider.DraggingIndicator>
-                  </Slider.Thumb>
-                </Slider.Control>
-              </Slider.Root>
-            </Stack>
+                <Text fontSize="sm" color="gemOnSurface" minW={0}>
+                  {tt('settingPanel.theme.sidebarScrimIntensity', 'Scrim intensity')}
+                </Text>
+                <Slider.Root
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={[localSidebarScrimValue]}
+                  onValueChange={(details) => setLocalSidebarScrimValue(details.value[0] ?? 0)}
+                  onValueChangeEnd={(details) => void props.onSidebarScrimIntensityChange(details.value[0] ?? 0)}
+                  disabled={props.isLoading || isFilePending}
+                  width={wideControlWidth}
+                >
+                  <Slider.Control>
+                    <Slider.Track>
+                      <Slider.Range />
+                    </Slider.Track>
+                    <Slider.Thumb index={0}>
+                      <Slider.DraggingIndicator
+                        layerStyle="fill.solid"
+                        top="6"
+                        rounded="sm"
+                        px="1.5"
+                        fontSize="xs"
+                        zIndex={2}
+                      >
+                        <HStack gap="0.5">
+                          <Slider.ValueText />
+                          <Box as="span">%</Box>
+                        </HStack>
+                      </Slider.DraggingIndicator>
+                    </Slider.Thumb>
+                  </Slider.Control>
+                </Slider.Root>
+              </Stack>
+            </VStack>
           )}
 
           <Stack
