@@ -88,13 +88,13 @@
   background-color: color-mix(in srgb, var(--theme-600), transparent 80%) !important;
 }
 
-:root[data-gpk-bg-enabled="true"] body.light-theme chat-window,
-:root[data-gpk-bg-enabled="true"] :where(.theme-host):where(.light-theme) chat-window {
+:root[data-gpk-bg-enabled="true"][data-gpk-chat-text-light-color] body.light-theme chat-window,
+:root[data-gpk-bg-enabled="true"][data-gpk-chat-text-light-color] :where(.theme-host):where(.light-theme) chat-window {
   --gem-sys-color--on-surface: var(--gpk-chat-text-light-color);
 }
 
-:root[data-gpk-bg-enabled="true"] body.dark-theme chat-window,
-:root[data-gpk-bg-enabled="true"] :where(.theme-host):where(.dark-theme) chat-window {
+:root[data-gpk-bg-enabled="true"][data-gpk-chat-text-dark-color] body.dark-theme chat-window,
+:root[data-gpk-bg-enabled="true"][data-gpk-chat-text-dark-color] :where(.theme-host):where(.dark-theme) chat-window {
   --gem-sys-color--on-surface: var(--gpk-chat-text-dark-color);
 }
 

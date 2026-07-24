@@ -246,6 +246,8 @@ describe('styleController', () => {
     expect(document.documentElement.style.getPropertyValue('--gpk-chat-text-dark-color')).toBe(
       '#ddeeffcc',
     )
+    expect(document.documentElement.hasAttribute('data-gpk-chat-text-light-color')).toBe(true)
+    expect(document.documentElement.hasAttribute('data-gpk-chat-text-dark-color')).toBe(true)
 
     applyThemeBackgroundStyle(createState())
 
@@ -255,6 +257,8 @@ describe('styleController', () => {
     expect(document.documentElement.style.getPropertyValue('--gpk-chat-text-dark-color')).toBe(
       '',
     )
+    expect(document.documentElement.hasAttribute('data-gpk-chat-text-light-color')).toBe(false)
+    expect(document.documentElement.hasAttribute('data-gpk-chat-text-dark-color')).toBe(false)
   })
 
   it('scopes chat text color CSS to chat-window', () => {
@@ -266,8 +270,8 @@ describe('styleController', () => {
       'utf8',
     )
 
-    expect(css).toContain('body.light-theme chat-window')
-    expect(css).toContain('body.dark-theme chat-window')
+    expect(css).toContain('[data-gpk-chat-text-light-color] body.light-theme chat-window')
+    expect(css).toContain('[data-gpk-chat-text-dark-color] body.dark-theme chat-window')
     expect(css).toContain('--gem-sys-color--on-surface: var(--gpk-chat-text-light-color)')
     expect(css).toContain('--gem-sys-color--on-surface: var(--gpk-chat-text-dark-color)')
   })
@@ -305,7 +309,15 @@ describe('styleController', () => {
   })
 
   it('clears style tag, root attributes and background layer', () => {
-    applyThemeBackgroundStyle(createState())
+    const state = createState()
+    applyThemeBackgroundStyle({
+      ...state,
+      settings: {
+        ...state.settings,
+        chatTextLightColor: '#112233',
+        chatTextDarkColor: '#ddeeff',
+      },
+    })
     clearThemeBackgroundStyle()
 
     expect(document.getElementById('gemini-extension-theme-background-override')).toBeNull()
@@ -321,6 +333,8 @@ describe('styleController', () => {
       document.documentElement.getAttribute('data-gpk-msg-glass-blur-customized'),
     ).toBeNull()
     expect(document.documentElement.getAttribute('data-gpk-sidebar-scrim-enabled')).toBeNull()
+    expect(document.documentElement.getAttribute('data-gpk-chat-text-light-color')).toBeNull()
+    expect(document.documentElement.getAttribute('data-gpk-chat-text-dark-color')).toBeNull()
     expect(document.documentElement.style.getPropertyValue('--gpk-bg-image')).toBe('')
     expect(document.documentElement.style.getPropertyValue('--gpk-bg-blur')).toBe('')
     expect(document.documentElement.style.getPropertyValue('--gpk-bg-position')).toBe('')

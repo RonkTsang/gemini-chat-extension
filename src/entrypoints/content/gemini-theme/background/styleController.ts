@@ -44,6 +44,8 @@ const ROOT_MSG_GLASS_BLUR_CUSTOMIZED_VAR
 const ROOT_SIDEBAR_SCRIM_ALPHA_VAR = '--gpk-sidebar-scrim-alpha'
 const ROOT_CHAT_TEXT_LIGHT_COLOR_VAR = '--gpk-chat-text-light-color'
 const ROOT_CHAT_TEXT_DARK_COLOR_VAR = '--gpk-chat-text-dark-color'
+const ROOT_CHAT_TEXT_LIGHT_COLOR_ATTR = 'data-gpk-chat-text-light-color'
+const ROOT_CHAT_TEXT_DARK_COLOR_ATTR = 'data-gpk-chat-text-dark-color'
 
 function ensureStyleElement(): HTMLStyleElement | null {
   if (typeof document === 'undefined' || !document.head) return null
@@ -80,8 +82,11 @@ function ensureBackgroundLayerElement(): HTMLDivElement | null {
 function syncOptionalColorVar(
   root: HTMLElement,
   name: string,
+  attribute: string,
   value: string | null,
 ): void {
+  root.toggleAttribute(attribute, Boolean(value))
+
   if (value) {
     root.style.setProperty(name, value)
     return
@@ -191,11 +196,13 @@ export function applyThemeBackgroundStyle(
   syncOptionalColorVar(
     root,
     ROOT_CHAT_TEXT_LIGHT_COLOR_VAR,
+    ROOT_CHAT_TEXT_LIGHT_COLOR_ATTR,
     state.settings.chatTextLightColor,
   )
   syncOptionalColorVar(
     root,
     ROOT_CHAT_TEXT_DARK_COLOR_VAR,
+    ROOT_CHAT_TEXT_DARK_COLOR_ATTR,
     state.settings.chatTextDarkColor,
   )
 
@@ -236,6 +243,8 @@ export function clearThemeBackgroundStyle(): void {
   root.style.removeProperty(ROOT_SIDEBAR_SCRIM_ALPHA_VAR)
   root.style.removeProperty(ROOT_CHAT_TEXT_LIGHT_COLOR_VAR)
   root.style.removeProperty(ROOT_CHAT_TEXT_DARK_COLOR_VAR)
+  root.removeAttribute(ROOT_CHAT_TEXT_LIGHT_COLOR_ATTR)
+  root.removeAttribute(ROOT_CHAT_TEXT_DARK_COLOR_ATTR)
 
   const styleEl = document.getElementById(STYLE_ID)
   styleEl?.remove()
