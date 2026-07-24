@@ -130,6 +130,17 @@
       "bulkDelete": {
         "title": "일괄 삭제",
         "description": "여러 채팅을 한 번에 선택하고 삭제합니다."
+      },
+      "topBarCustomization": {
+        "title": "상단 바 사용자 지정",
+        "showThemeShortcut": {
+          "title": "테마 바로가기 표시",
+          "description": "Gemini 상단 바에 테마 바로가기를 표시합니다."
+        },
+        "hideUpgradeReminder": {
+          "title": "업그레이드 알림 숨기기",
+          "description": "Gemini 상단 바에서 업그레이드 알림을 숨깁니다."
+        }
       }
     }
   },
@@ -148,8 +159,6 @@
       },
       "backToSettings": "설정으로 돌아가기",
       "closeThemePanel": "테마 패널 닫기",
-      "upgradeReminders": "업그레이드 알림",
-      "hideUpgradeReminder": "Gemini 업그레이드 알림 숨기기",
       "enableBackgroundImage": "배경화면 활성화",
       "backgroundImageUpload": "배경 이미지 업로드",
       "dropBackground": "여기에 이미지 드롭",

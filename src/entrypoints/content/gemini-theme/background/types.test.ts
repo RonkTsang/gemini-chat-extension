@@ -17,11 +17,16 @@ import {
   MESSAGE_GLASS_TRANSPARENCY_MIN,
   SIDEBAR_SCRIM_INTENSITY_MAX,
   SIDEBAR_SCRIM_INTENSITY_MIN,
+  THEME_BACKGROUND_VERSION,
   getBackgroundImagePositionCssValue,
   normalizeThemeBackgroundSettings,
 } from './types'
 
 describe('theme background settings normalize', () => {
+  it('uses the last published schema version', () => {
+    expect(THEME_BACKGROUND_VERSION).toBe(5)
+  })
+
   it('falls back to defaults when input is invalid', () => {
     const result = normalizeThemeBackgroundSettings(null)
 
@@ -50,7 +55,6 @@ describe('theme background settings normalize', () => {
     expect(result.sidebarScrimIntensity).toBe(
       DEFAULT_THEME_BACKGROUND_SETTINGS.sidebarScrimIntensity,
     )
-    expect(result.hideUpgradeReminder).toBe(true)
     expect(result.chatTextLightColor).toBeNull()
     expect(result.chatTextDarkColor).toBeNull()
     expect(result.welcomeGreetingReadabilityMode).toBe(
@@ -66,15 +70,6 @@ describe('theme background settings normalize', () => {
     expect(result.version).toBe(DEFAULT_THEME_BACKGROUND_SETTINGS.version)
     expect(typeof result.updatedAt).toBe('string')
     expect(result.updatedAt.length).toBeGreaterThan(0)
-  })
-
-  it('uses the default when the upgrade reminder setting is invalid', () => {
-    expect(normalizeThemeBackgroundSettings({ hideUpgradeReminder: true }).hideUpgradeReminder)
-      .toBe(true)
-    expect(normalizeThemeBackgroundSettings({ hideUpgradeReminder: false }).hideUpgradeReminder)
-      .toBe(false)
-    expect(normalizeThemeBackgroundSettings({ hideUpgradeReminder: 'true' }).hideUpgradeReminder)
-      .toBe(true)
   })
 
   it('clamps blur value to valid range', () => {

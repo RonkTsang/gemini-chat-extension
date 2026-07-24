@@ -1,0 +1,3 @@
+:root[data-gpk-hide-upgrade-reminder] top-bar-actions div.right-section div.adv-upsell {
+  display: none !important;
+}

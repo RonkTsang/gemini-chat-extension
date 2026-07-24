@@ -8,10 +8,11 @@ This module injects the Gemini Power Kit Theme shortcut into
 
 ## Startup
 
-`src/entrypoints/content/index.tsx` calls `startTopBarAction()` after the
-integrated overlay has mounted. The same content-script context calls
-`stopTopBarAction()` from `ctx.onInvalidated`, so the injected DOM and observers
-cannot outlive the extension context.
+The Top Bar customization settings controller starts this module after the
+integrated overlay has mounted, and stops it when the Theme shortcut setting is
+disabled or the content-script context is invalidated. This keeps the injected
+DOM and observers scoped to both the user preference and the active extension
+context.
 
 ## DOM Placement
 

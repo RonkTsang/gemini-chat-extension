@@ -91,7 +91,6 @@ function createSettings(overrides: Partial<ThemeBackgroundSettings> = {}): Theme
     messageGlassBlurCustomized: false,
     sidebarScrimEnabled: true,
     sidebarScrimIntensity: 20,
-    hideUpgradeReminder: false,
     chatTextLightColor: null,
     chatTextDarkColor: null,
     welcomeGreetingReadabilityMode: 'auto',

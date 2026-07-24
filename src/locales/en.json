@@ -130,6 +130,17 @@
       "bulkDelete": {
         "title": "Bulk Delete",
         "description": "Select and delete multiple chats at once."
+      },
+      "topBarCustomization": {
+        "title": "Top bar customization",
+        "showThemeShortcut": {
+          "title": "Show Theme shortcut",
+          "description": "Show a shortcut to Theme in Gemini's top bar."
+        },
+        "hideUpgradeReminder": {
+          "title": "Hide upgrade reminder",
+          "description": "Hide Gemini's upgrade reminder from the top bar."
+        }
       }
     }
   },
@@ -148,8 +159,6 @@
       },
       "backToSettings": "Back to settings",
       "closeThemePanel": "Close theme panel",
-      "upgradeReminders": "Upgrade reminders",
-      "hideUpgradeReminder": "Hide Gemini upgrade reminder",
       "enableBackgroundImage": "Enable wallpaper",
       "backgroundImageUpload": "Background Image Upload",
       "dropBackground": "Drop your image here",

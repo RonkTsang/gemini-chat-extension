@@ -130,6 +130,17 @@
       "bulkDelete": {
         "title": "Suppression groupée",
         "description": "Sélectionnez et supprimez plusieurs discussions à la fois."
+      },
+      "topBarCustomization": {
+        "title": "Personnalisation de la barre supérieure",
+        "showThemeShortcut": {
+          "title": "Afficher le raccourci Thème",
+          "description": "Affiche un raccourci vers Thème dans la barre supérieure de Gemini."
+        },
+        "hideUpgradeReminder": {
+          "title": "Masquer le rappel de mise à niveau",
+          "description": "Masque le rappel de mise à niveau de Gemini dans la barre supérieure."
+        }
       }
     }
   },
@@ -148,8 +159,6 @@
       },
       "backToSettings": "Retour aux paramètres",
       "closeThemePanel": "Fermer le panneau de thème",
-      "upgradeReminders": "Rappels de mise à niveau",
-      "hideUpgradeReminder": "Masquer le rappel de mise à niveau Gemini",
       "enableBackgroundImage": "Activer le fond d'écran",
       "backgroundImageUpload": "Téléchargement de l'image de fond",
       "dropBackground": "Déposez votre image ici",

@@ -1,7 +1,6 @@
 import { AppearanceSelector } from './AppearanceSelector'
 import { ColorPresets } from './ColorPresets'
 import { CustomBackground } from './CustomBackground'
-import { UpgradeReminderControl } from './UpgradeReminderControl'
 import type { ThemeSettingsController } from './useThemeSettingsController'
 
 interface ThemeSettingsControlsProps {
@@ -58,14 +57,6 @@ export function ThemeSettingsControls({
         }
         onUploadFile={controller.handleUploadFile}
         onRemoveImage={controller.handleRemoveImage}
-      />
-      <UpgradeReminderControl
-        variant={variant}
-        enabled={controller.backgroundState?.settings.hideUpgradeReminder ?? false}
-        isLoading={controller.isBackgroundLoading}
-        onEnabledChange={(enabled) => {
-          void controller.handleHideUpgradeReminderChange(enabled)
-        }}
       />
     </>
   )

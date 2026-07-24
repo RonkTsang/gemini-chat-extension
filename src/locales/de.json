@@ -130,6 +130,17 @@
       "bulkDelete": {
         "title": "Massenlöschung",
         "description": "Wählen Sie mehrere Chats aus und löschen Sie sie auf einmal."
+      },
+      "topBarCustomization": {
+        "title": "Anpassung der oberen Leiste",
+        "showThemeShortcut": {
+          "title": "Theme-Verknüpfung anzeigen",
+          "description": "Zeigt in der oberen Leiste von Gemini eine Verknüpfung zu Theme an."
+        },
+        "hideUpgradeReminder": {
+          "title": "Upgrade-Hinweis ausblenden",
+          "description": "Blendet den Gemini-Upgrade-Hinweis in der oberen Leiste aus."
+        }
       }
     }
   },
@@ -148,8 +159,6 @@
       },
       "backToSettings": "Zurück zu den Einstellungen",
       "closeThemePanel": "Theme-Panel schließen",
-      "upgradeReminders": "Upgrade-Hinweise",
-      "hideUpgradeReminder": "Gemini-Upgrade-Hinweis ausblenden",
       "enableBackgroundImage": "Hintergrundbild aktivieren",
       "backgroundImageUpload": "Hintergrundbild hochladen",
       "dropBackground": "Bild hierher ziehen",

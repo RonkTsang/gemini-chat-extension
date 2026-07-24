@@ -161,4 +161,13 @@ describe('Theme top bar action', () => {
     await flushReconcile()
     expect(document.querySelector(ENTRY_SELECTOR)).toBeNull()
   })
+
+  it('restarts cleanly after being disabled', () => {
+    startTopBarAction()
+    stopTopBarAction()
+    startTopBarAction()
+
+    expect(document.querySelectorAll(ENTRY_SELECTOR)).toHaveLength(1)
+    expect(document.getElementById('gpk-theme-top-bar-action-style')).not.toBeNull()
+  })
 })

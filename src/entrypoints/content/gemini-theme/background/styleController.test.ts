@@ -33,7 +33,6 @@ function createState(
       messageGlassBlurCustomized: false,
       sidebarScrimEnabled: true,
       sidebarScrimIntensity: 20,
-      hideUpgradeReminder: false,
       chatTextLightColor: null,
       chatTextDarkColor: null,
       welcomeGreetingReadabilityMode: 'auto',
@@ -97,9 +96,6 @@ describe('styleController', () => {
     ).toBe('true')
     expect(document.documentElement.getAttribute('data-gpk-sidebar-scrim-enabled')).toBe(
       'true',
-    )
-    expect(document.documentElement.hasAttribute('data-gpk-hide-upgrade-reminder')).toBe(
-      false,
     )
     expect(document.documentElement.style.getPropertyValue('--gpk-bg-blur')).toBe('12px')
     expect(document.documentElement.style.getPropertyValue('--gpk-bg-position')).toBe(
@@ -192,36 +188,6 @@ describe('styleController', () => {
     expect(bgLayer).toBeTruthy()
     expect(bgLayer?.style.display).toBe('block')
     expect(bgLayer?.style.backgroundImage).toContain('blob:preview')
-  })
-
-  it('toggles the upgrade reminder root attribute and includes its selector', () => {
-    applyThemeBackgroundStyle(
-      createState({
-        settings: {
-          hideUpgradeReminder: true,
-        } as ThemeBackgroundResolvedState['settings'],
-      }),
-    )
-
-    expect(document.documentElement.hasAttribute('data-gpk-hide-upgrade-reminder')).toBe(
-      true,
-    )
-
-    const css = readFileSync(
-      join(
-        process.cwd(),
-        'src/entrypoints/content/gemini-theme/background/style.css',
-      ),
-      'utf8',
-    )
-    expect(css).toContain(
-      ':root[data-gpk-hide-upgrade-reminder] top-bar-actions div.right-section div.adv-upsell',
-    )
-
-    applyThemeBackgroundStyle(createState())
-    expect(document.documentElement.hasAttribute('data-gpk-hide-upgrade-reminder')).toBe(
-      false,
-    )
   })
 
   it('applies non-renderable state when image is missing', () => {

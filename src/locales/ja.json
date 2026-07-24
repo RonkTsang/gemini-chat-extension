@@ -130,6 +130,17 @@
       "bulkDelete": {
         "title": "一括削除",
         "description": "複数のチャットをまとめて選択・削除します。"
+      },
+      "topBarCustomization": {
+        "title": "トップバーのカスタマイズ",
+        "showThemeShortcut": {
+          "title": "テーマのショートカットを表示",
+          "description": "Gemini のトップバーにテーマへのショートカットを表示します。"
+        },
+        "hideUpgradeReminder": {
+          "title": "アップグレード通知を非表示",
+          "description": "Gemini のトップバーからアップグレード通知を非表示にします。"
+        }
       }
     }
   },
@@ -148,8 +159,6 @@
       },
       "backToSettings": "設定に戻る",
       "closeThemePanel": "テーマパネルを閉じる",
-      "upgradeReminders": "アップグレードのお知らせ",
-      "hideUpgradeReminder": "Gemini のアップグレード通知を非表示",
       "enableBackgroundImage": "壁紙を有効にする",
       "backgroundImageUpload": "背景画像のアップロード",
       "dropBackground": "ここに画像をドロップ",
