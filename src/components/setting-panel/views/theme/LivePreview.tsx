@@ -18,6 +18,8 @@ interface LivePreviewProps {
   messageGlassBackgroundVisibility: number
   messageGlassBlurPx: number
   messageGlassBlurCustomized: boolean
+  inputAreaTransparency: number
+  messageTextColor: string
 }
 
 function clampInteger(value: number, min: number, max: number): number {
@@ -82,6 +84,8 @@ export function LivePreview({
   messageGlassBackgroundVisibility,
   messageGlassBlurPx,
   messageGlassBlurCustomized,
+  inputAreaTransparency,
+  messageTextColor,
 }: LivePreviewProps) {
   const { colorMode } = useColorMode()
   const isDark = colorMode === 'dark'
@@ -115,6 +119,9 @@ export function LivePreview({
   const modelGlassBlurPx = messageGlassBlurCustomized ? glassBlurPx : 20
   const userGlassBackground = `color-mix(in srgb, ${userGlassSurface.surfaceColor}, transparent ${userGlassSurface.transparency}%)`
   const modelGlassBackground = `color-mix(in srgb, ${modelGlassSurface.surfaceColor}, transparent ${modelGlassSurface.transparency}%)`
+  const inputAreaBackground = canRenderBackground && messageGlassEnabled
+    ? `color-mix(in srgb, var(--gem-sys-color--surface-bright), transparent ${clampInteger(inputAreaTransparency, 0, 100)}%)`
+    : 'var(--gem-sys-color--surface-bright, var(--gem-sys-color--surface-container, #eef2ef))'
   const previewTitle = t('settingPanel.theme.livePreview')
 
   return (
@@ -260,10 +267,10 @@ export function LivePreview({
                 backdropFilter={messageGlassEnabled ? `blur(${userGlassBlurPx}px)` : undefined}
                 border={messageGlassEnabled && !isDark ? '1px solid #f2f2f2' : undefined}
                 boxShadow={messageGlassEnabled ? 'inset 0 0 1px 0 #ffffff' : undefined}
-                color="gemOnSurface"
+                color={messageTextColor}
                 fontSize="xs"
                 lineHeight="1.4"
-                transition="background-color 0.16s ease, backdrop-filter 0.16s ease"
+                transition="background-color 0.16s ease, color 0.16s ease, backdrop-filter 0.16s ease"
               >
                 Summarize Gemini Power Kit updates.
               </Box>
@@ -289,10 +296,10 @@ export function LivePreview({
                 backdropFilter={messageGlassEnabled ? `blur(${modelGlassBlurPx}px)` : undefined}
                 border={messageGlassEnabled && !isDark ? '1px solid #f2f2f2' : undefined}
                 boxShadow={messageGlassEnabled && isDark ? '0 0 1px 0 #ffffff' : undefined}
-                color="gemOnSurface"
+                color={messageTextColor}
                 fontSize="xs"
                 lineHeight="1.45"
-                transition="background-color 0.16s ease, backdrop-filter 0.16s ease"
+                transition="background-color 0.16s ease, color 0.16s ease, backdrop-filter 0.16s ease"
               >
                 Added chat outline, quick follow-up, and prompt chaining support.
               </Box>
@@ -304,7 +311,11 @@ export function LivePreview({
               gap={2}
               p={2}
               borderRadius="full"
-              bg="var(--gem-sys-color--surface-bright, var(--gem-sys-color--surface-container, #eef2ef))"
+              bg={inputAreaBackground}
+              backdropFilter={canRenderBackground && messageGlassEnabled
+                ? 'blur(10px)'
+                : undefined}
+              transition="background-color 0.16s ease, backdrop-filter 0.16s ease"
             >
               <Box
                 flex="1"

@@ -130,6 +130,17 @@
       "bulkDelete": {
         "title": "일괄 삭제",
         "description": "여러 채팅을 한 번에 선택하고 삭제합니다."
+      },
+      "topBarCustomization": {
+        "title": "상단 바 사용자 지정",
+        "showThemeShortcut": {
+          "title": "테마 바로가기 표시",
+          "description": "Gemini 상단 바에 테마 바로가기를 표시합니다."
+        },
+        "hideUpgradeReminder": {
+          "title": "업그레이드 알림 숨기기",
+          "description": "Gemini 상단 바에서 업그레이드 알림을 숨깁니다."
+        }
       }
     }
   },
@@ -177,7 +188,11 @@
       "messageGlassBackgroundVisibility": "배경 보임 정도",
       "glassTransparency": "유리 투명도",
       "glassBlur": "유리 흐림",
+      "inputTransparency": "입력창 투명도",
       "resetGlassSettings": "유리 설정 초기화",
+      "chatTextColor": "메시지 텍스트 색상",
+      "chatTextColorModeDescription": "모드: $1",
+      "resetChatTextColor": "초기화",
       "invalidFileType": "PNG/JPG/WebP만 지원됩니다",
       "fileTooLarge": "이미지 크기는 5MB 이하여야 합니다",
       "imageLoadFailed": "이미지 로드 실패, 다시 시도해 주세요",

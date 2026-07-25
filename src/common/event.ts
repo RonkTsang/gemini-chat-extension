@@ -91,7 +91,7 @@ export interface AppEvents {
 
   // Theme floating panel
   'theme-floating-panel:open': {
-    source: 'setting-panel' | 'whats-new'
+    source: 'setting-panel' | 'whats-new' | 'top-bar-action'
     returnToSettings?: boolean
   };
   'theme-floating-panel:close': {

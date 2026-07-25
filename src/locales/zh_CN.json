@@ -130,6 +130,17 @@
       "bulkDelete": {
         "title": "批量删除",
         "description": "一次选择并删除多条聊天记录。"
+      },
+      "topBarCustomization": {
+        "title": "顶栏自定义",
+        "showThemeShortcut": {
+          "title": "显示主题快捷方式",
+          "description": "在 Gemini 顶栏中显示前往主题的快捷方式。"
+        },
+        "hideUpgradeReminder": {
+          "title": "隐藏升级提醒",
+          "description": "隐藏 Gemini 顶栏中的升级提醒。"
+        }
       }
     }
   },
@@ -177,7 +188,11 @@
       "messageGlassBackgroundVisibility": "背景透出",
       "glassTransparency": "玻璃透明度",
       "glassBlur": "玻璃模糊",
+      "inputTransparency": "输入透明度",
       "resetGlassSettings": "重置玻璃设置",
+      "chatTextColor": "消息文字颜色",
+      "chatTextColorModeDescription": "模式：$1",
+      "resetChatTextColor": "重置",
       "invalidFileType": "仅支持 PNG/JPG/WebP",
       "fileTooLarge": "图片大小不能超过 5MB",
       "imageLoadFailed": "图片加载失败，请重试",

@@ -21,7 +21,7 @@ export function ColorPresets({
   const swatchSize = isCompact ? '34px' : '44px'
 
   return (
-    <Box mb={isCompact ? 3 : 5} overflow="visible">
+    <Box mb={5} overflow="visible">
       <Heading size="sm" mb={isCompact ? 2 : 3}>
         {title === 'settingPanel.theme.colorPresets' ? 'Colors' : title}
       </Heading>

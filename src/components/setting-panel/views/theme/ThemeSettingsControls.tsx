@@ -40,7 +40,18 @@ export function ThemeSettingsControls({
           controller.handleMessageGlassBackgroundVisibilityChange
         }
         onMessageGlassBlurChange={controller.handleMessageGlassBlurChange}
+        onInputAreaTransparencyPreviewChange={
+          controller.handleInputAreaTransparencyPreviewChange
+        }
+        onInputAreaTransparencyChange={
+          controller.handleInputAreaTransparencyChange
+        }
         onResetGlassSettings={controller.handleResetGlassSettings}
+        effectiveTheme={controller.effectiveTheme}
+        chatTextColor={controller.chatTextColor}
+        defaultChatTextColor={controller.defaultChatTextColor}
+        onChatTextColorChange={controller.handleChatTextColorChange}
+        onResetChatTextColor={controller.handleResetChatTextColor}
         onWelcomeGreetingReadabilityModeChange={
           controller.handleWelcomeGreetingReadabilityModeChange
         }

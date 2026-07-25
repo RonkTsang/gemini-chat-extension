@@ -130,6 +130,17 @@
       "bulkDelete": {
         "title": "Eliminación en lote",
         "description": "Selecciona y elimina varios chats a la vez."
+      },
+      "topBarCustomization": {
+        "title": "Personalización de la barra superior",
+        "showThemeShortcut": {
+          "title": "Mostrar acceso directo a Tema",
+          "description": "Muestra un acceso directo a Tema en la barra superior de Gemini."
+        },
+        "hideUpgradeReminder": {
+          "title": "Ocultar recordatorio de actualización",
+          "description": "Oculta el recordatorio de actualización de Gemini en la barra superior."
+        }
       }
     }
   },
@@ -177,7 +188,11 @@
       "messageGlassBackgroundVisibility": "Visibilidad del fondo",
       "glassTransparency": "Transparencia del cristal",
       "glassBlur": "Desenfoque del cristal",
+      "inputTransparency": "Transparencia del campo de entrada",
       "resetGlassSettings": "Restablecer ajustes de cristal",
+      "chatTextColor": "Color del texto de los mensajes",
+      "chatTextColorModeDescription": "Modo: $1",
+      "resetChatTextColor": "Restablecer",
       "invalidFileType": "Solo se admite PNG/JPG/WebP",
       "fileTooLarge": "El tamaño de la imagen debe ser de 5MB o menos",
       "imageLoadFailed": "Error al cargar la imagen, por favor inténtalo de nuevo",

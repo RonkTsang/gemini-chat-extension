@@ -130,6 +130,17 @@
       "bulkDelete": {
         "title": "Suppression groupée",
         "description": "Sélectionnez et supprimez plusieurs discussions à la fois."
+      },
+      "topBarCustomization": {
+        "title": "Personnalisation de la barre supérieure",
+        "showThemeShortcut": {
+          "title": "Afficher le raccourci Thème",
+          "description": "Affiche un raccourci vers Thème dans la barre supérieure de Gemini."
+        },
+        "hideUpgradeReminder": {
+          "title": "Masquer le rappel de mise à niveau",
+          "description": "Masque le rappel de mise à niveau de Gemini dans la barre supérieure."
+        }
       }
     }
   },
@@ -177,7 +188,11 @@
       "messageGlassBackgroundVisibility": "Visibilité de l’arrière-plan",
       "glassTransparency": "Transparence du verre",
       "glassBlur": "Flou du verre",
+      "inputTransparency": "Transparence du champ de saisie",
       "resetGlassSettings": "Réinitialiser les réglages du verre",
+      "chatTextColor": "Couleur du texte des messages",
+      "chatTextColorModeDescription": "Mode : $1",
+      "resetChatTextColor": "Réinitialiser",
       "invalidFileType": "Seuls les formats PNG/JPG/WebP sont pris en charge",
       "fileTooLarge": "La taille de l'image doit être de 5 Mo ou moins",
       "imageLoadFailed": "Échec du chargement de l'image, veuillez réessayer",

@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { ThemeAssetRow, ThemeBackgroundResolvedState, ThemeBackgroundSettings } from '../types'
+import {
+  THEME_BACKGROUND_VERSION,
+  type ThemeAssetRow,
+  type ThemeBackgroundResolvedState,
+  type ThemeBackgroundSettings,
+} from '../types'
 import { eventBus } from '@/utils/eventbus'
 
 const { mockEstimate } = vi.hoisted(() => ({
@@ -20,7 +25,7 @@ function createSettings(
   overrides: Partial<ThemeBackgroundSettings> = {},
 ): ThemeBackgroundSettings {
   return {
-    version: 5,
+    version: THEME_BACKGROUND_VERSION,
     backgroundImageEnabled: true,
     backgroundBlurPx: 5,
     backgroundImagePosition: 'center',
@@ -30,6 +35,7 @@ function createSettings(
     messageGlassDarkTransparency: 90,
     messageGlassBackgroundVisibility: 5,
     messageGlassBlurPx: 20,
+    inputAreaTransparency: 40,
     messageGlassTransparencyCustomized: false,
     messageGlassLightTransparencyCustomized: false,
     messageGlassDarkTransparencyCustomized: false,
@@ -37,6 +43,8 @@ function createSettings(
     messageGlassBlurCustomized: false,
     sidebarScrimEnabled: true,
     sidebarScrimIntensity: 20,
+    chatTextLightColor: null,
+    chatTextDarkColor: null,
     welcomeGreetingReadabilityMode: 'auto',
     welcomeGreetingResolved: 'default',
     welcomeGreetingResolvedAssetId: null,

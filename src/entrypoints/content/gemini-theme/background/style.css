@@ -88,6 +88,16 @@
   background-color: color-mix(in srgb, var(--theme-600), transparent 80%) !important;
 }
 
+:root[data-gpk-bg-enabled="true"][data-gpk-chat-text-light-color] body.light-theme chat-window,
+:root[data-gpk-bg-enabled="true"][data-gpk-chat-text-light-color] :where(.theme-host):where(.light-theme) chat-window {
+  --gem-sys-color--on-surface: var(--gpk-chat-text-light-color);
+}
+
+:root[data-gpk-bg-enabled="true"][data-gpk-chat-text-dark-color] body.dark-theme chat-window,
+:root[data-gpk-bg-enabled="true"][data-gpk-chat-text-dark-color] :where(.theme-host):where(.dark-theme) chat-window {
+  --gem-sys-color--on-surface: var(--gpk-chat-text-dark-color);
+}
+
 :root[data-gpk-bg-enabled="true"][data-gpk-sidebar-scrim-enabled="true"] body.dark-theme bard-sidenav-container>bard-sidenav,
 :root[data-gpk-bg-enabled="true"][data-gpk-sidebar-scrim-enabled="true"] :where(.theme-host):where(.dark-theme) bard-sidenav-container>bard-sidenav {
   box-shadow: none;
@@ -285,7 +295,11 @@
 }
 
 :root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] input-container input-area-v2 {
-  background-color: color-mix(in srgb, var(--gem-sys-color--surface-bright), transparent 40%) !important;
+  background-color: color-mix(
+    in srgb,
+    var(--gem-sys-color--surface-bright),
+    transparent var(--gpk-input-area-transparency, 40%)
+  ) !important;
   backdrop-filter: blur(10px);
 }
 
@@ -339,6 +353,10 @@
   :root[data-gpk-bg-enabled="true"] #app-root>main>side-navigation-v2>mat-sidenav-container {
     background-color: transparent !important;
   }
+}
+
+:root[data-gpk-bg-enabled="true"] :where(.lm-component-theme) mat-sidenav-container {
+  background-color: transparent !important;
 }
 
 pending-response>response-container>div.response-container {

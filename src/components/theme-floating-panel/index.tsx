@@ -10,6 +10,7 @@ import { useThemeSettingsController } from '@/components/setting-panel/views/the
 export function ThemeFloatingPanel() {
   const [open, setOpen] = useState(false)
   const [returnToSettings, setReturnToSettings] = useState(false)
+  const [showPrimaryAction, setShowPrimaryAction] = useState(true)
   const { emitSync } = useEventEmitter()
 
   useEvent('theme-floating-panel:open', (data) => {
@@ -18,6 +19,7 @@ export function ThemeFloatingPanel() {
       reason: 'open-theme-studio',
     })
     setReturnToSettings(data.returnToSettings ?? false)
+    setShowPrimaryAction(data.source !== 'top-bar-action')
     setOpen(true)
   })
 
@@ -56,6 +58,7 @@ export function ThemeFloatingPanel() {
   return (
     <ThemeFloatingPanelContent
       returnToSettings={returnToSettings}
+      showPrimaryAction={showPrimaryAction}
       onPrimaryAction={handlePrimaryAction}
     />
   )
@@ -63,9 +66,11 @@ export function ThemeFloatingPanel() {
 
 function ThemeFloatingPanelContent({
   returnToSettings,
+  showPrimaryAction,
   onPrimaryAction,
 }: {
   returnToSettings: boolean
+  showPrimaryAction: boolean
   onPrimaryAction: () => void
 }) {
   const { emitSync } = useEventEmitter()
@@ -93,10 +98,10 @@ function ThemeFloatingPanelContent({
         top="auto"
         right={{ base: 0, md: 4 }}
         bottom={{ base: 0, md: 4 }}
-        width={{ base: '100%', md: '300px' }}
+        width={{ base: '100%', md: '320px' }}
         maxWidth={{ base: '100%', md: 'calc(100vw - 32px)' }}
-        height="min(500px, 50dvh)"
-        maxHeight="50dvh"
+        minHeight="520px"
+        maxHeight="max(520px, 50dvh)"
         display="flex"
         flexDirection="column"
         pointerEvents="auto"
@@ -119,16 +124,18 @@ function ThemeFloatingPanelContent({
           flexShrink={0}
         >
           <Flex align="center" gap={1.5} minW={0}>
-            <Tooltip content={actionLabel}>
-              <IconButton
-                aria-label={actionLabel}
-                size="xs"
-                variant="ghost"
-                onClick={onPrimaryAction}
-              >
-                <HiOutlineArrowLeft />
-              </IconButton>
-            </Tooltip>
+            {showPrimaryAction && (
+              <Tooltip content={actionLabel}>
+                <IconButton
+                  aria-label={actionLabel}
+                  size="xs"
+                  variant="ghost"
+                  onClick={onPrimaryAction}
+                >
+                  <HiOutlineArrowLeft />
+                </IconButton>
+              </Tooltip>
+            )}
             <Heading size="sm" truncate>
               {tt('settingPanel.config.theme.title', 'Theme')}
             </Heading>
