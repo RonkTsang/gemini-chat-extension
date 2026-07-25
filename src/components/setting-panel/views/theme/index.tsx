@@ -74,6 +74,12 @@ export function ThemeSettingsView() {
               messageGlassBlurCustomized={
                 previewState.settings.messageGlassBlurCustomized
               }
+              inputAreaTransparency={
+                previewState.settings.inputAreaTransparency
+              }
+              messageTextColor={
+                controller.chatTextColor ?? controller.defaultChatTextColor
+              }
             />
             <FeatureHintBubble
               id="theme-studio-entry"

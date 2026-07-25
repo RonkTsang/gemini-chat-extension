@@ -5,6 +5,7 @@ import { browser } from 'wxt/browser'
 import { GEM_DEV_EVENTS } from '@/common/event'
 import { renderOverlay } from "./overlay"
 import { startPowerKitEntry, stopPowerKitEntry } from './power-kit-entry'
+import { createTopBarCustomizationController } from './top-bar-customization'
 import { startBulkDelete, stopBulkDelete } from './bulk-delete'
 import { setDevForceBulkDeleteFailure } from './bulk-delete/deleteQueue'
 import { createBulkDeleteSettingsController } from './bulk-delete/settings'
@@ -179,6 +180,8 @@ export default defineContentScript({
     })
     await gemAvatarSettings.start()
     startPowerKitEntry()
+    const topBarCustomization = createTopBarCustomizationController()
+    await topBarCustomization.start()
     ctx.onInvalidated(() => {
       if (import.meta.env.DEV) {
         window.removeEventListener(
@@ -189,6 +192,7 @@ export default defineContentScript({
       bulkDeleteSettings.stop()
       gemAvatarSettings.stop()
       stopPowerKitEntry()
+      topBarCustomization.stop()
     })
     console.log('[ContentScript] UI mounted, context still valid:', ctx.isValid)
   },

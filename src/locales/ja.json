@@ -130,6 +130,17 @@
       "bulkDelete": {
         "title": "一括削除",
         "description": "複数のチャットをまとめて選択・削除します。"
+      },
+      "topBarCustomization": {
+        "title": "トップバーのカスタマイズ",
+        "showThemeShortcut": {
+          "title": "テーマのショートカットを表示",
+          "description": "Gemini のトップバーにテーマへのショートカットを表示します。"
+        },
+        "hideUpgradeReminder": {
+          "title": "アップグレード通知を非表示",
+          "description": "Gemini のトップバーからアップグレード通知を非表示にします。"
+        }
       }
     }
   },
@@ -177,7 +188,11 @@
       "messageGlassBackgroundVisibility": "背景の見え方",
       "glassTransparency": "ガラスの透明度",
       "glassBlur": "ガラスのぼかし",
+      "inputTransparency": "入力欄の透明度",
       "resetGlassSettings": "ガラス設定をリセット",
+      "chatTextColor": "メッセージ文字色",
+      "chatTextColorModeDescription": "モード: $1",
+      "resetChatTextColor": "リセット",
       "invalidFileType": "PNG/JPG/WebPのみサポートされています",
       "fileTooLarge": "画像サイズは5MB以下である必要があります",
       "imageLoadFailed": "画像の読み込みに失敗しました。もう一度お試しください",

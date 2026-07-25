@@ -1,16 +1,21 @@
 import { beforeEach, describe, expect, it } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import {
   applyThemeBackgroundStyle,
   clearThemeBackgroundStyle,
 } from './styleController'
-import type { ThemeBackgroundResolvedState } from './types'
+import {
+  THEME_BACKGROUND_VERSION,
+  type ThemeBackgroundResolvedState,
+} from './types'
 
 function createState(
   overrides: Partial<ThemeBackgroundResolvedState> = {},
 ): ThemeBackgroundResolvedState {
   const base: ThemeBackgroundResolvedState = {
     settings: {
-      version: 5,
+      version: THEME_BACKGROUND_VERSION,
       backgroundImageEnabled: false,
       backgroundBlurPx: 5,
       backgroundImagePosition: 'center',
@@ -20,6 +25,7 @@ function createState(
       messageGlassDarkTransparency: 90,
       messageGlassBackgroundVisibility: 5,
       messageGlassBlurPx: 20,
+      inputAreaTransparency: 40,
       messageGlassTransparencyCustomized: false,
       messageGlassLightTransparencyCustomized: false,
       messageGlassDarkTransparencyCustomized: false,
@@ -27,6 +33,8 @@ function createState(
       messageGlassBlurCustomized: false,
       sidebarScrimEnabled: true,
       sidebarScrimIntensity: 20,
+      chatTextLightColor: null,
+      chatTextDarkColor: null,
       welcomeGreetingReadabilityMode: 'auto',
       welcomeGreetingResolved: 'default',
       welcomeGreetingResolvedAssetId: null,
@@ -63,6 +71,7 @@ describe('styleController', () => {
           messageGlassTransparency: 72,
           messageGlassBackgroundVisibility: 4,
           messageGlassBlurPx: 8,
+          inputAreaTransparency: 65,
           messageGlassTransparencyCustomized: true,
           messageGlassBackgroundVisibilityCustomized: true,
           messageGlassBlurCustomized: true,
@@ -147,6 +156,11 @@ describe('styleController', () => {
     )
     expect(
       document.documentElement.style.getPropertyValue(
+        '--gpk-input-area-transparency',
+      ),
+    ).toBe('65%')
+    expect(
+      document.documentElement.style.getPropertyValue(
         '--gpk-msg-glass-transparency-customized',
       ),
     ).toBe('')
@@ -157,6 +171,12 @@ describe('styleController', () => {
     ).toBe('1')
     expect(document.documentElement.style.getPropertyValue('--gpk-sidebar-scrim-alpha')).toBe(
       '0.50',
+    )
+    expect(document.documentElement.style.getPropertyValue('--gpk-chat-text-light-color')).toBe(
+      '',
+    )
+    expect(document.documentElement.style.getPropertyValue('--gpk-chat-text-dark-color')).toBe(
+      '',
     )
     expect(document.documentElement.style.getPropertyValue('--gpk-bg-image')).toContain(
       'blob:preview',
@@ -210,8 +230,94 @@ describe('styleController', () => {
     expect(bgLayer?.style.backgroundImage).toBe('none')
   })
 
-  it('clears style tag, root attributes and background layer', () => {
+  it('syncs chat text color variables', () => {
+    applyThemeBackgroundStyle(
+      createState({
+        settings: {
+          chatTextLightColor: '#112233',
+          chatTextDarkColor: '#ddeeffcc',
+        } as ThemeBackgroundResolvedState['settings'],
+      }),
+    )
+
+    expect(document.documentElement.style.getPropertyValue('--gpk-chat-text-light-color')).toBe(
+      '#112233',
+    )
+    expect(document.documentElement.style.getPropertyValue('--gpk-chat-text-dark-color')).toBe(
+      '#ddeeffcc',
+    )
+    expect(document.documentElement.hasAttribute('data-gpk-chat-text-light-color')).toBe(true)
+    expect(document.documentElement.hasAttribute('data-gpk-chat-text-dark-color')).toBe(true)
+
     applyThemeBackgroundStyle(createState())
+
+    expect(document.documentElement.style.getPropertyValue('--gpk-chat-text-light-color')).toBe(
+      '',
+    )
+    expect(document.documentElement.style.getPropertyValue('--gpk-chat-text-dark-color')).toBe(
+      '',
+    )
+    expect(document.documentElement.hasAttribute('data-gpk-chat-text-light-color')).toBe(false)
+    expect(document.documentElement.hasAttribute('data-gpk-chat-text-dark-color')).toBe(false)
+  })
+
+  it('scopes chat text color CSS to chat-window', () => {
+    const css = readFileSync(
+      join(
+        process.cwd(),
+        'src/entrypoints/content/gemini-theme/background/style.css',
+      ),
+      'utf8',
+    )
+
+    expect(css).toContain('[data-gpk-chat-text-light-color] body.light-theme chat-window')
+    expect(css).toContain('[data-gpk-chat-text-dark-color] body.dark-theme chat-window')
+    expect(css).toContain('--gem-sys-color--on-surface: var(--gpk-chat-text-light-color)')
+    expect(css).toContain('--gem-sys-color--on-surface: var(--gpk-chat-text-dark-color)')
+  })
+
+  it('scopes input transparency to renderable message glass', () => {
+    const css = readFileSync(
+      join(
+        process.cwd(),
+        'src/entrypoints/content/gemini-theme/background/style.css',
+      ),
+      'utf8',
+    )
+
+    expect(css).toContain(
+      ':root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] input-container input-area-v2',
+    )
+    expect(css).toContain(
+      'transparent var(--gpk-input-area-transparency, 40%)',
+    )
+    expect(css).toContain('!important')
+  })
+
+  it('keeps the luminous mode sidenav transparent when a background is enabled', () => {
+    const css = readFileSync(
+      join(
+        process.cwd(),
+        'src/entrypoints/content/gemini-theme/background/style.css',
+      ),
+      'utf8',
+    )
+
+    expect(css).toMatch(
+      /:root\[data-gpk-bg-enabled="true"\] :where\(\.lm-component-theme\) mat-sidenav-container \{\s*background-color: transparent !important;/,
+    )
+  })
+
+  it('clears style tag, root attributes and background layer', () => {
+    const state = createState()
+    applyThemeBackgroundStyle({
+      ...state,
+      settings: {
+        ...state.settings,
+        chatTextLightColor: '#112233',
+        chatTextDarkColor: '#ddeeff',
+      },
+    })
     clearThemeBackgroundStyle()
 
     expect(document.getElementById('gemini-extension-theme-background-override')).toBeNull()
@@ -227,6 +333,8 @@ describe('styleController', () => {
       document.documentElement.getAttribute('data-gpk-msg-glass-blur-customized'),
     ).toBeNull()
     expect(document.documentElement.getAttribute('data-gpk-sidebar-scrim-enabled')).toBeNull()
+    expect(document.documentElement.getAttribute('data-gpk-chat-text-light-color')).toBeNull()
+    expect(document.documentElement.getAttribute('data-gpk-chat-text-dark-color')).toBeNull()
     expect(document.documentElement.style.getPropertyValue('--gpk-bg-image')).toBe('')
     expect(document.documentElement.style.getPropertyValue('--gpk-bg-blur')).toBe('')
     expect(document.documentElement.style.getPropertyValue('--gpk-bg-position')).toBe('')
@@ -281,6 +389,11 @@ describe('styleController', () => {
     expect(document.documentElement.style.getPropertyValue('--gpk-msg-glass-blur')).toBe('')
     expect(
       document.documentElement.style.getPropertyValue(
+        '--gpk-input-area-transparency',
+      ),
+    ).toBe('')
+    expect(
+      document.documentElement.style.getPropertyValue(
         '--gpk-msg-glass-transparency-customized',
       ),
     ).toBe('')
@@ -290,6 +403,12 @@ describe('styleController', () => {
       ),
     ).toBe('')
     expect(document.documentElement.style.getPropertyValue('--gpk-sidebar-scrim-alpha')).toBe(
+      '',
+    )
+    expect(document.documentElement.style.getPropertyValue('--gpk-chat-text-light-color')).toBe(
+      '',
+    )
+    expect(document.documentElement.style.getPropertyValue('--gpk-chat-text-dark-color')).toBe(
       '',
     )
   })

@@ -36,11 +36,16 @@ const ROOT_MSG_GLASS_DUAL_LIGHT_TRANSPARENCY_VAR
 const ROOT_MSG_GLASS_DUAL_DARK_TRANSPARENCY_VAR
   = '--gpk-msg-glass-dual-dark-transparency'
 const ROOT_MSG_GLASS_BLUR_VAR = '--gpk-msg-glass-blur'
+const ROOT_INPUT_AREA_TRANSPARENCY_VAR = '--gpk-input-area-transparency'
 const ROOT_MSG_GLASS_TRANSPARENCY_CUSTOMIZED_VAR
   = '--gpk-msg-glass-transparency-customized'
 const ROOT_MSG_GLASS_BLUR_CUSTOMIZED_VAR
   = '--gpk-msg-glass-blur-customized'
 const ROOT_SIDEBAR_SCRIM_ALPHA_VAR = '--gpk-sidebar-scrim-alpha'
+const ROOT_CHAT_TEXT_LIGHT_COLOR_VAR = '--gpk-chat-text-light-color'
+const ROOT_CHAT_TEXT_DARK_COLOR_VAR = '--gpk-chat-text-dark-color'
+const ROOT_CHAT_TEXT_LIGHT_COLOR_ATTR = 'data-gpk-chat-text-light-color'
+const ROOT_CHAT_TEXT_DARK_COLOR_ATTR = 'data-gpk-chat-text-dark-color'
 
 function ensureStyleElement(): HTMLStyleElement | null {
   if (typeof document === 'undefined' || !document.head) return null
@@ -72,6 +77,22 @@ function ensureBackgroundLayerElement(): HTMLDivElement | null {
     document.body.prepend(layer)
   }
   return layer
+}
+
+function syncOptionalColorVar(
+  root: HTMLElement,
+  name: string,
+  attribute: string,
+  value: string | null,
+): void {
+  root.toggleAttribute(attribute, Boolean(value))
+
+  if (value) {
+    root.style.setProperty(name, value)
+    return
+  }
+
+  root.style.removeProperty(name)
 }
 
 export function applyThemeBackgroundStyle(
@@ -158,6 +179,10 @@ export function applyThemeBackgroundStyle(
     ROOT_MSG_GLASS_BLUR_VAR,
     `${state.settings.messageGlassBlurPx}px`,
   )
+  root.style.setProperty(
+    ROOT_INPUT_AREA_TRANSPARENCY_VAR,
+    `${state.settings.inputAreaTransparency}%`,
+  )
   root.style.removeProperty(ROOT_MSG_GLASS_TRANSPARENCY_VAR)
   root.style.removeProperty(ROOT_MSG_GLASS_TRANSPARENCY_CUSTOMIZED_VAR)
   root.style.setProperty(
@@ -167,6 +192,18 @@ export function applyThemeBackgroundStyle(
   root.style.setProperty(
     ROOT_SIDEBAR_SCRIM_ALPHA_VAR,
     (state.settings.sidebarScrimIntensity / 100).toFixed(2),
+  )
+  syncOptionalColorVar(
+    root,
+    ROOT_CHAT_TEXT_LIGHT_COLOR_VAR,
+    ROOT_CHAT_TEXT_LIGHT_COLOR_ATTR,
+    state.settings.chatTextLightColor,
+  )
+  syncOptionalColorVar(
+    root,
+    ROOT_CHAT_TEXT_DARK_COLOR_VAR,
+    ROOT_CHAT_TEXT_DARK_COLOR_ATTR,
+    state.settings.chatTextDarkColor,
   )
 
   const backgroundLayer = ensureBackgroundLayerElement()
@@ -200,9 +237,14 @@ export function clearThemeBackgroundStyle(): void {
   root.style.removeProperty(ROOT_MSG_GLASS_DUAL_LIGHT_TRANSPARENCY_VAR)
   root.style.removeProperty(ROOT_MSG_GLASS_DUAL_DARK_TRANSPARENCY_VAR)
   root.style.removeProperty(ROOT_MSG_GLASS_BLUR_VAR)
+  root.style.removeProperty(ROOT_INPUT_AREA_TRANSPARENCY_VAR)
   root.style.removeProperty(ROOT_MSG_GLASS_TRANSPARENCY_CUSTOMIZED_VAR)
   root.style.removeProperty(ROOT_MSG_GLASS_BLUR_CUSTOMIZED_VAR)
   root.style.removeProperty(ROOT_SIDEBAR_SCRIM_ALPHA_VAR)
+  root.style.removeProperty(ROOT_CHAT_TEXT_LIGHT_COLOR_VAR)
+  root.style.removeProperty(ROOT_CHAT_TEXT_DARK_COLOR_VAR)
+  root.removeAttribute(ROOT_CHAT_TEXT_LIGHT_COLOR_ATTR)
+  root.removeAttribute(ROOT_CHAT_TEXT_DARK_COLOR_ATTR)
 
   const styleEl = document.getElementById(STYLE_ID)
   styleEl?.remove()

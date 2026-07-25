@@ -25,7 +25,7 @@ export function AppearanceSelector({
   const isCompact = variant === 'compact'
 
   return (
-    <Box mb={isCompact ? 3 : 5} overflow="visible">
+    <Box mb={5} overflow="visible">
       <Heading size="sm" mb={isCompact ? 2 : 3}>
         {tt('settingPanel.theme.appearance', 'Appearance')}
       </Heading>

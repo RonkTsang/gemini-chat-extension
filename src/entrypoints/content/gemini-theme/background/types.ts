@@ -25,8 +25,12 @@ export const MESSAGE_GLASS_LIGHT_TRANSPARENCY_DEFAULT = 40
 export const MESSAGE_GLASS_DARK_TRANSPARENCY_DEFAULT = 90
 export const MESSAGE_GLASS_BLUR_MIN = 0
 export const MESSAGE_GLASS_BLUR_MAX = 20
+export const INPUT_AREA_TRANSPARENCY_MIN = 0
+export const INPUT_AREA_TRANSPARENCY_DEFAULT = 40
+export const INPUT_AREA_TRANSPARENCY_MAX = 100
 export const SIDEBAR_SCRIM_INTENSITY_MIN = 0
 export const SIDEBAR_SCRIM_INTENSITY_MAX = 100
+const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i
 
 export const BACKGROUND_IMAGE_POSITIONS = [
   'top-left',
@@ -79,6 +83,7 @@ export interface ThemeBackgroundSettings {
   messageGlassDarkTransparency: number
   messageGlassBackgroundVisibility: number
   messageGlassBlurPx: number
+  inputAreaTransparency: number
   messageGlassTransparencyCustomized: boolean
   messageGlassLightTransparencyCustomized: boolean
   messageGlassDarkTransparencyCustomized: boolean
@@ -86,6 +91,8 @@ export interface ThemeBackgroundSettings {
   messageGlassBlurCustomized: boolean
   sidebarScrimEnabled: boolean
   sidebarScrimIntensity: number
+  chatTextLightColor: string | null
+  chatTextDarkColor: string | null
   welcomeGreetingReadabilityMode: WelcomeGreetingReadabilityMode
   welcomeGreetingResolved: WelcomeGreetingResolved
   welcomeGreetingResolvedAssetId: string | null
@@ -103,6 +110,7 @@ export interface ThemeBackgroundPatch {
   messageGlassDarkTransparency?: number
   messageGlassBackgroundVisibility?: number
   messageGlassBlurPx?: number
+  inputAreaTransparency?: number
   messageGlassTransparencyCustomized?: boolean
   messageGlassLightTransparencyCustomized?: boolean
   messageGlassDarkTransparencyCustomized?: boolean
@@ -110,6 +118,8 @@ export interface ThemeBackgroundPatch {
   messageGlassBlurCustomized?: boolean
   sidebarScrimEnabled?: boolean
   sidebarScrimIntensity?: number
+  chatTextLightColor?: string | null
+  chatTextDarkColor?: string | null
   welcomeGreetingReadabilityMode?: WelcomeGreetingReadabilityMode
   welcomeGreetingResolved?: WelcomeGreetingResolved
   welcomeGreetingResolvedAssetId?: string | null
@@ -146,6 +156,7 @@ export const DEFAULT_THEME_BACKGROUND_SETTINGS: ThemeBackgroundSettings = {
   messageGlassDarkTransparency: MESSAGE_GLASS_DARK_TRANSPARENCY_DEFAULT,
   messageGlassBackgroundVisibility: MESSAGE_GLASS_BACKGROUND_VISIBILITY_DEFAULT,
   messageGlassBlurPx: 20,
+  inputAreaTransparency: INPUT_AREA_TRANSPARENCY_DEFAULT,
   messageGlassTransparencyCustomized: false,
   messageGlassLightTransparencyCustomized: false,
   messageGlassDarkTransparencyCustomized: false,
@@ -153,6 +164,8 @@ export const DEFAULT_THEME_BACKGROUND_SETTINGS: ThemeBackgroundSettings = {
   messageGlassBlurCustomized: false,
   sidebarScrimEnabled: true,
   sidebarScrimIntensity: 20,
+  chatTextLightColor: null,
+  chatTextDarkColor: null,
   welcomeGreetingReadabilityMode: 'auto',
   welcomeGreetingResolved: 'default',
   welcomeGreetingResolvedAssetId: null,
@@ -190,6 +203,13 @@ function clampMessageGlassBlur(value: number): number {
   return Math.min(
     MESSAGE_GLASS_BLUR_MAX,
     Math.max(MESSAGE_GLASS_BLUR_MIN, Math.round(value)),
+  )
+}
+
+function clampInputAreaTransparency(value: number): number {
+  return Math.min(
+    INPUT_AREA_TRANSPARENCY_MAX,
+    Math.max(INPUT_AREA_TRANSPARENCY_MIN, Math.round(value)),
   )
 }
 
@@ -238,6 +258,12 @@ function normalizeWelcomeGreetingResolvedAssetId(value: unknown): string | null 
   if (typeof value !== 'string') return null
   const trimmed = value.trim()
   return trimmed.length > 0 ? trimmed : null
+}
+
+function normalizeChatTextColor(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  return HEX_COLOR_PATTERN.test(trimmed) ? trimmed.toLowerCase() : null
 }
 
 export function isAllowedBackgroundImageMimeType(
@@ -310,6 +336,11 @@ export function normalizeThemeBackgroundSettings(
     ? clampMessageGlassBlur(glassBlurCandidate)
     : DEFAULT_THEME_BACKGROUND_SETTINGS.messageGlassBlurPx
 
+  const inputAreaTransparencyCandidate = Number(source.inputAreaTransparency)
+  const inputAreaTransparency = Number.isFinite(inputAreaTransparencyCandidate)
+    ? clampInputAreaTransparency(inputAreaTransparencyCandidate)
+    : DEFAULT_THEME_BACKGROUND_SETTINGS.inputAreaTransparency
+
   const scrimIntensityCandidate = Number(source.sidebarScrimIntensity)
   const sidebarScrimIntensity = Number.isFinite(scrimIntensityCandidate)
     ? clampSidebarScrimIntensity(scrimIntensityCandidate)
@@ -320,6 +351,8 @@ export function normalizeThemeBackgroundSettings(
   const sidebarScrimEnabled = typeof source.sidebarScrimEnabled === 'boolean'
     ? source.sidebarScrimEnabled
     : DEFAULT_THEME_BACKGROUND_SETTINGS.sidebarScrimEnabled
+  const chatTextLightColor = normalizeChatTextColor(source.chatTextLightColor)
+  const chatTextDarkColor = normalizeChatTextColor(source.chatTextDarkColor)
   const welcomeGreetingReadabilityMode = normalizeWelcomeGreetingMode(
     source.welcomeGreetingReadabilityMode,
   )
@@ -351,6 +384,7 @@ export function normalizeThemeBackgroundSettings(
     messageGlassDarkTransparency,
     messageGlassBackgroundVisibility,
     messageGlassBlurPx,
+    inputAreaTransparency,
     messageGlassTransparencyCustomized:
       globalTransparencyCustomized,
     messageGlassLightTransparencyCustomized:
@@ -370,6 +404,8 @@ export function normalizeThemeBackgroundSettings(
     messageGlassBlurCustomized: source.messageGlassBlurCustomized === true,
     sidebarScrimEnabled,
     sidebarScrimIntensity,
+    chatTextLightColor,
+    chatTextDarkColor,
     welcomeGreetingReadabilityMode,
     welcomeGreetingResolved,
     welcomeGreetingResolvedAssetId,

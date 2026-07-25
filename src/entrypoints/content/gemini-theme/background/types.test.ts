@@ -5,6 +5,9 @@ import {
   BACKGROUND_BLUR_MAX,
   BACKGROUND_BLUR_MIN,
   DEFAULT_THEME_BACKGROUND_SETTINGS,
+  INPUT_AREA_TRANSPARENCY_DEFAULT,
+  INPUT_AREA_TRANSPARENCY_MAX,
+  INPUT_AREA_TRANSPARENCY_MIN,
   MESSAGE_GLASS_BLUR_MAX,
   MESSAGE_GLASS_BLUR_MIN,
   MESSAGE_GLASS_BACKGROUND_VISIBILITY_DEFAULT,
@@ -14,11 +17,16 @@ import {
   MESSAGE_GLASS_TRANSPARENCY_MIN,
   SIDEBAR_SCRIM_INTENSITY_MAX,
   SIDEBAR_SCRIM_INTENSITY_MIN,
+  THEME_BACKGROUND_VERSION,
   getBackgroundImagePositionCssValue,
   normalizeThemeBackgroundSettings,
 } from './types'
 
 describe('theme background settings normalize', () => {
+  it('uses the last published schema version', () => {
+    expect(THEME_BACKGROUND_VERSION).toBe(5)
+  })
+
   it('falls back to defaults when input is invalid', () => {
     const result = normalizeThemeBackgroundSettings(null)
 
@@ -37,6 +45,7 @@ describe('theme background settings normalize', () => {
     expect(result.messageGlassBlurPx).toBe(
       DEFAULT_THEME_BACKGROUND_SETTINGS.messageGlassBlurPx,
     )
+    expect(result.inputAreaTransparency).toBe(INPUT_AREA_TRANSPARENCY_DEFAULT)
     expect(result.messageGlassTransparencyCustomized).toBe(false)
     expect(result.messageGlassBackgroundVisibilityCustomized).toBe(false)
     expect(result.messageGlassBlurCustomized).toBe(false)
@@ -46,6 +55,8 @@ describe('theme background settings normalize', () => {
     expect(result.sidebarScrimIntensity).toBe(
       DEFAULT_THEME_BACKGROUND_SETTINGS.sidebarScrimIntensity,
     )
+    expect(result.chatTextLightColor).toBeNull()
+    expect(result.chatTextDarkColor).toBeNull()
     expect(result.welcomeGreetingReadabilityMode).toBe(
       DEFAULT_THEME_BACKGROUND_SETTINGS.welcomeGreetingReadabilityMode,
     )
@@ -151,6 +162,18 @@ describe('theme background settings normalize', () => {
     )
   })
 
+  it('clamps input area transparency to valid range', () => {
+    const low = normalizeThemeBackgroundSettings({ inputAreaTransparency: -100 })
+    const high = normalizeThemeBackgroundSettings({ inputAreaTransparency: 999 })
+    const invalid = normalizeThemeBackgroundSettings({
+      inputAreaTransparency: Number.NaN,
+    })
+
+    expect(low.inputAreaTransparency).toBe(INPUT_AREA_TRANSPARENCY_MIN)
+    expect(high.inputAreaTransparency).toBe(INPUT_AREA_TRANSPARENCY_MAX)
+    expect(invalid.inputAreaTransparency).toBe(INPUT_AREA_TRANSPARENCY_DEFAULT)
+  })
+
   it('normalizes message glass customization flags', () => {
     const result = normalizeThemeBackgroundSettings({
       messageGlassTransparencyCustomized: true,
@@ -176,6 +199,22 @@ describe('theme background settings normalize', () => {
       imageRef: { kind: 'asset', assetId: '' },
     })
     expect(result.imageRef).toEqual({ kind: 'none' })
+  })
+
+  it('normalizes chat text colors', () => {
+    const result = normalizeThemeBackgroundSettings({
+      chatTextLightColor: ' #AABBCC ',
+      chatTextDarkColor: '#112233AA',
+    })
+    const invalid = normalizeThemeBackgroundSettings({
+      chatTextLightColor: 'rgb(1, 2, 3)',
+      chatTextDarkColor: '#12345',
+    })
+
+    expect(result.chatTextLightColor).toBe('#aabbcc')
+    expect(result.chatTextDarkColor).toBe('#112233aa')
+    expect(invalid.chatTextLightColor).toBeNull()
+    expect(invalid.chatTextDarkColor).toBeNull()
   })
 
   it('resets welcome greeting cache when background is disabled', () => {

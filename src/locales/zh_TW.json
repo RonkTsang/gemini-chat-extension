@@ -130,6 +130,17 @@
       "bulkDelete": {
         "title": "批次刪除",
         "description": "一次選取並刪除多則對話。"
+      },
+      "topBarCustomization": {
+        "title": "頂部工具列自訂",
+        "showThemeShortcut": {
+          "title": "顯示主題捷徑",
+          "description": "在 Gemini 的頂部工具列顯示主題捷徑。"
+        },
+        "hideUpgradeReminder": {
+          "title": "隱藏升級提醒",
+          "description": "隱藏 Gemini 頂部工具列中的升級提醒。"
+        }
       }
     }
   },
@@ -177,7 +188,11 @@
       "messageGlassBackgroundVisibility": "背景透出",
       "glassTransparency": "玻璃透明度",
       "glassBlur": "玻璃模糊",
+      "inputTransparency": "輸入透明度",
       "resetGlassSettings": "重設玻璃設定",
+      "chatTextColor": "訊息文字顏色",
+      "chatTextColorModeDescription": "模式：$1",
+      "resetChatTextColor": "重設",
       "invalidFileType": "僅支援 PNG/JPG/WebP",
       "fileTooLarge": "圖片大小不能超過 5MB",
       "imageLoadFailed": "圖片載入失敗，請重試",
