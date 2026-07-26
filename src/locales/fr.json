@@ -125,7 +125,8 @@
       },
       "gemAvatar": {
         "title": "Avatar des Gems",
-        "description": "Utilisez des avatars personnalisés pour vos Gems."
+        "description": "Utilisez des avatars personnalisés pour vos Gems.",
+        "documentation": "Ouvrir le guide des avatars Gem"
       },
       "bulkDelete": {
         "title": "Suppression groupée",
@@ -556,6 +557,11 @@
       "title": "Gemini suit votre rythme",
       "description": "Ajustez la largeur du chat et du champ de saisie pour rendre les conversations Gemini plus confortables, plus ciblées et plus faciles à suivre.",
       "action": "Ajuster la mise en page"
+    },
+    "gemAvatar": {
+      "title": "Donnez un visage à chaque Gem",
+      "description": "Attribuez un avatar à chaque Gem pour transformer un simple nom en personnage visible avec sa propre personnalité.",
+      "action": "Ouvrir les améliorations"
     }
   }
 }

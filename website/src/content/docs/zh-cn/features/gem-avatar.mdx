@@ -1,0 +1,118 @@
+---
+title: Gemini Gem 自定义头像
+description: 使用 Gemini Power Kit 为每个 Google Gemini Gem 设置本地自定义头像，让角色与用途一眼可辨。
+head:
+  - tag: meta
+    attrs:
+      property: og:image
+      content: https://gpk.ronktsang.com/og/gem-avatar.png
+  - tag: meta
+    attrs:
+      property: og:image:alt
+      content: Gemini 对话中带有自定义猫咪头像的 Gem
+  - tag: meta
+    attrs:
+      name: twitter:image
+      content: https://gpk.ronktsang.com/og/gem-avatar.png
+  - tag: meta
+    attrs:
+      name: twitter:image:alt
+      content: Gemini 对话中带有自定义猫咪头像的 Gem
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: |
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "Gemini Gem 自定义头像",
+        "description": "使用 Gemini Power Kit 为每个 Google Gemini Gem 设置本地自定义头像，让角色与用途一眼可辨。",
+        "url": "https://gpk.ronktsang.com/zh-cn/features/gem-avatar/",
+        "image": "https://gpk.ronktsang.com/og/gem-avatar.png",
+        "inLanguage": "zh-CN",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Gemini Power Kit",
+          "url": "https://gpk.ronktsang.com/"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "Gemini Power Kit",
+          "applicationCategory": "BrowserApplication",
+          "operatingSystem": "Chrome, Chromium-based browsers"
+        }
+      }
+---
+
+import { Image } from 'astro:assets';
+import entranceImg from '../../../../assets/features/gem-avatar/entrance.png';
+import uploadImg from '../../../../assets/features/gem-avatar/upload.png';
+import showcaseImg from '../../../../assets/features/gem-avatar/showcase.png';
+
+## 让每个 Gem 都有一眼能认出的角色感
+
+**Gem 头像** 可以为每个 Gemini Gem 设置独立图片。合适的头像能快速提示它的角色：猫咪适合有趣的写作伙伴，指南针适合旅行规划师，简洁 Logo 适合工作助手。它是一个轻量的视觉线索，让 Gem 的语气和用途在持续对话中更有辨识度。
+
+自定义头像会显示在 Gemini 的 Gem 列表、Gem 标题和模型消息旁。Gemini Power Kit 也会在 Gem 对话中，把你当前的 Gemini 个人头像显示在你的消息旁。
+
+## 先开启 Gem 头像
+
+Gem 头像默认关闭，只有在你想使用时才会显示。
+
+1. 在 Gemini 中打开 Gemini Power Kit 设置面板。
+2. 选择 **设置** → **增强功能**。
+3. 开启 **Gem 头像**。
+
+<Image
+  src={entranceImg}
+  alt="Gemini Power Kit 的增强功能设置，其中 Gem 头像开关被高亮显示"
+  class="feature-image feature-image-full"
+/>
+
+*设置入口 —— 打开 **增强功能**，再开启 **Gem 头像**。*
+
+## 在 Gemini 中找到上传入口
+
+上传入口位于 Gemini 原生的 Gem 界面，不在扩展设置中。打开正在新建或编辑的 Gem，找到编辑器左上角原本的圆形 Gem 头像，点击它即可从电脑选择图片。
+
+<Image
+  src={uploadImg}
+  alt="Google Gemini 的 Gem 新建页面，箭头指向 Gem 名称旁的圆形头像上传入口"
+  class="feature-image feature-image-full"
+/>
+
+*功能入口 —— 在 Gemini 原生编辑器中点击 Gem 的圆形头像，即可上传或替换图片。*
+
+## 如何设置头像
+
+1. 按上述步骤在 Gemini Power Kit 中开启 **Gem 头像**。
+2. 在 Gemini 中编辑已有 Gem，或新建一个 Gem。
+3. 点击 Gem 名称旁的圆形头像，选择不超过 `3 MB` 的 `PNG`、`JPEG` 或 `WebP` 图片。
+4. 如果是新建 Gem，请点击 Gemini 的 **保存**。只有 Gemini 创建出这个 Gem 后，头像才会被保留。
+5. 如果是已有 Gem，选择新图片后会立即替换已保存头像。
+
+Gemini Power Kit 会将图片居中裁切为正方形，并在本地保存为 256 × 256 的 WebP。当前没有裁切编辑器，因此请选主体放在画面中央、裁成正方形后仍清晰的图片。
+
+## 让角色感延续到对话中
+
+设置完成后，头像会跟随 Gem 进入对话。Gem 的名称、指令和视觉角色会彼此呼应，不再和默认的首字母图标混在一起。
+
+<Image
+  src={showcaseImg}
+  alt="Gemini 的 Gem 对话，Gem April 旁显示自定义猫咪头像，用户消息旁显示个人头像"
+  class="feature-image feature-image-full"
+/>
+
+*效果展示 —— 自定义猫咪头像让有趣的 April Gem 在对话中一眼可辨。*
+
+## 关闭、替换或删除头像
+
+- 想暂时不显示自定义头像时，返回 **设置** → **增强功能**，关闭 **Gem 头像**。这只会隐藏功能，已保存头像会保留，之后可以继续使用。
+- 想替换头像时，打开对应 Gem 的编辑页，再次点击头像即可。
+- 想永久删除头像时，打开已有 Gem 的编辑页，点击 **Delete Gem avatar** 控件。这会删除该 Gem 在本地保存的图片，无法撤销；如需恢复，请重新上传。
+
+## 重要说明
+
+- 头像只保存在当前浏览器本地，不会通过 Gemini Power Kit 同步，也不会写入你的 Google Gemini 账号。
+- 新建 Gem 时，若尚未保存就离开创建页，所选头像会被丢弃，因为 Gemini 还没有为这个 Gem 分配身份。
+- Gemini 的界面可能随时变化；请保持 Gemini Power Kit 为最新版本，以获得兼容性更新。

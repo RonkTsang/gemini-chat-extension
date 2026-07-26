@@ -125,7 +125,8 @@
       },
       "gemAvatar": {
         "title": "Gem 아바타",
-        "description": "Gem에 사용자 지정 아바타를 사용합니다."
+        "description": "Gem에 사용자 지정 아바타를 사용합니다.",
+        "documentation": "Gem 아바타 가이드 열기"
       },
       "bulkDelete": {
         "title": "일괄 삭제",
@@ -556,6 +557,11 @@
       "title": "Gemini를 내 흐름에 맞게",
       "description": "채팅과 입력창의 너비를 조정해 Gemini 대화를 더 편안하고 집중하기 쉽게, 따라가기 좋게 만듭니다.",
       "action": "채팅 레이아웃 조정"
+    },
+    "gemAvatar": {
+      "title": "각 Gem에 얼굴을 더하세요",
+      "description": "각 Gem에 아바타를 설정해 이름을 눈에 보이는 개성 있는 캐릭터로 바꿔 보세요.",
+      "action": "확장 기능 열기"
     }
   }
 }

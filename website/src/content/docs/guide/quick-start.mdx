@@ -4,6 +4,9 @@ description: Get up and running with Gemini Power Kit in minutes.
 ---
 
 import { Steps } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+import entranceImg from '../../../assets/guide/quick-start/entrance.png';
+import settingPanelImg from '../../../assets/guide/quick-start/setting-panel.png';
 
 Welcome to Gemini Power Kit! This guide will help you set up and start using your new productivity toolkit.
 
@@ -12,20 +15,40 @@ Welcome to Gemini Power Kit! This guide will help you set up and start using you
 
 If you haven't installed the extension yet, please follow our [Installation Guide](/guide/install/).
 
-## 2. Accessing the Kit
+## 2. Open Gemini Power Kit Settings
 
 <Steps>
 1.  **Open Gemini**: Navigate to [gemini.google.com](https://gemini.google.com).
-2.  **Locate the Entry Point**: Look for the floating **Gemini Power Kit icon** at the top-left of the sidebar or main interface.
-3.  **Click to Expand**: Click the icon to reveal the toolkit panel, giving you access to all core features.
+2.  **Find the entry**: At the bottom of Gemini's sidebar, select the **Gemini Power Kit** puzzle-piece icon beside Gemini's Settings icon. When the sidebar is collapsed, it appears immediately before **Settings & help**.
+3.  **Open the panel**: Select the icon to open Gemini Power Kit settings. It opens to **Enhancements**, where you can turn optional features on or off.
 </Steps>
+
+<Image
+  src={entranceImg}
+  alt="Gemini Power Kit puzzle-piece entry at the bottom of the Google Gemini sidebar, beside the Settings icon"
+  class="feature-image feature-image-full feature-image-no-border"
+/>
+
+*Settings entry — select the Gemini Power Kit puzzle-piece icon in Gemini's sidebar.*
+
+### Choose and Enable Features
+
+The settings panel groups **Quick Follow-up** and **Chain Prompt** under **Prompt**. Under **Tools**, use **Enhancements** to enable **Chat Outline**, **Bulk Delete**, and **Gem Avatar**, then open **Notifications**, **Shortcut**, or **Theme** for their dedicated controls.
+
+<Image
+  src={settingPanelImg}
+  alt="Gemini Power Kit settings panel showing Prompt and Tools navigation, Enhancements toggles, and top bar customization controls"
+  class="feature-image feature-image-full feature-image-no-border"
+/>
+
+*Settings panel — turn optional enhancements on or off, then use the navigation to configure the rest of Gemini Power Kit.*
 
 ## 3. Core Features at a Glance
 
 ### 🗂️ Chat Outline
-Never scroll endlessly again. The **Outline** provides a structured map of your current conversation.
-- Click any item in the outline to jump directly to that part of the chat.
-- Use the **Pin** icon to keep the outline visible while you work.
+Keep long chats clear with a clickable map of the current conversation.
+- Jump directly to any prompt or response instead of scrolling through the whole chat.
+- Pin the outline while you research or compare answers.
 
 ### ⚡ Quick Follow-up
 Turn selected text from a Gemini response into your next prompt without copy-pasting.
@@ -33,22 +56,35 @@ Turn selected text from a Gemini response into your next prompt without copy-pas
 - Click **Ask Gemini** to attach the selected text as quote context above the input box, then type and send your follow-up manually.
 - Click a saved **Custom Prompt** to replace **Selected Text** in the template and send it automatically.
 
+### 🗑️ Bulk Delete
+Clean up temporary Gemini chats in a deliberate batch while protecting the conversations you keep.
+- Select 10, 20, 30, or 50 recent chats, then adjust individual selections if needed.
+- Turn on **Exclude pinned** to leave pinned conversations out of a recent-batch selection.
+- Review the selection and confirm before any chats are deleted.
+
+### 🎨 Visual Themes and Chat Layout
+Make Gemini easier and more comfortable to use.
+- Choose color presets, use a custom wallpaper, and adjust the glass effect in **Theme**.
+- Set chat and prompt widths in Default, %, or px; sync them, choose message alignment, or allow full-width messages with **Chat layout**.
+
+### 🎭 Gem Avatars
+Give each Gemini Gem a custom avatar, so it is easier to recognize in lists and chats.
+
+### 🔔 Reply Notifications
+Let Gemini work in the background and know when it is ready.
+- Receive a desktop notification when a standard reply, image, video, or Deep Research report finishes.
+- Open the originating Gemini chat from the notification and optionally use a built-in or custom sound.
+
 ### 🔗 Chain Prompt
 Automate repetitive, multi-step tasks.
-- Go to the **Chain Prompt** tab in the toolkit.
+- Go to **Chain Prompt** in settings.
 - Select a pre-defined chain or create your own sequence of prompts.
 - Click **Run** and watch Gemini execute the steps one by one.
-
-### 🎨 Personalization
-Make Gemini truly yours.
-- Open the **Settings** (gear icon) in the toolkit.
-- Choose from various **Visual Themes** and color presets.
-- Upload a **Custom Wallpaper** and adjust the glassmorphism intensity.
 
 ## 4. Pro Tips
 
 - **Smart Tab Titles**: The extension automatically syncs your browser tab title with your chat name. No more guessing which tab is which!
-- **Stuff in New Tab**: If you use the "My Stuff" gallery, you can now open generated images or files in a new tab for a better view.
+- **Open Media in New Tab**: From the Library gallery, open an image or file in a new tab and keep your place in Gemini.
 - **Privacy by Design**: Remember, everything runs locally. Your prompts and data are never sent to our servers.
 
 ---

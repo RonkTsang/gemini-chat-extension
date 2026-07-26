@@ -250,6 +250,10 @@ header.header {
   object-fit: contain;
 }
 
+.feature-image-no-border {
+  border: 0;
+}
+
 .release-image {
   display: block;
   width: 100%;

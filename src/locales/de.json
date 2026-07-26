@@ -125,7 +125,8 @@
       },
       "gemAvatar": {
         "title": "Gem-Avatar",
-        "description": "Benutzerdefinierte Avatare für Ihre Gems aktivieren."
+        "description": "Benutzerdefinierte Avatare für Ihre Gems aktivieren.",
+        "documentation": "Gem-Avatar-Anleitung öffnen"
       },
       "bulkDelete": {
         "title": "Massenlöschung",
@@ -556,6 +557,11 @@
       "title": "Gemini passt sich dir an",
       "description": "Passe die Breite von Chat und Eingabe an, damit Gespräche mit Gemini komfortabler, fokussierter und leichter zu verfolgen sind.",
       "action": "Chatlayout anpassen"
+    },
+    "gemAvatar": {
+      "title": "Gib jedem Gem ein Gesicht",
+      "description": "Lege für jedes Gem ein Avatar fest und mach aus einem Namen eine sichtbare Figur mit eigenem Charakter.",
+      "action": "Erweiterungen öffnen"
     }
   }
 }

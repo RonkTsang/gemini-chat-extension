@@ -125,7 +125,8 @@
       },
       "gemAvatar": {
         "title": "Gem 头像",
-        "description": "为你的 Gems 使用自定义头像。"
+        "description": "为你的 Gems 使用自定义头像。",
+        "documentation": "打开 Gem 头像指南"
       },
       "bulkDelete": {
         "title": "批量删除",
@@ -556,6 +557,11 @@
       "title": "让聊天界面更合心意",
       "description": "调整聊天区和输入框宽度，让 Gemini 对话空间更舒适、更专注，也更易于浏览。",
       "action": "调整聊天布局"
+    },
+    "gemAvatar": {
+      "title": "让 Gem 更有形象",
+      "description": "为每个 Gem 设置头像，让它从名字变成一眼可见、个性鲜明的角色。",
+      "action": "增强功能"
     }
   }
 }

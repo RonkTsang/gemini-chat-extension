@@ -25,6 +25,9 @@ Transforme seu espaço de trabalho e deixe o Gemini com a sua cara.
   ● Papéis de parede personalizados: Melhore a experiência com seus próprios fundos e elegantes efeitos de vidro.
   ● Layout do chat: Ajuste Chat Width e Input Width em Default, %, ou px; sincronize-os, escolha o alinhamento das mensagens e permita mensagens em largura total.
 
+🎭 AVATARES DE GEM — PERSONALIZE CADA GEM
+Dê a cada Gemini Gem um avatar próprio para reconhecê-lo na hora em listas e chats.
+
 🔔 NOTIFICAÇÕES DE RESPOSTA — SAIA DA ABA COM CONFIANÇA
 Receba alertas de desktop sem ficar checando o chat.
   ● Avisos de pronto: Chega uma notificação quando respostas, imagens, vídeos ou relatórios do Deep Research ficam prontos.

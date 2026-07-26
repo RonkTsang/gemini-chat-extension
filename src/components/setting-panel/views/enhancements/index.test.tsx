@@ -26,6 +26,19 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@chakra-ui/react', () => ({
   Box: ({ children }: PropsWithChildren) => <div>{children}</div>,
   Container: ({ children }: PropsWithChildren) => <div>{children}</div>,
+  HStack: ({ children }: PropsWithChildren) => <span>{children}</span>,
+  IconButton: ({
+    children,
+    onClick,
+    'aria-label': ariaLabel,
+  }: PropsWithChildren<{
+    onClick: () => void
+    'aria-label': string
+  }>) => (
+    <button type="button" aria-label={ariaLabel} onClick={onClick}>
+      {children}
+    </button>
+  ),
   Stack: ({ children }: PropsWithChildren) => <div>{children}</div>,
   Text: ({ children }: PropsWithChildren) => <span>{children}</span>,
   Switch: {
@@ -123,6 +136,7 @@ vi.mock('@/utils/i18n', () => {
     'settings.enhancements.bulkDelete.description': 'Bulk delete description',
     'settings.enhancements.gemAvatar.title': 'Gem Avatar',
     'settings.enhancements.gemAvatar.description': 'Gem avatar description',
+    'settings.enhancements.gemAvatar.documentation': 'Open Gem Avatar guide',
   }
 
   return {
@@ -151,6 +165,7 @@ function findSwitch(container: HTMLElement, label: string): HTMLButtonElement {
 
 let root: Root
 let container: HTMLDivElement
+let windowOpenSpy: ReturnType<typeof vi.spyOn>
 
 describe('EnhancementsSettingsView top bar customization', () => {
   beforeEach(() => {
@@ -183,13 +198,34 @@ describe('EnhancementsSettingsView top bar customization', () => {
     container = document.createElement('div')
     document.body.append(container)
     root = createRoot(container)
+    windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
   })
 
   afterEach(() => {
     act(() => {
       root.unmount()
     })
+    windowOpenSpy.mockRestore()
     container.remove()
+  })
+
+  it('opens the Gem Avatar guide from its title help icon', async () => {
+    await act(async () => {
+      root.render(<EnhancementsSettingsView />)
+    })
+
+    await act(async () => {
+      const helpButton = container.querySelector<HTMLButtonElement>(
+        '[aria-label="Open Gem Avatar guide"]',
+      )
+      helpButton?.click()
+    })
+
+    expect(windowOpenSpy).toHaveBeenCalledWith(
+      'https://gpk.ronktsang.com/features/gem-avatar/',
+      '_blank',
+      'noopener,noreferrer',
+    )
   })
 
   it('renders the group and disables both switches while loading', async () => {

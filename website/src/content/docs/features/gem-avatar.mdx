@@ -1,0 +1,118 @@
+---
+title: Custom Gemini Gem Avatars
+description: "Give each Google Gemini Gem a recognizable character with a custom local avatar in Gemini Power Kit."
+head:
+  - tag: meta
+    attrs:
+      property: og:image
+      content: https://gpk.ronktsang.com/og/gem-avatar.png
+  - tag: meta
+    attrs:
+      property: og:image:alt
+      content: A Gemini conversation showing a custom cat avatar for a Gem
+  - tag: meta
+    attrs:
+      name: twitter:image
+      content: https://gpk.ronktsang.com/og/gem-avatar.png
+  - tag: meta
+    attrs:
+      name: twitter:image:alt
+      content: A Gemini conversation showing a custom cat avatar for a Gem
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: |
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "Custom Gemini Gem Avatars",
+        "description": "Give each Google Gemini Gem a recognizable character with a custom local avatar in Gemini Power Kit.",
+        "url": "https://gpk.ronktsang.com/features/gem-avatar/",
+        "image": "https://gpk.ronktsang.com/og/gem-avatar.png",
+        "inLanguage": "en",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Gemini Power Kit",
+          "url": "https://gpk.ronktsang.com/"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "Gemini Power Kit",
+          "applicationCategory": "BrowserApplication",
+          "operatingSystem": "Chrome, Chromium-based browsers"
+        }
+      }
+---
+
+import { Image } from 'astro:assets';
+import entranceImg from '../../../assets/features/gem-avatar/entrance.png';
+import uploadImg from '../../../assets/features/gem-avatar/upload.png';
+import showcaseImg from '../../../assets/features/gem-avatar/showcase.png';
+
+## Give Each Gem a Recognizable Character
+
+**Gem Avatar** lets you give every Gemini Gem its own image. A well-chosen avatar makes a role easier to spot at a glance: a cat for a playful writing partner, a compass for a travel planner, or a clean logo for a work assistant. It is a small visual cue that makes the Gem's voice and purpose feel more distinct in an ongoing conversation.
+
+Your custom avatar appears with the Gem in Gemini's Gem list, Gem header, and model messages. Gemini Power Kit also shows your current Gemini profile image beside your own messages in Gem chats.
+
+## Turn On Gem Avatar First
+
+Gem Avatar is off by default, so it stays out of the way until you choose to use it.
+
+1. Open the Gemini Power Kit settings panel in Gemini.
+2. Select **Settings** → **Enhancements**.
+3. Turn on **Gem Avatar**.
+
+<Image
+  src={entranceImg}
+  alt="Gemini Power Kit Enhancements settings with the Gem Avatar switch highlighted"
+  class="feature-image feature-image-full"
+/>
+
+*Settings entry — open **Enhancements**, then turn on **Gem Avatar**.*
+
+## Find the Upload Control in Gemini
+
+The upload control lives in Gemini's original Gem interface, not in the extension settings. Open a Gem you are creating or editing, then look for its normal circular avatar at the upper left of the Gem editor. Select it to choose an image from your computer.
+
+<Image
+  src={uploadImg}
+  alt="Google Gemini Gem creation screen with an arrow pointing to the circular avatar upload control beside the Gem name"
+  class="feature-image feature-image-full"
+/>
+
+*Feature panel entry — select the Gem's circular avatar in Gemini's own editor to upload or replace its image.*
+
+## How to Set an Avatar
+
+1. Turn on **Gem Avatar** in Gemini Power Kit as described above.
+2. In Gemini, open an existing Gem for editing, or start creating a new Gem.
+3. Select the circular avatar beside the Gem name and choose a `PNG`, `JPEG`, or `WebP` image up to `3 MB`.
+4. For a new Gem, select Gemini's **Save** button. The avatar is kept only after Gemini creates the Gem.
+5. For an existing Gem, choosing a new image replaces its saved avatar right away.
+
+Gemini Power Kit center-crops the image to a square and stores a 256 × 256 WebP version locally. There is no crop editor, so choose an image whose subject remains clear in a square.
+
+## See the Character Carry Into the Chat
+
+Once set, the image follows the Gem into its conversations. That lets the Gem's name, instructions, and visual character reinforce one another instead of blending into the default initial-based icon.
+
+<Image
+  src={showcaseImg}
+  alt="Gemini Gem chat showing a custom cat avatar beside the Gem April and a user profile avatar beside the user's message"
+  class="feature-image feature-image-full"
+/>
+
+*Result — the Gem's custom cat avatar makes its playful April character immediately recognizable in chat.*
+
+## Turn It Off, Replace It, or Delete It
+
+- To stop showing custom avatars, return to **Settings** → **Enhancements** and turn **Gem Avatar** off. This hides the feature and keeps your saved avatars for later.
+- To replace an avatar, open that Gem's editor and select its avatar again.
+- To delete one permanently, open an existing Gem's editor and select the **Delete Gem avatar** control. This removes the locally saved image for that Gem and cannot be undone; upload it again if you want to restore it.
+
+## Important Notes
+
+- Avatars are saved locally in this browser. They are not synced through Gemini Power Kit or attached to your Google Gemini account.
+- On a new Gem, leaving the create page before saving discards the selected avatar because Gemini has not assigned that Gem an identity yet.
+- Gemini's interface can change over time. Keep Gemini Power Kit updated for the latest compatibility fixes.

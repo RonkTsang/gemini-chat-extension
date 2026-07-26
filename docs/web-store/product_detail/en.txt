@@ -25,6 +25,9 @@ Transform your workspace and make Gemini truly yours.
   ● Custom Wallpapers: Elevate your experience with personal backgrounds and elegant glass effects.
   ● Chat layout: Adjust Chat Width and Input Width in Default, % or px; sync them, choose message alignment, and allow full-width messages.
 
+🎭 GEM AVATARS — PERSONALIZE YOUR GEMS
+Give each Gemini Gem a custom avatar, so it is instantly recognizable in lists and chats.
+
 🔔 REPLY NOTIFICATIONS — KNOW WHEN GEMINI IS READY
 Let Gemini work in the background without constantly checking the tab.
   ● Ready Alerts: Get a desktop notification when a standard reply, image, video, or Deep Research report is ready.

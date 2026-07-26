@@ -21,9 +21,12 @@ Räume temporäre Unterhaltungen in Stapeln auf und lasse angeheftete Chats auß
 
 🎨 VISUELLE THEMEN — PERSONALISIERE DEIN GEMINI
 Verwandle deinen Arbeitsbereich und mache Gemini wirklich zu deinem.
-  ● Schöne Farbvorlagen: Wähle aus verschiedenen lebendigen Themes für eine persönlichere Umgebung.
+  ● Farbvorlagen: Wähle aus verschiedenen lebendigen Themes für eine persönlichere Umgebung.
   ● Eigene Hintergrundbilder: Werte dein Erlebnis mit persönlichen Hintergründen und eleganten Glaseffekten auf.
   ● Chat-Layout: Passe Chat Width und Input Width in Default, % oder px an, synchronisiere sie, wähle die Ausrichtung der Nachrichten und erlaube Nachrichten über die volle Breite.
+
+🎭 GEM-AVATARE
+Avatare machen deine Gems erkennbar.
 
 🔔 ANTWORT-BENACHRICHTIGUNGEN — SICHER WEGGEHEN
 Desktop-Benachrichtigungen halten dich auf dem Laufenden, ohne dass du den Chat offen lassen musst.

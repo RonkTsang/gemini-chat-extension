@@ -4,6 +4,9 @@ description: 在几分钟内快速上手使用 Gemini Power Kit。
 ---
 
 import { Steps } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+import entranceImg from '../../../../assets/guide/quick-start/entrance.png';
+import settingPanelImg from '../../../../assets/guide/quick-start/setting-panel.png';
 
 欢迎来到 Gemini Power Kit！本指南将帮助您快速设置并开始使用您的全新效率工具集。
 
@@ -12,20 +15,40 @@ import { Steps } from '@astrojs/starlight/components';
 
 如果您尚未安装扩展，请参考我们的 [安装指南](/zh-cn/guide/install/)。
 
-## 2. 访问工具集
+## 2. 打开 Gemini Power Kit 设置
 
 <Steps>
 1.  **打开 Gemini**: 访问 [gemini.google.com](https://gemini.google.com)。
-2.  **定位入口**: 在侧边栏或主界面左上角寻找悬浮的 **Gemini Power Kit 图标**。
-3.  **点击展开**: 点击图标以展开工具集面板，即可访问所有核心功能。
+2.  **找到入口**: 在 Gemini 侧边栏底部，点击 Gemini 设置图标旁的 **Gemini Power Kit** 拼图图标。侧边栏收起时，它紧挨在 **Settings & help** 之前。
+3.  **打开面板**: 点击该图标以打开 Gemini Power Kit 设置。面板会打开在 **Enhancements**，您可以在这里启用或关闭可选功能。
 </Steps>
+
+<Image
+  src={entranceImg}
+  alt="Google Gemini 侧边栏底部的 Gemini Power Kit 拼图入口，位于设置图标旁"
+  class="feature-image feature-image-full feature-image-no-border"
+/>
+
+*设置入口 — 点击 Gemini 侧边栏中的 Gemini Power Kit 拼图图标。*
+
+### 选择并启用功能
+
+设置面板将 **Quick Follow-up** 和 **Chain Prompt** 放在 **Prompt** 分类下。在 **Tools** 中，可通过 **Enhancements** 启用 **Chat Outline**、**Bulk Delete** 和 **Gem Avatar**，并通过 **Notifications**、**Shortcut** 或 **Theme** 配置对应功能。
+
+<Image
+  src={settingPanelImg}
+  alt="Gemini Power Kit 设置面板，展示 Prompt 和 Tools 导航、Enhancements 开关和顶部栏自定义选项"
+  class="feature-image feature-image-full feature-image-no-border"
+/>
+
+*设置面板 — 开启或关闭可选增强功能，并通过导航配置 Gemini Power Kit 的其他功能。*
 
 ## 3. 核心功能一览
 
 ### 🗂️ 对话大纲 (Chat Outline)
-告别无休止的滚动。**大纲** 为您当前的对话提供了一个结构化的地图。
-- 点击大纲中的任何项目，即可直接跳转到对话的该部分。
-- 使用 **固定 (Pin)** 图标在大纲工作时保持其可见。
+使用可点击的对话地图，让长对话保持清晰。
+- 直接跳转到任意提示词或回复，无需翻遍整段对话。
+- 研究或对比答案时，可以固定大纲。
 
 ### ⚡ 快速跟进 (Quick Follow-up)
 无需复制粘贴，直接把 Gemini 回复中的选中文本变成下一步追问。
@@ -33,22 +56,35 @@ import { Steps } from '@astrojs/starlight/components';
 - 点击 **Ask Gemini** 会先把选中文本作为引用上下文附加到输入框上方，然后由您继续输入并手动发送。
 - 点击已保存的 **Custom Prompt**，会先用当前选中文本替换模板中的 **Selected Text**，再自动发送。
 
+### 🗑️ 批量删除 (Bulk Delete)
+批量清理临时 Gemini 对话，同时保护您想保留的对话。
+- 选择最近的 10、20、30 或 50 个对话；如有需要，还可以逐个调整选择。
+- 开启 **Exclude pinned**，即可在选择最近对话时排除已固定的对话。
+- 删除前先检查选择结果并确认，避免误删。
+
+### 🎨 视觉主题与对话布局
+让 Gemini 更符合您的使用习惯，也更易于阅读。
+- 在 **Theme** 中选择颜色预设、使用自定义壁纸并调节玻璃效果。
+- 通过 **Chat layout** 以默认值、% 或 px 设置对话和输入框宽度；还可同步宽度、选择消息对齐方式或启用全宽消息。
+
+### 🎭 Gem 头像 (Gem Avatars)
+为每个 Gemini Gem 设置自定义头像，让它在列表和对话中更容易辨认。
+
+### 🔔 回复完成通知 (Reply Notifications)
+让 Gemini 在后台继续工作，并在完成时及时提醒您。
+- 标准回复、图片、视频或 Deep Research 报告完成后，可收到桌面通知。
+- 可从通知中打开对应的 Gemini 对话，并选择内置或自定义提示音。
+
 ### 🔗 链式提示词 (Chain Prompt)
 自动化重复的多步骤任务。
-- 进入工具集中的 **链式提示词** 选项卡。
+- 在设置中进入 **Chain Prompt**。
 - 选择预定义的链条或创建您自己的提示词序列。
 - 点击 **运行 (Run)**，观看 Gemini 逐步执行任务。
-
-### 🎨 个性化定制
-打造专属于您的 Gemini。
-- 打开工具集中的 **设置**（齿轮图标）。
-- 从各种 **视觉主题** 和颜色预设中进行选择。
-- 上传 **自定义壁纸** 并调整玻璃拟态效果的强度。
 
 ## 4. 进阶技巧
 
 - **智能标签页标题**: 扩展会自动将浏览器标签页标题与您的对话名称同步。再也不用猜哪个标签页对应哪个对话了！
-- **新标签页打开**: 如果您使用 "My Stuff" 画廊，现在可以在新标签页中打开生成的图像或文件，以便更好地查看。
+- **在新标签页中打开媒体**: 在 Library 画廊中，将图片或文件在新标签页打开，同时保留您在 Gemini 中的位置。
 - **隐私设计**: 请记住，一切都在本地运行。您的提示词和数据绝不会发送到我们的服务器。
 
 ---

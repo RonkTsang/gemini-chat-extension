@@ -1,6 +1,6 @@
 # Gemini Power Kit
 
-> Gemini Power Kit is a browser extension for Google Gemini. It adds Chat Outline navigation, Quick Follow-up actions, Chain Prompt automation, tab title sync, reply-completion notifications, open-in-new-tab workflows, and theme customization.
+> Gemini Power Kit is a browser extension for Google Gemini. It adds Chat Outline navigation, Quick Follow-up actions, Chain Prompt automation, custom Gem avatars, tab title sync, reply-completion notifications, open-in-new-tab workflows, and theme customization.
 
 This website documents the public product, installation flow, feature behavior, troubleshooting guidance, release notes, and privacy policy for Gemini Power Kit. English pages are the canonical documentation set, with Chinese pages available under `/zh-cn/`.
 
@@ -27,6 +27,7 @@ This website documents the public product, installation flow, feature behavior, 
 - [Gemini Bulk Delete Chats](https://gpk.ronktsang.com/features/bulk-delete/): Select multiple recent Gemini chats, exclude pinned conversations, and delete an intentional batch at once.
 - [Theme Customizer](https://gpk.ronktsang.com/features/theme/): Customize Gemini appearance with themes, colors, wallpaper, and readability controls.
 - [Gemini Chat Layout Settings](https://gpk.ronktsang.com/features/chat-layout/): Adjust Gemini chat and prompt widths, user-message alignment, and full-width messages from the top bar or Theme settings.
+- [Gem Avatar](https://gpk.ronktsang.com/features/gem-avatar/): Give each Gemini Gem a custom local avatar, then make its character easier to recognize in chats.
 
 ## Support And Policy
 

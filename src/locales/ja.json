@@ -125,7 +125,8 @@
       },
       "gemAvatar": {
         "title": "Gemアバター",
-        "description": "Gem にカスタムアバターを使います。"
+        "description": "Gem にカスタムアバターを使います。",
+        "documentation": "Gem アバターガイドを開く"
       },
       "bulkDelete": {
         "title": "一括削除",
@@ -556,6 +557,11 @@
       "title": "Geminiを使いやすく",
       "description": "チャットと入力欄の幅を調整して、Gemini との会話をより快適で、集中しやすく、追いやすくします。",
       "action": "チャットレイアウトを調整"
+    },
+    "gemAvatar": {
+      "title": "Gem に顔を",
+      "description": "各 Gem にアバターを設定して、名前を個性のある見えるキャラクターに変えます。",
+      "action": "拡張機能を開く"
     }
   }
 }

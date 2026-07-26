@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react'
-import { Box, Container, Stack, Switch, Text } from '@chakra-ui/react'
+import { useEffect, useState, type ReactNode } from 'react'
+import { Box, Container, HStack, IconButton, Stack, Switch, Text } from '@chakra-ui/react'
+import { LuCircleHelp } from 'react-icons/lu'
+import { EXTERNAL_LINKS } from '@/common/config'
 import {
   enableBulkDelete,
   enableChatOutline,
@@ -17,7 +19,8 @@ import { toaster } from '@/components/ui/toaster'
 import { t } from '@/utils/i18n'
 
 interface FeatureToggleCardProps {
-  title: string
+  title: ReactNode
+  switchLabel: string
   description: string
   checked: boolean
   disabled: boolean
@@ -26,6 +29,7 @@ interface FeatureToggleCardProps {
 
 function FeatureToggleRow({
   title,
+  switchLabel,
   description,
   checked,
   disabled,
@@ -34,7 +38,7 @@ function FeatureToggleRow({
   return (
     <Stack direction="row" align="center" justify="space-between" gap={4}>
       <Stack gap={1}>
-        <Text>{title}</Text>
+        <Box>{title}</Box>
         <Text fontSize="sm" color="fg.muted">
           {description}
         </Text>
@@ -45,7 +49,7 @@ function FeatureToggleRow({
         onCheckedChange={(details) => onCheckedChange(details.checked)}
         flexShrink={0}
       >
-        <Switch.HiddenInput aria-label={title} />
+        <Switch.HiddenInput aria-label={switchLabel} />
         <Switch.Control>
           <Switch.Thumb />
         </Switch.Control>
@@ -186,7 +190,6 @@ export function EnhancementsSettingsView() {
   }
 
   const isTopBarDisabled = isTopBarLoading || isTopBarUpdating
-
   return (
     <Box
       position="relative"
@@ -200,6 +203,7 @@ export function EnhancementsSettingsView() {
           <Stack direction="column" maxWidth="740px" width="100%" align="stretch" gap={4}>
             <FeatureToggleCard
               title={t('settings.enhancements.chatOutline.title')}
+              switchLabel={t('settings.enhancements.chatOutline.title')}
               description={t('settings.enhancements.chatOutline.description')}
               checked={chatOutlineEnabled}
               disabled={isLoading}
@@ -207,13 +211,29 @@ export function EnhancementsSettingsView() {
             />
             <FeatureToggleCard
               title={t('settings.enhancements.bulkDelete.title')}
+              switchLabel={t('settings.enhancements.bulkDelete.title')}
               description={t('settings.enhancements.bulkDelete.description')}
               checked={bulkDeleteEnabled}
               disabled={isLoading}
               onCheckedChange={(enabled) => void updateBulkDeleteEnabled(enabled)}
             />
             <FeatureToggleCard
-              title={t('settings.enhancements.gemAvatar.title')}
+              title={(
+                <HStack gap={1} align="center">
+                  <Text>{t('settings.enhancements.gemAvatar.title')}</Text>
+                  <IconButton
+                    aria-label={t('settings.enhancements.gemAvatar.documentation')}
+                    variant="ghost"
+                    size="xs"
+                    onClick={() => {
+                      window.open(EXTERNAL_LINKS.GEM_AVATAR_GUIDE, '_blank', 'noopener,noreferrer')
+                    }}
+                  >
+                    <LuCircleHelp />
+                  </IconButton>
+                </HStack>
+              )}
+              switchLabel={t('settings.enhancements.gemAvatar.title')}
               description={t('settings.enhancements.gemAvatar.description')}
               checked={gemAvatarEnabled}
               disabled={isLoading}
@@ -226,6 +246,9 @@ export function EnhancementsSettingsView() {
                 </Text>
                 <FeatureToggleRow
                   title={t(
+                    'settings.enhancements.topBarCustomization.showChatSettingsShortcut.title',
+                  )}
+                  switchLabel={t(
                     'settings.enhancements.topBarCustomization.showChatSettingsShortcut.title',
                   )}
                   description={t(
@@ -243,6 +266,9 @@ export function EnhancementsSettingsView() {
                   title={t(
                     'settings.enhancements.topBarCustomization.showThemeShortcut.title',
                   )}
+                  switchLabel={t(
+                    'settings.enhancements.topBarCustomization.showThemeShortcut.title',
+                  )}
                   description={t(
                     'settings.enhancements.topBarCustomization.showThemeShortcut.description',
                   )}
@@ -254,6 +280,9 @@ export function EnhancementsSettingsView() {
                 />
                 <FeatureToggleRow
                   title={t(
+                    'settings.enhancements.topBarCustomization.hideUpgradeReminder.title',
+                  )}
+                  switchLabel={t(
                     'settings.enhancements.topBarCustomization.hideUpgradeReminder.title',
                   )}
                   description={t(

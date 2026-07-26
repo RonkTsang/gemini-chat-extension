@@ -25,6 +25,9 @@ Transformez votre espace de travail et faites de Gemini un environnement vraimen
   ● Fonds d'écran personnalisés : Améliorez l'expérience avec vos propres images et d'élégants effets de verre.
   ● Mise en page du chat : Réglez Chat Width et Input Width en Default, %, ou px; synchronisez-les, choisissez l'alignement des messages et autorisez les messages pleine largeur.
 
+🎭 AVATARS DE GEM — PERSONNALISEZ VOS GEMS
+Attribuez un avatar unique à chaque Gemini Gem pour le repérer d’un coup d’œil dans les listes et les chats.
+
 🔔 NOTIFICATIONS DE RÉPONSE — ÉLOIGNEZ-VOUS SEREINEMENT
 Recevez des notifications de bureau sans garder l'onglet sous les yeux.
   ● Prêt à l'emploi : Une alerte arrive quand une réponse, une image, une vidéo ou un rapport Deep Research est prêt.

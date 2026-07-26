@@ -46,5 +46,16 @@ export const CURRENT_RELEASE_NOTES: ReleaseNote[] = [
     promoAction: {
       action: 'chat-settings-panel'
     }
+  },
+  {
+    titleKey: 'whatsnew.gemAvatar.title',
+    descriptionKey: 'whatsnew.gemAvatar.description',
+    actionLabelKey: 'whatsnew.gemAvatar.action',
+    promoAction: {
+      action: 'setting-panel',
+      params: {
+        tab: 'enhancements'
+      }
+    }
   }
 ]
