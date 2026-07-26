@@ -1,3 +1,19 @@
+# [0.11.0](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.10.0...v0.11.0) (2026-07-26)
+
+
+### Bug Fixes
+
+* clarify bulk delete entry ([#46](https://github.com/RonkTsang/gemini-chat-extension/issues/46)) ([a118de2](https://github.com/RonkTsang/gemini-chat-extension/commit/a118de2aa9f4a5b2ac40a6ab63b2a946e8c83ffa))
+* **shortcuts:** enable hotkeys in prompt editor ([#50](https://github.com/RonkTsang/gemini-chat-extension/issues/50)) ([102c4b8](https://github.com/RonkTsang/gemini-chat-extension/commit/102c4b89f4a8c8982d46660d9e0f282da034f156)), closes [#43](https://github.com/RonkTsang/gemini-chat-extension/issues/43)
+* stabilize Power Kit side nav entry ([#49](https://github.com/RonkTsang/gemini-chat-extension/issues/49)) ([d057650](https://github.com/RonkTsang/gemini-chat-extension/commit/d0576504dd3638b390aa893d9202bd392a8e7d02)), closes [#39](https://github.com/RonkTsang/gemini-chat-extension/issues/39)
+
+
+### Features
+
+* add Chat layout settings ([#48](https://github.com/RonkTsang/gemini-chat-extension/issues/48)) ([ff7a84b](https://github.com/RonkTsang/gemini-chat-extension/commit/ff7a84b1cdd1134f63bf543501719f99fbc538e4))
+* add Gem Avatar customization ([#45](https://github.com/RonkTsang/gemini-chat-extension/issues/45)) ([d744fdb](https://github.com/RonkTsang/gemini-chat-extension/commit/d744fdba5bb462d824462a3d918e404004e7186c))
+* add theme customization controls ([#47](https://github.com/RonkTsang/gemini-chat-extension/issues/47)) ([bef1bcb](https://github.com/RonkTsang/gemini-chat-extension/commit/bef1bcb407db4f98f60ca274c530be15d244e751))
+
 # [0.10.0](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.9.0...v0.10.0) (2026-07-19)
 
 
