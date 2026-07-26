@@ -9,20 +9,27 @@ import {
 } from './definitions'
 
 describe('shortcut definitions', () => {
-  it('defines SideNav navigation shortcuts', () => {
-    const definitionsByAction = new Map(shortcutDefinitions.map((definition) => [definition.action, definition]))
+  it('allows every action except Focus Input to run while the prompt editor is focused', () => {
+    for (const definition of shortcutDefinitions) {
+      expect(definition.enableOnContentEditable).toBe(definition.action !== 'focusInput')
+      expect(
+        definition.enableOnFormTags === true
+        || (
+          Array.isArray(definition.enableOnFormTags)
+          && definition.enableOnFormTags.includes('textbox')
+        ),
+      ).toBe(definition.action !== 'focusInput')
+    }
 
+    const definitionsByAction = new Map(shortcutDefinitions.map((definition) => [definition.action, definition]))
     expect(definitionsByAction.get('openLibrary')).toMatchObject({
       defaultShortcut: { default: 'alt+l', mac: 'ctrl+l' },
-      enableOnContentEditable: false,
     })
     expect(definitionsByAction.get('openGems')).toMatchObject({
       defaultShortcut: { default: 'alt+g', mac: 'ctrl+g' },
-      enableOnContentEditable: false,
     })
     expect(definitionsByAction.get('toggleSidebar')).toMatchObject({
       defaultShortcut: { default: 'alt+b', mac: 'ctrl+b' },
-      enableOnContentEditable: false,
     })
   })
 
@@ -127,8 +134,8 @@ describe('shortcut definitions', () => {
     expect(bulkDelete).toMatchObject({
       category: 'geminiPowerKit',
       defaultShortcut: { default: 'alt+shift+d', mac: 'ctrl+shift+d' },
-      enableOnFormTags: ['input'],
-      enableOnContentEditable: false,
+      enableOnFormTags: ['input', 'textbox'],
+      enableOnContentEditable: true,
     })
 
     const checkbox = document.createElement('input')
