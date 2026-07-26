@@ -3,8 +3,6 @@
  * Defines the release notes for the current version
  */
 
-import bulkDeleteImagePath from '@/assets/whatsnew/bulk-delete.webp'
-import shortcutsImagePath from '@/assets/whatsnew/shortcuts.webp'
 import type { NavigationSection } from '@/components/setting-panel/config'
 
 export interface SettingPanelPromoAction {
@@ -18,9 +16,14 @@ export interface ThemeFloatingPanelPromoAction {
   action: 'theme-floating-panel'
 }
 
+export interface ChatSettingsPanelPromoAction {
+  action: 'chat-settings-panel'
+}
+
 export type ReleaseNotePromoAction =
   | SettingPanelPromoAction
   | ThemeFloatingPanelPromoAction
+  | ChatSettingsPanelPromoAction
 
 export interface ReleaseNote {
   titleKey: string // i18n key for feature title
@@ -37,21 +40,11 @@ export interface ReleaseNote {
  */
 export const CURRENT_RELEASE_NOTES: ReleaseNote[] = [
   {
-    titleKey: 'whatsnew.shortcuts.title',
-    descriptionKey: 'whatsnew.shortcuts.description',
-    actionLabelKey: 'whatsnew.shortcuts.action',
-    promoImagePath: shortcutsImagePath,
+    titleKey: 'whatsnew.chatLayout.title',
+    descriptionKey: 'whatsnew.chatLayout.description',
+    actionLabelKey: 'whatsnew.chatLayout.action',
     promoAction: {
-      action: 'setting-panel',
-      params: {
-        tab: 'shortcuts'
-      }
+      action: 'chat-settings-panel'
     }
-  },
-  {
-    titleKey: 'whatsnew.bulkDelete.title',
-    descriptionKey: 'whatsnew.bulkDelete.description',
-    actionLabelKey: 'whatsnew.bulkDelete.action',
-    promoImagePath: bulkDeleteImagePath
   }
 ]

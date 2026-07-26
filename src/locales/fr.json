@@ -552,15 +552,10 @@
   "whatsnew": {
     "title": "Quoi de neuf",
     "releaseNotes": "Notes de version",
-    "shortcuts": {
-      "title": "Naviguez plus vite dans Gemini",
-      "description": "Définissez des raccourcis pour les chats, la navigation et les actions du menu d'outils, pour garder vos actions Gemini les plus fréquentes à une seule touche.",
-      "action": "Configurer les raccourcis"
-    },
-    "bulkDelete": {
-      "title": "Nettoyez plus vite les chats inutiles",
-      "description": "Sélectionnez plusieurs chats Gemini, ajustez votre sélection, puis supprimez les conversations inutiles en une seule fois.",
-      "action": "Supprimer en lot"
+    "chatLayout": {
+      "title": "Gemini suit votre rythme",
+      "description": "Ajustez la largeur du chat et du champ de saisie pour rendre les conversations Gemini plus confortables, plus ciblées et plus faciles à suivre.",
+      "action": "Ajuster la mise en page"
     }
   }
 }

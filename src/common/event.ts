@@ -102,7 +102,7 @@ export interface AppEvents {
 
   // Chat layout shortcut panel
   'chat-settings-panel:toggle': {
-    source: 'top-bar-action'
+    source: 'top-bar-action' | 'whats-new'
   };
   'chat-settings-panel:close': {
     source:

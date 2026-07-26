@@ -552,15 +552,10 @@
   "whatsnew": {
     "title": "更新内容",
     "releaseNotes": "更新说明",
-    "shortcuts": {
-      "title": "常用操作一键直达",
-      "description": "为聊天、导航和工具菜单操作设置快捷键，让常用 Gemini 操作始终一键可达。",
-      "action": "设置快捷键"
-    },
-    "bulkDelete": {
-      "title": "更快清理无用对话",
-      "description": "勾选多条 Gemini 对话，调整选择后一次性删除无用记录，清理历史更高效。",
-      "action": "批量删除"
+    "chatLayout": {
+      "title": "让聊天界面更合心意",
+      "description": "调整聊天区和输入框宽度，让 Gemini 对话空间更舒适、更专注，也更易于浏览。",
+      "action": "调整聊天布局"
     }
   }
 }

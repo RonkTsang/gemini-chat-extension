@@ -552,15 +552,10 @@
   "whatsnew": {
     "title": "새로운 기능",
     "releaseNotes": "릴리스 노트",
-    "shortcuts": {
-      "title": "Gemini를 더 빠르게 이동",
-      "description": "채팅, 탐색, 도구 메뉴 작업에 단축키를 설정해 자주 쓰는 Gemini 동작을 한 번의 키 입력으로 바로 실행하세요.",
-      "action": "단축키 설정"
-    },
-    "bulkDelete": {
-      "title": "불필요한 채팅을 더 빠르게 정리",
-      "description": "여러 Gemini 채팅을 선택하고 선택을 조정한 뒤, 불필요한 대화를 한 번에 삭제하세요.",
-      "action": "일괄 삭제"
+    "chatLayout": {
+      "title": "Gemini를 내 흐름에 맞게",
+      "description": "채팅과 입력창의 너비를 조정해 Gemini 대화를 더 편안하고 집중하기 쉽게, 따라가기 좋게 만듭니다.",
+      "action": "채팅 레이아웃 조정"
     }
   }
 }

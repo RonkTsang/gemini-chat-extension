@@ -552,15 +552,10 @@
   "whatsnew": {
     "title": "新機能",
     "releaseNotes": "リリースノート",
-    "shortcuts": {
-      "title": "Geminiをもっとすばやく操作",
-      "description": "チャット、ナビゲーション、ツールメニューの操作にショートカットを設定して、よく使う Gemini の操作を1キーで呼び出せます。",
-      "action": "ショートカットを設定"
-    },
-    "bulkDelete": {
-      "title": "不要なチャットをすばやく整理",
-      "description": "複数の Gemini チャットを選び、選択を調整して、不要な会話をまとめて削除できます。",
-      "action": "一括削除"
+    "chatLayout": {
+      "title": "Geminiを使いやすく",
+      "description": "チャットと入力欄の幅を調整して、Gemini との会話をより快適で、集中しやすく、追いやすくします。",
+      "action": "チャットレイアウトを調整"
     }
   }
 }

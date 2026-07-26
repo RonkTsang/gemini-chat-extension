@@ -552,15 +552,10 @@
   "whatsnew": {
     "title": "Novedades",
     "releaseNotes": "Notas de la versión",
-    "shortcuts": {
-      "title": "Muévete más rápido por Gemini",
-      "description": "Configura atajos para chats, navegación y acciones del menú de herramientas, y ten a un toque las acciones que más usas en Gemini.",
-      "action": "Configurar atajos"
-    },
-    "bulkDelete": {
-      "title": "Borra chats no deseados más rápido",
-      "description": "Selecciona varios chats de Gemini, ajusta la selección y borra conversaciones no deseadas juntas en un flujo claro.",
-      "action": "Eliminar en lote"
+    "chatLayout": {
+      "title": "Gemini se adapta a tu ritmo",
+      "description": "Ajusta el ancho del chat y del campo de entrada para que las conversaciones con Gemini sean más cómodas, enfocadas y fáciles de seguir.",
+      "action": "Ajustar diseño del chat"
     }
   }
 }
