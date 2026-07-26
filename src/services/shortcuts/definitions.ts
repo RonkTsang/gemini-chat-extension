@@ -60,22 +60,24 @@ function withPlatformModifier(defaultKeys: string, macKeys = defaultKeys): Short
   }
 }
 
+const promptEditorFormTags = ['textbox'] as const
+
 export const shortcutDefinitions: ShortcutDefinition[] = [
   {
     action: 'openSettings',
     category: 'geminiPowerKit',
     labelKey: 'settingPanel.shortcut.actions.openSettings',
     defaultShortcut: withPlatformModifier('comma'),
-    enableOnFormTags: false,
-    enableOnContentEditable: false,
+    enableOnFormTags: promptEditorFormTags,
+    enableOnContentEditable: true,
   },
   {
     action: 'toggleBulkDelete',
     category: 'geminiPowerKit',
     labelKey: 'settingPanel.shortcut.actions.toggleBulkDelete',
     defaultShortcut: withPlatformModifier('shift+d'),
-    enableOnFormTags: ['input'],
-    enableOnContentEditable: false,
+    enableOnFormTags: ['input', ...promptEditorFormTags],
+    enableOnContentEditable: true,
     ignoreEventWhen: (event) => (
       event.target instanceof HTMLInputElement && event.target.type !== 'checkbox'
     ),
@@ -85,40 +87,40 @@ export const shortcutDefinitions: ShortcutDefinition[] = [
     category: 'app',
     labelKey: 'settingPanel.shortcut.actions.toggleSidebar',
     defaultShortcut: withPlatformModifier('b'),
-    enableOnFormTags: false,
-    enableOnContentEditable: false,
+    enableOnFormTags: promptEditorFormTags,
+    enableOnContentEditable: true,
   },
   {
     action: 'openNewChat',
     category: 'app',
     labelKey: 'settingPanel.shortcut.actions.openNewChat',
     defaultShortcut: withPlatformModifier('n'),
-    enableOnFormTags: false,
-    enableOnContentEditable: false,
+    enableOnFormTags: promptEditorFormTags,
+    enableOnContentEditable: true,
   },
   {
     action: 'openTemporaryChat',
     category: 'app',
     labelKey: 'settingPanel.shortcut.actions.openTemporaryChat',
     defaultShortcut: withPlatformModifier('t'),
-    enableOnFormTags: false,
-    enableOnContentEditable: false,
+    enableOnFormTags: promptEditorFormTags,
+    enableOnContentEditable: true,
   },
   {
     action: 'openLibrary',
     category: 'app',
     labelKey: 'settingPanel.shortcut.actions.openLibrary',
     defaultShortcut: withPlatformModifier('l'),
-    enableOnFormTags: false,
-    enableOnContentEditable: false,
+    enableOnFormTags: promptEditorFormTags,
+    enableOnContentEditable: true,
   },
   {
     action: 'openGems',
     category: 'app',
     labelKey: 'settingPanel.shortcut.actions.openGems',
     defaultShortcut: withPlatformModifier('g'),
-    enableOnFormTags: false,
-    enableOnContentEditable: false,
+    enableOnFormTags: promptEditorFormTags,
+    enableOnContentEditable: true,
   },
   {
     action: 'focusInput',
@@ -133,7 +135,7 @@ export const shortcutDefinitions: ShortcutDefinition[] = [
     category: 'prompt',
     labelKey: 'settingPanel.shortcut.actions.toggleSpeechDictation',
     defaultShortcut: withPlatformModifier('d'),
-    enableOnFormTags: ['textbox'],
+    enableOnFormTags: promptEditorFormTags,
     enableOnContentEditable: true,
   },
   {
@@ -141,7 +143,7 @@ export const shortcutDefinitions: ShortcutDefinition[] = [
     category: 'prompt',
     labelKey: 'settingPanel.shortcut.actions.cycleModel',
     defaultShortcut: withPlatformModifier('m', 'shift+m'),
-    enableOnFormTags: ['textbox'],
+    enableOnFormTags: promptEditorFormTags,
     enableOnContentEditable: true,
   },
   {
@@ -149,7 +151,7 @@ export const shortcutDefinitions: ShortcutDefinition[] = [
     category: 'prompt',
     labelKey: 'settingPanel.shortcut.actions.uploadFiles',
     defaultShortcut: withPlatformModifier('u'),
-    enableOnFormTags: ['textbox'],
+    enableOnFormTags: promptEditorFormTags,
     enableOnContentEditable: true,
   },
   {
@@ -157,7 +159,7 @@ export const shortcutDefinitions: ShortcutDefinition[] = [
     category: 'prompt',
     labelKey: 'settingPanel.shortcut.actions.createImage',
     defaultShortcut: withPlatformModifier('shift+i', 'i'),
-    enableOnFormTags: ['textbox'],
+    enableOnFormTags: promptEditorFormTags,
     enableOnContentEditable: true,
   },
   {
@@ -165,7 +167,7 @@ export const shortcutDefinitions: ShortcutDefinition[] = [
     category: 'prompt',
     labelKey: 'settingPanel.shortcut.actions.createVideo',
     defaultShortcut: withPlatformModifier('shift+v', 'v'),
-    enableOnFormTags: ['textbox'],
+    enableOnFormTags: promptEditorFormTags,
     enableOnContentEditable: true,
   },
   {
@@ -173,7 +175,7 @@ export const shortcutDefinitions: ShortcutDefinition[] = [
     category: 'prompt',
     labelKey: 'settingPanel.shortcut.actions.createMusic',
     defaultShortcut: withPlatformModifier('shift+m', 'm'),
-    enableOnFormTags: ['textbox'],
+    enableOnFormTags: promptEditorFormTags,
     enableOnContentEditable: true,
   },
   {
@@ -181,7 +183,7 @@ export const shortcutDefinitions: ShortcutDefinition[] = [
     category: 'prompt',
     labelKey: 'settingPanel.shortcut.actions.openCanvas',
     defaultShortcut: withPlatformModifier('shift+c', 'c'),
-    enableOnFormTags: ['textbox'],
+    enableOnFormTags: promptEditorFormTags,
     enableOnContentEditable: true,
   },
   {
@@ -189,7 +191,7 @@ export const shortcutDefinitions: ShortcutDefinition[] = [
     category: 'prompt',
     labelKey: 'settingPanel.shortcut.actions.openDeepResearch',
     defaultShortcut: withPlatformModifier('shift+r', 'r'),
-    enableOnFormTags: ['textbox'],
+    enableOnFormTags: promptEditorFormTags,
     enableOnContentEditable: true,
   },
 ]
