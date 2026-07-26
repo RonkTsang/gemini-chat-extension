@@ -10,33 +10,30 @@ Supprimez les frictions du copier-coller. Interagissez avec Gemini directement d
   ● Bibliothèque de prompts personnalisée : Créez vos propres raccourcis comme "Résumer" ou "Expliquer" et lancez-les en un clic.
 
 🗂️ CHAT OUTLINE — NE VOUS PERDEZ PLUS
-Arrêtez de faire défiler sans fin les longues conversations.
-  ● Vue d'ensemble immédiate : Voyez tous les prompts de votre conversation en un coup d'œil.
-  ● Navigation en un clic : Accédez directement à n'importe quelle partie du chat.
-  ● Mode épinglé : Gardez le plan toujours visible pendant les longues sessions de recherche.
+Voyez chaque prompt, allez partout et épinglez le plan pour la recherche.
+  ● Vue d'ensemble des prompts : Gardez toute la conversation immédiatement visible.
+  ● Aller partout et épingler : Accédez à n'importe quelle partie du chat et épinglez le plan pour la recherche.
 
 🗑️ BULK DELETE — CHATS GEMINI PAR LOTS
 Supprimez les chats par lots, épinglés exclus.
   ● Exclure les épinglés : Activez « Exclure les épinglés » pour sauter les chats épinglés lors du choix d’un lot récent.
   ● Bon lot : Choisissez 10, 20, 30 ou 50 chats récents, ajustez si besoin, puis confirmez et suivez la progression.
 
-🔔 NOTIFICATIONS DE RÉPONSE — ÉLOIGNEZ-VOUS SEREINEMENT
-Laissez Gemini travailler en arrière-plan sans vérifier l'onglet en permanence.
-  ● Alertes de disponibilité : Recevez une notification de bureau lorsqu'une réponse standard, une image, une vidéo ou un rapport Deep Research est prêt.
-  ● Retour en un clic : Ouvrez le chat Gemini d'origine directement depuis la notification.
-  ● Son facultatif : Ajoutez un court signal sonore intégré ou personnalisé lorsque les notifications apparaissent.
-
-🔗 CHAIN PROMPT — AUTOMATISEZ LES FLUX COMPLEXES
-Transformez les tâches en plusieurs étapes en automatisations en un clic.
-  ● Automatisation des flux : Exécutez automatiquement une séquence de prompts.
-  ● Variables dynamiques : Définissez des espaces réservés réutilisables pour des flux flexibles.
-  ● Éditeur visuel : Gérez vos chains avec un éditeur intuitif par glisser-déposer.
-  ● Suivi en temps réel : Suivez la progression de l'automatisation étape par étape.
-
 🎨 THÈMES VISUELS — PERSONNALISEZ VOTRE GEMINI
 Transformez votre espace de travail et faites de Gemini un environnement vraiment personnel.
   ● Superbes presets de couleur : Choisissez parmi plusieurs thèmes dynamiques pour créer un espace plus personnel.
   ● Fonds d'écran personnalisés : Améliorez l'expérience avec vos propres images et d'élégants effets de verre.
+  ● Mise en page du chat : Réglez Chat Width et Input Width en Default, %, ou px; synchronisez-les, choisissez l'alignement des messages et autorisez les messages pleine largeur.
+
+🔔 NOTIFICATIONS DE RÉPONSE — ÉLOIGNEZ-VOUS SEREINEMENT
+Recevez des notifications de bureau sans garder l'onglet sous les yeux.
+  ● Prêt à l'emploi : Une alerte arrive quand une réponse, une image, une vidéo ou un rapport Deep Research est prêt.
+  ● Retour et son : Rouvrez le chat d'origine en un clic, avec son intégré ou personnalisé en option.
+
+🔗 CHAIN PROMPT — AUTOMATISEZ LES FLUX COMPLEXES
+Séquences de prompts réutilisables avec variables et éditeur visuel pour avancer étape par étape.
+  ● Séquences souples : Créez des chaînes réutilisables avec des variables dynamiques.
+  ● Édition et suivi : Glissez-déposez vos étapes et suivez la progression pas à pas.
 
 💎 EXPERIENCE FLUIDE
 ● Titres d'onglets intelligents : Renomme automatiquement les onglets du navigateur selon les titres de vos chats, pour passer facilement d'une session Gemini à l'autre.
