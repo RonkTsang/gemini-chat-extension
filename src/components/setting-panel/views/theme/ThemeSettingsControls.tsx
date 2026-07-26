@@ -1,3 +1,4 @@
+import { ChatLayoutSettings } from '@/components/chat-layout-settings'
 import { AppearanceSelector } from './AppearanceSelector'
 import { ColorPresets } from './ColorPresets'
 import { CustomBackground } from './CustomBackground'
@@ -58,6 +59,7 @@ export function ThemeSettingsControls({
         onUploadFile={controller.handleUploadFile}
         onRemoveImage={controller.handleRemoveImage}
       />
+      <ChatLayoutSettings variant={variant} />
     </>
   )
 }

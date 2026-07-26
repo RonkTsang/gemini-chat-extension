@@ -1,0 +1,124 @@
+---
+title: Gemini 对话布局设置
+description: 使用 Gemini Power Kit 调整 Google Gemini 的聊天宽度、输入框宽度、用户消息对齐方式和全宽消息显示。
+head:
+  - tag: meta
+    attrs:
+      property: og:image
+      content: https://gpk.ronktsang.com/og/chat-layout.png
+  - tag: meta
+    attrs:
+      property: og:image:alt
+      content: Gemini Power Kit 的 Chat layout 面板，可调整 Google Gemini 的聊天与输入框宽度
+  - tag: meta
+    attrs:
+      name: twitter:image
+      content: https://gpk.ronktsang.com/og/chat-layout.png
+  - tag: meta
+    attrs:
+      name: twitter:image:alt
+      content: Gemini Power Kit 的 Chat layout 面板，可调整 Google Gemini 的聊天与输入框宽度
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: |
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "Gemini 对话布局设置",
+        "description": "使用 Gemini Power Kit 调整 Google Gemini 的聊天宽度、输入框宽度、用户消息对齐方式和全宽消息显示。",
+        "url": "https://gpk.ronktsang.com/zh-cn/features/chat-layout/",
+        "image": "https://gpk.ronktsang.com/og/chat-layout.png",
+        "inLanguage": "zh-CN",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Gemini Power Kit",
+          "url": "https://gpk.ronktsang.com/"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "Gemini Power Kit",
+          "applicationCategory": "BrowserApplication",
+          "operatingSystem": "Chrome, Chromium-based browsers"
+        }
+      }
+---
+
+import { Image } from 'astro:assets';
+import chatLayoutImg from '../../../../assets/features/chat-layout.png';
+
+## 按自己的方式安排 Gemini 对话空间
+
+**Chat layout** 用来调整 Gemini 对话内容、输入框和用户消息所占的空间。当默认布局不适合阅读、对照表格或输入长提示词时，可以直接在当前 Gemini 页面中修改。
+
+它归属于 **Theme** 个性化设置。因此，即使隐藏了快捷入口，已经保存的布局仍会继续生效，也始终能在 Theme 中找到这些控制项。
+
+## Chat layout 在哪里
+
+打开 [gemini.google.com](https://gemini.google.com)，在顶栏中点击 **Chat layout** 图标。它固定在 **Theme** 图标的左侧。快捷面板会在图标下方打开，调整时会立即反映在当前 Gemini 页面上。
+
+<Image
+  src={chatLayoutImg}
+  alt="Gemini 中的 Chat layout 快捷面板，包含宽度模式、宽度滑块、对齐按钮和全宽消息开关"
+  class="feature-image feature-image-full"
+/>
+
+*Chat layout 功能面板 —— 设置聊天与输入框宽度，再调整用户消息如何使用这些空间。*
+
+## 每个设置的作用
+
+<div class="settings-card-grid">
+  <article class="settings-card">
+    <div class="settings-label">Chat Width</div>
+    <p class="settings-detail">设置 Gemini 对话内容的最大宽度。选择 <strong>Default</strong> 可保留 Gemini 原生宽度；选择 <strong>%</strong> 使用相对宽度；选择 <strong>px</strong> 使用固定最大宽度。</p>
+    <p class="settings-when">需要阅读表格、代码或并排对照内容时可调宽；想恢复原生布局时选择 Default。</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">Input Width</div>
+    <p class="settings-detail">使用同样的 Default、百分比和像素模式，设置 Gemini 提示词输入区域的最大宽度。</p>
+    <p class="settings-when">适合让输入框更紧凑，或让它与单独设置过宽度的聊天区对齐。</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">Sync Chat Width and Input Width</div>
+    <p class="settings-detail">让输入区域与聊天宽度保持一致。开启后，修改任一宽度控件都会同步更新另一个。</p>
+    <p class="settings-when">希望聊天区和输入框自然对齐、不想维护两个数值时，建议开启。</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">User messages</div>
+    <p class="settings-detail">可选择用户消息左对齐或右对齐；开启 <strong>Allow full-width messages</strong> 后，较长的用户消息可以使用完整可用聊天宽度。</p>
+    <p class="settings-when">左对齐能让对话更像文档；输入很长的提示词或粘贴内容时，全宽显示会更实用。</p>
+  </article>
+</div>
+
+## 如何使用
+
+1. 打开 [gemini.google.com](https://gemini.google.com)，点击顶栏中 **Theme** 左侧的 **Chat layout**。
+2. 为 **Chat Width** 和 **Input Width** 选择 **Default**、**%** 或 **px**。
+3. 使用 **%** 时，可设为 `35%` 到 `100%`；使用 **px** 时，可设为 `700px` 到 `2000px`。
+4. 如果希望聊天区与输入框持续对齐，开启 **Sync Chat Width and Input Width**。
+5. 在 **User messages** 中选择左对齐或右对齐；需要时开启 **Allow full-width messages**。
+6. 想让某一部分恢复 Gemini 原生最大宽度时，将其切回 **Default**。
+
+调整会立即显示，并会保留到后续 Gemini 页面。切换到 Default 只会移除当前宽度覆写，不会清除上一次使用的百分比或像素数值。
+
+## 如何关闭或重新打开快捷入口
+
+**Chat layout** 快捷入口默认显示。如需隐藏或恢复：
+
+1. 在 Gemini 中打开 Gemini Power Kit 设置面板。
+2. 打开 **Settings**，再进入 **Enhancements**。
+3. 在 **Top bar customization** 下关闭或打开 **Show Chat layout shortcut**。
+
+关闭此开关只会隐藏顶栏图标，并关闭当前已打开的快捷面板；不会重置 Chat layout 配置，也不会停止已保存布局的应用。你仍可随时通过 **Settings** → **Theme** → **Chat layout** 管理全部设置；需要更快捷访问时，再重新打开该入口即可。
+
+## 使用注意事项
+
+- Chat layout 调整的是最大宽度；实际可见宽度仍会受到当前浏览器视口大小限制。
+- **Default** 会保留该控件对应的 Gemini 原生宽度。
+- 当前版本不调整字号或行高。
+- Gemini 的界面可能随时变化；请保持 Gemini Power Kit 为最新版本，以获得兼容性更新。
+
+## 相关功能
+
+- [主题个性化](/zh-cn/features/theme/)
+- [对话大纲](/zh-cn/features/chat-outline/)

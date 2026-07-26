@@ -1,3 +1,4 @@
+import chatWidthIconSvg from '@/assets/chat-width.svg?raw'
 import { eventBus } from '@/utils/eventbus'
 import { tt } from '@/utils/i18n'
 
@@ -7,12 +8,26 @@ const TOP_BAR_HOST_SELECTOR = 'main.chat-app'
 const TOP_BAR_SELECTOR = 'top-bar-actions'
 const RIGHT_SECTION_SELECTOR = '.right-section'
 
-const CONTAINER_TEST_ID = 'gemini-power-kit-theme-top-bar-container'
-const BUTTON_TEST_ID = 'gemini-power-kit-theme-top-bar-button'
+const THEME_CONTAINER_TEST_ID = 'gemini-power-kit-theme-top-bar-container'
+const THEME_BUTTON_TEST_ID = 'gemini-power-kit-theme-top-bar-button'
+const CHAT_SETTINGS_CONTAINER_TEST_ID =
+  'gemini-power-kit-chat-settings-top-bar-container'
+const CHAT_SETTINGS_BUTTON_TEST_ID =
+  'gemini-power-kit-chat-settings-top-bar-button'
 const STYLE_ID = 'gpk-theme-top-bar-action-style'
 
-const ENTRY_SELECTOR = `[data-test-id="${CONTAINER_TEST_ID}"]`
-const BUTTON_SELECTOR = `[data-test-id="${BUTTON_TEST_ID}"]`
+const THEME_ENTRY_SELECTOR =
+  `[data-test-id="${THEME_CONTAINER_TEST_ID}"]`
+const THEME_BUTTON_SELECTOR =
+  `[data-test-id="${THEME_BUTTON_TEST_ID}"]`
+const CHAT_SETTINGS_ENTRY_SELECTOR =
+  `[data-test-id="${CHAT_SETTINGS_CONTAINER_TEST_ID}"]`
+export const CHAT_SETTINGS_TOP_BAR_BUTTON_SELECTOR =
+  `[data-test-id="${CHAT_SETTINGS_BUTTON_TEST_ID}"]`
+const ALL_ENTRY_SELECTOR =
+  `${THEME_ENTRY_SELECTOR}, ${CHAT_SETTINGS_ENTRY_SELECTOR}`
+const ALL_BUTTON_SELECTOR =
+  `${THEME_BUTTON_SELECTOR}, ${CHAT_SETTINGS_TOP_BAR_BUTTON_SELECTOR}`
 
 const THEME_ICON_SVG = `
 <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true">
@@ -21,7 +36,11 @@ const THEME_ICON_SVG = `
 </svg>
 `
 
+type EntryKind = 'chat-settings' | 'theme'
+
 let isStarted = false
+let themeEnabled = false
+let chatSettingsEnabled = false
 let reconcileFrame: number | null = null
 
 let bootstrapObserver: MutationObserver | null = null
@@ -44,15 +63,23 @@ const getChatApp = (): HTMLElement | null =>
   document.querySelector(`${APP_ROOT_SELECTOR} > ${CHAT_APP_SELECTOR}`)
 
 const getTopBarHost = (): HTMLElement | null =>
-  document.querySelector(`${APP_ROOT_SELECTOR} > ${CHAT_APP_SELECTOR} > ${TOP_BAR_HOST_SELECTOR}`)
+  document.querySelector(
+    `${APP_ROOT_SELECTOR} > ${CHAT_APP_SELECTOR} > ${TOP_BAR_HOST_SELECTOR}`,
+  )
 
 const getTopBar = (): HTMLElement | null =>
-  getTopBarHost()?.querySelector(`:scope > ${TOP_BAR_SELECTOR}`) as HTMLElement | null
+  getTopBarHost()?.querySelector(
+    `:scope > ${TOP_BAR_SELECTOR}`,
+  ) as HTMLElement | null
 
 const getRightSection = (): HTMLElement | null =>
   getTopBar()?.querySelector(RIGHT_SECTION_SELECTOR) as HTMLElement | null
 
-const setAttributeIfDifferent = (element: Element, name: string, value: string) => {
+const setAttributeIfDifferent = (
+  element: Element,
+  name: string,
+  value: string,
+) => {
   if (element.getAttribute(name) !== value) {
     element.setAttribute(name, value)
   }
@@ -64,14 +91,14 @@ const ensureStyle = () => {
   const style = document.createElement('style')
   style.id = STYLE_ID
   style.textContent = `
-${ENTRY_SELECTOR} {
+${ALL_ENTRY_SELECTOR} {
   align-items: center;
   display: flex;
   height: 48px;
   justify-content: center;
 }
 
-${BUTTON_SELECTOR} {
+:is(${ALL_BUTTON_SELECTOR}) {
   align-items: center;
   background: transparent;
   border: 0;
@@ -87,7 +114,12 @@ ${BUTTON_SELECTOR} {
   width: 36px;
 }
 
-${BUTTON_SELECTOR}::before {
+body.light-theme :is(${ALL_BUTTON_SELECTOR}),
+:where(.theme-host):where(.light-theme) :is(${ALL_BUTTON_SELECTOR}) {
+  color: rgb(0, 0, 0);
+}
+
+:is(${ALL_BUTTON_SELECTOR})::before {
   background-color: var(--mat-icon-button-state-layer-color, var(--mat-sys-on-surface-variant));
   border-radius: inherit;
   content: '';
@@ -97,16 +129,16 @@ ${BUTTON_SELECTOR}::before {
   position: absolute;
 }
 
-${BUTTON_SELECTOR}:hover::before {
+:is(${ALL_BUTTON_SELECTOR}):hover::before {
   opacity: 0.08;
 }
 
-${BUTTON_SELECTOR}:focus-visible {
+:is(${ALL_BUTTON_SELECTOR}):focus-visible {
   outline: 2px solid var(--gem-sys-color--primary, currentColor);
   outline-offset: 2px;
 }
 
-${BUTTON_SELECTOR} [data-gpk-theme-top-bar-icon] {
+:is(${ALL_BUTTON_SELECTOR}) [data-gpk-top-bar-icon] {
   align-items: center;
   display: inline-flex;
   flex: 0 0 auto;
@@ -118,48 +150,78 @@ ${BUTTON_SELECTOR} [data-gpk-theme-top-bar-icon] {
   z-index: 1;
 }
 
-${BUTTON_SELECTOR} svg {
+:is(${ALL_BUTTON_SELECTOR}) svg {
   display: block;
 }
 `
   document.head.appendChild(style)
 }
 
-const openThemePanel = () => {
-  eventBus.emitSync('theme-floating-panel:open', {
+function selectors(kind: EntryKind) {
+  return kind === 'theme'
+    ? {
+        containerTestId: THEME_CONTAINER_TEST_ID,
+        buttonTestId: THEME_BUTTON_TEST_ID,
+        entry: THEME_ENTRY_SELECTOR,
+        button: THEME_BUTTON_SELECTOR,
+      }
+    : {
+        containerTestId: CHAT_SETTINGS_CONTAINER_TEST_ID,
+        buttonTestId: CHAT_SETTINGS_BUTTON_TEST_ID,
+        entry: CHAT_SETTINGS_ENTRY_SELECTOR,
+        button: CHAT_SETTINGS_TOP_BAR_BUTTON_SELECTOR,
+      }
+}
+
+function openPanel(kind: EntryKind): void {
+  if (kind === 'theme') {
+    eventBus.emitSync('theme-floating-panel:open', {
+      source: 'top-bar-action',
+    })
+    return
+  }
+
+  eventBus.emitSync('chat-settings-panel:toggle', {
     source: 'top-bar-action',
   })
 }
 
-const createEntry = (): HTMLDivElement => {
+function createEntry(kind: EntryKind): HTMLDivElement {
+  const entrySelectors = selectors(kind)
   const container = document.createElement('div')
   container.className = 'buttons-container'
-  container.dataset.testId = CONTAINER_TEST_ID
+  container.dataset.testId = entrySelectors.containerTestId
 
   const button = document.createElement('button')
   button.type = 'button'
-  button.className = 'mdc-icon-button mat-mdc-icon-button mat-mdc-button-base mat-unthemed'
-  button.dataset.testId = BUTTON_TEST_ID
+  button.className =
+    'mdc-icon-button mat-mdc-icon-button mat-mdc-button-base mat-unthemed'
+  button.dataset.testId = entrySelectors.buttonTestId
 
   const icon = document.createElement('span')
-  icon.dataset.gpkThemeTopBarIcon = '1'
-  icon.innerHTML = THEME_ICON_SVG
+  icon.dataset.gpkTopBarIcon = kind
+  icon.setAttribute('aria-hidden', 'true')
+  icon.innerHTML = kind === 'theme' ? THEME_ICON_SVG : chatWidthIconSvg
   button.appendChild(icon)
 
   button.addEventListener('click', (event) => {
     event.preventDefault()
     event.stopPropagation()
-    button.blur()
-    openThemePanel()
+    openPanel(kind)
   })
 
   container.appendChild(button)
   return container
 }
 
-const decorateEntry = (container: HTMLElement) => {
-  const label = tt('settingPanel.config.theme.title', 'Theme')
-  const button = container.querySelector<HTMLButtonElement>(BUTTON_SELECTOR)
+function decorateEntry(container: HTMLElement, kind: EntryKind): void {
+  const entrySelectors = selectors(kind)
+  const label = kind === 'theme'
+    ? tt('settingPanel.config.theme.title', 'Theme')
+    : tt('chatSettings.title', 'Chat layout')
+  const button = container.querySelector<HTMLButtonElement>(
+    entrySelectors.button,
+  )
   if (!button) return
 
   setAttributeIfDifferent(container, 'class', 'buttons-container')
@@ -167,29 +229,13 @@ const decorateEntry = (container: HTMLElement) => {
   setAttributeIfDifferent(button, 'title', label)
 }
 
-const insertAsPenultimateChild = (parent: HTMLElement, child: HTMLElement) => {
-  const nativeChildren = Array.from(parent.children).filter((element) => element !== child)
-  const lastNativeChild = nativeChildren.at(-1)
-
-  if (lastNativeChild) {
-    if (child.parentElement === parent && child.nextElementSibling === lastNativeChild) {
-      return
-    }
-    parent.insertBefore(child, lastNativeChild)
-    return
-  }
-
-  if (child.parentElement !== parent || child.nextElementSibling !== null) {
-    parent.appendChild(child)
-  }
-}
-
-const isEntryNode = (node: Node): boolean => {
+function isEntryNode(node: Node): boolean {
   if (!(node instanceof Element)) return false
-  return node.matches(ENTRY_SELECTOR) || Boolean(node.closest(ENTRY_SELECTOR))
+  return node.matches(ALL_ENTRY_SELECTOR) ||
+    Boolean(node.closest(ALL_ENTRY_SELECTOR))
 }
 
-const isOnlyEntryInsertion = (mutations: MutationRecord[]): boolean => {
+function isOnlyEntryInsertion(mutations: MutationRecord[]): boolean {
   let hasAddedEntry = false
 
   for (const mutation of mutations) {
@@ -203,14 +249,14 @@ const isOnlyEntryInsertion = (mutations: MutationRecord[]): boolean => {
   return hasAddedEntry
 }
 
-const disconnectObserver = (
+function disconnectObserver(
   observer: MutationObserver | null,
-): null => {
+): null {
   observer?.disconnect()
   return null
 }
 
-const scheduleReconcile = () => {
+function scheduleReconcile(): void {
   if (!isStarted || reconcileFrame !== null) return
 
   reconcileFrame = window.requestAnimationFrame(() => {
@@ -219,7 +265,7 @@ const scheduleReconcile = () => {
   })
 }
 
-const bindBootstrapObserver = () => {
+function bindBootstrapObserver(): void {
   if (bootstrapObserver || getAppRoot()) return
 
   bootstrapObserver = new MutationObserver(() => {
@@ -231,7 +277,7 @@ const bindBootstrapObserver = () => {
   })
 }
 
-const bindAppRootObserver = (appRoot: Element | null) => {
+function bindAppRootObserver(appRoot: Element | null): void {
   if (observedAppRoot === appRoot) return
   appRootObserver = disconnectObserver(appRootObserver)
   observedAppRoot = appRoot
@@ -242,7 +288,7 @@ const bindAppRootObserver = (appRoot: Element | null) => {
   appRootObserver.observe(appRoot, { childList: true })
 }
 
-const bindChatAppObserver = (chatApp: Element | null) => {
+function bindChatAppObserver(chatApp: Element | null): void {
   if (observedChatApp === chatApp) return
   chatAppObserver = disconnectObserver(chatAppObserver)
   observedChatApp = chatApp
@@ -252,7 +298,7 @@ const bindChatAppObserver = (chatApp: Element | null) => {
   chatAppObserver.observe(chatApp, { childList: true })
 }
 
-const bindTopBarHostObserver = (topBarHost: Element | null) => {
+function bindTopBarHostObserver(topBarHost: Element | null): void {
   if (observedTopBarHost === topBarHost) return
   topBarHostObserver = disconnectObserver(topBarHostObserver)
   observedTopBarHost = topBarHost
@@ -262,7 +308,7 @@ const bindTopBarHostObserver = (topBarHost: Element | null) => {
   topBarHostObserver.observe(topBarHost, { childList: true })
 }
 
-const bindTopBarObserver = (topBar: Element | null) => {
+function bindTopBarObserver(topBar: Element | null): void {
   if (observedTopBar === topBar) return
   topBarObserver = disconnectObserver(topBarObserver)
   observedTopBar = topBar
@@ -274,7 +320,7 @@ const bindTopBarObserver = (topBar: Element | null) => {
   topBarObserver.observe(topBar, { childList: true, subtree: true })
 }
 
-const bindRightSectionObserver = (rightSection: Element | null) => {
+function bindRightSectionObserver(rightSection: Element | null): void {
   if (observedRightSection === rightSection) return
   rightSectionObserver = disconnectObserver(rightSectionObserver)
   observedRightSection = rightSection
@@ -286,7 +332,7 @@ const bindRightSectionObserver = (rightSection: Element | null) => {
   rightSectionObserver.observe(rightSection, { childList: true })
 }
 
-const ensureObserverBindings = () => {
+function ensureObserverBindings(): void {
   const appRoot = getAppRoot()
   const chatApp = getChatApp()
   const topBarHost = getTopBarHost()
@@ -302,13 +348,57 @@ const ensureObserverBindings = () => {
   if (!appRoot) bindBootstrapObserver()
 }
 
-const removeDuplicateEntries = (entryToKeep: HTMLElement | null) => {
-  document.querySelectorAll<HTMLElement>(ENTRY_SELECTOR).forEach((entry) => {
-    if (entry !== entryToKeep) entry.remove()
-  })
+function ensureEntry(
+  rightSection: HTMLElement,
+  kind: EntryKind,
+): HTMLElement {
+  const entrySelectors = selectors(kind)
+  const existingEntry = rightSection.querySelector<HTMLElement>(
+    `:scope > ${entrySelectors.entry}`,
+  )
+  const existingButton = existingEntry?.querySelector(
+    entrySelectors.button,
+  )
+  const existingIcon = existingButton?.querySelector(
+    `[data-gpk-top-bar-icon="${kind}"]`,
+  )
+  const entry = existingEntry && existingButton && existingIcon
+    ? existingEntry
+    : createEntry(kind)
+
+  if (existingEntry && existingEntry !== entry) existingEntry.remove()
+  document.querySelectorAll<HTMLElement>(entrySelectors.entry).forEach(
+    (candidate) => {
+      if (candidate !== entry) candidate.remove()
+    },
+  )
+  decorateEntry(entry, kind)
+  return entry
 }
 
-const reconcile = () => {
+function insertEntries(
+  rightSection: HTMLElement,
+  entries: HTMLElement[],
+): void {
+  const nativeChildren = Array.from(rightSection.children).filter(
+    (element) => !element.matches(ALL_ENTRY_SELECTOR),
+  )
+  let nextElement = nativeChildren.at(-1) ?? null
+
+  for (let index = entries.length - 1; index >= 0; index -= 1) {
+    const entry = entries[index]
+    if (!entry) continue
+    if (
+      entry.parentElement !== rightSection ||
+      entry.nextElementSibling !== nextElement
+    ) {
+      rightSection.insertBefore(entry, nextElement)
+    }
+    nextElement = entry
+  }
+}
+
+function reconcile(): void {
   if (!isStarted) return
 
   ensureObserverBindings()
@@ -316,19 +406,27 @@ const reconcile = () => {
   if (!rightSection) return
 
   ensureStyle()
-  const existingEntry = rightSection.querySelector<HTMLElement>(`:scope > ${ENTRY_SELECTOR}`)
-  const existingButton = existingEntry?.querySelector(BUTTON_SELECTOR)
-  const existingIcon = existingButton?.querySelector('[data-gpk-theme-top-bar-icon]')
-  const entry = existingEntry && existingButton && existingIcon
-    ? existingEntry
-    : createEntry()
-  if (existingEntry && existingEntry !== entry) existingEntry.remove()
-  removeDuplicateEntries(entry)
-  decorateEntry(entry)
-  insertAsPenultimateChild(rightSection, entry)
+  const entries: HTMLElement[] = []
+  if (chatSettingsEnabled) {
+    entries.push(ensureEntry(rightSection, 'chat-settings'))
+  } else {
+    document.querySelectorAll(CHAT_SETTINGS_ENTRY_SELECTOR)
+      .forEach((entry) => entry.remove())
+  }
+  if (themeEnabled) {
+    entries.push(ensureEntry(rightSection, 'theme'))
+  } else {
+    document.querySelectorAll(THEME_ENTRY_SELECTOR)
+      .forEach((entry) => entry.remove())
+  }
+  insertEntries(rightSection, entries)
+
+  if (chatSettingsEnabled) {
+    eventBus.emitSync('chat-settings-panel:anchor-changed', undefined)
+  }
 }
 
-const stopObservers = () => {
+function stopObservers(): void {
   bootstrapObserver = disconnectObserver(bootstrapObserver)
   appRootObserver = disconnectObserver(appRootObserver)
   chatAppObserver = disconnectObserver(chatAppObserver)
@@ -348,23 +446,68 @@ const stopObservers = () => {
   }
 }
 
-const removeInjectedResources = () => {
-  document.querySelectorAll(ENTRY_SELECTOR).forEach((entry) => entry.remove())
+function removeInjectedResources(): void {
+  document.querySelectorAll(ALL_ENTRY_SELECTOR)
+    .forEach((entry) => entry.remove())
   document.getElementById(STYLE_ID)?.remove()
 }
 
-export const stopTopBarAction = () => {
-  if (!isStarted) return
+function stopLifecycleIfUnused(): void {
+  if (themeEnabled || chatSettingsEnabled || !isStarted) return
   isStarted = false
-  window.removeEventListener('beforeunload', stopTopBarAction)
+  window.removeEventListener('beforeunload', stopAllTopBarActions)
   stopObservers()
   removeInjectedResources()
 }
 
-export const startTopBarAction = () => {
-  if (isStarted) return
-  isStarted = true
-  removeInjectedResources()
+function startLifecycle(): void {
+  if (!isStarted) {
+    isStarted = true
+    removeInjectedResources()
+    window.addEventListener('beforeunload', stopAllTopBarActions)
+  }
   reconcile()
-  window.addEventListener('beforeunload', stopTopBarAction)
+}
+
+function stopAllTopBarActions(): void {
+  themeEnabled = false
+  chatSettingsEnabled = false
+  if (!isStarted) return
+  isStarted = false
+  window.removeEventListener('beforeunload', stopAllTopBarActions)
+  stopObservers()
+  removeInjectedResources()
+}
+
+export function startTopBarAction(): void {
+  if (themeEnabled) return
+  themeEnabled = true
+  startLifecycle()
+}
+
+export function stopTopBarAction(): void {
+  if (!themeEnabled) return
+  themeEnabled = false
+  document.querySelectorAll(THEME_ENTRY_SELECTOR)
+    .forEach((entry) => entry.remove())
+  if (chatSettingsEnabled) reconcile()
+  stopLifecycleIfUnused()
+}
+
+export function startChatSettingsTopBarAction(): void {
+  if (chatSettingsEnabled) return
+  chatSettingsEnabled = true
+  startLifecycle()
+}
+
+export function stopChatSettingsTopBarAction(): void {
+  if (!chatSettingsEnabled) return
+  chatSettingsEnabled = false
+  document.querySelectorAll(CHAT_SETTINGS_ENTRY_SELECTOR)
+    .forEach((entry) => entry.remove())
+  eventBus.emitSync('chat-settings-panel:close', {
+    source: 'shortcut-hidden',
+  })
+  if (themeEnabled) reconcile()
+  stopLifecycleIfUnused()
 }

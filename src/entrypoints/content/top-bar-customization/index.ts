@@ -4,7 +4,12 @@ import {
   topBarSettingsStorage,
   type TopBarSettings,
 } from '@/services/topBarCustomizationSettings'
-import { startTopBarAction, stopTopBarAction } from '../top-bar-action'
+import {
+  startChatSettingsTopBarAction,
+  startTopBarAction,
+  stopChatSettingsTopBarAction,
+  stopTopBarAction,
+} from '../top-bar-action'
 import topBarCustomizationCss from './style.css?raw'
 
 const STYLE_ID = 'gpk-top-bar-customization-style'
@@ -17,6 +22,8 @@ export interface TopBarSettingsSource {
 
 interface TopBarCustomizationControllerOptions {
   setting?: TopBarSettingsSource
+  startChatSettingsShortcut?: () => void
+  stopChatSettingsShortcut?: () => void
   startThemeShortcut?: () => void
   stopThemeShortcut?: () => void
 }
@@ -56,6 +63,8 @@ function clearUpgradeReminderSetting(): void {
 export function createTopBarCustomizationController(
   {
     setting = topBarSettingsStorage,
+    startChatSettingsShortcut = startChatSettingsTopBarAction,
+    stopChatSettingsShortcut = stopChatSettingsTopBarAction,
     startThemeShortcut = startTopBarAction,
     stopThemeShortcut = stopTopBarAction,
   }: TopBarCustomizationControllerOptions = {},
@@ -65,6 +74,11 @@ export function createTopBarCustomizationController(
   let unwatch: (() => void) | null = null
 
   const applySettings = (settings: TopBarSettings): void => {
+    if (settings.showChatSettingsShortcut) {
+      startChatSettingsShortcut()
+    } else {
+      stopChatSettingsShortcut()
+    }
     if (settings.showThemeShortcut) {
       startThemeShortcut()
     } else {
@@ -104,6 +118,7 @@ export function createTopBarCustomizationController(
       lifecycleGeneration += 1
       unwatch?.()
       unwatch = null
+      stopChatSettingsShortcut()
       stopThemeShortcut()
       clearUpgradeReminderSetting()
     },

@@ -140,9 +140,27 @@
         "hideUpgradeReminder": {
           "title": "Ocultar lembrete de atualização",
           "description": "Oculta o lembrete de atualização do Gemini na barra superior."
+        },
+        "showChatSettingsShortcut": {
+          "title": "Mostrar atalho para o layout do chat",
+          "description": "Mostra um atalho para o layout do chat na barra superior do Gemini."
         }
       }
     }
+  },
+  "chatSettings": {
+    "title": "Layout do chat",
+    "chatWidth": "Largura do chat",
+    "inputWidth": "Largura da entrada",
+    "default": "Padrão",
+    "percent": "Porcentagem",
+    "pixels": "Pixels",
+    "syncWidths": "Sincronizar largura do chat e da entrada",
+    "userMessages": "Mensagens do usuário",
+    "alignment": "Alinhamento",
+    "alignLeft": "Alinhar à esquerda",
+    "alignRight": "Alinhar à direita",
+    "allowFullWidthMessages": "Permitir mensagens em largura total"
   },
   "settingPanel": {
     "theme": {
@@ -534,15 +552,10 @@
   "whatsnew": {
     "title": "O que há de novo",
     "releaseNotes": "Notas da versão",
-    "shortcuts": {
-      "title": "Navegue mais rápido no Gemini",
-      "description": "Configure atalhos para chats, navegação e ações do menu de ferramentas e deixe suas ações mais usadas no Gemini a um toque de tecla.",
-      "action": "Configurar atalhos"
-    },
-    "bulkDelete": {
-      "title": "Limpe conversas indesejadas mais rápido",
-      "description": "Selecione vários chats do Gemini, ajuste a seleção e exclua conversas indesejadas de uma vez em um fluxo focado.",
-      "action": "Excluir em lote"
+    "chatLayout": {
+      "title": "Gemini no seu ritmo",
+      "description": "Ajuste a largura do chat e da caixa de entrada para tornar as conversas com o Gemini mais confortáveis, focadas e fáceis de acompanhar.",
+      "action": "Ajustar layout do chat"
     }
   }
 }

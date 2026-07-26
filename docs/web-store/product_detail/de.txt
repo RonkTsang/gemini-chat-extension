@@ -10,33 +10,30 @@ Kein umständliches Kopieren und Einfügen mehr. Interagiere direkt mit Gemini �
   ● Eigene Prompt-Bibliothek: Erstelle eigene Kurzbefehle wie "Zusammenfassen" oder "Erklären" und starte sie mit einem Klick.
 
 🗂️ CHAT OUTLINE — NIE WIEDER DEN ÜBERBLICK VERLIEREN
-Höre auf, endlos durch lange Unterhaltungen zu scrollen.
-  ● Sofortiger Überblick: Sieh alle Prompts deiner Unterhaltung auf einen Blick.
-  ● Navigation mit einem Klick: Springe direkt zu jeder Stelle im Chat.
-  ● Angehefteter Modus: Halte die Gliederung bei umfangreichen Recherche-Sitzungen immer sichtbar.
+Sieh jeden Prompt, spring an jede Stelle und halte die Gliederung für Recherchen angeheftet.
+  ● Überblick über alle Prompts: Behalte die gesamte Unterhaltung sofort im Blick.
+  ● Direkt springen und anheften: Wechsle zu jeder Stelle im Chat und pinne die Gliederung für Recherche.
 
 🗑️ BULK DELETE — GEMINI-CHATS AUFRÄUMEN, OHNE ANGEHEFTETE ZU BERÜHREN
 Räume temporäre Unterhaltungen in Stapeln auf und lasse angeheftete Chats außen vor.
   ● Angeheftete Chats mit einem Schalter ausschließen: Aktiviere „Angeheftete ausschließen“, um sie bei der Auswahl eines aktuellen Stapels zu überspringen.
   ● Die passende Menge löschen: Wähle die 10, 20, 30 oder 50 neuesten Chats, passe die Auswahl bei Bedarf einzeln an und verfolge danach den Löschfortschritt.
 
-🔔 ANTWORT-BENACHRICHTIGUNGEN — SICHER WEGGEHEN
-Lass Gemini im Hintergrund arbeiten, ohne ständig den Tab zu prüfen.
-  ● Fertig-Hinweise: Erhalte eine Desktop-Benachrichtigung, wenn eine Standardantwort, ein Bild, ein Video oder ein Deep Research-Bericht bereit ist.
-  ● Zurück per Klick: Öffne den ursprünglichen Gemini-Chat direkt über die Benachrichtigung.
-  ● Optionaler Ton: Spiele beim Erscheinen einer Benachrichtigung einen kurzen integrierten oder eigenen Ton ab.
-
-🔗 CHAIN PROMPT — KOMPLEXE WORKFLOWS AUTOMATISIEREN
-Verwandle mehrstufige Aufgaben in Automatisierungen mit einem Klick.
-  ● Workflow-Automatisierung: Führe eine Abfolge von Prompts automatisch aus.
-  ● Dynamische Variablen: Definiere wiederverwendbare Platzhalter für flexible Workflows.
-  ● Visueller Builder: Verwalte deine Chains in einem intuitiven Drag-and-drop-Editor.
-  ● Echtzeit-Tracking: Verfolge den Automatisierungsfortschritt Schritt für Schritt.
-
 🎨 VISUELLE THEMEN — PERSONALISIERE DEIN GEMINI
 Verwandle deinen Arbeitsbereich und mache Gemini wirklich zu deinem.
   ● Schöne Farbvorlagen: Wähle aus verschiedenen lebendigen Themes für eine persönlichere Umgebung.
   ● Eigene Hintergrundbilder: Werte dein Erlebnis mit persönlichen Hintergründen und eleganten Glaseffekten auf.
+  ● Chat-Layout: Passe Chat Width und Input Width in Default, % oder px an, synchronisiere sie, wähle die Ausrichtung der Nachrichten und erlaube Nachrichten über die volle Breite.
+
+🔔 ANTWORT-BENACHRICHTIGUNGEN — SICHER WEGGEHEN
+Desktop-Benachrichtigungen halten dich auf dem Laufenden, ohne dass du den Chat offen lassen musst.
+  ● Fertige Inhalte sofort sehen: Erhalte Desktop-Alerts, wenn Antworten, Bilder, Videos oder Deep-Research-Berichte bereit sind.
+  ● Zurück per Klick mit Ton: Öffne den ursprünglichen Chat direkt und nutze optional integrierten oder eigenen Sound.
+
+🔗 CHAIN PROMPT — KOMPLEXE WORKFLOWS AUTOMATISIEREN
+Wiederverwendbare Prompt-Sequenzen mit Variablen und einem visuellen Editor für klare Abläufe.
+  ● Flexible Sequenzen: Nutze dynamische Variablen in wiederverwendbaren Prompt-Reihen.
+  ● Fortschritt Schritt für Schritt: Ziehe Abläufe per Drag-and-drop auf und verfolge jeden Schritt.
 
 💎 NAHTLOSE ERFAHRUNG
 ● Smarte Tab-Titel: Benennt Browser-Tabs automatisch passend zu deinen Chat-Titeln um, damit du leicht zwischen mehreren Gemini-Sitzungen wechseln kannst.

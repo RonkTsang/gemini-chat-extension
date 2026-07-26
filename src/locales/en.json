@@ -140,9 +140,27 @@
         "hideUpgradeReminder": {
           "title": "Hide upgrade reminder",
           "description": "Hide Gemini's upgrade reminder from the top bar."
+        },
+        "showChatSettingsShortcut": {
+          "title": "Show Chat layout shortcut",
+          "description": "Show a shortcut to Chat layout in Gemini's top bar."
         }
       }
     }
+  },
+  "chatSettings": {
+    "title": "Chat layout",
+    "chatWidth": "Chat Width",
+    "inputWidth": "Input Width",
+    "default": "Default",
+    "percent": "Percent",
+    "pixels": "Pixels",
+    "syncWidths": "Sync Chat Width and Input Width",
+    "userMessages": "User messages",
+    "alignment": "Alignment",
+    "alignLeft": "Align left",
+    "alignRight": "Align right",
+    "allowFullWidthMessages": "Allow full-width messages"
   },
   "settingPanel": {
     "theme": {
@@ -530,15 +548,10 @@
   "whatsnew": {
     "title": "What's New",
     "releaseNotes": "Release notes",
-    "shortcuts": {
-      "title": "Move through Gemini faster",
-      "description": "Set shortcuts for chats, navigation, and tool menu actions, then keep your most frequent Gemini actions one key press away.",
-      "action": "Set shortcuts"
-    },
-    "bulkDelete": {
-      "title": "Clear unwanted chats faster",
-      "description": "Select multiple Gemini chats, adjust your selection, and delete unwanted conversations together in one focused flow.",
-      "action": "Use Bulk Delete"
+    "chatLayout": {
+      "title": "Make Gemini fit your flow",
+      "description": "Set your chat and input widths to make Gemini conversations feel more comfortable, focused, and easier to follow.",
+      "action": "Adjust chat layout"
     }
   }
 }

@@ -10,33 +10,30 @@ Elimina la fricción de copiar y pegar. Interactúa con Gemini directamente desd
   ● Biblioteca de prompts personalizada: Crea accesos directos como "Resumir" o "Explicar" para ejecutarlos con un clic.
 
 🗂️ CHAT OUTLINE — NO VUELVAS A PERDERTE
-Deja de desplazarte sin fin por conversaciones largas.
-  ● Vista general instantánea: Ve todos los prompts de la conversación de un vistazo.
-  ● Navegación con un clic: Salta directamente a cualquier parte del chat.
-  ● Modo fijado: Mantiene el índice siempre visible durante sesiones de investigación extensas.
+Ve cada prompt, salta a cualquier punto y fija el índice para investigar.
+  ● Vista de todos los prompts: Ten toda la conversación clara de un vistazo.
+  ● Salta y fija: Ve a cualquier parte del chat y fija el índice para investigación.
 
 🗑️ BULK DELETE — LIMPIA CHATS DE GEMINI SIN TOCAR LOS FIJADOS
 Borra conversaciones temporales por lotes y deja fuera de la limpieza los chats fijados.
   ● Excluye los chats fijados con una sola acción: Activa “Excluir fijados” para omitir las conversaciones fijadas al seleccionar un lote reciente, sin tener que quitarlas a mano.
   ● Borra el lote justo: Elige los 10, 20, 30 o 50 chats más recientes, ajusta selecciones individuales si hace falta y luego confirma y sigue el progreso del borrado.
 
-🔔 NOTIFICACIONES DE RESPUESTA — ALÉJATE CON CONFIANZA
-Deja que Gemini trabaje en segundo plano sin revisar la pestaña constantemente.
-  ● Avisos de listo: Recibe una notificación de escritorio cuando una respuesta normal, imagen, video o informe de Deep Research esté listo.
-  ● Volver con un clic: Abre el chat de Gemini original directamente desde la notificación.
-  ● Sonido opcional: Añade un aviso sonoro breve, integrado o personalizado, cuando aparezcan las notificaciones.
-
-🔗 CHAIN PROMPT — AUTOMATIZA FLUJOS COMPLEJOS
-Convierte tareas de varios pasos en automatizaciones de un clic.
-  ● Automatización de flujos: Ejecuta una secuencia de prompts automáticamente.
-  ● Variables dinámicas: Define marcadores reutilizables para flujos flexibles.
-  ● Constructor visual: Gestiona tus chains con un editor intuitivo de arrastrar y soltar.
-  ● Seguimiento en tiempo real: Observa el progreso de la automatizacion paso a paso.
-
 🎨 TEMAS VISUALES — PERSONALIZA TU GEMINI
 Transforma tu espacio de trabajo y haz que Gemini sea realmente tuyo.
   ● Preajustes de color atractivos: Elige entre varios temas vivos para crear un entorno más personal.
   ● Fondos personalizados: Mejora la experiencia con fondos propios y elegantes efectos de cristal.
+  ● Diseño del chat: Ajusta Chat Width e Input Width en Default, %, o px; sincronízalos, elige la alineación de los mensajes y permite mensajes a ancho completo.
+
+🔔 NOTIFICACIONES DE RESPUESTA — ALÉJATE CON CONFIANZA
+Recibe avisos de escritorio sin tener que vigilar el chat todo el tiempo.
+  ● Avisos cuando está listo: Llega una notificación al terminar respuestas, imágenes, videos o informes de Deep Research.
+  ● Vuelve y escucha: Abre el chat original con un clic y usa sonido integrado o personalizado si quieres.
+
+🔗 CHAIN PROMPT — AUTOMATIZA FLUJOS COMPLEJOS
+Secuencias reutilizables de prompts con variables y un editor visual para trabajar por pasos.
+  ● Secuencias flexibles: Crea flujos reutilizables con variables dinámicas.
+  ● Editor y progreso: Arrastra y suelta, y sigue cada paso del progreso.
 
 💎 EXPERIENCIA FLUIDA
 ● Títulos inteligentes de pestañas: Cambia automáticamente el nombre de las pestañas para que coincidan con los títulos de tus chats, facilitando alternar entre varias sesiones de Gemini.

@@ -140,9 +140,27 @@
         "hideUpgradeReminder": {
           "title": "Upgrade-Hinweis ausblenden",
           "description": "Blendet den Gemini-Upgrade-Hinweis in der oberen Leiste aus."
+        },
+        "showChatSettingsShortcut": {
+          "title": "Chat-Layout-Verknüpfung anzeigen",
+          "description": "Zeigt in der oberen Leiste von Gemini eine Verknüpfung zum Chat-Layout an."
         }
       }
     }
+  },
+  "chatSettings": {
+    "title": "Chat-Layout",
+    "chatWidth": "Chat-Breite",
+    "inputWidth": "Eingabebreite",
+    "default": "Standard",
+    "percent": "Prozent",
+    "pixels": "Pixel",
+    "syncWidths": "Chat- und Eingabebreite synchronisieren",
+    "userMessages": "Nachrichten des Nutzers",
+    "alignment": "Ausrichtung",
+    "alignLeft": "Links ausrichten",
+    "alignRight": "Rechts ausrichten",
+    "allowFullWidthMessages": "Nachrichten über volle Breite erlauben"
   },
   "settingPanel": {
     "theme": {
@@ -534,15 +552,10 @@
   "whatsnew": {
     "title": "Was gibt's Neues",
     "releaseNotes": "Versionshinweise",
-    "shortcuts": {
-      "title": "Mit Shortcuts schneller durch Gemini",
-      "description": "Lege Shortcuts für Chats, Navigation und Aktionen im Tool-Menü fest, damit du deine häufigsten Gemini-Aktionen mit einem Tastendruck erreichst.",
-      "action": "Shortcuts festlegen"
-    },
-    "bulkDelete": {
-      "title": "Unerwünschte Chats schneller löschen",
-      "description": "Wähle mehrere Gemini-Chats aus, passe die Auswahl an und lösche unerwünschte Unterhaltungen gesammelt in einem klaren Ablauf.",
-      "action": "Bulk löschen"
+    "chatLayout": {
+      "title": "Gemini passt sich dir an",
+      "description": "Passe die Breite von Chat und Eingabe an, damit Gespräche mit Gemini komfortabler, fokussierter und leichter zu verfolgen sind.",
+      "action": "Chatlayout anpassen"
     }
   }
 }

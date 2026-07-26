@@ -1,0 +1,124 @@
+---
+title: Gemini Chat Layout Settings
+description: "Customize Google Gemini chat and prompt widths, message alignment, and full-width messages with Gemini Power Kit."
+head:
+  - tag: meta
+    attrs:
+      property: og:image
+      content: https://gpk.ronktsang.com/og/chat-layout.png
+  - tag: meta
+    attrs:
+      property: og:image:alt
+      content: Gemini Power Kit Chat layout panel for customizing Google Gemini chat and prompt widths
+  - tag: meta
+    attrs:
+      name: twitter:image
+      content: https://gpk.ronktsang.com/og/chat-layout.png
+  - tag: meta
+    attrs:
+      name: twitter:image:alt
+      content: Gemini Power Kit Chat layout panel for customizing Google Gemini chat and prompt widths
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: |
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "Gemini Chat Layout Settings",
+        "description": "Customize Google Gemini chat and prompt widths, message alignment, and full-width messages with Gemini Power Kit.",
+        "url": "https://gpk.ronktsang.com/features/chat-layout/",
+        "image": "https://gpk.ronktsang.com/og/chat-layout.png",
+        "inLanguage": "en",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Gemini Power Kit",
+          "url": "https://gpk.ronktsang.com/"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "Gemini Power Kit",
+          "applicationCategory": "BrowserApplication",
+          "operatingSystem": "Chrome, Chromium-based browsers"
+        }
+      }
+---
+
+import { Image } from 'astro:assets';
+import chatLayoutImg from '../../../assets/features/chat-layout.png';
+
+## Customize the Space Around Your Gemini Conversation
+
+**Chat layout** gives you direct control over the space used by a Gemini conversation, its prompt box, and your own messages. Use it when the default layout feels too narrow for comparison work, too wide for focused reading, or when you want the prompt box to line up with the conversation.
+
+It is part of **Theme** customization, so your layout settings stay available even when you hide the quick shortcut.
+
+## Where to Find Chat Layout
+
+On [gemini.google.com](https://gemini.google.com), select the **Chat layout** icon in the top bar. It sits immediately to the left of the **Theme** icon. The compact panel opens below the icon and applies changes to the current Gemini page as you adjust them.
+
+<Image
+  src={chatLayoutImg}
+  alt="Chat layout shortcut panel in Gemini showing width modes, width sliders, alignment buttons, and the full-width messages switch"
+  class="feature-image feature-image-full"
+/>
+
+*Chat layout feature panel — set chat and prompt widths, then adjust how your messages use that space.*
+
+## What Each Setting Does
+
+<div class="settings-card-grid">
+  <article class="settings-card">
+    <div class="settings-label">Chat Width</div>
+    <p class="settings-detail">Sets the maximum width of Gemini's conversation content. Choose <strong>Default</strong> to keep Gemini's native width, <strong>%</strong> for a viewport-relative maximum, or <strong>px</strong> for a fixed maximum.</p>
+    <p class="settings-when">Use a wider value for tables, code, and side-by-side reading; choose Default when you want Gemini's original layout back.</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">Input Width</div>
+    <p class="settings-detail">Sets the maximum width of the Gemini prompt area using the same Default, percentage, and pixel modes.</p>
+    <p class="settings-when">Use it when you prefer a compact prompt box or want it to align with a separately sized conversation.</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">Sync Chat Width and Input Width</div>
+    <p class="settings-detail">Keeps the prompt area matched to the chat width. When it is on, changing either width control updates both.</p>
+    <p class="settings-when">Recommended when you want a clean, aligned writing surface without maintaining two values.</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">User messages</div>
+    <p class="settings-detail">Choose left or right alignment for your messages, and turn on <strong>Allow full-width messages</strong> to let long messages use the full available chat width.</p>
+    <p class="settings-when">Left alignment can make a conversation read more like a document; full width is useful for long prompts or pasted content.</p>
+  </article>
+</div>
+
+## How to Use It
+
+1. Open [gemini.google.com](https://gemini.google.com) and select **Chat layout** in the top bar, immediately left of **Theme**.
+2. For **Chat Width** and **Input Width**, choose **Default**, **%**, or **px**.
+3. When using **%**, set a value from `35%` to `100%`. When using **px**, set a value from `700px` to `2000px`.
+4. Turn on **Sync Chat Width and Input Width** if both areas should stay aligned.
+5. Under **User messages**, choose left or right alignment and optionally enable **Allow full-width messages**.
+6. Return a width control to **Default** whenever you want Gemini's native maximum width for that area.
+
+Changes appear immediately and are kept for future Gemini pages. Switching a width to Default removes only that width override; it does not erase the last percentage or pixel value you chose.
+
+## Turn the Top-bar Shortcut On or Off
+
+The **Chat layout** shortcut is shown by default. To hide or restore it:
+
+1. Open the Gemini Power Kit settings panel in Gemini.
+2. Open **Settings** and then **Enhancements**.
+3. Under **Top bar customization**, turn **Show Chat layout shortcut** off or on.
+
+Turning this switch off only hides the top-bar icon and closes its open panel. It does not reset your Chat layout choices or stop them from applying. You can always manage the same controls from **Settings** → **Theme** → **Chat layout**, then turn the shortcut back on whenever you want faster access.
+
+## Important Notes
+
+- Chat layout changes maximum widths; the available viewport can still make the visible area smaller.
+- **Default** preserves Gemini's native width for that control.
+- This version does not change font size or line height.
+- Gemini's interface can change over time. Keep Gemini Power Kit updated for the latest compatibility fixes.
+
+## Related Features
+
+- [Theme Customizer](/features/theme/)
+- [Chat Outline](/features/chat-outline/)

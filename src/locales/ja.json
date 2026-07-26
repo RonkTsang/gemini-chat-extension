@@ -140,9 +140,27 @@
         "hideUpgradeReminder": {
           "title": "アップグレード通知を非表示",
           "description": "Gemini のトップバーからアップグレード通知を非表示にします。"
+        },
+        "showChatSettingsShortcut": {
+          "title": "チャットのレイアウトのショートカットを表示",
+          "description": "Gemini のトップバーにチャットのレイアウトへのショートカットを表示します。"
         }
       }
     }
+  },
+  "chatSettings": {
+    "title": "チャットのレイアウト",
+    "chatWidth": "チャットの幅",
+    "inputWidth": "入力欄の幅",
+    "default": "デフォルト",
+    "percent": "パーセント",
+    "pixels": "ピクセル",
+    "syncWidths": "チャット幅と入力欄の幅を同期",
+    "userMessages": "ユーザーのメッセージ",
+    "alignment": "配置",
+    "alignLeft": "左寄せ",
+    "alignRight": "右寄せ",
+    "allowFullWidthMessages": "メッセージを全幅で表示"
   },
   "settingPanel": {
     "theme": {
@@ -534,15 +552,10 @@
   "whatsnew": {
     "title": "新機能",
     "releaseNotes": "リリースノート",
-    "shortcuts": {
-      "title": "Geminiをもっとすばやく操作",
-      "description": "チャット、ナビゲーション、ツールメニューの操作にショートカットを設定して、よく使う Gemini の操作を1キーで呼び出せます。",
-      "action": "ショートカットを設定"
-    },
-    "bulkDelete": {
-      "title": "不要なチャットをすばやく整理",
-      "description": "複数の Gemini チャットを選び、選択を調整して、不要な会話をまとめて削除できます。",
-      "action": "一括削除"
+    "chatLayout": {
+      "title": "Geminiを使いやすく",
+      "description": "チャットと入力欄の幅を調整して、Gemini との会話をより快適で、集中しやすく、追いやすくします。",
+      "action": "チャットレイアウトを調整"
     }
   }
 }

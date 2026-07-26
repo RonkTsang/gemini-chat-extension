@@ -140,9 +140,27 @@
         "hideUpgradeReminder": {
           "title": "隱藏升級提醒",
           "description": "隱藏 Gemini 頂部工具列中的升級提醒。"
+        },
+        "showChatSettingsShortcut": {
+          "title": "顯示聊天版面捷徑",
+          "description": "在 Gemini 頂部列中顯示前往聊天版面的捷徑。"
         }
       }
     }
+  },
+  "chatSettings": {
+    "title": "聊天版面",
+    "chatWidth": "聊天寬度",
+    "inputWidth": "輸入欄寬度",
+    "default": "預設",
+    "percent": "百分比",
+    "pixels": "像素",
+    "syncWidths": "同步聊天寬度與輸入欄寬度",
+    "userMessages": "使用者訊息",
+    "alignment": "對齊",
+    "alignLeft": "靠左",
+    "alignRight": "靠右",
+    "allowFullWidthMessages": "允許訊息佔滿寬度"
   },
   "settingPanel": {
     "theme": {
@@ -534,15 +552,10 @@
   "whatsnew": {
     "title": "更新內容",
     "releaseNotes": "更新說明",
-    "shortcuts": {
-      "title": "更快切換 Gemini 操作",
-      "description": "為聊天、導覽和工具選單操作設定快捷鍵，讓最常用的 Gemini 操作一鍵就能到位。",
-      "action": "設定快捷鍵"
-    },
-    "bulkDelete": {
-      "title": "更快清理無用對話",
-      "description": "勾選多個 Gemini 對話，調整選取後一次刪除無用記錄，清理歷史更有效率。",
-      "action": "批量刪除"
+    "chatLayout": {
+      "title": "讓 Gemini 更順手",
+      "description": "調整聊天區和輸入框的寬度，讓 Gemini 對話更舒適、更專注，也更容易瀏覽。",
+      "action": "調整聊天版面"
     }
   }
 }

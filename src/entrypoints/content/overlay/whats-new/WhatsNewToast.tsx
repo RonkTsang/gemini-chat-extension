@@ -53,6 +53,13 @@ export function WhatsNewToast({ version, features, onClose }: WhatsNewToastProps
       emitSync('theme-floating-panel:open', {
         source: 'whats-new',
       })
+      return
+    }
+
+    if (action.action === 'chat-settings-panel') {
+      emitSync('chat-settings-panel:toggle', {
+        source: 'whats-new',
+      })
     }
   }
 

@@ -68,6 +68,7 @@ export default defineConfig({
 						{ label: 'Notifications', translations: { 'zh-CN': '回复完成通知' }, slug: 'features/notifications' },
 						{ label: 'Bulk Delete', translations: { 'zh-CN': '批量删除' }, slug: 'features/bulk-delete' },
 						{ label: 'Theme', translations: { 'zh-CN': '主题个性化' }, slug: 'features/theme' },
+						{ label: 'Chat Layout', translations: { 'zh-CN': '对话布局' }, slug: 'features/chat-layout' },
 					],
 				},
 				{

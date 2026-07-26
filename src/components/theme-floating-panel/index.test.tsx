@@ -22,7 +22,12 @@ vi.mock('@/components/ui/tooltip', () => ({
 }))
 
 vi.mock('@/components/setting-panel/views/theme/ThemeSettingsControls', () => ({
-  ThemeSettingsControls: () => null,
+  ThemeSettingsControls: ({ variant }: { variant?: string }) => (
+    <div
+      data-theme-settings-controls
+      data-variant={variant ?? 'default'}
+    />
+  ),
 }))
 
 vi.mock('@/components/setting-panel/views/theme/useThemeSettingsController', () => ({
@@ -67,6 +72,10 @@ describe('ThemeFloatingPanel entry behavior', () => {
     const buttons = container.querySelectorAll('button')
     expect(buttons).toHaveLength(1)
     expect(buttons[0]?.getAttribute('aria-label')).toBe('Close theme panel')
+    expect(
+      container.querySelector('[data-theme-settings-controls]')
+        ?.getAttribute('data-variant'),
+    ).toBe('compact')
   })
 
   it('keeps the back action when opened from Theme settings', async () => {

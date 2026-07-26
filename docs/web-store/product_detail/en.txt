@@ -9,34 +9,31 @@ Eliminate the friction of copy-pasting. Interact with Gemini directly from any t
   ● Instant Follow-up: Select any text and ask immediately.
   ● Custom Prompt Library: Build your own shortcuts like "Summarize" or "Explain" to run in one click.
 
-🗂️ CHAT OUTLINE — NEVER GET LOST AGAIN
+🗂️ CHAT OUTLINE — KEEP LONG CHATS CLEAR
 Stop scrolling endlessly through long threads.
   ● Instant Overview: See every prompt in your conversation at a glance.
-  ● One-Click Navigation: Jump directly to any part of the chat.
-  ● Pinned Mode: Keep your outline always visible for heavy research sessions.
+  ● Jump and Pin: Go directly to any part of the chat, or keep the outline visible for research sessions.
 
 🗑️ BULK DELETE — CLEAN UP GEMINI CHATS WITHOUT TOUCHING PINNED ONES
 Clear temporary conversations in batches, while leaving the chats you pinned out of the cleanup.
   ● Exclude pinned chats in one action: Turn on Exclude pinned to skip pinned conversations when selecting a recent batch—no need to manually remove them from the selection.
   ● Delete the right-sized batch: Choose the 10, 20, 30, or 50 most recent chats, adjust individual selections if needed, then confirm and track deletion progress.
 
-🔔 REPLY NOTIFICATIONS — STEP AWAY WITH CONFIDENCE
-Let Gemini work in the background without constantly checking the tab.
-  ● Ready Alerts: Get a desktop notification when a standard reply, image, video, or Deep Research report is ready.
-  ● Click to Return: Open the originating Gemini chat directly from the notification.
-  ● Optional Sound: Add a short built-in or custom audio cue when notifications appear.
-
-🔗 CHAIN PROMPT — AUTOMATE COMPLEX WORKFLOWS
-Turn multi-step tasks into one-click automations.
-  ● Workflow Automation: Execute a sequence of prompts automatically.
-  ● Dynamic Variables: Define reusable placeholders for flexible workflows.
-  ● Visual Builder: Manage your chains with an intuitive drag-and-drop editor.
-  ● Real-time Tracking: Watch your automation progress step-by-step.
-
 🎨 VISUAL THEMES — PERSONALIZE YOUR GEMINI
 Transform your workspace and make Gemini truly yours.
   ● Stunning Color Presets: Choose from a variety of vibrant themes to create a more personal environment.
   ● Custom Wallpapers: Elevate your experience with personal backgrounds and elegant glass effects.
+  ● Chat layout: Adjust Chat Width and Input Width in Default, % or px; sync them, choose message alignment, and allow full-width messages.
+
+🔔 REPLY NOTIFICATIONS — KNOW WHEN GEMINI IS READY
+Let Gemini work in the background without constantly checking the tab.
+  ● Ready Alerts: Get a desktop notification when a standard reply, image, video, or Deep Research report is ready.
+  ● One-Click Return and Sound: Open the originating Gemini chat from the notification, with an optional built-in or custom audio cue.
+
+🔗 CHAIN PROMPT — AUTOMATE MULTI-STEP WORK
+Turn multi-step tasks into one-click automations.
+  ● Reusable Sequences: Execute prompt sequences with dynamic variables.
+  ● Visual Control: Manage chains in a drag-and-drop editor and track progress step by step.
 
 💎 SEAMLESS EXPERIENCE
 ● Smart Tab Titles: Automatically renames browser tabs to match your chat titles, making it effortless to switch between multiple Gemini sessions.
