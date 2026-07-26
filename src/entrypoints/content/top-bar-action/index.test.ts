@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { eventBus } from '@/utils/eventbus'
-import { startTopBarAction, stopTopBarAction } from './index'
+import {
+  startChatSettingsTopBarAction,
+  startTopBarAction,
+  stopChatSettingsTopBarAction,
+  stopTopBarAction,
+} from './index'
 
 vi.mock('@/utils/eventbus', () => ({
   eventBus: {
@@ -14,6 +19,10 @@ vi.mock('@/utils/i18n', () => ({
 
 const ENTRY_SELECTOR = '[data-test-id="gemini-power-kit-theme-top-bar-container"]'
 const BUTTON_SELECTOR = '[data-test-id="gemini-power-kit-theme-top-bar-button"]'
+const CHAT_ENTRY_SELECTOR =
+  '[data-test-id="gemini-power-kit-chat-settings-top-bar-container"]'
+const CHAT_BUTTON_SELECTOR =
+  '[data-test-id="gemini-power-kit-chat-settings-top-bar-button"]'
 
 function renderTopBar(children = '<div data-native="last"></div>'): void {
   document.body.innerHTML = `
@@ -47,7 +56,9 @@ describe('Theme top bar action', () => {
   })
 
   afterEach(() => {
+    stopChatSettingsTopBarAction()
     stopTopBarAction()
+    document.body.classList.remove('light-theme')
     document.body.innerHTML = ''
     vi.clearAllMocks()
   })
@@ -72,6 +83,58 @@ describe('Theme top bar action', () => {
     expect(eventBus.emitSync).toHaveBeenCalledWith('theme-floating-panel:open', {
       source: 'top-bar-action',
     })
+  })
+
+  it('places Chat layout directly left of Theme and opens its panel', () => {
+    startTopBarAction()
+    startChatSettingsTopBarAction()
+
+    const chatEntry = document.querySelector(CHAT_ENTRY_SELECTOR)
+    const themeEntry = document.querySelector(ENTRY_SELECTOR)
+    const chatButton = document.querySelector<HTMLButtonElement>(
+      CHAT_BUTTON_SELECTOR,
+    )
+
+    expect(chatEntry?.nextElementSibling).toBe(themeEntry)
+    expect(chatButton?.getAttribute('aria-label')).toBe('Chat layout')
+    expect(chatButton?.querySelector('svg')?.getAttribute('viewBox'))
+      .toBe('0 0 24 24')
+
+    chatButton?.click()
+
+    expect(eventBus.emitSync).toHaveBeenCalledWith(
+      'chat-settings-panel:toggle',
+      { source: 'top-bar-action' },
+    )
+  })
+
+  it('uses black for both shortcuts in Light mode', () => {
+    document.body.classList.add('light-theme')
+    startTopBarAction()
+    startChatSettingsTopBarAction()
+
+    const injectedStyle = document.getElementById(
+      'gpk-theme-top-bar-action-style',
+    )
+
+    expect(injectedStyle?.textContent).toContain(
+      'body.light-theme :is([data-test-id="gemini-power-kit-theme-top-bar-button"], [data-test-id="gemini-power-kit-chat-settings-top-bar-button"])',
+    )
+    expect(injectedStyle?.textContent).toContain('color: rgb(0, 0, 0);')
+  })
+
+  it('keeps Theme active when the Chat layout shortcut is disabled', () => {
+    startTopBarAction()
+    startChatSettingsTopBarAction()
+
+    stopChatSettingsTopBarAction()
+
+    expect(document.querySelector(CHAT_ENTRY_SELECTOR)).toBeNull()
+    expect(document.querySelector(ENTRY_SELECTOR)).not.toBeNull()
+    expect(eventBus.emitSync).toHaveBeenCalledWith(
+      'chat-settings-panel:close',
+      { source: 'shortcut-hidden' },
+    )
   })
 
   it('appends the entry when the right section has no native children', () => {

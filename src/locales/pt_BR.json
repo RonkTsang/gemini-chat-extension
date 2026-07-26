@@ -140,9 +140,27 @@
         "hideUpgradeReminder": {
           "title": "Ocultar lembrete de atualização",
           "description": "Oculta o lembrete de atualização do Gemini na barra superior."
+        },
+        "showChatSettingsShortcut": {
+          "title": "Mostrar atalho para o layout do chat",
+          "description": "Mostra um atalho para o layout do chat na barra superior do Gemini."
         }
       }
     }
+  },
+  "chatSettings": {
+    "title": "Layout do chat",
+    "chatWidth": "Largura do chat",
+    "inputWidth": "Largura da entrada",
+    "default": "Padrão",
+    "percent": "Porcentagem",
+    "pixels": "Pixels",
+    "syncWidths": "Sincronizar largura do chat e da entrada",
+    "userMessages": "Mensagens do usuário",
+    "alignment": "Alinhamento",
+    "alignLeft": "Alinhar à esquerda",
+    "alignRight": "Alinhar à direita",
+    "allowFullWidthMessages": "Permitir mensagens em largura total"
   },
   "settingPanel": {
     "theme": {

@@ -140,9 +140,27 @@
         "hideUpgradeReminder": {
           "title": "Masquer le rappel de mise à niveau",
           "description": "Masque le rappel de mise à niveau de Gemini dans la barre supérieure."
+        },
+        "showChatSettingsShortcut": {
+          "title": "Afficher le raccourci de mise en page du chat",
+          "description": "Affiche un raccourci vers la mise en page du chat dans la barre supérieure de Gemini."
         }
       }
     }
+  },
+  "chatSettings": {
+    "title": "Mise en page du chat",
+    "chatWidth": "Largeur du chat",
+    "inputWidth": "Largeur de saisie",
+    "default": "Par défaut",
+    "percent": "Pourcentage",
+    "pixels": "Pixels",
+    "syncWidths": "Synchroniser la largeur du chat et de la saisie",
+    "userMessages": "Messages de l'utilisateur",
+    "alignment": "Alignement",
+    "alignLeft": "Aligner à gauche",
+    "alignRight": "Aligner à droite",
+    "allowFullWidthMessages": "Autoriser les messages pleine largeur"
   },
   "settingPanel": {
     "theme": {

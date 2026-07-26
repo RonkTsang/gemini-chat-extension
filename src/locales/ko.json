@@ -140,9 +140,27 @@
         "hideUpgradeReminder": {
           "title": "업그레이드 알림 숨기기",
           "description": "Gemini 상단 바에서 업그레이드 알림을 숨깁니다."
+        },
+        "showChatSettingsShortcut": {
+          "title": "채팅 레이아웃 바로가기 표시",
+          "description": "Gemini 상단 바에 채팅 레이아웃 바로가기를 표시합니다."
         }
       }
     }
+  },
+  "chatSettings": {
+    "title": "채팅 레이아웃",
+    "chatWidth": "채팅 너비",
+    "inputWidth": "입력창 너비",
+    "default": "기본값",
+    "percent": "퍼센트",
+    "pixels": "픽셀",
+    "syncWidths": "채팅 너비와 입력창 너비 동기화",
+    "userMessages": "사용자 메시지",
+    "alignment": "정렬",
+    "alignLeft": "왼쪽 정렬",
+    "alignRight": "오른쪽 정렬",
+    "allowFullWidthMessages": "전체 너비 메시지 허용"
   },
   "settingPanel": {
     "theme": {

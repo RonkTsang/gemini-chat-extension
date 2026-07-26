@@ -6,6 +6,7 @@ import { GEM_DEV_EVENTS } from '@/common/event'
 import { renderOverlay } from "./overlay"
 import { startPowerKitEntry, stopPowerKitEntry } from './power-kit-entry'
 import { createTopBarCustomizationController } from './top-bar-customization'
+import { createChatSettingsController } from './chat-settings'
 import { startBulkDelete, stopBulkDelete } from './bulk-delete'
 import { setDevForceBulkDeleteFailure } from './bulk-delete/deleteQueue'
 import { createBulkDeleteSettingsController } from './bulk-delete/settings'
@@ -180,6 +181,8 @@ export default defineContentScript({
     })
     await gemAvatarSettings.start()
     startPowerKitEntry()
+    const chatSettings = createChatSettingsController()
+    await chatSettings.start()
     const topBarCustomization = createTopBarCustomizationController()
     await topBarCustomization.start()
     ctx.onInvalidated(() => {
@@ -192,6 +195,7 @@ export default defineContentScript({
       bulkDeleteSettings.stop()
       gemAvatarSettings.stop()
       stopPowerKitEntry()
+      chatSettings.stop()
       topBarCustomization.stop()
     })
     console.log('[ContentScript] UI mounted, context still valid:', ctx.isValid)

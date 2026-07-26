@@ -32,10 +32,12 @@ describe('topBarCustomizationSettings', () => {
     expect(normalizeTopBarSettings(null)).toEqual(DEFAULT_TOP_BAR_SETTINGS)
     expect(
       normalizeTopBarSettings({
+        showChatSettingsShortcut: false,
         showThemeShortcut: false,
         hideUpgradeReminder: false,
       }),
     ).toEqual({
+      showChatSettingsShortcut: false,
       showThemeShortcut: false,
       hideUpgradeReminder: false,
     })
@@ -54,6 +56,7 @@ describe('topBarCustomizationSettings', () => {
     })
 
     await expect(getTopBarSettings()).resolves.toEqual({
+      showChatSettingsShortcut: true,
       showThemeShortcut: false,
       hideUpgradeReminder: true,
     })
@@ -68,11 +71,13 @@ describe('topBarCustomizationSettings', () => {
     await expect(
       updateTopBarSettings({ hideUpgradeReminder: false }),
     ).resolves.toEqual({
+      showChatSettingsShortcut: true,
       showThemeShortcut: false,
       hideUpgradeReminder: false,
     })
 
     expect(mockSetValue).toHaveBeenCalledWith({
+      showChatSettingsShortcut: true,
       showThemeShortcut: false,
       hideUpgradeReminder: false,
     })

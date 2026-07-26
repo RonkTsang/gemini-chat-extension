@@ -12,6 +12,7 @@ type SettingsCloseSource =
   | 'run-modal'
   | 'manual'
   | 'theme-floating-panel'
+  | 'chat-settings-panel'
   | 'shortcut'
 
 export const GEM_EXT_EVENTS = {
@@ -98,6 +99,20 @@ export interface AppEvents {
     source: 'back-to-settings' | 'escape' | 'manual'
     reopenSettings?: boolean
   };
+
+  // Chat layout shortcut panel
+  'chat-settings-panel:toggle': {
+    source: 'top-bar-action'
+  };
+  'chat-settings-panel:close': {
+    source:
+      | 'escape'
+      | 'outside'
+      | 'shortcut-hidden'
+      | 'theme-panel'
+      | 'settings-panel'
+  };
+  'chat-settings-panel:anchor-changed': undefined;
 
   // Chain Prompt
   'execution:aborted-by-chat-switch': {

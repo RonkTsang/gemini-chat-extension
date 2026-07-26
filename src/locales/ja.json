@@ -140,9 +140,27 @@
         "hideUpgradeReminder": {
           "title": "アップグレード通知を非表示",
           "description": "Gemini のトップバーからアップグレード通知を非表示にします。"
+        },
+        "showChatSettingsShortcut": {
+          "title": "チャットのレイアウトのショートカットを表示",
+          "description": "Gemini のトップバーにチャットのレイアウトへのショートカットを表示します。"
         }
       }
     }
+  },
+  "chatSettings": {
+    "title": "チャットのレイアウト",
+    "chatWidth": "チャットの幅",
+    "inputWidth": "入力欄の幅",
+    "default": "デフォルト",
+    "percent": "パーセント",
+    "pixels": "ピクセル",
+    "syncWidths": "チャット幅と入力欄の幅を同期",
+    "userMessages": "ユーザーのメッセージ",
+    "alignment": "配置",
+    "alignLeft": "左寄せ",
+    "alignRight": "右寄せ",
+    "allowFullWidthMessages": "メッセージを全幅で表示"
   },
   "settingPanel": {
     "theme": {

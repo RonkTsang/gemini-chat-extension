@@ -140,9 +140,27 @@
         "hideUpgradeReminder": {
           "title": "Hide upgrade reminder",
           "description": "Hide Gemini's upgrade reminder from the top bar."
+        },
+        "showChatSettingsShortcut": {
+          "title": "Show Chat layout shortcut",
+          "description": "Show a shortcut to Chat layout in Gemini's top bar."
         }
       }
     }
+  },
+  "chatSettings": {
+    "title": "Chat layout",
+    "chatWidth": "Chat Width",
+    "inputWidth": "Input Width",
+    "default": "Default",
+    "percent": "Percent",
+    "pixels": "Pixels",
+    "syncWidths": "Sync Chat Width and Input Width",
+    "userMessages": "User messages",
+    "alignment": "Alignment",
+    "alignLeft": "Align left",
+    "alignRight": "Align right",
+    "allowFullWidthMessages": "Allow full-width messages"
   },
   "settingPanel": {
     "theme": {

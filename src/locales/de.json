@@ -140,9 +140,27 @@
         "hideUpgradeReminder": {
           "title": "Upgrade-Hinweis ausblenden",
           "description": "Blendet den Gemini-Upgrade-Hinweis in der oberen Leiste aus."
+        },
+        "showChatSettingsShortcut": {
+          "title": "Chat-Layout-Verknüpfung anzeigen",
+          "description": "Zeigt in der oberen Leiste von Gemini eine Verknüpfung zum Chat-Layout an."
         }
       }
     }
+  },
+  "chatSettings": {
+    "title": "Chat-Layout",
+    "chatWidth": "Chat-Breite",
+    "inputWidth": "Eingabebreite",
+    "default": "Standard",
+    "percent": "Prozent",
+    "pixels": "Pixel",
+    "syncWidths": "Chat- und Eingabebreite synchronisieren",
+    "userMessages": "Nachrichten des Nutzers",
+    "alignment": "Ausrichtung",
+    "alignLeft": "Links ausrichten",
+    "alignRight": "Rechts ausrichten",
+    "allowFullWidthMessages": "Nachrichten über volle Breite erlauben"
   },
   "settingPanel": {
     "theme": {

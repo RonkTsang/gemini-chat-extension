@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { SettingPanel } from "@/components/setting-panel"
 import { PageShortcutController } from "@/components/page-shortcuts/PageShortcutController"
 import { ThemeFloatingPanel } from "@/components/theme-floating-panel"
+import { ChatSettingsPanel } from "@/components/chat-settings-panel"
 import { useSyncColorMode } from "@/hooks/useSyncColorMode"
 import QuickFollowUp from "./quick-follow-up"
 import ExtensionUpdate from "./extension-update"
@@ -18,6 +19,7 @@ function App() {
       <PageShortcutController />
       <SettingPanel />
       <ThemeFloatingPanel />
+      <ChatSettingsPanel />
       <Toaster />
       <QuickFollowUp />
       <ExtensionUpdate />

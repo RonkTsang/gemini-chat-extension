@@ -140,9 +140,27 @@
         "hideUpgradeReminder": {
           "title": "隐藏升级提醒",
           "description": "隐藏 Gemini 顶栏中的升级提醒。"
+        },
+        "showChatSettingsShortcut": {
+          "title": "显示聊天布局快捷方式",
+          "description": "在 Gemini 顶栏中显示前往聊天布局的快捷方式。"
         }
       }
     }
+  },
+  "chatSettings": {
+    "title": "聊天布局",
+    "chatWidth": "聊天宽度",
+    "inputWidth": "输入框宽度",
+    "default": "默认",
+    "percent": "百分比",
+    "pixels": "像素",
+    "syncWidths": "同步聊天宽度和输入框宽度",
+    "userMessages": "用户消息",
+    "alignment": "对齐",
+    "alignLeft": "左对齐",
+    "alignRight": "右对齐",
+    "allowFullWidthMessages": "允许消息占满宽度"
   },
   "settingPanel": {
     "theme": {

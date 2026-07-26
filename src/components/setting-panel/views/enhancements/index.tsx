@@ -226,6 +226,21 @@ export function EnhancementsSettingsView() {
                 </Text>
                 <FeatureToggleRow
                   title={t(
+                    'settings.enhancements.topBarCustomization.showChatSettingsShortcut.title',
+                  )}
+                  description={t(
+                    'settings.enhancements.topBarCustomization.showChatSettingsShortcut.description',
+                  )}
+                  checked={topBarSettings.showChatSettingsShortcut}
+                  disabled={isTopBarDisabled}
+                  onCheckedChange={(enabled) => {
+                    void updateTopBarCustomization({
+                      showChatSettingsShortcut: enabled,
+                    })
+                  }}
+                />
+                <FeatureToggleRow
+                  title={t(
                     'settings.enhancements.topBarCustomization.showThemeShortcut.title',
                   )}
                   description={t(

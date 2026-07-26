@@ -1,6 +1,7 @@
 import { storage } from '#imports'
 
 export interface TopBarSettings {
+  showChatSettingsShortcut: boolean
   showThemeShortcut: boolean
   hideUpgradeReminder: boolean
 }
@@ -8,6 +9,7 @@ export interface TopBarSettings {
 export type TopBarSettingsPatch = Partial<TopBarSettings>
 
 export const DEFAULT_TOP_BAR_SETTINGS: TopBarSettings = {
+  showChatSettingsShortcut: true,
   showThemeShortcut: true,
   hideUpgradeReminder: true,
 }
@@ -18,6 +20,10 @@ export function normalizeTopBarSettings(raw: unknown): TopBarSettings {
     : {}
 
   return {
+    showChatSettingsShortcut:
+      typeof source.showChatSettingsShortcut === 'boolean'
+        ? source.showChatSettingsShortcut
+        : DEFAULT_TOP_BAR_SETTINGS.showChatSettingsShortcut,
     showThemeShortcut: typeof source.showThemeShortcut === 'boolean'
       ? source.showThemeShortcut
       : DEFAULT_TOP_BAR_SETTINGS.showThemeShortcut,
