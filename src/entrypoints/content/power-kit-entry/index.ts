@@ -10,8 +10,6 @@ const MOBILE_POWER_KIT_BUTTON_TEST_ID = 'mobile-gemini-power-kit-control'
 const MOBILE_SETTINGS_BUTTON_TEST_ID = 'mobile-settings-and-help-control'
 
 const POWER_KIT_LABEL = 'Gemini Power kit'
-const MAVATAR_FALLBACK_ENTRY_SIZE_PX = 36
-const MAVATAR_FALLBACK_ICON_SIZE_PX = 18
 const DEFAULT_POWER_KIT_ICON_SIZE_PX = 20
 const MAVATAR_POWER_KIT_ICON_SIZE_PX = 16
 const WIDE_MAVATAR_EXPANDED_POWER_KIT_ICON_SIZE_PX = 18
@@ -34,7 +32,7 @@ const SYNC_RELATED_SELECTOR = [
   `button[data-test-id="${DESKTOP_MAVATAR_SETTINGS_BUTTON_TEST_ID}"]`,
   `gem-icon-button[data-test-id="${DESKTOP_POWER_KIT_HOST_TEST_ID}"]`,
   `button[data-test-id="${DESKTOP_POWER_KIT_HOST_TEST_ID}"]`,
-  `div[data-test-id="${DESKTOP_MAVATAR_POWER_KIT_CONTAINER_TEST_ID}"]`,
+  `[data-test-id="${DESKTOP_MAVATAR_POWER_KIT_CONTAINER_TEST_ID}"]`,
   `button[data-test-id="${MOBILE_SETTINGS_BUTTON_TEST_ID}"]`,
   'sidenav-mavatar-footer',
   '.mavatar-footer-row',
@@ -48,18 +46,36 @@ type DesktopVariant = 'expanded' | 'collapsed'
 
 const BADGE_DOT_ATTR = 'data-gpk-badge'
 const BADGE_STYLE_ID = 'gpk-badge-style'
+const ENTRY_STYLE_ID = 'gpk-side-nav-entry-style'
 const TOOLTIP_STYLE_ID = 'gpk-tooltip-style'
+const MAVATAR_ENTRY_ATTR = 'data-gpk-mavatar-entry'
+const MAVATAR_ENTRY_BUTTON_ATTR = 'data-gpk-mavatar-entry-button'
+const MAVATAR_ENTRY_ICON_ATTR = 'data-gpk-mavatar-entry-icon'
 
 let badgeVisible = false
 
+const ensureInjectedStyle = (styleId: string, css: string) => {
+  let style = document.getElementById(styleId) as HTMLStyleElement | null
+  if (!style) {
+    style = document.createElement('style')
+    style.id = styleId
+    document.head.appendChild(style)
+  }
+
+  if (style.textContent !== css) {
+    style.textContent = css
+  }
+}
+
 const injectBadgeStyle = () => {
-  if (document.getElementById(BADGE_STYLE_ID)) return
-  const style = document.createElement('style')
-  style.id = BADGE_STYLE_ID
-  style.textContent = `
+  const css = `
 mat-icon[data-gpk-icon-applied="1"] {
   position: relative !important;
   overflow: visible !important;
+}
+[${MAVATAR_ENTRY_ICON_ATTR}] {
+  position: relative;
+  overflow: visible;
 }
 [${BADGE_DOT_ATTR}="icon"] {
   position: absolute;
@@ -90,7 +106,7 @@ mat-icon[data-gpk-icon-applied="1"] {
   font-family: inherit;
 }
 `
-  document.head.appendChild(style)
+  ensureInjectedStyle(BADGE_STYLE_ID, css)
 }
 
 const ensureBadgeDot = (el: HTMLElement, mode: 'icon' | 'inline') => {
@@ -122,11 +138,98 @@ const removeAllBadgeDots = () => {
 
 // ── End badge state ──────────────────────────────────────────────────────────
 
+const injectEntryStyle = () => {
+  const css = `
+[${MAVATAR_ENTRY_ATTR}] {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  color: var(
+    --lumi-sys-color--on-surface,
+    var(--gem-sys-color--on-surface, currentColor)
+  );
+}
+
+[${MAVATAR_ENTRY_ATTR}][data-gpk-variant="collapsed"] {
+  margin: 4px;
+}
+
+[${MAVATAR_ENTRY_BUTTON_ATTR}] {
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  margin: 0;
+  padding: 6px;
+  border: 0;
+  border-radius: 9999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+  overflow: visible;
+  -webkit-tap-highlight-color: transparent;
+}
+
+[${MAVATAR_ENTRY_BUTTON_ATTR}]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+}
+
+[${MAVATAR_ENTRY_BUTTON_ATTR}]:hover::before {
+  opacity: 0.08;
+}
+
+[${MAVATAR_ENTRY_BUTTON_ATTR}]:focus-visible::before {
+  opacity: 0.12;
+}
+
+[${MAVATAR_ENTRY_BUTTON_ATTR}]:active::before {
+  opacity: 0.12;
+}
+
+[${MAVATAR_ENTRY_BUTTON_ATTR}]:focus-visible {
+  outline: 2px solid var(--gem-sys-color--primary, currentColor);
+  outline-offset: 2px;
+}
+
+[${MAVATAR_ENTRY_ICON_ATTR}] {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+}
+`
+  ensureInjectedStyle(ENTRY_STYLE_ID, css)
+}
+
 const injectTooltipStyle = () => {
-  if (document.getElementById(TOOLTIP_STYLE_ID)) return
-  const style = document.createElement('style')
-  style.id = TOOLTIP_STYLE_ID
-  style.textContent = `
+  const css = `
 .tippy-box[data-theme~='gemini-tooltip'] {
   background: rgb(0, 0, 0);
   border-radius: 12px;
@@ -147,7 +250,7 @@ body.dark-theme .tippy-box[data-theme~='gemini-tooltip'] {
   padding: 8px 16px;
 }
 `
-  document.head.appendChild(style)
+  ensureInjectedStyle(TOOLTIP_STYLE_ID, css)
 }
 
 let rafId: number | null = null
@@ -194,11 +297,11 @@ const getSideNavRoot = (): HTMLElement | null => document.querySelector('side-na
 
 const getLayoutRoot = (): HTMLElement | null => document.querySelector('chat-app')
 
-const openThemeSettings = () => {
+const openEnhancementsSettings = () => {
   eventBus.emitSync('settings:open', {
     from: 'prompt-entrance',
     open: true,
-    module: 'theme',
+    module: 'enhancements',
   })
 }
 
@@ -220,26 +323,7 @@ const setTextIfDifferent = (el: Element, value: string) => {
   }
 }
 
-const syncAttributesFromSource = (
-  source: Element,
-  target: Element,
-  preservedAttrs: readonly string[] = []
-) => {
-  const preserved = new Set(preservedAttrs)
-  const sourceAttrNames = new Set(Array.from(source.attributes).map((attr) => attr.name))
-
-  for (const attr of Array.from(target.attributes)) {
-    if (!sourceAttrNames.has(attr.name) && !preserved.has(attr.name)) {
-      target.removeAttribute(attr.name)
-    }
-  }
-
-  for (const attr of Array.from(source.attributes)) {
-    setAttrIfDifferent(target, attr.name, attr.value)
-  }
-}
-
-const bindThemeOpenHandler = (button: HTMLElement) => {
+const bindSettingsOpenHandler = (button: HTMLElement) => {
   if (button.dataset.gpkBound === '1') return
   button.dataset.gpkBound = '1'
   button.addEventListener('click', (event) => {
@@ -252,7 +336,7 @@ const bindThemeOpenHandler = (button: HTMLElement) => {
       removeAllBadgeDots()
       void dismissBadge()
     }
-    openThemeSettings()
+    openEnhancementsSettings()
   })
 }
 
@@ -303,6 +387,7 @@ const ensureDesktopTooltip = (
 
   try {
     const instance = tippy(button, {
+      appendTo: () => document.body,
       content: POWER_KIT_LABEL,
       placement,
       animation: 'shift-away-subtle',
@@ -336,16 +421,6 @@ const sweepDesktopTooltipInstances = () => {
       desktopTooltipInstances.delete(instance)
     }
   }
-}
-
-const getElementPixelSize = (element: Element | null, fallbackPx = DEFAULT_POWER_KIT_ICON_SIZE_PX) => {
-  if (!(element instanceof HTMLElement)) return fallbackPx
-
-  const rect = element.getBoundingClientRect()
-  if (rect.width > 0) return Math.round(rect.width)
-
-  const fontSize = Number.parseFloat(getComputedStyle(element).fontSize)
-  return Number.isFinite(fontSize) && fontSize > 0 ? Math.round(fontSize) : fallbackPx
 }
 
 const isVisibleElement = (element: Element | null) => {
@@ -412,7 +487,7 @@ const decorateDesktopEntry = (host: HTMLElement, variant: DesktopVariant) => {
   htmlButton.style.setProperty('--mat-icon-button-icon-size', '20px')
   removeAttrIfPresent(button, 'aria-haspopup')
   removeAttrIfPresent(button, 'aria-expanded')
-  bindThemeOpenHandler(button as HTMLElement)
+  bindSettingsOpenHandler(button as HTMLElement)
 
   const icon = host.querySelector('mat-icon[data-test-id="side-nav-action-button-icon"], mat-icon')
   applyPowerKitSvgIcon(icon)
@@ -446,104 +521,72 @@ const getDesktopMavatarVariant = (settingsButton: HTMLElement): DesktopVariant =
   return sideNav?.classList.contains('collapsed') ? 'collapsed' : 'expanded'
 }
 
-const getDesktopMavatarPowerKitButton = (): HTMLElement | null =>
-  document.querySelector(
-    `gem-icon-button[data-test-id="${DESKTOP_POWER_KIT_HOST_TEST_ID}"], button[data-test-id="${DESKTOP_POWER_KIT_HOST_TEST_ID}"]`
-  )
-
 const getDesktopMavatarPowerKitContainer = (): HTMLElement | null =>
-  document.querySelector(`div[data-test-id="${DESKTOP_MAVATAR_POWER_KIT_CONTAINER_TEST_ID}"]`)
+  document.querySelector(`[data-test-id="${DESKTOP_MAVATAR_POWER_KIT_CONTAINER_TEST_ID}"]`)
 
-const getDesktopMavatarFallbackPowerKitButton = (): HTMLButtonElement | null =>
-  document.querySelector(`button[data-test-id="${DESKTOP_POWER_KIT_HOST_TEST_ID}"]`)
+const getOrCreateDesktopMavatarPowerKitContainer = () => {
+  const existing = getDesktopMavatarPowerKitContainer()
+  if (existing?.matches(`div[${MAVATAR_ENTRY_ATTR}]`)) {
+    return existing
+  }
 
-const decorateDesktopMavatarButton = (
-  button: HTMLElement,
-  sourceClassName: string,
-  variant: DesktopVariant,
-  sourceIconSizePx: number
+  existing?.remove()
+  return document.createElement('div')
+}
+
+const getDesktopMavatarIconSize = (
+  variant: DesktopVariant
 ) => {
-  setAttrIfDifferent(button, 'data-test-id', DESKTOP_POWER_KIT_HOST_TEST_ID)
-  setAttrIfDifferent(button, 'aria-label', POWER_KIT_LABEL)
-  removeAttrIfPresent(button, 'title')
-  setAttrIfDifferent(button, 'data-gpk-variant', variant)
-  if (button.className !== sourceClassName) {
-    button.className = sourceClassName
-  }
-  removeAttrIfPresent(button, 'aria-haspopup')
-  removeAttrIfPresent(button, 'aria-expanded')
-  bindThemeOpenHandler(button)
-
-  const innerButton = button.matches('button') ? button : button.querySelector('button')
-  if (innerButton) {
-    setAttrIfDifferent(innerButton, 'aria-label', POWER_KIT_LABEL)
-    removeAttrIfPresent(innerButton, 'title')
-    removeAttrIfPresent(innerButton, 'aria-haspopup')
-    removeAttrIfPresent(innerButton, 'aria-expanded')
-  }
-
-  const icon = button.querySelector('mat-icon')
   const useNarrowIconSize = variant === 'expanded' && isNarrowMavatarLayout()
-  const iconSizePx = variant === 'collapsed'
+  return variant === 'collapsed'
     ? MAVATAR_POWER_KIT_ICON_SIZE_PX
     : useNarrowIconSize
       ? NARROW_MAVATAR_POWER_KIT_ICON_SIZE_PX
       : WIDE_MAVATAR_EXPANDED_POWER_KIT_ICON_SIZE_PX
-  const iconBoxSizePx = variant === 'collapsed' ? DEFAULT_POWER_KIT_ICON_SIZE_PX : sourceIconSizePx
-  applyPowerKitSvgIcon(icon, iconSizePx, iconBoxSizePx)
-
-  const iconTarget = (button.querySelector('mat-icon[data-gpk-icon-applied="1"]') ?? icon) as HTMLElement | null
-  if (iconTarget) ensureBadgeDot(iconTarget, 'icon')
-
-  ensureDesktopTooltip(button, true, variant === 'collapsed' ? 'right' : 'top')
 }
 
-const decorateDesktopMavatarFallbackButton = (
-  button: HTMLButtonElement,
-  iconSizePx: number
+const decorateDesktopMavatarEntry = (
+  container: HTMLElement,
+  variant: DesktopVariant
 ) => {
+  injectEntryStyle()
+  setAttrIfDifferent(container, 'data-test-id', DESKTOP_MAVATAR_POWER_KIT_CONTAINER_TEST_ID)
+  setAttrIfDifferent(container, MAVATAR_ENTRY_ATTR, '1')
+  setAttrIfDifferent(container, 'data-gpk-variant', variant)
+
+  let button = container.querySelector<HTMLButtonElement>(
+    `button[${MAVATAR_ENTRY_BUTTON_ATTR}]`
+  )
+  if (!button) {
+    button = document.createElement('button')
+    button.type = 'button'
+    button.setAttribute(MAVATAR_ENTRY_BUTTON_ATTR, '1')
+    button.setAttribute('data-test-id', DESKTOP_POWER_KIT_HOST_TEST_ID)
+    button.setAttribute('aria-label', POWER_KIT_LABEL)
+    container.replaceChildren(button)
+    bindSettingsOpenHandler(button)
+  }
+
   setAttrIfDifferent(button, 'data-test-id', DESKTOP_POWER_KIT_HOST_TEST_ID)
   setAttrIfDifferent(button, 'aria-label', POWER_KIT_LABEL)
-  setAttrIfDifferent(button, 'title', POWER_KIT_LABEL)
-  setAttrIfDifferent(button, 'data-gpk-variant', 'fallback')
-  button.type = 'button'
-  button.className = 'gpk-power-kit-fallback-entry'
-  button.style.width = `${MAVATAR_FALLBACK_ENTRY_SIZE_PX}px`
-  button.style.height = `${MAVATAR_FALLBACK_ENTRY_SIZE_PX}px`
-  button.style.minWidth = `${MAVATAR_FALLBACK_ENTRY_SIZE_PX}px`
-  button.style.padding = '0'
-  button.style.border = '0'
-  button.style.borderRadius = '50%'
-  button.style.background = 'transparent'
-  button.style.color = 'inherit'
-  button.style.display = 'inline-flex'
-  button.style.alignItems = 'center'
-  button.style.justifyContent = 'center'
-  button.style.cursor = 'pointer'
-  removeAttrIfPresent(button, 'aria-haspopup')
-  removeAttrIfPresent(button, 'aria-expanded')
-  bindThemeOpenHandler(button)
+  removeAttrIfPresent(button, 'title')
+  bindSettingsOpenHandler(button)
 
-  let icon = button.querySelector('span[data-gpk-fallback-icon="1"]')
+  let icon = button.querySelector<HTMLElement>(`span[${MAVATAR_ENTRY_ICON_ATTR}]`)
   if (!icon) {
     icon = document.createElement('span')
-    icon.setAttribute('data-gpk-fallback-icon', '1')
-    button.replaceChildren(icon)
+    icon.setAttribute(MAVATAR_ENTRY_ICON_ATTR, '1')
+    button.appendChild(icon)
   }
-  if (icon instanceof HTMLElement) {
-    icon.style.width = `${iconSizePx}px`
-    icon.style.height = `${iconSizePx}px`
-    icon.style.display = 'inline-flex'
-    icon.style.alignItems = 'center'
-    icon.style.justifyContent = 'center'
-  }
+
+  const iconSizePx = getDesktopMavatarIconSize(variant)
   if (icon.getAttribute('data-gpk-icon-size') !== String(iconSizePx)) {
     icon.innerHTML = getPowerKitIconSvg(iconSizePx)
     icon.setAttribute('data-gpk-icon-size', String(iconSizePx))
   }
-  if (icon instanceof HTMLElement) ensureBadgeDot(icon, 'icon')
+  ensureBadgeDot(icon, 'icon')
 
-  ensureDesktopTooltip(button, true, 'top')
+  ensureDesktopTooltip(button, true, variant === 'collapsed' ? 'right' : 'top')
 }
 
 const insertAsPenultimateChild = (parent: HTMLElement, child: HTMLElement) => {
@@ -575,28 +618,24 @@ const ensureDesktopMavatarFallbackEntry = () => {
 
   bindDesktopObservers(mountParent, footerRow ?? mountParent)
 
-  const existingPowerKitEntry = getDesktopMavatarPowerKitButton()
-  if (existingPowerKitEntry && !existingPowerKitEntry.matches('button')) {
-    destroyDesktopTooltip(existingPowerKitEntry)
-    existingPowerKitEntry.remove()
+  const container = getOrCreateDesktopMavatarPowerKitContainer()
+  const variant: DesktopVariant = footerRow?.classList.contains('collapsed')
+    ? 'collapsed'
+    : 'expanded'
+  decorateDesktopMavatarEntry(container, variant)
+
+  if (variant === 'collapsed' && footerRow && footerRight) {
+    if (
+      container.parentElement !== footerRow
+      || container.previousElementSibling !== footerRight
+    ) {
+      footerRow.insertBefore(container, footerRight.nextElementSibling)
+    }
+  } else {
+    insertAsPenultimateChild(mountParent, container)
   }
 
-  const existingButton = getDesktopMavatarFallbackPowerKitButton()
-  const currentButton = existingButton ?? document.createElement('button')
-  decorateDesktopMavatarFallbackButton(currentButton, MAVATAR_FALLBACK_ICON_SIZE_PX)
-  insertAsPenultimateChild(mountParent, currentButton)
-
   return true
-}
-
-const buildDesktopMavatarButtonFromSettings = (
-  settingsButton: HTMLElement,
-  variant: DesktopVariant,
-  sourceIconSizePx: number
-) => {
-  const clone = settingsButton.cloneNode(true) as HTMLElement
-  decorateDesktopMavatarButton(clone, settingsButton.className, variant, sourceIconSizePx)
-  return clone
 }
 
 const ensureDesktopMavatarEntry = () => {
@@ -611,35 +650,25 @@ const ensureDesktopMavatarEntry = () => {
   bindDesktopObservers(settingsButton, footerRow)
 
   const variant = getDesktopMavatarVariant(settingsButton)
-  const sourceIconSizePx = getElementPixelSize(settingsButton.querySelector('mat-icon'))
-  const existingButton = getDesktopMavatarPowerKitButton()
-  const isFallbackButton = Boolean(existingButton?.classList.contains('gpk-power-kit-fallback-entry'))
-  if (existingButton && isFallbackButton) {
-    destroyDesktopTooltip(existingButton)
-    existingButton.remove()
-  }
-  const existingContainer = getDesktopMavatarPowerKitContainer()
-  const currentButton = existingButton && !isFallbackButton
-    ? existingButton
-    : buildDesktopMavatarButtonFromSettings(settingsButton, variant, sourceIconSizePx)
-
-  decorateDesktopMavatarButton(currentButton, settingsButton.className, variant, sourceIconSizePx)
+  const container = getOrCreateDesktopMavatarPowerKitContainer()
+  decorateDesktopMavatarEntry(container, variant)
 
   if (variant === 'collapsed') {
-    const container = existingContainer ?? settingsButtonParent.cloneNode(false) as HTMLElement
-    syncAttributesFromSource(settingsButtonParent, container, ['data-test-id'])
-    setAttrIfDifferent(container, 'data-test-id', DESKTOP_MAVATAR_POWER_KIT_CONTAINER_TEST_ID)
-    if (currentButton.parentElement !== container) {
-      container.appendChild(currentButton)
-    }
-    if (container.parentElement !== footerRow || container.previousElementSibling !== settingsButtonParent) {
-      footerRow.insertBefore(container, settingsButtonParent.nextElementSibling)
+    const footerRight = settingsButton.closest('.mavatar-footer-right')
+    const insertionAnchor = footerRight ?? settingsButtonParent
+    if (
+      container.parentElement !== footerRow
+      || container.previousElementSibling !== insertionAnchor
+    ) {
+      footerRow.insertBefore(container, insertionAnchor.nextElementSibling)
     }
   } else {
-    if (currentButton.parentElement !== settingsButtonParent || currentButton.nextElementSibling !== settingsButton) {
-      settingsButtonParent.insertBefore(currentButton, settingsButton)
+    if (
+      container.parentElement !== settingsButtonParent
+      || container.nextElementSibling !== settingsButton
+    ) {
+      settingsButtonParent.insertBefore(container, settingsButton)
     }
-    existingContainer?.remove()
   }
 
   return true
@@ -690,7 +719,7 @@ const decorateMobileEntry = (button: HTMLButtonElement, sourceClassName: string)
   if (button.className !== sourceClassName) {
     button.className = sourceClassName
   }
-  bindThemeOpenHandler(button)
+  bindSettingsOpenHandler(button)
 
   const icon = button.querySelector('mat-icon')
   applyPowerKitSvgIcon(icon)
@@ -974,11 +1003,17 @@ const stopObservers = () => {
 const removeInjectedEntries = () => {
   document.querySelectorAll([
     POWER_KIT_ENTRY_SELECTOR,
-    `div[data-test-id="${DESKTOP_MAVATAR_POWER_KIT_CONTAINER_TEST_ID}"]`,
+    `[data-test-id="${DESKTOP_MAVATAR_POWER_KIT_CONTAINER_TEST_ID}"]`,
   ].join(',')).forEach((element) => {
     element.remove()
   })
   removeAllBadgeDots()
+}
+
+const removeInjectedStyles = () => {
+  for (const styleId of [BADGE_STYLE_ID, ENTRY_STYLE_ID, TOOLTIP_STYLE_ID]) {
+    document.getElementById(styleId)?.remove()
+  }
 }
 
 export const stopPowerKitEntry = () => {
@@ -988,6 +1023,7 @@ export const stopPowerKitEntry = () => {
   window.removeEventListener('beforeunload', stopPowerKitEntry)
   stopObservers()
   removeInjectedEntries()
+  removeInjectedStyles()
 }
 
 export const startPowerKitEntry = () => {
