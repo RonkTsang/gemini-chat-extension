@@ -17,11 +17,24 @@ describe('current chat deletion DOM contract', () => {
     document.body.innerHTML = ''
   })
 
-  it('uses technical Gemini attributes instead of visible copy', () => {
+  it('uses the current chat action hierarchy and technical menu attributes instead of visible copy', () => {
     document.body.innerHTML = `
-      <gem-icon-button cdkoverlayorigin gemmenutrigger fonticonname="more_vert" theme="lm" aria-controls="chat-actions">
+      <gem-icon-button cdkoverlayorigin gemmenutrigger aria-controls="unrelated-actions">
         <button type="button"></button>
       </gem-icon-button>
+      <top-bar-actions>
+        <div class="top-bar-actions">
+          <div class="right-section">
+            <div class="buttons-container">
+              <conversation-actions-icon>
+                <gem-icon-button cdkoverlayorigin gemmenutrigger aria-controls="chat-actions">
+                  <button type="button"></button>
+                </gem-icon-button>
+              </conversation-actions-icon>
+            </div>
+          </div>
+        </div>
+      </top-bar-actions>
       <gem-menu id="chat-actions" role="menu" data-visible="true">
         <gem-menu-item role="menuitem" value="delete" leadingicon="delete" data-test-id="delete-button"></gem-menu-item>
       </gem-menu>
@@ -40,9 +53,27 @@ describe('current chat deletion DOM contract', () => {
 
     const trigger = findCurrentChatActionTrigger()
     expect(trigger).not.toBeNull()
+    expect(trigger?.getAttribute('aria-controls')).toBe('chat-actions')
     expect(findCurrentChatActionButton(trigger!)).not.toBeNull()
     expect(findCurrentChatDeleteMenuItem(document.querySelector('gem-menu')!)).not.toBeNull()
     expect(findCurrentChatDeleteConfirmButton(document.querySelector('[role="dialog"]')!)).not.toBeNull()
+  })
+
+  it('does not require theme or icon presentation attributes', () => {
+    document.body.innerHTML = `
+      <top-bar-actions>
+        <conversation-actions-icon>
+          <gem-icon-button cdkoverlayorigin gemmenutrigger aria-controls="chat-actions">
+        <button type="button"></button>
+          </gem-icon-button>
+        </conversation-actions-icon>
+      </top-bar-actions>
+    `
+
+    document.querySelectorAll<HTMLElement>('gem-icon-button, button').forEach(makeVisible)
+
+    const trigger = findCurrentChatActionTrigger()
+    expect(trigger).not.toBeNull()
   })
 
   it('only accepts concrete conversation routes', () => {

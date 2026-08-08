@@ -8,9 +8,13 @@ function makeVisible(element: HTMLElement): void {
 
 function makeDeleteFlow(): { confirmButton: HTMLButtonElement; confirmClick: ReturnType<typeof vi.fn> } {
   document.body.innerHTML = `
-    <gem-icon-button cdkoverlayorigin gemmenutrigger fonticonname="more_vert" theme="lm" aria-controls="conversation-actions">
-      <button type="button"></button>
-    </gem-icon-button>
+    <top-bar-actions>
+      <conversation-actions-icon>
+        <gem-icon-button cdkoverlayorigin gemmenutrigger aria-controls="conversation-actions">
+          <button type="button"></button>
+        </gem-icon-button>
+      </conversation-actions-icon>
+    </top-bar-actions>
   `
 
   const trigger = document.querySelector<HTMLElement>('gem-icon-button')!

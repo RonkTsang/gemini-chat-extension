@@ -3,11 +3,10 @@ import { isVisibleElement } from './geminiDom'
 export const CURRENT_CHAT_PATH_PATTERN = /^(?:\/app\/[^/]+|\/gem\/[^/]+\/[^/]+)\/?$/
 
 const CURRENT_CHAT_ACTION_TRIGGER_SELECTOR = [
-  'gem-icon-button',
+  'top-bar-actions conversation-actions-icon > gem-icon-button',
   '[cdkoverlayorigin]',
   '[gemmenutrigger]',
-  '[fonticonname="more_vert"]',
-  '[theme="lm"]',
+  '[aria-controls]',
 ].join('')
 
 const CURRENT_CHAT_DELETE_MENU_ITEM_SELECTOR = [
