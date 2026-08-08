@@ -10,7 +10,7 @@ function makeDeleteFlow(): { confirmButton: HTMLButtonElement; confirmClick: Ret
   document.body.innerHTML = `
     <top-bar-actions>
       <conversation-actions-icon>
-        <gem-icon-button cdkoverlayorigin gemmenutrigger aria-controls="conversation-actions">
+        <gem-icon-button gemmenutrigger aria-controls="conversation-actions">
           <button type="button"></button>
         </gem-icon-button>
       </conversation-actions-icon>

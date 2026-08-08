@@ -19,7 +19,7 @@ describe('current chat deletion DOM contract', () => {
 
   it('uses the current chat action hierarchy and technical menu attributes instead of visible copy', () => {
     document.body.innerHTML = `
-      <gem-icon-button cdkoverlayorigin gemmenutrigger aria-controls="unrelated-actions">
+      <gem-icon-button gemmenutrigger aria-controls="unrelated-actions">
         <button type="button"></button>
       </gem-icon-button>
       <top-bar-actions>
@@ -27,7 +27,7 @@ describe('current chat deletion DOM contract', () => {
           <div class="right-section">
             <div class="buttons-container">
               <conversation-actions-icon>
-                <gem-icon-button cdkoverlayorigin gemmenutrigger aria-controls="chat-actions">
+                <gem-icon-button gemmenutrigger aria-controls="chat-actions">
                   <button type="button"></button>
                 </gem-icon-button>
               </conversation-actions-icon>
@@ -63,7 +63,7 @@ describe('current chat deletion DOM contract', () => {
     document.body.innerHTML = `
       <top-bar-actions>
         <conversation-actions-icon>
-          <gem-icon-button cdkoverlayorigin gemmenutrigger aria-controls="chat-actions">
+          <gem-icon-button gemmenutrigger aria-controls="chat-actions">
         <button type="button"></button>
           </gem-icon-button>
         </conversation-actions-icon>
@@ -74,6 +74,36 @@ describe('current chat deletion DOM contract', () => {
 
     const trigger = findCurrentChatActionTrigger()
     expect(trigger).not.toBeNull()
+  })
+
+  it.each([
+    ['value', 'delete'],
+    ['leadingicon', 'delete'],
+    ['data-test-id', 'delete-button'],
+  ])('finds the delete item when Gemini provides only its %s marker', (attribute, value) => {
+    document.body.innerHTML = `
+      <gem-menu role="menu">
+        <gem-menu-item role="menuitem" ${attribute}="${value}"></gem-menu-item>
+      </gem-menu>
+    `
+
+    const menuItem = document.querySelector<HTMLElement>('gem-menu-item')!
+    makeVisible(menuItem)
+
+    expect(findCurrentChatDeleteMenuItem(document.querySelector('gem-menu')!)).toBe(menuItem)
+  })
+
+  it('does not choose a delete item when fallback markers match multiple visible actions', () => {
+    document.body.innerHTML = `
+      <gem-menu role="menu">
+        <gem-menu-item role="menuitem" value="delete"></gem-menu-item>
+        <gem-menu-item role="menuitem" data-test-id="delete-button"></gem-menu-item>
+      </gem-menu>
+    `
+
+    document.querySelectorAll<HTMLElement>('gem-menu-item').forEach(makeVisible)
+
+    expect(findCurrentChatDeleteMenuItem(document.querySelector('gem-menu')!)).toBeNull()
   })
 
   it('only accepts concrete conversation routes', () => {

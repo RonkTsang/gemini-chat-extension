@@ -4,18 +4,15 @@ export const CURRENT_CHAT_PATH_PATTERN = /^(?:\/app\/[^/]+|\/gem\/[^/]+\/[^/]+)\
 
 const CURRENT_CHAT_ACTION_TRIGGER_SELECTOR = [
   'top-bar-actions conversation-actions-icon > gem-icon-button',
-  '[cdkoverlayorigin]',
   '[gemmenutrigger]',
   '[aria-controls]',
 ].join('')
 
 const CURRENT_CHAT_DELETE_MENU_ITEM_SELECTOR = [
-  'gem-menu-item',
-  '[role="menuitem"]',
-  '[value="delete"]',
-  '[leadingicon="delete"]',
-  '[data-test-id="delete-button"]',
-].join('')
+  'gem-menu-item[role="menuitem"][value="delete"]',
+  'gem-menu-item[role="menuitem"][leadingicon="delete"]',
+  'gem-menu-item[role="menuitem"][data-test-id="delete-button"]',
+].join(', ')
 
 const CURRENT_CHAT_CONFIRM_BUTTON_SELECTOR = [
   'message-dialog',
@@ -38,8 +35,7 @@ export function findCurrentChatActionButton(trigger: HTMLElement): HTMLButtonEle
 }
 
 export function findCurrentChatDeleteMenuItem(menu: ParentNode): HTMLElement | null {
-  const menuItem = menu.querySelector<HTMLElement>(CURRENT_CHAT_DELETE_MENU_ITEM_SELECTOR)
-  return isVisibleElement(menuItem) ? menuItem : null
+  return findOnlyVisible(menu.querySelectorAll<HTMLElement>(CURRENT_CHAT_DELETE_MENU_ITEM_SELECTOR))
 }
 
 export function findCurrentChatDeleteConfirmButton(dialog: ParentNode): HTMLButtonElement | null {
