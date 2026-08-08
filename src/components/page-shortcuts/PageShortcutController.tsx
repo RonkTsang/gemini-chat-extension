@@ -9,6 +9,7 @@ import {
   toggleSidebar,
 } from '@/utils/chatActions'
 import { cycleGeminiModel } from '@/utils/cycleModel'
+import { openCurrentChatDeleteConfirmation } from '@/utils/currentChatDelete'
 import { toggleBulkDeleteMode } from '@/entrypoints/content/bulk-delete'
 import { focusContentEditor } from '@/utils/editorUtils'
 import { launchGeminiTool, openUploadFilesDialog } from '@/utils/toolboxActions'
@@ -136,6 +137,11 @@ async function runShortcutAction(
 
   if (action === 'openNewChat') {
     await openNewChat()
+    return
+  }
+
+  if (action === 'deleteCurrentChat') {
+    await openCurrentChatDeleteConfirmation()
     return
   }
 

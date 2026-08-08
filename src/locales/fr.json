@@ -474,6 +474,8 @@
         "toggleBulkDelete": "Basculer la suppression groupée",
         "toggleBulkDeleteDisabledInfo": "La suppression groupée est désactivée. Activez-la dans les paramètres pour utiliser ce raccourci.",
         "openNewChat": "Ouvrir un nouveau chat",
+        "deleteCurrentChat": "Supprimer le chat actuel",
+        "deleteCurrentChatInfo": "Ce raccourci ouvre la confirmation de suppression. Appuyez sur Entrée pour confirmer la suppression du chat actuel.",
         "openTemporaryChat": "Ouvrir le chat temporaire",
         "openLibrary": "Ouvrir la bibliothèque",
         "openGems": "Ouvrir Gems",

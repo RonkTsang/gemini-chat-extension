@@ -474,6 +474,8 @@
         "toggleBulkDelete": "일괄 삭제 전환",
         "toggleBulkDeleteDisabledInfo": "일괄 삭제가 꺼져 있습니다. 설정에서 켠 다음 이 단축키를 사용하세요.",
         "openNewChat": "새 채팅 열기",
+        "deleteCurrentChat": "현재 채팅 삭제",
+        "deleteCurrentChatInfo": "이 단축키는 삭제 확인을 엽니다. Enter 키를 누르면 현재 채팅 삭제를 확정합니다.",
         "openTemporaryChat": "임시 채팅 열기",
         "openLibrary": "라이브러리 열기",
         "openGems": "Gems 열기",

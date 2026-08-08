@@ -470,6 +470,8 @@
         "toggleBulkDelete": "Toggle Bulk Delete",
         "toggleBulkDeleteDisabledInfo": "Bulk Delete is off. Turn it on in Settings to use this shortcut.",
         "openNewChat": "Open New Chat",
+        "deleteCurrentChat": "Delete Current Chat",
+        "deleteCurrentChatInfo": "This shortcut opens the delete confirmation. Press Enter to confirm deleting the current chat.",
         "openTemporaryChat": "Open Temporary Chat",
         "openLibrary": "Open Library",
         "openGems": "Open Gems",

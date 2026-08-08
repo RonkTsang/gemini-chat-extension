@@ -303,6 +303,9 @@ export function ShortcutSettingsView({ navigateToSection }: SettingViewComponent
                         const isHovered = hoveredAction === action
                         const isLastRow = index === category.definitions.length - 1
                         const showBulkDeleteDisabledInfo = action === 'toggleBulkDelete' && !bulkDeleteEnabled
+                        const shortcutInfo = action === 'deleteCurrentChat'
+                          ? t('settingPanel.shortcut.actions.deleteCurrentChatInfo')
+                          : null
 
                         return (
                           <Table.Row
@@ -320,6 +323,22 @@ export function ShortcutSettingsView({ navigateToSection }: SettingViewComponent
                                 <Text fontSize="sm" fontWeight="normal">
                                   {t(definition.labelKey)}
                                 </Text>
+                                {shortcutInfo ? (
+                                  <ToggleTip
+                                    content={<Text>{shortcutInfo}</Text>}
+                                    contentProps={{ maxWidth: '260px' }}
+                                    bodyProps={{ fontSize: 'xs', px: 2, py: 1.5 }}
+                                  >
+                                    <IconButton
+                                      aria-label={shortcutInfo}
+                                      variant="ghost"
+                                      size="xs"
+                                      color="fg.muted"
+                                    >
+                                      <LuInfo />
+                                    </IconButton>
+                                  </ToggleTip>
+                                ) : null}
                                 {showBulkDeleteDisabledInfo ? (
                                   <ToggleTip
                                     content={(
