@@ -474,6 +474,8 @@
         "toggleBulkDelete": "Alternar eliminación en lote",
         "toggleBulkDeleteDisabledInfo": "La eliminación en lote está desactivada. Actívala en Ajustes para usar este atajo.",
         "openNewChat": "Abrir chat nuevo",
+        "deleteCurrentChat": "Eliminar chat actual",
+        "deleteCurrentChatInfo": "Este acceso directo abre la confirmación de eliminación. Pulsa Enter para confirmar la eliminación del chat actual.",
         "openTemporaryChat": "Abrir chat temporal",
         "openLibrary": "Abrir biblioteca",
         "openGems": "Abrir Gems",

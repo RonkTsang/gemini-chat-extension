@@ -6,6 +6,7 @@ const bindings: Record<ShortcutAction, string | null> = {
   openSettings: 'alt+comma',
   toggleBulkDelete: 'alt+shift+d',
   openNewChat: 'alt+n',
+  deleteCurrentChat: null,
   openTemporaryChat: 'alt+t',
   openLibrary: 'alt+l',
   openGems: 'alt+g',

@@ -57,6 +57,16 @@ describe('shortcut settings', () => {
     expect(settings.bindings.toggleBulkDelete).toBe('ctrl+shift+d')
   })
 
+  it('adds the unassigned current-chat deletion binding to existing settings', () => {
+    const { deleteCurrentChat: _deleteCurrentChat, ...bindingsWithoutDeleteCurrentChat } = createDefaultShortcutSettings(false).bindings
+    const settings = normalizeShortcutSettings({
+      enabled: true,
+      bindings: bindingsWithoutDeleteCurrentChat,
+    }, false)
+
+    expect(settings.bindings.deleteCurrentChat).toBeNull()
+  })
+
   it('preserves a user-selected local binding', () => {
     const settings = normalizeShortcutSettings({
       enabled: true,

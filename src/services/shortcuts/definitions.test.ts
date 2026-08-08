@@ -51,7 +51,7 @@ describe('shortcut definitions', () => {
       { id: 'geminiPowerKit', actions: ['openSettings', 'toggleBulkDelete'] },
       {
         id: 'app',
-        actions: ['toggleSidebar', 'openNewChat', 'openTemporaryChat', 'openLibrary', 'openGems'],
+        actions: ['toggleSidebar', 'openNewChat', 'deleteCurrentChat', 'openTemporaryChat', 'openLibrary', 'openGems'],
       },
       {
         id: 'prompt',
@@ -94,6 +94,7 @@ describe('shortcut definitions', () => {
       openSettings: 'alt+comma',
       toggleBulkDelete: 'alt+shift+d',
       openNewChat: 'alt+n',
+      deleteCurrentChat: null,
       openTemporaryChat: 'alt+t',
       openLibrary: 'alt+l',
       openGems: 'alt+g',
@@ -112,6 +113,7 @@ describe('shortcut definitions', () => {
       openSettings: 'ctrl+comma',
       toggleBulkDelete: 'ctrl+shift+d',
       openNewChat: 'ctrl+n',
+      deleteCurrentChat: null,
       openTemporaryChat: 'ctrl+t',
       openLibrary: 'ctrl+l',
       openGems: 'ctrl+g',

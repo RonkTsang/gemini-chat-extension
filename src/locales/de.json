@@ -474,6 +474,8 @@
         "toggleBulkDelete": "Massenlöschung umschalten",
         "toggleBulkDeleteDisabledInfo": "Massenlöschung ist aus. Aktiviere sie in den Einstellungen, um diesen Shortcut zu verwenden.",
         "openNewChat": "Neuen Chat öffnen",
+        "deleteCurrentChat": "Aktuellen Chat löschen",
+        "deleteCurrentChatInfo": "Dieser Kurzbefehl öffnet die Löschbestätigung. Drücken Sie Enter, um das Löschen des aktuellen Chats zu bestätigen.",
         "openTemporaryChat": "Temporären Chat öffnen",
         "openLibrary": "Bibliothek öffnen",
         "openGems": "Gems öffnen",
