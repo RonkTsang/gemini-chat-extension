@@ -474,6 +474,8 @@
         "toggleBulkDelete": "Alternar exclusão em lote",
         "toggleBulkDeleteDisabledInfo": "A exclusão em lote está desativada. Ative-a em Configurações para usar este atalho.",
         "openNewChat": "Abrir novo chat",
+        "deleteCurrentChat": "Excluir chat atual",
+        "deleteCurrentChatInfo": "Este atalho abre a confirmação de exclusão. Pressione Enter para confirmar a exclusão do chat atual.",
         "openTemporaryChat": "Abrir chat temporário",
         "openLibrary": "Abrir biblioteca",
         "openGems": "Abrir Gems",

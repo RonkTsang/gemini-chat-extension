@@ -474,6 +474,8 @@
         "toggleBulkDelete": "一括削除を切り替え",
         "toggleBulkDeleteDisabledInfo": "一括削除はオフです。設定で有効にしてからこのショートカットを使ってください。",
         "openNewChat": "新しいチャットを開く",
+        "deleteCurrentChat": "現在のチャットを削除",
+        "deleteCurrentChatInfo": "このショートカットは削除の確認を開きます。Enter キーで現在のチャットの削除を確定します。",
         "openTemporaryChat": "一時チャットを開く",
         "openLibrary": "ライブラリを開く",
         "openGems": "Gems を開く",
