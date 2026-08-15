@@ -14,7 +14,7 @@ import { Tooltip } from '@/components/ui/tooltip'
 import {
   DEFAULT_THEME_BLOOM_ENABLED,
   enableThemeBloom,
-} from '@/entrypoints/popup/storage'
+} from '@/common/storage'
 import { tt } from '@/utils/i18n'
 
 interface ThemeBloomControlProps {

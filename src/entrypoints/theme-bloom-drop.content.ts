@@ -6,7 +6,7 @@ import {
   THEME_BLOOM_RUNTIME_READY_EVENT,
 } from './content/theme-bloom/runtime'
 import { createThemeBloomSettingsController } from './content/theme-bloom/settings'
-import { enableThemeBloom } from './popup/storage'
+import { enableThemeBloom } from '@/common/storage'
 
 export default defineContentScript({
   matches: ['*://gemini.google.com/*'],

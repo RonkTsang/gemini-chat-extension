@@ -6,7 +6,7 @@ import {
   enableBulkDelete,
   enableChatOutline,
   enableGemAvatar,
-} from '@/entrypoints/popup/storage'
+} from '@/common/storage'
 import {
   DEFAULT_TOP_BAR_SETTINGS,
   getTopBarSettings,

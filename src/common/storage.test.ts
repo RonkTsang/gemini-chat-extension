@@ -14,7 +14,7 @@ vi.mock('#imports', () => ({
 
 import { DEFAULT_THEME_BLOOM_ENABLED } from './storage'
 
-describe('popup storage defaults', () => {
+describe('shared storage defaults', () => {
   it('enables Theme Bloom when no preference has been saved', () => {
     expect(DEFAULT_THEME_BLOOM_ENABLED).toBe(true)
     expect(defineItem).toHaveBeenCalledWith('sync:enableThemeBloom', {

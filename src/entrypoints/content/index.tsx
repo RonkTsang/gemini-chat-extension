@@ -18,7 +18,7 @@ import {
   enableBulkDelete,
   enableThemeBloom,
   enableGemAvatar,
-} from '@/entrypoints/popup/storage'
+} from '@/common/storage'
 import { i18nCache } from '@/utils/i18nCache'
 import { stuffPageModule } from './stuff-page'
 import { initTheme, initThemeBackground } from './gemini-theme'

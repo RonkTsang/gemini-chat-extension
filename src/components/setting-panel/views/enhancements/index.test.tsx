@@ -70,7 +70,7 @@ vi.mock('@chakra-ui/react', () => ({
   },
 }))
 
-vi.mock('@/entrypoints/popup/storage', () => ({
+vi.mock('@/common/storage', () => ({
   enableChatOutline: {
     getValue: mocks.getChatOutline,
     setValue: mocks.setChatOutline,

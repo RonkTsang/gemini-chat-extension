@@ -75,7 +75,7 @@ vi.mock('@/components/ui/tooltip', () => ({
   ),
 }))
 
-vi.mock('@/entrypoints/popup/storage', () => ({
+vi.mock('@/common/storage', () => ({
   DEFAULT_THEME_BLOOM_ENABLED: true,
   enableThemeBloom: {
     getValue: mocks.getValue,
