@@ -34,7 +34,7 @@ interface ThemeBackgroundSettings {
 interface ThemeAssetRow {
   id: string
   feature: 'background-image'
-  mimeType: 'image/png' | 'image/jpeg' | 'image/webp'
+  mimeType: 'image/png' | 'image/jpeg' | 'image/webp' | 'image/avif'
   size: number
   blob: Blob
   hash?: string
@@ -60,7 +60,7 @@ interface ThemeAssetRow {
 - 不建议放 `storage.sync`：背景图无服务端同步能力，跨设备同步配置会导致“有开关没图片”。
 
 ### 3.3 上传/删除流程
-1. 上传时校验类型和 5MB 限制。
+1. 上传时校验 MIME 类型、10MB 文件大小限制和 40MP 像素总数限制。
 2. 写入 `theme_assets`（必要时可先压缩为 webp）。
 3. 更新设置：
    - `imageRef = { kind: 'asset', assetId }`

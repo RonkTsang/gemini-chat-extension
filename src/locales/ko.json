@@ -181,7 +181,15 @@
       "enableBackgroundImage": "배경화면 활성화",
       "backgroundImageUpload": "배경 이미지 업로드",
       "dropBackground": "여기에 이미지 드롭",
-      "fileTypes": "PNG, JPG 또는 WebP(최대 5MB)",
+      "themeBloom": {
+        "title": "Theme Bloom",
+        "description": "프롬프트 상자 밖에 이미지를 놓으면 어울리는 테마를 적용하고, 안에 놓으면 일반 업로드됩니다.",
+        "analyzing": "테마를 맞추는 중…",
+        "dropHint": "놓으면 테마가 적용됩니다",
+        "applyImageFailed": "이미지를 적용할 수 없습니다"
+      },
+      "interactions": "상호작용",
+      "fileTypes": "PNG, JPG, WebP 및 AVIF(최대 10MB)",
       "selectFile": "파일 선택",
       "blurIntensity": "흐림",
       "backgroundPosition": "위치",
@@ -212,8 +220,9 @@
       "chatTextColor": "메시지 텍스트 색상",
       "chatTextColorModeDescription": "모드: $1",
       "resetChatTextColor": "초기화",
-      "invalidFileType": "PNG/JPG/WebP만 지원됩니다",
-      "fileTooLarge": "이미지 크기는 5MB 이하여야 합니다",
+      "invalidFileType": "PNG/JPG/WebP/AVIF만 지원됩니다",
+      "fileTooLarge": "이미지 크기는 10MB 이하여야 합니다",
+      "imageTooLarge": "이미지 크기는 40MP를 초과할 수 없습니다",
       "imageLoadFailed": "이미지 로드 실패, 다시 시도해 주세요",
       "removeBackgroundImage": "배경 이미지 제거"
     },

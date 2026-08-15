@@ -10,6 +10,7 @@ import {
   __resetWelcomeGreetingReadabilityServiceForTests,
 } from './welcome-greeting'
 import {
+  BACKGROUND_IMAGE_PIXEL_LIMIT,
   BACKGROUND_FILE_SIZE_LIMIT,
   buildThemeBackgroundResolvedState,
   isAllowedBackgroundImageMimeType,
@@ -29,6 +30,7 @@ import {
 type ThemeBackgroundErrorCode =
   | 'invalid-file-type'
   | 'file-too-large'
+  | 'image-too-many-pixels'
   | 'image-load-failed'
 
 export class ThemeBackgroundError extends Error {
@@ -37,6 +39,13 @@ export class ThemeBackgroundError extends Error {
   constructor(code: ThemeBackgroundErrorCode, message: string) {
     super(message)
     this.code = code
+  }
+}
+
+export interface ThemeBackgroundImageValidation {
+  dimensions: {
+    width?: number
+    height?: number
   }
 }
 
@@ -64,6 +73,12 @@ let activeAssetId: string | null = null
 let activeObjectUrl: string | null = null
 let panelPreviewAssetId: string | null = null
 let panelPreviewUrl: string | null = null
+let backgroundResolutionGeneration = 0
+let pendingBackgroundResolution: {
+  assetId: string
+  generation: number
+  promise: Promise<string | null>
+} | null = null
 
 interface PersistAndApplyOptions {
   readabilityAsset?: ThemeAssetRow | null
@@ -127,6 +142,31 @@ export function validateThemeBackgroundFile(
   }
 }
 
+function validateThemeBackgroundDimensions(dimensions: {
+  width?: number
+  height?: number
+}): void {
+  if (
+    dimensions.width !== undefined
+    && dimensions.height !== undefined
+    && dimensions.width * dimensions.height > BACKGROUND_IMAGE_PIXEL_LIMIT
+  ) {
+    throw new ThemeBackgroundError(
+      'image-too-many-pixels',
+      `Image dimensions exceed ${BACKGROUND_IMAGE_PIXEL_LIMIT} pixels`,
+    )
+  }
+}
+
+export async function validateThemeBackgroundImage(
+  file: File,
+): Promise<ThemeBackgroundImageValidation> {
+  validateThemeBackgroundFile(file)
+  const dimensions = await getImageDimensions(file)
+  validateThemeBackgroundDimensions(dimensions)
+  return { dimensions }
+}
+
 function resetActiveObjectUrl(nextAssetId: string | null, nextUrl: string | null): void {
   if (activeObjectUrl && activeObjectUrl !== nextUrl) {
     revokeObjectUrl(activeObjectUrl)
@@ -143,27 +183,83 @@ function resetPanelPreviewUrl(nextAssetId: string | null, nextUrl: string | null
   panelPreviewUrl = nextUrl
 }
 
+async function preloadBackgroundObjectUrl(objectUrl: string): Promise<void> {
+  if (typeof Image === 'undefined') return
+
+  const image = new Image()
+  image.decoding = 'async'
+  if (typeof image.decode === 'function') {
+    image.src = objectUrl
+    try {
+      await image.decode()
+    } catch (error) {
+      console.warn('[ThemeBackground] Failed to decode background object URL:', error)
+    }
+    return
+  }
+
+  await new Promise<void>((resolve) => {
+    image.onload = () => resolve()
+    image.onerror = () => resolve()
+    image.src = objectUrl
+  })
+}
+
 async function resolveBackgroundUrlFromSettings(
   settings: ThemeBackgroundSettings,
 ): Promise<string | null> {
   if (settings.imageRef.kind !== 'asset') {
+    backgroundResolutionGeneration += 1
+    pendingBackgroundResolution = null
     resetActiveObjectUrl(null, null)
     return null
   }
 
-  if (activeAssetId === settings.imageRef.assetId && activeObjectUrl) {
+  const assetId = settings.imageRef.assetId
+  if (activeAssetId === assetId && activeObjectUrl) {
+    if (
+      pendingBackgroundResolution
+      && pendingBackgroundResolution.assetId !== assetId
+    ) {
+      backgroundResolutionGeneration += 1
+      pendingBackgroundResolution = null
+    }
     return activeObjectUrl
   }
 
-  const asset = await getThemeAssetById(settings.imageRef.assetId)
-  if (!asset) {
-    resetActiveObjectUrl(null, null)
-    return null
+  if (pendingBackgroundResolution?.assetId === assetId) {
+    return await pendingBackgroundResolution.promise
   }
 
-  const objectUrl = URL.createObjectURL(asset.blob)
-  resetActiveObjectUrl(settings.imageRef.assetId, objectUrl)
-  return objectUrl
+  const generation = ++backgroundResolutionGeneration
+  const promise = (async (): Promise<string | null> => {
+    const asset = await getThemeAssetById(assetId)
+    if (generation !== backgroundResolutionGeneration) {
+      return activeAssetId === assetId ? activeObjectUrl : null
+    }
+    if (!asset) {
+      resetActiveObjectUrl(null, null)
+      return null
+    }
+
+    const objectUrl = URL.createObjectURL(asset.blob)
+    await preloadBackgroundObjectUrl(objectUrl)
+    if (generation !== backgroundResolutionGeneration) {
+      revokeObjectUrl(objectUrl)
+      return activeAssetId === assetId ? activeObjectUrl : null
+    }
+    resetActiveObjectUrl(assetId, objectUrl)
+    return objectUrl
+  })()
+  pendingBackgroundResolution = { assetId, generation, promise }
+
+  try {
+    return await promise
+  } finally {
+    if (pendingBackgroundResolution?.generation === generation) {
+      pendingBackgroundResolution = null
+    }
+  }
 }
 
 async function repairSettingsIfNeeded(
@@ -308,9 +404,11 @@ export async function updateThemeBackgroundSettings(
 
 export async function uploadThemeBackground(
   file: File,
+  validation?: ThemeBackgroundImageValidation,
 ): Promise<ThemeBackgroundResolvedState> {
   validateThemeBackgroundFile(file)
-  const dimensions = await getImageDimensions(file)
+  const dimensions = validation?.dimensions ?? await getImageDimensions(file)
+  validateThemeBackgroundDimensions(dimensions)
   const id = createAssetId()
   const timestamp = nowIso()
 
@@ -426,6 +524,8 @@ export async function resolveThemeBackgroundPreviewUrlForPanel(
 }
 
 export function __resetThemeBackgroundServiceForTests(): void {
+  backgroundResolutionGeneration += 1
+  pendingBackgroundResolution = null
   resetActiveObjectUrl(null, null)
   resetPanelPreviewUrl(null, null)
   clearThemeBackgroundStyle()

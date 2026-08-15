@@ -181,7 +181,15 @@
       "enableBackgroundImage": "Habilitar papel de parede",
       "backgroundImageUpload": "Upload de imagem de fundo",
       "dropBackground": "Solte sua imagem aqui",
-      "fileTypes": "PNG, JPG ou WebP até 5MB",
+      "themeBloom": {
+        "title": "Theme Bloom",
+        "description": "Solte uma imagem fora da caixa de prompt para aplicar um tema correspondente; dentro dela, o envio é normal.",
+        "analyzing": "Correspondendo seu tema…",
+        "dropHint": "Solte para aplicar o tema",
+        "applyImageFailed": "Não foi possível aplicar a imagem"
+      },
+      "interactions": "Interações",
+      "fileTypes": "PNG, JPG, WebP e AVIF até 10MB",
       "selectFile": "Selecionar arquivo",
       "blurIntensity": "Desfoque",
       "backgroundPosition": "Posição",
@@ -212,8 +220,9 @@
       "chatTextColor": "Cor do texto da mensagem",
       "chatTextColorModeDescription": "Modo: $1",
       "resetChatTextColor": "Redefinir",
-      "invalidFileType": "Apenas PNG/JPG/WebP são suportados",
-      "fileTooLarge": "O tamanho da imagem deve ser de 5MB ou menos",
+      "invalidFileType": "Apenas PNG, JPG, WebP e AVIF são suportados",
+      "fileTooLarge": "O tamanho da imagem deve ser de 10MB ou menos",
+      "imageTooLarge": "As dimensões da imagem não podem exceder 40 MP",
       "imageLoadFailed": "Falha ao carregar a imagem, tente novamente",
       "removeBackgroundImage": "Remover imagem de fundo"
     },

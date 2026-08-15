@@ -13,7 +13,8 @@ export const THEME_BACKGROUND_VERSION = 5 as const
 
 export const BACKGROUND_BLUR_MIN = 0
 export const BACKGROUND_BLUR_MAX = 20
-export const BACKGROUND_FILE_SIZE_LIMIT = 5 * 1024 * 1024
+export const BACKGROUND_FILE_SIZE_LIMIT = 10 * 1024 * 1024
+export const BACKGROUND_IMAGE_PIXEL_LIMIT = 40 * 1_000_000
 export {
   MESSAGE_GLASS_BACKGROUND_VISIBILITY_DEFAULT,
   MESSAGE_GLASS_BACKGROUND_VISIBILITY_MAX,
@@ -60,6 +61,7 @@ export const ALLOWED_BACKGROUND_IMAGE_MIME_TYPES = [
   'image/png',
   'image/jpeg',
   'image/webp',
+  'image/avif',
 ] as const
 
 export type ThemeBackgroundMimeType =
@@ -148,9 +150,9 @@ export interface ThemeAssetRow {
 export const DEFAULT_THEME_BACKGROUND_SETTINGS: ThemeBackgroundSettings = {
   version: THEME_BACKGROUND_VERSION,
   backgroundImageEnabled: false,
-  backgroundBlurPx: 5,
+  backgroundBlurPx: 0,
   backgroundImagePosition: 'center',
-  messageGlassEnabled: false,
+  messageGlassEnabled: true,
   messageGlassTransparency: MESSAGE_GLASS_LIGHT_TRANSPARENCY_DEFAULT,
   messageGlassLightTransparency: MESSAGE_GLASS_LIGHT_TRANSPARENCY_DEFAULT,
   messageGlassDarkTransparency: MESSAGE_GLASS_DARK_TRANSPARENCY_DEFAULT,
@@ -348,6 +350,9 @@ export function normalizeThemeBackgroundSettings(
 
   const imageRef = normalizeImageRef(source.imageRef)
   const enabled = Boolean(source.backgroundImageEnabled)
+  const messageGlassEnabled = typeof source.messageGlassEnabled === 'boolean'
+    ? source.messageGlassEnabled
+    : DEFAULT_THEME_BACKGROUND_SETTINGS.messageGlassEnabled
   const sidebarScrimEnabled = typeof source.sidebarScrimEnabled === 'boolean'
     ? source.sidebarScrimEnabled
     : DEFAULT_THEME_BACKGROUND_SETTINGS.sidebarScrimEnabled
@@ -378,7 +383,7 @@ export function normalizeThemeBackgroundSettings(
     backgroundImagePosition: normalizeBackgroundImagePosition(
       source.backgroundImagePosition,
     ),
-    messageGlassEnabled: Boolean(source.messageGlassEnabled),
+    messageGlassEnabled,
     messageGlassTransparency,
     messageGlassLightTransparency,
     messageGlassDarkTransparency,

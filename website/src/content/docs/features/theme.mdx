@@ -1,6 +1,47 @@
 ---
 title: Gemini Theme Customizer
-description: "Customize Google Gemini themes with appearance modes, color presets, wallpaper, and readability controls for clearer long-session work."
+description: "Customize Google Gemini with appearance modes, color presets, wallpaper, readability controls, and Theme Bloom image-drop interactions."
+head:
+  - tag: meta
+    attrs:
+      property: og:image
+      content: https://gpk.ronktsang.com/og/theme.png
+  - tag: meta
+    attrs:
+      property: og:image:alt
+      content: Gemini Power Kit Theme customizer with wallpaper and color presets
+  - tag: meta
+    attrs:
+      name: twitter:image
+      content: https://gpk.ronktsang.com/og/theme.png
+  - tag: meta
+    attrs:
+      name: twitter:image:alt
+      content: Gemini Power Kit Theme customizer with wallpaper and color presets
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: |
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "Gemini Theme Customizer",
+        "description": "Customize Google Gemini with appearance modes, color presets, wallpaper, readability controls, and Theme Bloom image-drop interactions.",
+        "url": "https://gpk.ronktsang.com/features/theme/",
+        "image": "https://gpk.ronktsang.com/og/theme.png",
+        "inLanguage": "en",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Gemini Power Kit",
+          "url": "https://gpk.ronktsang.com/"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "Gemini Power Kit",
+          "applicationCategory": "BrowserApplication",
+          "operatingSystem": "Chrome, Chromium-based browsers"
+        }
+      }
 ---
 
 import { Image } from 'astro:assets';
@@ -21,6 +62,39 @@ Instead of only changing colors, it gives you three layers of control:
 - appearance mode
 - color presets
 - wallpaper and readability tuning
+
+## Interactions
+
+### Theme Bloom
+
+**Theme Bloom** turns a single image drop into a complete theme change. Drop an image anywhere on the Gemini page outside the prompt box, and Gemini Power Kit analyzes its colors, chooses the closest Theme color preset, saves the image as wallpaper, and reveals the new look from the drop point.
+
+Theme Bloom is enabled by default. It accepts one `PNG`, `JPG`, `WebP`, or `AVIF` image up to `10MB` and `40MP`.
+
+<video
+  src="/theme-bloom.mp4"
+  controls
+  playsInline
+  preload="metadata"
+  class="release-video"
+  aria-label="Theme Bloom demonstration showing an image being dropped onto Gemini to apply a matching theme"
+></video>
+
+*Theme Bloom demo — drop an image outside the prompt box to match the wallpaper and color preset, then watch the theme spread from the drop point.*
+
+### How to Use Theme Bloom
+
+1. Open Gemini Power Kit's **Settings** and select **Theme**.
+2. Under **Interactions**, make sure **Theme Bloom** is on.
+3. Drag one supported image from your computer onto any Gemini page area outside the prompt box.
+4. Release the image when the Theme Bloom drop cue appears. The image becomes wallpaper, and the closest matching color preset is applied.
+5. To attach an image to a Gemini prompt instead, drop it inside the prompt box. Gemini's native upload flow keeps handling that area.
+
+### Turn Theme Bloom Off
+
+Open **Settings** → **Theme** → **Interactions**, then switch **Theme Bloom** off. External image drops will no longer apply a theme. Image drops inside the prompt box continue to use Gemini's native upload behavior.
+
+If an image is invalid, contains more than one file, or exceeds the size or dimension limit, Theme Bloom leaves the current theme and wallpaper unchanged.
 
 ## Why It Matters
 
@@ -77,7 +151,7 @@ Wallpaper settings are where visual style and readability work together.
   </article>
   <article class="settings-card">
     <div class="settings-label">Select File / drag area</div>
-    <p class="settings-detail">Uploads a wallpaper image. Supports `PNG`, `JPG`, and `WebP` up to `5MB`. Uploading an image enables wallpaper automatically. Removing the image disables it automatically.</p>
+    <p class="settings-detail">Uploads a wallpaper image. Supports `PNG`, `JPG`, `WebP`, and `AVIF` up to `10MB`, with a maximum of `40MP`. Uploading an image enables wallpaper automatically. Removing the image disables it automatically.</p>
     <p class="settings-when">Use a landscape image with soft contrast if you want the most balanced result.</p>
   </article>
   <article class="settings-card">
@@ -138,12 +212,15 @@ For `Welcome greeting readability`, the options mean:
 
 ## Default Behavior
 
-When you first use wallpaper-related settings, the current defaults are:
+When you first use Theme and wallpaper-related settings, the current defaults are:
 
+- appearance is `System`
+- color is the default Gemini blue
+- Theme Bloom is `on`
 - wallpaper is `off`
-- blur starts at `5px`
+- blur starts at `0px`
 - `Background Position` starts at `Center`
-- `Message Glass Effect` is `off`
+- `Message Glass Effect` is `on`
 - `Sidebar readability scrim` is `on`
 - `Scrim intensity` starts at `20%`
 - `Welcome greeting readability` starts at `Auto adapt (first estimate)`

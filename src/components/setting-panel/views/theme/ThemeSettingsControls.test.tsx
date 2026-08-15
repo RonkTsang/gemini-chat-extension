@@ -4,6 +4,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ThemeSettingsController } from './useThemeSettingsController'
 import { ThemeSettingsControls } from './ThemeSettingsControls'
 
+vi.mock('./ThemeBloomControl', () => ({
+  ThemeBloomControl: ({ variant }: { variant: string }) => (
+    <div data-control="theme-bloom" data-variant={variant} />
+  ),
+}))
+
 vi.mock('./AppearanceSelector', () => ({
   AppearanceSelector: ({ variant }: { variant: string }) => (
     <div data-control="appearance" data-variant={variant} />
@@ -49,7 +55,7 @@ describe('ThemeSettingsControls', () => {
     container.remove()
   })
 
-  it('renders Chat layout after Wallpaper in the full settings layout', () => {
+  it('renders Theme Bloom first and Chat layout after Wallpaper', () => {
     act(() => {
       root.render(
         <ThemeSettingsControls
@@ -62,6 +68,7 @@ describe('ThemeSettingsControls', () => {
       container.querySelectorAll<HTMLElement>('[data-control]'),
     )
     expect(controls.map((control) => control.dataset.control)).toEqual([
+      'theme-bloom',
       'appearance',
       'colors',
       'wallpaper',
@@ -84,6 +91,10 @@ describe('ThemeSettingsControls', () => {
 
     expect(
       container.querySelector('[data-control="chat-layout"]')
+        ?.getAttribute('data-variant'),
+    ).toBe('compact')
+    expect(
+      container.querySelector('[data-control="theme-bloom"]')
         ?.getAttribute('data-variant'),
     ).toBe('compact')
   })

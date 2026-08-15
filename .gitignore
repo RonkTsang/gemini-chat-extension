@@ -31,3 +31,5 @@ stats-*.json
 # python
 __pycache__/
 *.py[cod]
+
+.notes/

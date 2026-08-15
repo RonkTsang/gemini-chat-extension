@@ -214,6 +214,8 @@ describe('EnhancementsSettingsView top bar customization', () => {
       root.render(<EnhancementsSettingsView />)
     })
 
+    expect(container.textContent).not.toContain('Theme Bloom')
+
     await act(async () => {
       const helpButton = container.querySelector<HTMLButtonElement>(
         '[aria-label="Open Gem Avatar guide"]',

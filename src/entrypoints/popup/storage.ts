@@ -29,6 +29,15 @@ export const enableGemAvatar = storage.defineItem<boolean>(
   }
 );
 
+export const DEFAULT_THEME_BLOOM_ENABLED = true;
+
+export const enableThemeBloom = storage.defineItem<boolean>(
+  'sync:enableThemeBloom',
+  {
+    fallback: DEFAULT_THEME_BLOOM_ENABLED,
+  }
+);
+
 // Helper functions for individual settings
 export const getChatOutlineEnabled = () => enableChatOutline.getValue();
 export const setChatOutlineEnabled = (enabled: boolean) => enableChatOutline.setValue(enabled);
@@ -41,6 +50,9 @@ export const setBulkDeleteEnabled = (enabled: boolean) => enableBulkDelete.setVa
 
 export const getGemAvatarEnabled = () => enableGemAvatar.getValue();
 export const setGemAvatarEnabled = (enabled: boolean) => enableGemAvatar.setValue(enabled);
+
+export const getThemeBloomEnabled = () => enableThemeBloom.getValue();
+export const setThemeBloomEnabled = (enabled: boolean) => enableThemeBloom.setValue(enabled);
 
 // Helper function to get all settings at once
 export const getAllSettings = async () => {
