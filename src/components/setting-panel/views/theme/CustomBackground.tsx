@@ -27,6 +27,7 @@ import type {
 } from '@/entrypoints/content/gemini-theme'
 import {
   BACKGROUND_IMAGE_POSITIONS,
+  DEFAULT_THEME_BACKGROUND_SETTINGS,
   INPUT_AREA_TRANSPARENCY_DEFAULT,
   INPUT_AREA_TRANSPARENCY_MAX,
   INPUT_AREA_TRANSPARENCY_MIN,
@@ -214,9 +215,11 @@ export function CustomBackground(props: CustomBackgroundProps) {
   const settings = props.state?.settings
   const previewUrl = props.state?.resolvedBackgroundUrl ?? null
   const isBackgroundEnabled = settings?.backgroundImageEnabled ?? false
-  const blurValue = settings?.backgroundBlurPx ?? 5
+  const blurValue = settings?.backgroundBlurPx
+    ?? DEFAULT_THEME_BACKGROUND_SETTINGS.backgroundBlurPx
   const backgroundImagePosition = settings?.backgroundImagePosition ?? 'center'
-  const messageGlassEnabled = settings?.messageGlassEnabled ?? false
+  const messageGlassEnabled = settings?.messageGlassEnabled
+    ?? DEFAULT_THEME_BACKGROUND_SETTINGS.messageGlassEnabled
   const messageGlassBackgroundVisibility =
     settings?.messageGlassBackgroundVisibility
     ?? MESSAGE_GLASS_BACKGROUND_VISIBILITY_DEFAULT
@@ -412,7 +415,7 @@ export function CustomBackground(props: CustomBackgroundProps) {
             {tt('settingPanel.theme.dropBackground', 'Drop your image here')}
           </Text>
           <Text fontSize={isCompact ? '2xs' : 'xs'} color={secondaryTextColor}>
-            {tt('settingPanel.theme.fileTypes', 'PNG, JPG or WebP up to 5MB')}
+            {tt('settingPanel.theme.fileTypes', 'PNG, JPG, WebP or AVIF up to 10MB')}
           </Text>
           <HStack gap={isCompact ? 1.5 : 2}>
             <Button
@@ -446,7 +449,7 @@ export function CustomBackground(props: CustomBackgroundProps) {
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/png,image/jpeg,image/webp"
+          accept="image/png,image/jpeg,image/webp,image/avif"
           style={{ display: 'none' }}
           onChange={(event) => void handleFileChange(event)}
         />

@@ -1,6 +1,47 @@
 ---
 title: 主题个性化
-description: 通过外观模式、颜色预设、壁纸与可读性设置，自定义 Gemini 的长期使用体验。
+description: 通过外观模式、颜色预设、壁纸、可读性设置和 Theme Bloom 图片换肤交互，自定义 Gemini 的使用体验。
+head:
+  - tag: meta
+    attrs:
+      property: og:image
+      content: https://gpk.ronktsang.com/og/theme.png
+  - tag: meta
+    attrs:
+      property: og:image:alt
+      content: Gemini Power Kit Theme 主题面板，包含壁纸与颜色预设
+  - tag: meta
+    attrs:
+      name: twitter:image
+      content: https://gpk.ronktsang.com/og/theme.png
+  - tag: meta
+    attrs:
+      name: twitter:image:alt
+      content: Gemini Power Kit Theme 主题面板，包含壁纸与颜色预设
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: |
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "Gemini 主题个性化",
+        "description": "通过外观模式、颜色预设、壁纸、可读性设置和 Theme Bloom 图片换肤交互，自定义 Gemini 的使用体验。",
+        "url": "https://gpk.ronktsang.com/zh-cn/features/theme/",
+        "image": "https://gpk.ronktsang.com/og/theme.png",
+        "inLanguage": "zh-CN",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Gemini Power Kit",
+          "url": "https://gpk.ronktsang.com/"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "Gemini Power Kit",
+          "applicationCategory": "BrowserApplication",
+          "operatingSystem": "Chrome, Chromium-based browsers"
+        }
+      }
 ---
 
 import { Image } from 'astro:assets';
@@ -21,6 +62,39 @@ Theme 不只是换颜色，而是把 Gemini 调整成一个更适合长期使用
 - 外观模式
 - 颜色预设
 - 壁纸与可读性调节
+
+## 交互
+
+### Theme Bloom
+
+**Theme Bloom** 可以把一次图片拖放变成完整的换肤操作。将图片拖到 Gemini 输入框以外的页面区域，Gemini Power Kit 会分析图片的颜色，匹配最接近的 Theme 颜色预设，把图片保存为壁纸，并从拖放位置开始展示换肤动效。
+
+Theme Bloom 默认开启。它支持单张 `PNG`、`JPG`、`WebP` 或 `AVIF` 图片，大小不超过 `10MB`，图片尺寸不超过 `40MP`。
+
+<video
+  src="/theme-bloom.mp4"
+  controls
+  playsInline
+  preload="metadata"
+  class="release-video"
+  aria-label="Theme Bloom 演示：将图片拖到 Gemini 页面后自动应用匹配的主题"
+></video>
+
+*Theme Bloom 演示 —— 将图片拖到输入框外，自动匹配壁纸与颜色预设，并从拖放位置开始扩散换肤效果。*
+
+### 如何使用 Theme Bloom
+
+1. 打开 Gemini Power Kit 的 **Settings**，进入 **Theme**。
+2. 在 **Interactions** 下确认 **Theme Bloom** 已开启。
+3. 从电脑中拖动一张支持的图片，放到 Gemini 页面上输入框以外的区域。
+4. 看到 Theme Bloom 的拖放提示后松开鼠标。图片会成为壁纸，同时应用最接近的颜色预设。
+5. 如果要把图片添加到 Gemini 提示词中，请将它拖到输入框内部。该区域仍由 Gemini 原生上传流程处理。
+
+### 如何关闭 Theme Bloom
+
+打开 **Settings** → **Theme** → **Interactions**，关闭 **Theme Bloom**。关闭后，拖到页面其他区域的图片不会再触发换肤；拖到输入框内的图片仍按 Gemini 原生上传处理。
+
+如果图片格式不支持、一次拖入了多张图片，或超过大小与尺寸限制，Theme Bloom 会保持当前主题和壁纸不变。
 
 ## 为什么重要
 
@@ -77,7 +151,7 @@ Theme 把这些能力集中到一个设置面板里，并且支持实时预览�
   </article>
   <article class="settings-card">
     <div class="settings-label">Select File / 拖拽上传区</div>
-    <p class="settings-detail">上传壁纸图片。支持 `PNG`、`JPG`、`WebP`，大小不超过 `5MB`。上传成功后会自动开启壁纸；删除图片后会自动关闭。</p>
+    <p class="settings-detail">上传壁纸图片。支持 `PNG`、`JPG`、`WebP`、`AVIF`，大小不超过 `10MB`，图片尺寸不超过 `40MP`。上传成功后会自动开启壁纸；删除图片后会自动关闭。</p>
     <p class="settings-when">建议优先选择对比不过强、细节不过密的横向图片，后续更容易兼顾美观和可读性。</p>
   </article>
   <article class="settings-card">
@@ -138,12 +212,15 @@ Theme 把这些能力集中到一个设置面板里，并且支持实时预览�
 
 ## 默认行为
 
-当前壁纸相关设置的默认值如下：
+首次使用 Theme 和壁纸相关设置时，默认值如下：
 
+- 外观模式默认是 `System`
+- 颜色默认使用 Gemini 原生蓝色
+- `Theme Bloom` 默认 `开启`
 - 壁纸默认 `关闭`
-- `Blur` 默认是 `5px`
+- `Blur` 默认是 `0px`
 - `Background Position` 默认是 `Center`
-- `Message Glass Effect` 默认 `关闭`
+- `Message Glass Effect` 默认 `开启`
 - `Sidebar readability scrim` 默认 `开启`
 - `Scrim intensity` 默认是 `20%`
 - `Welcome greeting readability` 默认是 `Auto adapt (first estimate)`

@@ -7,6 +7,7 @@ export {
   resolveThemeBackgroundPreviewUrlForPanel,
   updateThemeBackgroundSettings,
   uploadThemeBackground,
+  validateThemeBackgroundImage,
   validateThemeBackgroundFile,
 } from './service'
 
@@ -21,6 +22,8 @@ export type {
   ThemeBackgroundSettings,
 } from './types'
 
+export type { ThemeBackgroundImageValidation } from './service'
+
 export type {
   WelcomeGreetingReadabilityMode,
   WelcomeGreetingResolved,
@@ -32,6 +35,7 @@ export {
   BACKGROUND_IMAGE_POSITIONS,
   BACKGROUND_BLUR_MAX,
   BACKGROUND_BLUR_MIN,
+  BACKGROUND_IMAGE_PIXEL_LIMIT,
   BACKGROUND_FILE_SIZE_LIMIT,
   DEFAULT_THEME_BACKGROUND_SETTINGS,
   INPUT_AREA_TRANSPARENCY_DEFAULT,

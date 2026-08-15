@@ -31,6 +31,25 @@ export const EVENTS = {
   QUICK_FOLLOW_UP_ADD_QUOTE: 'quick-follow-up:addQuote',
 } as const;
 
+export type ThemeBloomState =
+  | 'idle'
+  | 'eligible-drag'
+  | 'over-theme'
+  | 'over-native-upload'
+  | 'analyzing'
+  | 'transitioning'
+  | 'error'
+
+export interface ThemeBloomVisualState {
+  state: ThemeBloomState
+  origin?: {
+    clientX: number
+    clientY: number
+  }
+  accentColor?: string
+  message?: string
+}
+
 export interface URLChangeEvent {
   url: string
   timestamp: number
@@ -113,6 +132,9 @@ export interface AppEvents {
       | 'settings-panel'
   };
   'chat-settings-panel:anchor-changed': undefined;
+
+  // Theme Bloom prototype
+  'theme-bloom:state-change': ThemeBloomVisualState;
 
   // Chain Prompt
   'execution:aborted-by-chat-switch': {

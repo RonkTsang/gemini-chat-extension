@@ -70,7 +70,7 @@ vi.mock('@chakra-ui/react', () => ({
   },
 }))
 
-vi.mock('@/entrypoints/popup/storage', () => ({
+vi.mock('@/common/storage', () => ({
   enableChatOutline: {
     getValue: mocks.getChatOutline,
     setValue: mocks.setChatOutline,
@@ -213,6 +213,8 @@ describe('EnhancementsSettingsView top bar customization', () => {
     await act(async () => {
       root.render(<EnhancementsSettingsView />)
     })
+
+    expect(container.textContent).not.toContain('Theme Bloom')
 
     await act(async () => {
       const helpButton = container.querySelector<HTMLButtonElement>(

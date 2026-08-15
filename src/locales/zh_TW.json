@@ -181,7 +181,15 @@
       "enableBackgroundImage": "啟用桌布",
       "backgroundImageUpload": "背景圖上傳",
       "dropBackground": "將圖片拖放到這裡",
-      "fileTypes": "支援 PNG、JPG、WebP，最大 5MB",
+      "themeBloom": {
+        "title": "Theme Bloom",
+        "description": "將圖片拖到提示框外即可套用相符主題；拖到提示框內則會正常上傳。",
+        "analyzing": "正在比對主題…",
+        "dropHint": "放開即可套用主題",
+        "applyImageFailed": "無法套用圖片"
+      },
+      "interactions": "互動",
+      "fileTypes": "支援 PNG、JPG、WebP、AVIF，最大 10MB",
       "selectFile": "選擇檔案",
       "blurIntensity": "模糊",
       "backgroundPosition": "位置",
@@ -212,8 +220,9 @@
       "chatTextColor": "訊息文字顏色",
       "chatTextColorModeDescription": "模式：$1",
       "resetChatTextColor": "重設",
-      "invalidFileType": "僅支援 PNG/JPG/WebP",
-      "fileTooLarge": "圖片大小不能超過 5MB",
+      "invalidFileType": "僅支援 PNG/JPG/WebP/AVIF",
+      "fileTooLarge": "圖片大小不能超過 10MB",
+      "imageTooLarge": "圖片尺寸不能超過 40 MP",
       "imageLoadFailed": "圖片載入失敗，請重試",
       "removeBackgroundImage": "刪除背景圖"
     },

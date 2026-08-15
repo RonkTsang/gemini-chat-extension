@@ -2,6 +2,7 @@ import { ChatLayoutSettings } from '@/components/chat-layout-settings'
 import { AppearanceSelector } from './AppearanceSelector'
 import { ColorPresets } from './ColorPresets'
 import { CustomBackground } from './CustomBackground'
+import { ThemeBloomControl } from './ThemeBloomControl'
 import type { ThemeSettingsController } from './useThemeSettingsController'
 
 interface ThemeSettingsControlsProps {
@@ -15,6 +16,7 @@ export function ThemeSettingsControls({
 }: ThemeSettingsControlsProps) {
   return (
     <>
+      <ThemeBloomControl variant={variant} />
       <AppearanceSelector
         variant={variant}
         value={controller.appearanceState.mode}

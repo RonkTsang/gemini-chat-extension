@@ -29,10 +29,10 @@ import {
   setResponseCompleteNotificationAudioEnabled,
   setResponseCompleteNotificationEnabled,
 } from '@/services/responseCompleteNotificationSettings';
-import { 
+import {
   getAllSettings,
   setChatOutlineEnabled,
-} from './storage';
+} from '@/common/storage';
 import { ChatOutlineIcon, QuickQuoteIcon, ExternalLinkIcon, NotificationIcon } from '@/components/icons';
 import { NotificationTestButton } from '@/components/notification/NotificationTestButton';
 import { quickFollowStore } from '@/stores/quickFollowStore'

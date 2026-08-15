@@ -25,7 +25,7 @@ This website documents the public product, installation flow, feature behavior, 
 - [Tab Title Sync](https://gpk.ronktsang.com/features/tab-title-sync/): Sync browser tab titles with Gemini conversation titles.
 - [Gemini Reply Completion Notifications](https://gpk.ronktsang.com/features/notifications/): Receive system notifications when Gemini finishes replying.
 - [Gemini Bulk Delete Chats](https://gpk.ronktsang.com/features/bulk-delete/): Select multiple recent Gemini chats, exclude pinned conversations, and delete an intentional batch at once.
-- [Theme Customizer](https://gpk.ronktsang.com/features/theme/): Customize Gemini appearance with themes, colors, wallpaper, and readability controls.
+- [Theme Customizer](https://gpk.ronktsang.com/features/theme/): Customize Gemini appearance with themes, colors, wallpaper, readability controls, and Theme Bloom image-drop interactions that match a wallpaper to a color preset.
 - [Gemini Chat Layout Settings](https://gpk.ronktsang.com/features/chat-layout/): Adjust Gemini chat and prompt widths, user-message alignment, and full-width messages from the top bar or Theme settings.
 - [Gem Avatar](https://gpk.ronktsang.com/features/gem-avatar/): Give each Gemini Gem a custom local avatar, then make its character easier to recognize in chats.
 

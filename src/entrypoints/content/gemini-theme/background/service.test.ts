@@ -69,7 +69,10 @@ import {
   uploadThemeBackground,
   validateThemeBackgroundFile,
 } from './service'
-import { BACKGROUND_FILE_SIZE_LIMIT } from './types'
+import {
+  BACKGROUND_FILE_SIZE_LIMIT,
+  BACKGROUND_IMAGE_PIXEL_LIMIT,
+} from './types'
 
 function createSettings(overrides: Partial<ThemeBackgroundSettings> = {}): ThemeBackgroundSettings {
   return {
@@ -166,8 +169,66 @@ describe('theme background service', () => {
     )
     expect(() => validateThemeBackgroundFile(oversized)).toThrow(ThemeBackgroundError)
 
-    const valid = new File(['ok'], 'a.webp', { type: 'image/webp' })
+    const valid = new File(['ok'], 'a.avif', { type: 'image/avif' })
     expect(() => validateThemeBackgroundFile(valid)).not.toThrow()
+  })
+
+  it('rejects images above the pixel limit before persisting them', async () => {
+    class OversizedImage {
+      naturalWidth = 4_001
+      naturalHeight = Math.ceil(BACKGROUND_IMAGE_PIXEL_LIMIT / 4_001)
+      onload: null | ((event: Event) => void) = null
+      onerror: null | ((event: Event) => void) = null
+
+      set src(_: string) {
+        this.onload?.(new Event('load'))
+      }
+    }
+    Object.defineProperty(globalThis, 'Image', {
+      value: OversizedImage,
+      configurable: true,
+      writable: true,
+    })
+
+    await expect(
+      uploadThemeBackground(new File(['image'], 'large.avif', { type: 'image/avif' })),
+    ).rejects.toMatchObject({ code: 'image-too-many-pixels' })
+
+    expect(mockPut).not.toHaveBeenCalled()
+  })
+
+  it('accepts 8K images within the pixel limit', async () => {
+    class EightKImage {
+      naturalWidth = 7_680
+      naturalHeight = 4_320
+      onload: null | ((event: Event) => void) = null
+      onerror: null | ((event: Event) => void) = null
+
+      set src(_: string) {
+        this.onload?.(new Event('load'))
+      }
+    }
+    Object.defineProperty(globalThis, 'Image', {
+      value: EightKImage,
+      configurable: true,
+      writable: true,
+    })
+    mockGet.mockImplementation(async (assetId: string) => ({
+      id: assetId,
+      feature: 'background-image',
+      mimeType: 'image/avif',
+      size: 5,
+      blob: new Blob(['image'], { type: 'image/avif' }),
+      createdAt: '2026-02-20T00:00:00.000Z',
+      updatedAt: '2026-02-20T00:00:00.000Z',
+    }))
+
+    const result = await uploadThemeBackground(
+      new File(['image'], 'wallpaper.avif', { type: 'image/avif' }),
+    )
+
+    expect(result.settings.backgroundImageEnabled).toBe(true)
+    expect(mockPut).toHaveBeenCalledOnce()
   })
 
   it('repairs settings when referenced asset is missing', async () => {
@@ -241,6 +302,47 @@ describe('theme background service', () => {
     expect(third).toBe('blob:asset-2')
     expect(createObjectURLMock).toHaveBeenCalledTimes(2)
     expect(revokeObjectURLMock).toHaveBeenCalledWith('blob:asset-1')
+  })
+
+  it('coalesces concurrent object URL resolution for the same asset', async () => {
+    let resolveAsset: ((asset: {
+      id: string
+      feature: 'background-image'
+      mimeType: 'image/png'
+      size: number
+      blob: Blob
+      createdAt: string
+      updatedAt: string
+    }) => void) | undefined
+    mockGet.mockImplementation(() => new Promise((resolve) => {
+      resolveAsset = resolve
+    }))
+    createObjectURLMock.mockReturnValue('blob:shared-asset')
+    const settings = createSettings({
+      backgroundImageEnabled: true,
+      imageRef: { kind: 'asset', assetId: 'shared-asset' },
+    })
+
+    const first = resolveThemeBackgroundPreviewUrl(settings)
+    const second = resolveThemeBackgroundPreviewUrl(settings)
+
+    expect(mockGet).toHaveBeenCalledOnce()
+    resolveAsset?.({
+      id: 'shared-asset',
+      feature: 'background-image',
+      mimeType: 'image/png',
+      size: 10,
+      blob: new Blob(['shared'], { type: 'image/png' }),
+      createdAt: '2026-02-20T00:00:00.000Z',
+      updatedAt: '2026-02-20T00:00:00.000Z',
+    })
+
+    await expect(Promise.all([first, second])).resolves.toEqual([
+      'blob:shared-asset',
+      'blob:shared-asset',
+    ])
+    expect(createObjectURLMock).toHaveBeenCalledOnce()
+    expect(revokeObjectURLMock).not.toHaveBeenCalledWith('blob:shared-asset')
   })
 
   it('does not rollback new asset when deleting old asset fails', async () => {

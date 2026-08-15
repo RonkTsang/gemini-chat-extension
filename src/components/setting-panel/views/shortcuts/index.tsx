@@ -4,7 +4,7 @@ import { useRecordHotkeys } from 'react-hotkeys-hook'
 import { HiOutlinePencil, HiOutlineTrash } from 'react-icons/hi'
 import { LuInfo } from 'react-icons/lu'
 import { ToggleTip } from '@/components/ui/toggle-tip'
-import { enableBulkDelete } from '@/entrypoints/popup/storage'
+import { enableBulkDelete } from '@/common/storage'
 import { t } from '@/utils/i18n'
 import { useShortcutSettings } from '@/hooks/useShortcutSettings'
 import {

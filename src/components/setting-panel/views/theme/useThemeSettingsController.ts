@@ -83,10 +83,13 @@ function toResolvedState(
 function getBackgroundErrorMessage(error: unknown): string {
   if (error instanceof ThemeBackgroundError) {
     if (error.code === 'invalid-file-type') {
-      return tt('settingPanel.theme.invalidFileType', 'Only PNG/JPG/WebP is supported')
+      return tt('settingPanel.theme.invalidFileType', 'Only PNG/JPG/WebP/AVIF is supported')
     }
     if (error.code === 'file-too-large') {
-      return tt('settingPanel.theme.fileTooLarge', 'Image size must be 5MB or less')
+      return tt('settingPanel.theme.fileTooLarge', 'Image size must be 10MB or less')
+    }
+    if (error.code === 'image-too-many-pixels') {
+      return tt('settingPanel.theme.imageTooLarge', 'Image dimensions must not exceed 40MP')
     }
     if (error.code === 'image-load-failed') {
       return tt('settingPanel.theme.imageLoadFailed', 'Image loading failed, please try again')

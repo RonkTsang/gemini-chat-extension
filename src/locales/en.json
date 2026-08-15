@@ -181,7 +181,15 @@
       "enableBackgroundImage": "Enable wallpaper",
       "backgroundImageUpload": "Background Image Upload",
       "dropBackground": "Drop your image here",
-      "fileTypes": "PNG, JPG or WebP up to 5MB",
+      "themeBloom": {
+        "title": "Theme Bloom",
+        "description": "Drop an image outside Gemini's prompt box to apply a matching theme; drop it inside to upload normally.",
+        "analyzing": "Matching your theme…",
+        "dropHint": "Drop to apply theme",
+        "applyImageFailed": "Could not apply the image"
+      },
+      "interactions": "Interactions",
+      "fileTypes": "PNG, JPG, WebP, and AVIF up to 10MB",
       "selectFile": "Select File",
       "blurIntensity": "Blur",
       "backgroundPosition": "Position",
@@ -212,8 +220,9 @@
       "chatTextColor": "Message text color",
       "chatTextColorModeDescription": "Mode: $1",
       "resetChatTextColor": "Reset",
-      "invalidFileType": "Only PNG/JPG/WebP is supported",
-      "fileTooLarge": "Image size must be 5MB or less",
+      "invalidFileType": "Only PNG, JPG, WebP, and AVIF are supported",
+      "fileTooLarge": "Image size must be 10MB or less",
+      "imageTooLarge": "Image dimensions must not exceed 40MP",
       "imageLoadFailed": "Image loading failed, please try again",
       "removeBackgroundImage": "Remove Background Image"
     },

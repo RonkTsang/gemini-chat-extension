@@ -10,6 +10,7 @@ import { useSyncColorMode } from "@/hooks/useSyncColorMode"
 import QuickFollowUp from "./quick-follow-up"
 import ExtensionUpdate from "./extension-update"
 import WhatsNew from "./whats-new"
+import { ThemeBloomOverlay } from '@/components/theme-bloom-overlay'
 
 function App() {
   useSyncColorMode()
@@ -24,6 +25,7 @@ function App() {
       <QuickFollowUp />
       <ExtensionUpdate />
       <WhatsNew />
+      <ThemeBloomOverlay />
     </>
   )
 }

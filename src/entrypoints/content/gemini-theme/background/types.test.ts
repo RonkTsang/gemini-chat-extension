@@ -72,6 +72,20 @@ describe('theme background settings normalize', () => {
     expect(result.updatedAt.length).toBeGreaterThan(0)
   })
 
+  it('uses a sharp wallpaper with message glass enabled by default', () => {
+    expect(DEFAULT_THEME_BACKGROUND_SETTINGS.backgroundBlurPx).toBe(0)
+    expect(DEFAULT_THEME_BACKGROUND_SETTINGS.messageGlassEnabled).toBe(true)
+
+    const defaults = normalizeThemeBackgroundSettings({})
+    expect(defaults.backgroundBlurPx).toBe(0)
+    expect(defaults.messageGlassEnabled).toBe(true)
+
+    const explicitlyDisabled = normalizeThemeBackgroundSettings({
+      messageGlassEnabled: false,
+    })
+    expect(explicitlyDisabled.messageGlassEnabled).toBe(false)
+  })
+
   it('clamps blur value to valid range', () => {
     const low = normalizeThemeBackgroundSettings({ backgroundBlurPx: -100 })
     const high = normalizeThemeBackgroundSettings({ backgroundBlurPx: 999 })
