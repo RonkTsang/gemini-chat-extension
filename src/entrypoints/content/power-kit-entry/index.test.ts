@@ -210,6 +210,10 @@ describe('power kit entry', () => {
     renderMavatarFooter(true)
     startPowerKitEntry()
 
+    const tooltip = vi.mocked(tippy).mock.results[0]?.value as {
+      setProps: ReturnType<typeof vi.fn>
+    } | undefined
+
     const footerRow = document.querySelector('.mavatar-footer-row')
     const settingsButton = document.querySelector(
       'gem-icon-button[data-test-id="mavatar-footer-settings-button"]'
@@ -228,6 +232,7 @@ describe('power kit entry', () => {
     expect(currentContainer).toBe(initialContainer)
     expect(currentContainer?.nextElementSibling).toBe(settingsButton)
     expect(currentContainer?.getAttribute('data-gpk-variant')).toBe('expanded')
+    expect(tooltip?.setProps).toHaveBeenCalledWith({ placement: 'top' })
   })
 
   it('portals the owned tooltip to document.body', () => {
