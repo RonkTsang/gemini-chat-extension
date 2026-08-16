@@ -102,8 +102,9 @@ function waitForNewChatRoute(): Promise<boolean> {
   })
 }
 
-function navigateToNewChat(): void {
-  window.location.assign(NEW_CHAT_PATH)
+function navigateToNewChatViaSpa(): void {
+  window.history.pushState({}, '', NEW_CHAT_PATH)
+  window.dispatchEvent(new PopStateEvent('popstate', { state: window.history.state }))
 }
 
 /**
@@ -144,7 +145,7 @@ export const createNewChatForChainPrompt = async (): Promise<boolean> => {
 
 /**
  * Open a new Gemini chat through the native control when possible.
- * Falls back to a real page navigation when the control is unavailable or does
+ * Falls back to a SPA route transition when the control is unavailable or does
  * not update the route promptly.
  */
 export const openNewChat = async (): Promise<void> => {
@@ -154,7 +155,7 @@ export const openNewChat = async (): Promise<void> => {
 
   const button = findNewChatButton()
   if (!button) {
-    navigateToNewChat()
+    navigateToNewChatViaSpa()
     return
   }
 
@@ -167,7 +168,7 @@ export const openNewChat = async (): Promise<void> => {
     console.warn('[Chat Action] Failed to click New chat:', error)
   }
 
-  navigateToNewChat()
+  navigateToNewChatViaSpa()
 }
 
 function clickTemporaryChatButton(): boolean {

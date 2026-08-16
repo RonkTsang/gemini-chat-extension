@@ -180,16 +180,18 @@ describe('chatActions new chat', () => {
     expect(clickSpy).not.toHaveBeenCalled()
   })
 
-  it('falls back to a real route navigation when no native control is available', async () => {
+  it('falls back to a SPA route transition when no native control is available', async () => {
     window.history.replaceState({}, '', '/app/current-chat')
-    const assignSpy = vi.spyOn(window.location, 'assign').mockImplementation(() => undefined)
+    const popStateSpy = vi.fn()
+    window.addEventListener('popstate', popStateSpy, { once: true })
 
     await expect(openNewChat()).resolves.toBeUndefined()
 
-    expect(assignSpy).toHaveBeenCalledWith('/app')
+    expect(window.location.pathname).toBe('/app')
+    expect(popStateSpy).toHaveBeenCalledTimes(1)
   })
 
-  it('falls back to a real route navigation when the native control does not change routes', async () => {
+  it('falls back to a SPA route transition when the native control does not change routes', async () => {
     vi.useFakeTimers()
     window.history.replaceState({}, '', '/app/current-chat')
     document.body.innerHTML = `
@@ -203,13 +205,15 @@ describe('chatActions new chat', () => {
       '[data-test-id="new-chat-button"] > a[href="/app"]',
     )!
     newChatButton.addEventListener('click', (event) => event.preventDefault())
-    const assignSpy = vi.spyOn(window.location, 'assign').mockImplementation(() => undefined)
+    const popStateSpy = vi.fn()
+    window.addEventListener('popstate', popStateSpy, { once: true })
 
     const navigation = openNewChat()
     await vi.advanceTimersByTimeAsync(1000)
     await expect(navigation).resolves.toBeUndefined()
 
-    expect(assignSpy).toHaveBeenCalledWith('/app')
+    expect(window.location.pathname).toBe('/app')
+    expect(popStateSpy).toHaveBeenCalledTimes(1)
   })
 })
 
