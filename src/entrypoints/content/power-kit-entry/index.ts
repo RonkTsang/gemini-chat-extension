@@ -1,5 +1,10 @@
 import { eventBus } from '@/utils/eventbus'
-import tippy, { type Instance } from 'tippy.js'
+import {
+  createGeminiTooltip,
+  destroyGeminiTooltip,
+  destroyGeminiTooltipsWhere,
+  getGeminiTooltip,
+} from '../gemini-tooltip'
 import { shouldShowBadge, dismissBadge } from './badge'
 
 const DESKTOP_POWER_KIT_HOST_TEST_ID = 'gemini-power-kit-button'
@@ -47,7 +52,6 @@ type DesktopVariant = 'expanded' | 'collapsed'
 const BADGE_DOT_ATTR = 'data-gpk-badge'
 const BADGE_STYLE_ID = 'gpk-badge-style'
 const ENTRY_STYLE_ID = 'gpk-side-nav-entry-style'
-const TOOLTIP_STYLE_ID = 'gpk-tooltip-style'
 const MAVATAR_ENTRY_ATTR = 'data-gpk-mavatar-entry'
 const MAVATAR_ENTRY_BUTTON_ATTR = 'data-gpk-mavatar-entry-button'
 const MAVATAR_ENTRY_ICON_ATTR = 'data-gpk-mavatar-entry-icon'
@@ -228,31 +232,6 @@ const injectEntryStyle = () => {
   ensureInjectedStyle(ENTRY_STYLE_ID, css)
 }
 
-const injectTooltipStyle = () => {
-  const css = `
-.tippy-box[data-theme~='gemini-tooltip'] {
-  background: rgb(0, 0, 0);
-  border-radius: 12px;
-  box-shadow: none;
-  color: rgb(242, 240, 240);
-  font-family: "Google Sans Flex", "Google Sans Text", "Google Sans", sans-serif;
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 16px;
-}
-
-body.dark-theme .tippy-box[data-theme~='gemini-tooltip'] {
-  background: rgb(230, 230, 230);
-  color: rgb(23, 23, 23);
-}
-
-.tippy-box[data-theme~='gemini-tooltip'] > .tippy-content {
-  padding: 8px 16px;
-}
-`
-  ensureInjectedStyle(TOOLTIP_STYLE_ID, css)
-}
-
 let rafId: number | null = null
 let bootstrapRetryTimer: number | null = null
 let bootstrapRetryCount = 0
@@ -271,7 +250,6 @@ let observedDesktopList: Element | null = null
 let observedDesktopSettingsHost: Element | null = null
 let observedMobileControls: Element | null = null
 
-const desktopTooltipInstances = new Set<Instance>()
 let isStarted = false
 
 const getDesktopSettingsHost = (): HTMLElement | null =>
@@ -340,17 +318,13 @@ const bindSettingsOpenHandler = (button: HTMLElement) => {
   })
 }
 
-const getDesktopTooltipInstance = (button: HTMLElement): Instance | null => {
-  const existing = (button as unknown as { _tippy?: Instance })._tippy
-  return existing ?? null
-}
+const getDesktopTooltipInstance = (button: HTMLElement) => getGeminiTooltip(button)
 
 const destroyDesktopTooltip = (button: HTMLElement | null) => {
   if (!button) return
   const existing = getDesktopTooltipInstance(button)
   if (!existing) return
-  existing.destroy()
-  desktopTooltipInstances.delete(existing)
+  destroyGeminiTooltip(button)
 }
 
 const POWER_KIT_ENTRY_SELECTOR = [
@@ -365,62 +339,22 @@ const ensureDesktopTooltip = (
   enabled: boolean,
   placement: 'top' | 'right' = 'top'
 ) => {
-  injectTooltipStyle()
-  const existing = getDesktopTooltipInstance(button)
-
   if (!enabled) {
-    if (existing) {
-      existing.destroy()
-      desktopTooltipInstances.delete(existing)
-    }
+    destroyGeminiTooltip(button)
     return
   }
 
-  if (existing) {
-    if (!desktopTooltipInstances.has(existing)) {
-      desktopTooltipInstances.add(existing)
-    }
-    existing.setContent(POWER_KIT_LABEL)
-    existing.setProps({ placement })
-    return
-  }
-
-  try {
-    const instance = tippy(button, {
-      appendTo: () => document.body,
-      content: POWER_KIT_LABEL,
-      placement,
-      animation: 'shift-away-subtle',
-      arrow: false,
-      theme: 'gemini-tooltip',
-      duration: [null, 0],
-    })
-
-    desktopTooltipInstances.add(instance)
-  } catch (error) {
-    console.warn('[Gemini Power kit] Failed to initialize desktop tooltip', error)
-  }
-}
-
-const destroyAllDesktopTooltips = () => {
-  for (const instance of desktopTooltipInstances) {
-    instance.destroy()
-  }
-  desktopTooltipInstances.clear()
+  createGeminiTooltip(button, {
+    content: POWER_KIT_LABEL,
+    owner: 'power-kit-entry',
+    placement,
+  })
 }
 
 const sweepDesktopTooltipInstances = () => {
-  for (const instance of Array.from(desktopTooltipInstances)) {
-    const reference = instance.reference as Element | null
-    const isDetached = !reference || !(reference as Node).isConnected
-    const outsidePowerKitEntry = !isDetached
-      && !reference.closest(POWER_KIT_ENTRY_SELECTOR)
-
-    if (isDetached || outsidePowerKitEntry) {
-      instance.destroy()
-      desktopTooltipInstances.delete(instance)
-    }
-  }
+  destroyGeminiTooltipsWhere((reference, owner) =>
+    owner === 'power-kit-entry' && !reference.isConnected
+  )
 }
 
 const isVisibleElement = (element: Element | null) => {
@@ -530,7 +464,12 @@ const getOrCreateDesktopMavatarPowerKitContainer = () => {
     return existing
   }
 
-  existing?.remove()
+  if (existing) {
+    destroyGeminiTooltipsWhere((reference, owner) =>
+      owner === 'power-kit-entry' && existing.contains(reference)
+    )
+    existing.remove()
+  }
   return document.createElement('div')
 }
 
@@ -558,6 +497,9 @@ const decorateDesktopMavatarEntry = (
     `button[${MAVATAR_ENTRY_BUTTON_ATTR}]`
   )
   if (!button) {
+    destroyGeminiTooltipsWhere((reference, owner) =>
+      owner === 'power-kit-entry' && container.contains(reference)
+    )
     button = document.createElement('button')
     button.type = 'button'
     button.setAttribute(MAVATAR_ENTRY_BUTTON_ATTR, '1')
@@ -826,7 +768,9 @@ const syncEntries = () => {
   }
 
   if (!desktopOk) {
-    destroyAllDesktopTooltips()
+    destroyGeminiTooltipsWhere((_reference, owner) =>
+      owner === 'power-kit-entry'
+    )
     unbindDesktopObservers()
   }
   if (!mobileOk) {
@@ -997,7 +941,9 @@ const stopObservers = () => {
   }
   bootstrapRetryCount = 0
 
-  destroyAllDesktopTooltips()
+  destroyGeminiTooltipsWhere((_reference, owner) =>
+    owner === 'power-kit-entry'
+  )
 }
 
 const removeInjectedEntries = () => {
@@ -1005,13 +951,16 @@ const removeInjectedEntries = () => {
     POWER_KIT_ENTRY_SELECTOR,
     `[data-test-id="${DESKTOP_MAVATAR_POWER_KIT_CONTAINER_TEST_ID}"]`,
   ].join(',')).forEach((element) => {
+    destroyGeminiTooltipsWhere((reference, owner) =>
+      owner === 'power-kit-entry' && element.contains(reference)
+    )
     element.remove()
   })
   removeAllBadgeDots()
 }
 
 const removeInjectedStyles = () => {
-  for (const styleId of [BADGE_STYLE_ID, ENTRY_STYLE_ID, TOOLTIP_STYLE_ID]) {
+  for (const styleId of [BADGE_STYLE_ID, ENTRY_STYLE_ID]) {
     document.getElementById(styleId)?.remove()
   }
 }

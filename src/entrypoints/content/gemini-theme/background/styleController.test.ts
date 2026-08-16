@@ -294,6 +294,20 @@ describe('styleController', () => {
     expect(css).toContain('!important')
   })
 
+  it('removes the autosuggest scrim when a wallpaper is enabled', () => {
+    const css = readFileSync(
+      join(
+        process.cwd(),
+        'src/entrypoints/content/gemini-theme/background/style.css',
+      ),
+      'utf8',
+    )
+
+    expect(css).toMatch(
+      /:root\[data-gpk-bg-enabled="true"\] \.autosuggest-scrim \{\s*background: none;/,
+    )
+  })
+
   it('keeps the luminous mode sidenav transparent when a background is enabled', () => {
     const css = readFileSync(
       join(

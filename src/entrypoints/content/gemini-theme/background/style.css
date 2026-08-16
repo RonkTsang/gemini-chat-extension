@@ -337,6 +337,10 @@
   background: var(--gem-sys-color--surface-bright);
 }
 
+:root[data-gpk-bg-enabled="true"] .autosuggest-scrim {
+  background: none;
+}
+
 :root[data-gpk-bg-enabled="true"] div.blur-bg.visible-primary-message.blur-shown {
   visibility: hidden !important;
 }
