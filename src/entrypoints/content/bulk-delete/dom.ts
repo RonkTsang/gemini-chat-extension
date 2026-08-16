@@ -1,6 +1,17 @@
 import { t } from '@/utils/i18n'
 
-export const CHAT_HEADER_SELECTOR = 'side-navigation-content > div > div > infinite-scroller > expandable-section[storagekey="chats"][data-test-id="chats-expandable-section"] > button.expandable-section-header'
+const CHAT_SECTION_SELECTORS = [
+  'expandable-section[data-test-id="chats-expandable-section"]',
+  'expandable-section[storagekey="chats"]',
+]
+const SIDENAV_SELECTOR = 'bard-sidenav[role="navigation"], bard-sidenav'
+const CHAT_HEADER_SELECTORS = [
+  'button[data-test-id="expandable-section-toggle"]',
+  'button[aria-controls="sidenav-section-content-chats"]',
+  'button[aria-expanded]',
+  'button.expandable-section-header',
+]
+const CONVERSATION_LIST_SELECTOR = 'conversations-list[data-test-id="all-conversations"], conversations-list, gem-nav-list-item[data-test-id="conversation"]'
 
 const ENTRY_SPACER_ATTR = 'data-gpk-bulk-delete-entry-spacer'
 const ENTRY_ROOT_ATTR = 'data-gpk-bulk-delete-entry-root'
@@ -66,13 +77,61 @@ export interface LoadRowsResult {
   reason?: 'scroller-not-found' | 'timeout' | 'gemini-load-failed'
 }
 
+function isSectionHeaderToggle(section: HTMLElement, header: HTMLElement): boolean {
+  const container = header.parentElement
+  return container === section || container?.parentElement === section
+}
+
+function getSidenavScopes(root: ParentNode): ParentNode[] {
+  const sidenavs = Array.from(root.querySelectorAll<HTMLElement>(SIDENAV_SELECTOR))
+  return sidenavs.length > 0 ? sidenavs : [root]
+}
+
+function findChatSections(scope: ParentNode): HTMLElement[] {
+  const chatSections = CHAT_SECTION_SELECTORS.flatMap(selector =>
+    Array.from(scope.querySelectorAll<HTMLElement>(selector)),
+  )
+  const conversationList = scope.querySelector<HTMLElement>(CONVERSATION_LIST_SELECTOR)
+  const conversationSection = conversationList?.closest<HTMLElement>('expandable-section')
+  if (conversationSection && !chatSections.includes(conversationSection)) {
+    chatSections.push(conversationSection)
+  }
+  return chatSections
+}
+
 export function findChatHeader(root: ParentNode = document): HTMLElement | null {
-  return root.querySelector<HTMLElement>(CHAT_HEADER_SELECTOR)
+  for (const scope of getSidenavScopes(root)) {
+    for (const section of findChatSections(scope)) {
+      for (const selector of CHAT_HEADER_SELECTORS) {
+        const header = Array.from(section.querySelectorAll<HTMLElement>(selector))
+          .find(candidate => isSectionHeaderToggle(section, candidate))
+        if (header) {
+          return header
+        }
+      }
+    }
+  }
+
+  return null
+}
+
+function getEntryContainer(header: HTMLElement): HTMLElement {
+  const headerActions = Array.from(header.parentElement?.children ?? [])
+    .find((element): element is HTMLElement =>
+      element instanceof HTMLElement && element.classList.contains('expandable-section-header-actions'),
+    )
+  return headerActions ?? header
 }
 
 export function ensureEntryMount(header: HTMLElement): HTMLElement {
-  const existing = header.querySelector<HTMLElement>(`[${ENTRY_ROOT_ATTR}]`)
+  const container = getEntryContainer(header)
+  const existing = container.querySelector<HTMLElement>(`[${ENTRY_ROOT_ATTR}]`)
+    ?? header.querySelector<HTMLElement>(`[${ENTRY_ROOT_ATTR}]`)
   if (existing) {
+    const spacer = existing.closest<HTMLElement>(`[${ENTRY_SPACER_ATTR}]`)
+    if (spacer && spacer.parentElement !== container) {
+      container.prepend(spacer)
+    }
     return existing
   }
 
@@ -82,7 +141,7 @@ export function ensureEntryMount(header: HTMLElement): HTMLElement {
   const root = document.createElement('div')
   root.setAttribute(ENTRY_ROOT_ATTR, 'true')
   spacer.appendChild(root)
-  header.appendChild(spacer)
+  container.prepend(spacer)
   return root
 }
 
@@ -90,8 +149,12 @@ export function removeEntryMount(root: HTMLElement): void {
   root.closest(`[${ENTRY_SPACER_ATTR}]`)?.remove()
 }
 
+function getBulkMenuAnchor(header: HTMLElement): HTMLElement {
+  return header.closest<HTMLElement>('.expandable-section-header-row') ?? header
+}
+
 export function findBulkMenu(header: HTMLElement): HTMLElement | null {
-  const next = header.nextElementSibling
+  const next = getBulkMenuAnchor(header).nextElementSibling
   if (next instanceof HTMLElement && next.hasAttribute(MENU_ATTR)) {
     return next
   }
@@ -215,7 +278,7 @@ export function ensureBulkMenu(
   recentRow.append(selectRecent, changeLimit)
   actionRow.append(deselectPinned, cancel)
   menu.append(recentRow, limitPanel, actionRow, submit)
-  header.insertAdjacentElement('afterend', menu)
+  getBulkMenuAnchor(header).insertAdjacentElement('afterend', menu)
   return menu
 }
 

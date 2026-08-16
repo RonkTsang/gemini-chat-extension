@@ -1,7 +1,7 @@
 import tippy, { type Instance } from 'tippy.js'
 
 export type GeminiTooltipPlacement = 'top' | 'right' | 'bottom' | 'left'
-export type GeminiTooltipOwner = 'power-kit-entry' | 'top-bar-action'
+export type GeminiTooltipOwner = 'bulk-delete' | 'power-kit-entry' | 'top-bar-action'
 
 export interface GeminiTooltipOptions {
   content: string

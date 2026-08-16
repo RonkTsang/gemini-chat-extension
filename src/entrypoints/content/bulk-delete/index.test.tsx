@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import tippy from 'tippy.js'
 import {
   cleanupChatCheckboxes,
   ensureBulkMenu,
@@ -31,6 +32,17 @@ vi.mock('@/components/ui/toaster', () => ({
   },
 }))
 
+vi.mock('tippy.js', () => ({
+  default: vi.fn((reference: Element, options: unknown) => ({
+    destroy: vi.fn(),
+    hide: vi.fn(),
+    options,
+    reference,
+    setContent: vi.fn(),
+    setProps: vi.fn(),
+  })),
+}))
+
 vi.mock('@/utils/i18n', () => ({
   t: (id: string, substitutions?: string | string[]) => {
     if (id === 'bulkDelete.deleteSelected') {
@@ -38,6 +50,7 @@ vi.mock('@/utils/i18n', () => ({
       return `Delete (${count})`
     }
     const map: Record<string, string> = {
+      'bulkDelete.entryLabel': 'Bulk delete',
       'bulkDelete.selectRecent': `Select ${substitutions} recent`,
       'bulkDelete.selectUnpinned': `Select ${substitutions} unpinned`,
       'bulkDelete.excludePinned': 'Exclude pinned',
@@ -94,6 +107,29 @@ function renderSidenav(count = 3): void {
   `
 }
 
+function renderLatestSidenav(): void {
+  document.body.innerHTML = `
+    <bard-sidenav>
+      <side-navigation-content>
+        <div class="sidenav-with-history-container">
+          <div data-test-id="overflow-container"></div>
+          <infinite-scroller>
+            <expandable-section storagekey="chats" data-test-id="chats-expandable-section">
+              <div class="expandable-section-header-row">
+                <button data-test-id="expandable-section-toggle" class="expandable-section-header" aria-expanded="true" aria-controls="sidenav-section-content-chats"><span>Recents</span></button>
+                <div class="expandable-section-header-actions"></div>
+              </div>
+              <div data-test-id="expandable-section-content" class="expandable-section-content">
+                <div class="chat-history"></div>
+              </div>
+            </expandable-section>
+          </infinite-scroller>
+        </div>
+      </side-navigation-content>
+    </bard-sidenav>
+  `
+}
+
 describe('bulk delete DOM helpers', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
@@ -110,7 +146,7 @@ describe('bulk delete DOM helpers', () => {
     toasterCreateMock.mockReset()
   })
 
-  it('injects the entry mount into the chats header without duplicates', () => {
+  it('falls back to the chats header when no actions slot exists', () => {
     renderSidenav()
     const header = findChatHeader()
     expect(header).not.toBeNull()
@@ -120,6 +156,104 @@ describe('bulk delete DOM helpers', () => {
 
     expect(first).toBe(second)
     expect(header!.querySelectorAll('[data-gpk-bulk-delete-entry-spacer]')).toHaveLength(1)
+  })
+
+  it('finds the latest Chats header and places its menu below the header row', () => {
+    renderLatestSidenav()
+    const header = findChatHeader()
+    const headerRow = document.querySelector<HTMLElement>('.expandable-section-header-row')!
+    const headerActions = headerRow.querySelector<HTMLElement>('.expandable-section-header-actions')!
+
+    expect(header).toBe(headerRow.querySelector('button.expandable-section-header'))
+
+    const entryMount = ensureEntryMount(header!)
+    const menu = ensureBulkMenu(header!, {
+      onSelectRecent: vi.fn(),
+      onRecentLimitChange: vi.fn(),
+      onDeselectPinned: vi.fn(),
+      onDeselectAll: vi.fn(),
+      onDelete: vi.fn(),
+    })
+
+    expect(entryMount.isConnected).toBe(true)
+    expect(headerActions.firstElementChild).toBe(entryMount.parentElement)
+    expect(header?.querySelector('[data-gpk-bulk-delete-entry-root]')).toBeNull()
+    expect(headerRow.nextElementSibling).toBe(menu)
+    expect(menu.nextElementSibling?.getAttribute('data-test-id')).toBe('expandable-section-content')
+  })
+
+  it('moves an existing entry mount into the actions slot', () => {
+    renderLatestSidenav()
+    const header = findChatHeader()!
+    const headerActions = document.querySelector<HTMLElement>('.expandable-section-header-actions')!
+    const oldSpacer = document.createElement('div')
+    oldSpacer.setAttribute('data-gpk-bulk-delete-entry-spacer', 'true')
+    const oldMount = document.createElement('div')
+    oldMount.setAttribute('data-gpk-bulk-delete-entry-root', 'true')
+    oldSpacer.appendChild(oldMount)
+    header.appendChild(oldSpacer)
+
+    expect(ensureEntryMount(header)).toBe(oldMount)
+    expect(headerActions.firstElementChild).toBe(oldSpacer)
+    expect(header.querySelector('[data-gpk-bulk-delete-entry-root]')).toBeNull()
+  })
+
+  it('falls back to semantic Chats section and toggle attributes', () => {
+    renderLatestSidenav()
+    const section = document.querySelector<HTMLElement>('expandable-section')!
+    const header = section.querySelector<HTMLButtonElement>('button')!
+    section.removeAttribute('data-test-id')
+    header.removeAttribute('data-test-id')
+    header.removeAttribute('class')
+
+    expect(findChatHeader()).toBe(header)
+  })
+
+  it('limits Chat section matching to the Gemini side navigation', () => {
+    renderLatestSidenav()
+    document.body.insertAdjacentHTML('afterbegin', `
+      <expandable-section storagekey="chats">
+        <button class="expandable-section-header" aria-expanded="true">Decoy Chats</button>
+      </expandable-section>
+    `)
+
+    expect(findChatHeader()?.textContent).toBe('Recents')
+  })
+
+  it('attaches the shared Gemini tooltip to the Bulk Delete entry and cleans it up', async () => {
+    renderLatestSidenav()
+    startBulkDelete()
+    await new Promise<void>((resolve) => {
+      window.requestAnimationFrame(() => resolve())
+    })
+    await Promise.resolve()
+
+    const button = document.querySelector<HTMLButtonElement>('.gpk-bulk-delete-entry-button')!
+    await vi.waitFor(() => {
+      expect(vi.mocked(tippy).mock.calls.some(
+        ([reference]) => reference as unknown as Element === button,
+      )).toBe(true)
+    })
+    const tooltipCall = vi.mocked(tippy).mock.calls.find(
+      ([reference]) => reference as unknown as Element === button,
+    )
+    const tooltip = vi.mocked(tippy).mock.results.find(
+      result => (result.value as { reference?: Element }).reference === button,
+    )?.value as { destroy: ReturnType<typeof vi.fn> } | undefined
+    const options = tooltipCall?.[1] as {
+      appendTo?: () => Element
+      content?: string
+      placement?: string
+    } | undefined
+
+    expect(button.hasAttribute('title')).toBe(false)
+    expect(options?.content).toBe('Bulk delete')
+    expect(options?.placement).toBe('right')
+    expect(options?.appendTo?.()).toBe(document.body)
+
+    stopBulkDelete()
+
+    expect(tooltip?.destroy).toHaveBeenCalledOnce()
   })
 
   it('toggles Bulk Delete mode only while the feature controller is running', () => {
