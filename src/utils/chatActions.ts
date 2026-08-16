@@ -1,16 +1,35 @@
 /**
- * Chat action utilities for chain prompt execution
- * Handles chat history detection and new chat creation
+ * Chat action utilities for Gemini page navigation and Chain Prompt execution.
  */
 
-import { GEM_EXT_EVENTS } from '@/common/event'
 import { hasChatHistory, getChatSummary, getDefaultChatWindow } from './messageUtils'
 
 const NEW_CHAT_PATH = '/app'
+const NEW_CHAT_ROUTE_TIMEOUT_MS = 1000
+const NEW_CHAT_ROUTE_POLL_INTERVAL_MS = 50
+const TEMPORARY_CHAT_BUTTON_TIMEOUT_MS = 1000
+const TEMPORARY_CHAT_BUTTON_POLL_INTERVAL_MS = 50
 
-const delay = (ms: number): Promise<void> => new Promise((resolve) => {
-  window.setTimeout(resolve, ms)
-})
+// Gemini's native entry for switching the active page into Temporary Chat.
+const TEMPORARY_CHAT_BUTTON_SELECTORS = [
+  'temp-chat-button > gem-icon-button',
+  'temp-chat-button gem-icon-button',
+  'temp-chat-button button',
+] as const
+
+const NEW_CHAT_SELECTORS = [
+  // Any one of these independent contracts identifies New chat in SideNav.
+  'bard-sidenav a[href="/app"]',
+  'bard-sidenav a[aria-label="New chat"]',
+  'bard-sidenav gem-nav-list-item[data-test-id="new-chat-button"] > a',
+
+  // Fallback for the compact top-level entry.
+  'side-nav-sparkle-button > a[aria-label="New chat"]',
+
+  // Gemini can move the same controls outside of the SideNav container.
+  'a[aria-label="New chat"]',
+  'gem-nav-list-item[data-test-id="new-chat-button"] > a',
+] as const
 
 function isElementVisible(element: HTMLElement): boolean {
   let currentElement: HTMLElement | null = element
@@ -43,35 +62,73 @@ function findVisibleElement(selectors: readonly string[]): HTMLElement | null {
   return null
 }
 
+function findFirstElement(selectors: readonly string[]): HTMLElement | null {
+  for (const selector of selectors) {
+    const element = document.querySelector<HTMLElement>(selector)
+    if (element) {
+      return element
+    }
+  }
+
+  return null
+}
+
+function findNewChatButton(): HTMLElement | null {
+  // Chain Prompt may invoke this while its confirmation dialog marks Gemini's
+  // app root aria-hidden. New Chat is an explicit native target, so do not
+  // reject it based on visibility state inherited from that dialog.
+  return findFirstElement(NEW_CHAT_SELECTORS)
+}
+
+function isNewChatRoute(): boolean {
+  return window.location.pathname === NEW_CHAT_PATH
+}
+
+function waitForNewChatRoute(): Promise<boolean> {
+  if (isNewChatRoute()) {
+    return Promise.resolve(true)
+  }
+
+  return new Promise((resolve) => {
+    let intervalId = 0
+    let timeoutId = 0
+
+    const finish = (navigated: boolean) => {
+      window.clearInterval(intervalId)
+      window.clearTimeout(timeoutId)
+      resolve(navigated)
+    }
+
+    intervalId = window.setInterval(() => {
+      if (isNewChatRoute()) {
+        finish(true)
+      }
+    }, NEW_CHAT_ROUTE_POLL_INTERVAL_MS)
+
+    timeoutId = window.setTimeout(() => {
+      finish(isNewChatRoute())
+    }, NEW_CHAT_ROUTE_TIMEOUT_MS)
+  })
+}
+
+function navigateToNewChatViaSpa(): void {
+  window.history.pushState({}, '', NEW_CHAT_PATH)
+  window.dispatchEvent(new PopStateEvent('popstate', { state: window.history.state }))
+}
+
 /**
- * Create a new chat by simulating click on the "New chat" button
- * Preserves Content Script state (unlike navigation-based approach)
+ * Create a new chat for Chain Prompt, then wait until its editor is ready.
+ * This intentionally avoids hard navigation because the Chain Prompt run must
+ * continue in the existing content-script context.
  * @returns Promise<boolean> - true if successful, false otherwise
  */
-export const createNewChatByClick = async (): Promise<boolean> => {
+export const createNewChatForChainPrompt = async (): Promise<boolean> => {
   try {
     // Get chat summary before creating new chat
     const beforeSummary = getChatSummary()
     const beforeCount = beforeSummary.messageCount
     
-    // Button selectors (ordered by priority)
-    const selectors = [
-      // Collapsed SideNav uses a compact gem-icon-button entry.
-      'bard-sidenav.collapsed gem-icon-button > a[aria-label="New chat"][href="/app"]',
-
-      // Primary selector (based on Gemini DOM structure)
-      'side-navigation-v2 side-nav-action-button[data-test-id="new-chat-button"] a[aria-label="New chat"]',
-      
-      // Alternative selectors
-      'a[aria-label="New chat"]',
-      'side-nav-action-button[data-test-id="new-chat-button"] a',
-      '[data-test-id="new-chat-button"]',
-      
-      // Generic fallbacks
-      'button[aria-label*="New"]',
-    ]
-    
-    const button = findVisibleElement(selectors)
+    const button = findNewChatButton()
     
     if (!button) {
       console.error('[Chain Prompt] New chat button not found')
@@ -96,55 +153,68 @@ export const createNewChatByClick = async (): Promise<boolean> => {
 }
 
 /**
- * Open a new chat by moving Gemini to the blank /app route.
- * Use this as a fallback when Gemini's native button is unavailable.
+ * Open a new Gemini chat through the native control when possible.
+ * Falls back to a SPA route transition when the control is unavailable or does
+ * not update the route promptly.
  */
-export const openNewChatByRoute = async (): Promise<boolean> => {
+export const openNewChat = async (): Promise<void> => {
+  if (isNewChatRoute()) {
+    return
+  }
+
+  const button = findNewChatButton()
+  if (!button) {
+    navigateToNewChatViaSpa()
+    return
+  }
+
   try {
-    const beforeSummary = getChatSummary()
-    const beforeCount = beforeSummary.messageCount
-
-    if (window.location.pathname !== NEW_CHAT_PATH) {
-      window.history.pushState({}, '', NEW_CHAT_PATH)
-      window.dispatchEvent(new PopStateEvent('popstate', { state: window.history.state }))
-      window.dispatchEvent(new CustomEvent(GEM_EXT_EVENTS.URL_CHANGE, {
-        detail: {
-          url: window.location.href,
-          timestamp: Date.now(),
-        },
-      }))
+    button.click()
+    if (await waitForNewChatRoute()) {
+      return
     }
-
-    const success = await waitForNewChatReady(beforeCount)
-    if (success) {
-      return true
-    }
-
-    return false
   } catch (error) {
-    console.error('[Shortcut] Failed to open new chat by route:', error)
-    return false
-  }
-}
-
-/**
- * Open a new chat with Gemini's native UI first, then fall back to route change.
- */
-export const openNewChat = async (): Promise<boolean> => {
-  const clicked = await createNewChatByClick()
-  if (clicked) {
-    return true
+    console.warn('[Chat Action] Failed to click New chat:', error)
   }
 
-  return openNewChatByRoute()
+  navigateToNewChatViaSpa()
 }
 
-function clickTemporaryChatButton(): boolean {
-  const temporaryChatButton = findVisibleElement([
-    'temp-chat-button > gem-icon-button',
-    'temp-chat-button gem-icon-button',
-    'temp-chat-button button',
-  ])
+function findTemporaryChatButton(): HTMLElement | null {
+  return findFirstElement(TEMPORARY_CHAT_BUTTON_SELECTORS)
+}
+
+function waitForTemporaryChatButton(): Promise<HTMLElement | null> {
+  const existingButton = findTemporaryChatButton()
+  if (existingButton) {
+    return Promise.resolve(existingButton)
+  }
+
+  return new Promise((resolve) => {
+    let intervalId = 0
+    let timeoutId = 0
+
+    const finish = (button: HTMLElement | null) => {
+      window.clearInterval(intervalId)
+      window.clearTimeout(timeoutId)
+      resolve(button)
+    }
+
+    intervalId = window.setInterval(() => {
+      const button = findTemporaryChatButton()
+      if (button) {
+        finish(button)
+      }
+    }, TEMPORARY_CHAT_BUTTON_POLL_INTERVAL_MS)
+
+    timeoutId = window.setTimeout(() => {
+      finish(findTemporaryChatButton())
+    }, TEMPORARY_CHAT_BUTTON_TIMEOUT_MS)
+  })
+}
+
+function clickTemporaryChatButton(button = findTemporaryChatButton()): boolean {
+  const temporaryChatButton = button
 
   if (!temporaryChatButton) {
     console.error('[Shortcut] Temporary chat button not found')
@@ -159,19 +229,31 @@ function clickTemporaryChatButton(): boolean {
  * Open a new temporary chat from Gemini's page controls.
  */
 export const openTemporaryChatByClick = async (): Promise<boolean> => {
-  // The temporary chat control is already available on Gemini's blank chat page.
-  // Avoid waiting for a redundant new-chat transition in this common shortcut path.
-  if (window.location.pathname === NEW_CHAT_PATH) {
-    return clickTemporaryChatButton()
+  const existingButton = findTemporaryChatButton()
+  if (existingButton) {
+    return clickTemporaryChatButton(existingButton)
   }
 
-  const newChatReady = await openNewChat()
-  if (!newChatReady) {
-    return false
+  if (!isNewChatRoute()) {
+    const newChatButton = findNewChatButton()
+
+    if (newChatButton) {
+      try {
+        newChatButton.click()
+        if (!await waitForNewChatRoute()) {
+          navigateToNewChatViaSpa()
+        }
+      } catch (error) {
+        console.warn('[Shortcut] Failed to click New chat before opening Temporary chat:', error)
+        navigateToNewChatViaSpa()
+      }
+    } else {
+      navigateToNewChatViaSpa()
+    }
   }
 
-  await delay(500)
-  return clickTemporaryChatButton()
+  const temporaryChatButton = await waitForTemporaryChatButton()
+  return clickTemporaryChatButton(temporaryChatButton)
 }
 
 function openSideNavEntry(selectors: readonly string[], label: string): boolean {

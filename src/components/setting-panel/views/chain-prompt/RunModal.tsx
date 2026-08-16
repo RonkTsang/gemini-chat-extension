@@ -26,7 +26,7 @@ import { executionCoordinator } from '@/services/executionCoordinator'
 import { useChainPromptStore, startRun, updateStepStatus, completeRun } from '@/stores/chainPromptStore'
 import { toaster } from '@/components/ui/toaster'
 import { t } from '@/utils/i18n'
-import { createNewChatByClick } from '@/utils/chatActions'
+import { createNewChatForChainPrompt } from '@/utils/chatActions'
 import { hasChatHistory, getChatSummary, getDefaultChatWindow } from '@/utils/messageUtils'
 import { ConfirmNewChatDialog } from './ConfirmNewChatDialog'
 import { useEventEmitter } from '@/hooks/useEventBus'
@@ -110,7 +110,7 @@ export function RunModal({ prompt, open, onClose, onEdit }: RunModalProps) {
     setShowConfirmDialog(false)
 
     // Create new chat
-    const success = await createNewChatByClick()
+    const success = await createNewChatForChainPrompt()
 
     if (!success) {
       toaster.create({
@@ -388,5 +388,4 @@ export function RunModal({ prompt, open, onClose, onEdit }: RunModalProps) {
     </Dialog.Root>
   )
 }
-
 
