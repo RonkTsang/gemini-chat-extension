@@ -40,6 +40,11 @@ export function WhatsNewToast({ version, features, onClose }: WhatsNewToastProps
   const handlePromoActionClick = (action?: ReleaseNotePromoAction) => {
     if (!action) return
 
+    if (action.action === 'external-link') {
+      window.open(action.params.url, '_blank', 'noopener,noreferrer')
+      return
+    }
+
     if (action.action === 'setting-panel') {
       emitSync('settings:open', {
         from: 'whats-new',

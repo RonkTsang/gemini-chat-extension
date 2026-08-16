@@ -564,15 +564,10 @@
   "whatsnew": {
     "title": "新機能",
     "releaseNotes": "リリースノート",
-    "chatLayout": {
-      "title": "Geminiを使いやすく",
-      "description": "チャットと入力欄の幅を調整して、Gemini との会話をより快適で、集中しやすく、追いやすくします。",
-      "action": "チャットレイアウトを調整"
-    },
-    "gemAvatar": {
-      "title": "Gem に顔を",
-      "description": "各 Gem にアバターを設定して、名前を個性のある見えるキャラクターに変えます。",
-      "action": "拡張機能を開く"
+    "themeBloom": {
+      "title": "Gemini をもっと楽しくする変身",
+      "description": "お気に入りの画像をドロップするだけで、すぐに Gemini に合うテーマを作成。会話を自分らしく彩る、手軽で楽しい方法です。",
+      "action": "Theme Bloom を試す"
     }
   }
 }

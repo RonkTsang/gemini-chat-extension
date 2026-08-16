@@ -13,6 +13,7 @@ export const EXTERNAL_LINKS = {
   COFFEE: 'https://ko-fi.com/ronktsang',
   SHARE: 'https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn',
   RELEASE_NOTES: 'https://gpk.ronktsang.com/support/whats-new/',
+  THEME_BLOOM_GUIDE: 'https://gpk.ronktsang.com/features/theme/#theme-bloom',
   GEM_AVATAR_GUIDE: 'https://gpk.ronktsang.com/features/gem-avatar/',
   NOTIFICATION_TROUBLESHOOTING: 'https://gpk.ronktsang.com/support/notification-troubleshooting/',
   NOTIFICATION_TROUBLESHOOTING_ZH_CN: 'https://gpk.ronktsang.com/zh-cn/support/notification-troubleshooting/',

@@ -564,15 +564,10 @@
   "whatsnew": {
     "title": "Quoi de neuf",
     "releaseNotes": "Notes de version",
-    "chatLayout": {
-      "title": "Gemini suit votre rythme",
-      "description": "Ajustez la largeur du chat et du champ de saisie pour rendre les conversations Gemini plus confortables, plus ciblées et plus faciles à suivre.",
-      "action": "Ajuster la mise en page"
-    },
-    "gemAvatar": {
-      "title": "Donnez un visage à chaque Gem",
-      "description": "Attribuez un avatar à chaque Gem pour transformer un simple nom en personnage visible avec sa propre personnalité.",
-      "action": "Ouvrir les améliorations"
+    "themeBloom": {
+      "title": "La refonte Gemini la plus ludique",
+      "description": "Déposez une image favorite pour créer instantanément un thème Gemini assorti, une façon simple et ludique de rendre chaque conversation plus personnelle.",
+      "action": "Essayer Theme Bloom"
     }
   }
 }

@@ -564,15 +564,10 @@
   "whatsnew": {
     "title": "更新内容",
     "releaseNotes": "更新说明",
-    "chatLayout": {
-      "title": "让聊天界面更合心意",
-      "description": "调整聊天区和输入框宽度，让 Gemini 对话空间更舒适、更专注，也更易于浏览。",
-      "action": "调整聊天布局"
-    },
-    "gemAvatar": {
-      "title": "让 Gem 更有形象",
-      "description": "为每个 Gem 设置头像，让它从名字变成一眼可见、个性鲜明的角色。",
-      "action": "增强功能"
+    "themeBloom": {
+      "title": "最有趣的 Gemini 主题体验",
+      "description": "把喜欢的图片拖进 Gemini，一拖即换主题，让每次聊天都更有趣、更合你心意。",
+      "action": "尝试 Theme Bloom"
     }
   }
 }
