@@ -10,6 +10,13 @@ const NEW_CHAT_ROUTE_POLL_INTERVAL_MS = 50
 const TEMPORARY_CHAT_BUTTON_TIMEOUT_MS = 1000
 const TEMPORARY_CHAT_BUTTON_POLL_INTERVAL_MS = 50
 
+// Gemini's native entry for switching the active page into Temporary Chat.
+const TEMPORARY_CHAT_BUTTON_SELECTORS = [
+  'temp-chat-button > gem-icon-button',
+  'temp-chat-button gem-icon-button',
+  'temp-chat-button button',
+] as const
+
 const NEW_CHAT_SELECTORS = [
   // Any one of these independent contracts identifies New chat in SideNav.
   'bard-sidenav a[href="/app"]',
@@ -172,12 +179,6 @@ export const openNewChat = async (): Promise<void> => {
 
   navigateToNewChatViaSpa()
 }
-
-const TEMPORARY_CHAT_BUTTON_SELECTORS = [
-  'temp-chat-button > gem-icon-button',
-  'temp-chat-button gem-icon-button',
-  'temp-chat-button button',
-] as const
 
 function findTemporaryChatButton(): HTMLElement | null {
   return findVisibleElement(TEMPORARY_CHAT_BUTTON_SELECTORS)
