@@ -260,6 +260,67 @@ describe('chatActions temporary chat', () => {
 
     expect(clickSpy).toHaveBeenCalledTimes(1)
   })
+
+  it('opens New chat, waits for the Temporary chat control, then clicks it', async () => {
+    vi.useFakeTimers()
+    window.history.replaceState({}, '', '/app/current-chat')
+    document.body.innerHTML = `
+      <bard-sidenav>
+        <gem-nav-list-item data-test-id="new-chat-button">
+          <a aria-label="New chat" href="/app"></a>
+        </gem-nav-list-item>
+      </bard-sidenav>
+    `
+    const newChatButton = document.querySelector<HTMLAnchorElement>(
+      'gem-nav-list-item[data-test-id="new-chat-button"] > a',
+    )!
+    const temporaryChatClickSpy = vi.fn()
+    const newChatClickSpy = vi.fn(() => {
+      window.history.pushState({}, '', '/app')
+      window.setTimeout(() => {
+        document.body.insertAdjacentHTML('beforeend', `
+          <temp-chat-button>
+            <gem-icon-button></gem-icon-button>
+          </temp-chat-button>
+        `)
+        document.querySelector<HTMLElement>('temp-chat-button > gem-icon-button')!
+          .addEventListener('click', temporaryChatClickSpy)
+      }, 100)
+    })
+    newChatButton.addEventListener('click', newChatClickSpy)
+
+    const opening = openTemporaryChatByClick()
+    await vi.advanceTimersByTimeAsync(150)
+
+    await expect(opening).resolves.toBe(true)
+    expect(newChatClickSpy).toHaveBeenCalledTimes(1)
+    expect(temporaryChatClickSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('uses the SPA route fallback before waiting for the Temporary chat control', async () => {
+    vi.useFakeTimers()
+    window.history.replaceState({}, '', '/app/current-chat')
+    const popStateSpy = vi.fn()
+    const temporaryChatClickSpy = vi.fn()
+    window.addEventListener('popstate', popStateSpy, { once: true })
+    window.setTimeout(() => {
+      document.body.insertAdjacentHTML('beforeend', `
+        <temp-chat-button>
+          <gem-icon-button></gem-icon-button>
+        </temp-chat-button>
+      `)
+      document.querySelector<HTMLElement>('temp-chat-button > gem-icon-button')!
+        .addEventListener('click', temporaryChatClickSpy)
+    }, 100)
+
+    const opening = openTemporaryChatByClick()
+    await vi.advanceTimersByTimeAsync(150)
+
+    await expect(opening).resolves.toBe(true)
+    expect(window.location.pathname).toBe('/app')
+    expect(popStateSpy).toHaveBeenCalledTimes(1)
+    expect(temporaryChatClickSpy).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe('chatActions sidebar toggle', () => {

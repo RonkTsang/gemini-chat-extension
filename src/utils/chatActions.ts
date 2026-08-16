@@ -7,6 +7,8 @@ import { hasChatHistory, getChatSummary, getDefaultChatWindow } from './messageU
 const NEW_CHAT_PATH = '/app'
 const NEW_CHAT_ROUTE_TIMEOUT_MS = 1000
 const NEW_CHAT_ROUTE_POLL_INTERVAL_MS = 50
+const TEMPORARY_CHAT_BUTTON_TIMEOUT_MS = 1000
+const TEMPORARY_CHAT_BUTTON_POLL_INTERVAL_MS = 50
 
 const NEW_CHAT_SELECTORS = [
   // Any one of these independent contracts identifies New chat in SideNav.
@@ -171,12 +173,47 @@ export const openNewChat = async (): Promise<void> => {
   navigateToNewChatViaSpa()
 }
 
-function clickTemporaryChatButton(): boolean {
-  const temporaryChatButton = findVisibleElement([
-    'temp-chat-button > gem-icon-button',
-    'temp-chat-button gem-icon-button',
-    'temp-chat-button button',
-  ])
+const TEMPORARY_CHAT_BUTTON_SELECTORS = [
+  'temp-chat-button > gem-icon-button',
+  'temp-chat-button gem-icon-button',
+  'temp-chat-button button',
+] as const
+
+function findTemporaryChatButton(): HTMLElement | null {
+  return findVisibleElement(TEMPORARY_CHAT_BUTTON_SELECTORS)
+}
+
+function waitForTemporaryChatButton(): Promise<HTMLElement | null> {
+  const existingButton = findTemporaryChatButton()
+  if (existingButton) {
+    return Promise.resolve(existingButton)
+  }
+
+  return new Promise((resolve) => {
+    let intervalId = 0
+    let timeoutId = 0
+
+    const finish = (button: HTMLElement | null) => {
+      window.clearInterval(intervalId)
+      window.clearTimeout(timeoutId)
+      resolve(button)
+    }
+
+    intervalId = window.setInterval(() => {
+      const button = findTemporaryChatButton()
+      if (button) {
+        finish(button)
+      }
+    }, TEMPORARY_CHAT_BUTTON_POLL_INTERVAL_MS)
+
+    timeoutId = window.setTimeout(() => {
+      finish(findTemporaryChatButton())
+    }, TEMPORARY_CHAT_BUTTON_TIMEOUT_MS)
+  })
+}
+
+function clickTemporaryChatButton(button = findTemporaryChatButton()): boolean {
+  const temporaryChatButton = button
 
   if (!temporaryChatButton) {
     console.error('[Shortcut] Temporary chat button not found')
@@ -191,9 +228,31 @@ function clickTemporaryChatButton(): boolean {
  * Open a new temporary chat from Gemini's page controls.
  */
 export const openTemporaryChatByClick = async (): Promise<boolean> => {
-  // Gemini's native control handles the transition from either an existing chat
-  // or the blank chat page. Avoid an unnecessary New Chat transition first.
-  return clickTemporaryChatButton()
+  const existingButton = findTemporaryChatButton()
+  if (existingButton) {
+    return clickTemporaryChatButton(existingButton)
+  }
+
+  if (!isNewChatRoute()) {
+    const newChatButton = findNewChatButton()
+
+    if (newChatButton) {
+      try {
+        newChatButton.click()
+        if (!await waitForNewChatRoute()) {
+          navigateToNewChatViaSpa()
+        }
+      } catch (error) {
+        console.warn('[Shortcut] Failed to click New chat before opening Temporary chat:', error)
+        navigateToNewChatViaSpa()
+      }
+    } else {
+      navigateToNewChatViaSpa()
+    }
+  }
+
+  const temporaryChatButton = await waitForTemporaryChatButton()
+  return clickTemporaryChatButton(temporaryChatButton)
 }
 
 function openSideNavEntry(selectors: readonly string[], label: string): boolean {
