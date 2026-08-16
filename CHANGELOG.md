@@ -1,3 +1,18 @@
+# [0.12.0](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.11.0...v0.12.0) (2026-08-16)
+
+
+### Bug Fixes
+
+* restore bulk delete entry ([#55](https://github.com/RonkTsang/gemini-chat-extension/issues/55)) ([efcfc2d](https://github.com/RonkTsang/gemini-chat-extension/commit/efcfc2d603d64f39c9a7b03e6bad1bada938d78d))
+* **shortcuts:** make New Chat navigation resilient ([#56](https://github.com/RonkTsang/gemini-chat-extension/issues/56)) ([eb1afa0](https://github.com/RonkTsang/gemini-chat-extension/commit/eb1afa054462955cdcdfc1c7994d661edd79775f))
+* **ui:** polish Theme styles and Top bar tooltips ([#54](https://github.com/RonkTsang/gemini-chat-extension/issues/54)) ([5485b3e](https://github.com/RonkTsang/gemini-chat-extension/commit/5485b3e95cb846e01877625a66878d362cfc1f2c))
+
+
+### Features
+
+* **shortcuts:** add delete current chat action ([#52](https://github.com/RonkTsang/gemini-chat-extension/issues/52)) ([d027cb9](https://github.com/RonkTsang/gemini-chat-extension/commit/d027cb970293c41ab0e1cbc98c67c77fe18002a2))
+* **theme-bloom:** add drag-to-theme feature ([#53](https://github.com/RonkTsang/gemini-chat-extension/issues/53)) ([71dbacb](https://github.com/RonkTsang/gemini-chat-extension/commit/71dbacbcf0d971d8d311e626f270d533fc3175c0))
+
 # [0.11.0](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.10.0...v0.11.0) (2026-07-26)
 
 
