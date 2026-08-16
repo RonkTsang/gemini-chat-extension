@@ -181,7 +181,7 @@ export const openNewChat = async (): Promise<void> => {
 }
 
 function findTemporaryChatButton(): HTMLElement | null {
-  return findVisibleElement(TEMPORARY_CHAT_BUTTON_SELECTORS)
+  return findFirstElement(TEMPORARY_CHAT_BUTTON_SELECTORS)
 }
 
 function waitForTemporaryChatButton(): Promise<HTMLElement | null> {
