@@ -48,6 +48,29 @@ describe('chatActions new chat', () => {
     expect(newChatClickSpy).toHaveBeenCalledTimes(1)
   })
 
+  it('clicks New chat when a confirmation dialog marks Gemini app root aria-hidden', async () => {
+    document.body.innerHTML = `
+      <chat-app-orchestrator id="app-root" aria-hidden="true">
+        <bard-sidenav>
+          <gem-nav-list-item data-test-id="new-chat-button">
+            <a aria-label="New chat" href="/app"></a>
+          </gem-nav-list-item>
+        </bard-sidenav>
+        <chat-window></chat-window>
+        <rich-textarea></rich-textarea>
+      </chat-app-orchestrator>
+    `
+    const newChatLink = document.querySelector<HTMLAnchorElement>(
+      'gem-nav-list-item[data-test-id="new-chat-button"] > a',
+    )!
+    const clickSpy = vi.fn()
+    newChatLink.addEventListener('click', clickSpy)
+
+    await expect(createNewChatForChainPrompt()).resolves.toBe(true)
+
+    expect(clickSpy).toHaveBeenCalledTimes(1)
+  })
+
   it('recognizes the SideNav aria-label contract without an /app href', async () => {
     document.body.innerHTML = `
       <bard-sidenav>

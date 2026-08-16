@@ -53,8 +53,22 @@ function findVisibleElement(selectors: readonly string[]): HTMLElement | null {
   return null
 }
 
+function findFirstElement(selectors: readonly string[]): HTMLElement | null {
+  for (const selector of selectors) {
+    const element = document.querySelector<HTMLElement>(selector)
+    if (element) {
+      return element
+    }
+  }
+
+  return null
+}
+
 function findNewChatButton(): HTMLElement | null {
-  return findVisibleElement(NEW_CHAT_SELECTORS)
+  // Chain Prompt may invoke this while its confirmation dialog marks Gemini's
+  // app root aria-hidden. New Chat is an explicit native target, so do not
+  // reject it based on visibility state inherited from that dialog.
+  return findFirstElement(NEW_CHAT_SELECTORS)
 }
 
 function isNewChatRoute(): boolean {
