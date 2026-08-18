@@ -57,12 +57,10 @@ representative at an online or offline event.
 
 ## Enforcement
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported to the community leaders responsible for enforcement at [INSERT CONTACT METHOD].
-All complaints will be reviewed and investigated promptly and fairly.
-
-All community leaders are obligated to respect the privacy and security of the
-reporter of any incident.
+This project does not currently provide a dedicated private channel for
+reporting Code of Conduct concerns. Maintainers may moderate public project
+spaces, including issues, pull requests, discussions, and commits, in line with
+this Code of Conduct.
 
 ## Enforcement Guidelines
 

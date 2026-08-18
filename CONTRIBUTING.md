@@ -1,68 +1,80 @@
 # Contributing to Gemini Power Kit
 
-First off, thank you for considering contributing! It's people like you that make open source such a great community.
+Thanks for helping improve Gemini Power Kit. Bug fixes, documentation improvements, tests, and focused feature proposals are all welcome.
 
-## AI-Assisted Development Workflow (Recommended)
+## Before you start
 
-To maintain consistency and development speed, we highly recommend using an AI programming assistant like **Gemini CLI**, GitHub Copilot, or others for your contributions.
+- Search [open issues](https://github.com/RonkTsang/gemini-chat-extension/issues) before reporting a bug or proposing a feature.
+- For a substantial feature or a change to Gemini-facing behavior, open an issue first so the intended user experience and browser scope can be discussed.
+- Follow the project's [Code of Conduct](CODE_OF_CONDUCT.md).
+- Do not include prompts, conversation content, account data, API keys, or other personal information in issues, commits, screenshots, or pull requests.
 
-The key to success is providing the AI with the right context. Our project's "source of truth" for its architecture is the technical documentation.
+## Set up your development environment
 
-### Recommended Steps
+This project uses Node.js 22 and the pnpm version pinned in `package.json`.
 
-1.  **Define Your Goal**: Have a clear idea of the feature or bug fix you want to implement.
+1. Fork the repository, then clone your fork.
+2. Create a branch from the latest `main` branch.
+3. Install dependencies and start the Chromium development build:
 
-2.  **Gather Context**: Your primary context files are:
-    *   `docs/tech.md` (The project's architectural blueprint)
-    *   The specific file(s) you intend to modify (e.g., `content.js`, `styles.css`).
+   ```bash
+   corepack enable
+   pnpm install
+   git switch -c fix/short-description
+   pnpm dev
+   ```
 
-3.  **Write a Clear Prompt**: Describe your goal in detail to the AI. For example:
-    > "I want to add a 'copy to clipboard' button next to each item in the outline list inside `#gemini-toc-list`. When a user clicks this button, the text content of that specific prompt should be copied to their clipboard. Please ensure the new button's styling matches the existing UI and that all logic adheres to the patterns described in the provided technical documentation and existing code."
+Use `pnpm dev:firefox` when working on Firefox behavior. WXT writes development builds to `.output/`; see [Platform Differences](docs/platforms.md) for browser-specific entry points, permissions, and build outputs.
 
-4.  **Execute and **Review****:
-    *   Use your preferred AI tool to generate the code.
-    *   **This is the most critical step.** Always manually review, test, and refine the AI's output. You are the author of the final code, and you are responsible for its quality and correctness.
+## Make a change
 
-### Example using Gemini CLI
+- Keep each pull request focused on one user-visible improvement or fix.
+- Work in `src/`; WXT generates the browser manifests from `wxt.config.ts`. Do not edit generated build output or a legacy root manifest.
+- Preserve Chrome/Firefox isolation with WXT `include` rules or `import.meta.env.FIREFOX` guards when behavior differs.
+- For user-facing text, update the English base and every locale in `src/locales/`.
+- Update the relevant user documentation when behavior, permissions, or supported workflows change. Use the documentation site for detailed feature guidance; keep the root README concise.
+- Add or update focused tests when the change has testable behavior.
 
-If you wanted to implement the "copy button" feature described above, you could use a command like this:
+AI-assisted contributions are welcome, but the contributor remains responsible for reviewing the diff, validating behavior, and ensuring the submission does not contain secrets or copyrighted material that cannot be contributed.
+
+## Verify your work
+
+Run the checks that apply to your change before opening a pull request:
 
 ```bash
-gemini
+# Required for code changes
+pnpm compile
+pnpm test:run
+git diff --check
 
-@docs/tech.md {YOUR PROMPT}
+# Required when localized strings change
+pnpm run check:i18n
+
+# Required when a browser-specific or build-time path changes
+pnpm build
+pnpm build:firefox
 ```
 
-This command tells Gemini to edit using your prompt, with the additional context of the technical documentation.
+For Gemini UI changes, also test the affected path on `gemini.google.com`. If a change affects both browser targets, verify both. Automated checks do not replace manual verification for Gemini DOM integration.
 
-## How Can I Contribute?
+## Open a pull request
 
-### Reporting Bugs
+1. Rebase or merge the latest `main` into your branch if needed.
+2. Use a clear [Conventional Commit](https://www.conventionalcommits.org/) message, such as `fix: restore the sidebar entry` or `feat: add a shortcut action`.
+3. In the pull request description, explain the user-facing outcome, link the related issue, and list the checks you ran.
+4. Include screenshots or a short recording for visible UI changes, and describe any manual Gemini verification.
+5. Keep unrelated refactors, formatting changes, generated files, and dependency updates out of the pull request unless they are necessary for the change.
 
-- **Ensure the bug was not already reported** by searching on GitHub under [Issues](https://github.com/RonkTsang/gemini-chat-extension/issues).
-- If you're unable to find an open issue addressing the problem, [open a new one](https://github.com/RonkTsang/gemini-chat-extension/issues/new). Be sure to include a **title and clear description**, as much relevant information as possible, and a **code sample** or an **executable test case** demonstrating the expected behavior that is not occurring.
+Maintainers may ask for adjustments to scope, tests, copy, documentation, or cross-browser behavior before merging.
 
-### Suggesting Enhancements
+## Report a bug or suggest an improvement
 
-- Open a new issue to discuss your enhancement idea. This is the best way to ensure your suggestion aligns with the project's goals.
-- Clearly describe the proposed enhancement, why it's needed, and how it would work.
+Use [GitHub Issues](https://github.com/RonkTsang/gemini-chat-extension/issues) and include:
 
-### Pull Requests
+- Gemini Power Kit version and browser version.
+- Clear steps to reproduce the behavior.
+- Expected and actual results.
+- Screenshots, console errors, or recordings when safe to share.
+- Whether the issue reproduces after refreshing Gemini and reloading the extension.
 
-1.  Fork the repo and create your branch from `main`.
-2.  Set up your development environment: `npm install`.
-3.  Make your changes. Please ensure your code follows the existing style.
-4.  Run `npm run build:rollup` to ensure the bundled code is updated.
-5.  Update the `README.md` or technical docs if you change any functionality.
-6.  Ensure your commit messages are clear and descriptive.
-7.  Issue that pull request!
-
-## Code Style
-
-This project does not yet have a formal linter setup. For now, please try to match the style and formatting of the existing codebase.
-
-## Any questions?
-
-Feel free to open an issue and ask.
-
-Thank you for your contribution!
+For a feature proposal, describe the user problem and desired outcome before prescribing an implementation.

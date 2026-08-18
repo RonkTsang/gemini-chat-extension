@@ -1,89 +1,88 @@
-<div align="center">
-  <img src="images/gemini-power-kit.png" alt="Gemini Power Kit Logo" style="border-radius: 12px"/>
-  <br/>
-  <a href="https://github.com/google-gemini/gemini-cli">
-    <img src="https://img.shields.io/badge/Made%20with-Gemini%20Cli-4285F4?style=for-the-badge&logo=google-gemini&logoColor=white" alt="Made with Gemini-Cli"/>
-  </a>
-</div>
+<p align="center">
+  <img src="images/gemini-power-kit.png" alt="Gemini Power Kit logo" width="128" />
+</p>
 
-# Gemini Power Kit - A Chrome Extension for Gemini
+<h1 align="center">Gemini Power Kit</h1>
 
-[Gemini Power Kit official website](https://gpk.ronktsang.com/) · [Chrome Web Store](https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn?utm_source=item-share-cb)
+<p align="center">
+  An open-source browser extension that adds focused workflow and workspace tools to <a href="https://gemini.google.com">Gemini</a>.
+</p>
 
-Transform your [Gemini](https://gemini.google.com) experience with powerful tools designed to boost your productivity and streamline your workflow. Gemini Power Kit is your essential companion, bringing together three powerful features: **Chat Outline**, **Quick Follow-up**, and **Chain Prompt**.
+<p align="center">
+  <a href="https://gpk.ronktsang.com/">Website</a> ·
+  <a href="https://gpk.ronktsang.com/guide/quick-start/">Quick start</a> ·
+  <a href="https://gpk.ronktsang.com/features/">Feature guides</a> ·
+  <a href="https://gpk.ronktsang.com/support/whats-new/">What's new</a> ·
+  <a href="https://github.com/RonkTsang/gemini-chat-extension/issues">Issues</a>
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-3DA639.svg" alt="MIT License" /></a>
+</p>
+
+## What it does
+
+Gemini Power Kit helps you stay oriented in long conversations, turn repeated work into reusable flows, and shape Gemini around the way you work. It runs in your browser on `gemini.google.com`.
+
+## Install
+
+### Get it from a browser store
+
+- **[Add to Chrome](https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn)**
+- **[Get it for Firefox](https://addons.mozilla.org/en-US/firefox/addon/gemini-power-kit/)**
+
+After installation, open [Gemini](https://gemini.google.com) and select the Gemini Power Kit icon near the bottom of the sidebar to open settings. The [quick start guide](https://gpk.ronktsang.com/guide/quick-start/) shows where to find it and how to enable optional features.
+
+### From source
+
+Use Node.js 22 and the version of pnpm pinned in `package.json`.
+
+```bash
+git clone https://github.com/RonkTsang/gemini-chat-extension.git
+cd gemini-chat-extension
+corepack enable
+pnpm install
+pnpm build
+```
+
+To load the Chromium build, open `chrome://extensions`, enable **Developer mode**, choose **Load unpacked**, and select `.output/chrome-mv3`.
+
+For Firefox, build with `pnpm build:firefox`, then use Firefox's temporary-add-on workflow to load `.output/firefox-mv2`.
 
 ## Features
 
-### 🗂️ Chat Outline
--   **Clickable Outline**: Generates a navigable list of all your prompts in a conversation.
--   **Easy Navigation**: Click any prompt to instantly scroll to that point in the chat.
--   **Pin Mode**: Keep the outline popover open and visible while you scroll and interact.
--   **Smart Organization**: Never get lost in long conversations again.
+- **Work with conversations:** navigate long chats with [Chat Outline](https://gpk.ronktsang.com/features/chat-outline/), ask from selected text with [Quick Follow-up](https://gpk.ronktsang.com/features/quick-follow-up/), and automate repeatable multi-step tasks with [Chain Prompt](https://gpk.ronktsang.com/features/chain-prompt/).
+- **Make the workspace yours:** adjust [themes and wallpaper](https://gpk.ronktsang.com/features/theme/), [chat layout](https://gpk.ronktsang.com/features/chat-layout/), and [Gem avatars](https://gpk.ronktsang.com/features/gem-avatar/).
+- **Move through Gemini faster:** use configurable [keyboard shortcuts](https://gpk.ronktsang.com/features/shortcuts/), [bulk delete](https://gpk.ronktsang.com/features/bulk-delete/) with a review step, synced tab titles, and a direct “open in new tab” action for My stuff.
+- **Stay informed:** optionally receive [reply-complete notifications](https://gpk.ronktsang.com/features/notifications/) while Gemini works in the background.
 
-### ⚡ Quick Follow-up
--   **Text Selection Actions**: Select any text and instantly access custom prompts.
--   **Customizable Prompts**: Create your own quick-action templates (translate, explain, summarize, etc.).
--   **One-Click Execution**: Turn selected text into a follow-up question with a single click.
--   **Template Library**: Pre-built templates to get you started immediately.
+See the [feature overview](https://gpk.ronktsang.com/features/) for the full list and task-specific guides.
 
-### 🔗 Chain Prompt
--   **Multi-Step Automation**: Execute complex conversation workflows automatically.
--   **Variable Support**: Define reusable variables for dynamic prompt chains.
--   **Visual Editor**: Build and manage chain prompts with an intuitive interface.
--   **Real-time Monitoring**: Track execution progress with live status updates.
+## Develop
 
-### 🎨 Design
--   **Minimalist UI**: Clean, unobtrusive interface that stays out of your way.
--   **Light & Dark Theme**: Automatically adapts to the Gemini website's theme.
--   **Shadow DOM Isolation**: Styles never conflict with Gemini's native interface.
+| Task | Command |
+| --- | --- |
+| Start Chromium development mode | `pnpm dev` |
+| Start Firefox development mode | `pnpm dev:firefox` |
+| Type-check | `pnpm compile` |
+| Run tests once | `pnpm test:run` |
+| Check locale parity | `pnpm run check:i18n` |
+| Build production bundles | `pnpm build` / `pnpm build:firefox` |
 
-## Install from Chrome Web Store
+The extension is built with WXT, React, TypeScript, Chakra UI, and browser-local storage. Read [the technical documentation](docs/tech.md) and [platform differences](docs/platforms.md) before changing browser-specific behavior.
 
-You can install the extension directly from the Chrome Web Store:
+## Privacy and permissions
 
-[**Add to Chrome**](https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn?utm_source=item-share-cb)
+Gemini Power Kit processes feature data locally in your browser and does not operate a developer backend for Gemini conversations, prompts, responses, or settings. Some features request optional browser permissions only when they need them, such as reply-complete notifications. See the [Privacy Policy](PRIVACY_POLICY.md) for the complete, browser-specific explanation.
 
-## How to Install (from source)
+## Get help and contribute
 
-1.  Clone or download this repository.
-2.  Open Google Chrome and navigate to `chrome://extensions`.
-3.  Enable **Developer mode** using the toggle in the top-right corner.
-4.  Click the **Load unpacked** button.
-5.  Select the directory where you cloned or downloaded this repository.
+- Read the [documentation site](https://gpk.ronktsang.com/) and [FAQ](https://gpk.ronktsang.com/support/faq/) for usage help.
+- [Report a bug or suggest an improvement](https://github.com/RonkTsang/gemini-chat-extension/issues).
+- Read [Contributing](CONTRIBUTING.md) before opening a pull request.
+- Follow the [Code of Conduct](CODE_OF_CONDUCT.md) when participating in this project.
+- Review [release notes](https://gpk.ronktsang.com/support/whats-new/) for user-facing changes.
 
-The extension's icon will now appear in the top-left corner of the Gemini chat window.
+## License
 
----
-
-## AI-Assisted Development Workflow (Recommended)
-
-To maintain consistency and development speed, we highly recommend using an AI programming assistant like **Gemini CLI**, GitHub Copilot, or others for your contributions.
-
-The key to success is providing the AI with the right context. Our project's "source of truth" for its architecture is the technical documentation.
-
-### Recommended Steps
-
-1.  **Define Your Goal**: Have a clear idea of the feature or bug fix you want to implement.
-
-2.  **Gather Context**: Your primary context files are:
-    *   `docs/tech.md` (The project's architectural blueprint)
-    *   The specific file(s) you intend to modify (e.g., `content.js`, `styles.css`).
-
-3.  **Write a Clear Prompt**: Describe your goal in detail to the AI. For example:
-    > "I want to add a 'copy to clipboard' button next to each item in the outline list inside `#gemini-toc-list`. When a user clicks this button, the text content of that specific prompt should be copied to their clipboard. Please ensure the new button's styling matches the existing UI and that all logic adheres to the patterns described in the provided technical documentation and existing code."
-
-4.  **Execute and **Review****:
-    *   Use your preferred AI tool to generate the code.
-    *   **This is the most critical step.** Always manually review, test, and refine the AI's output. You are the author of the final code, and you are responsible for its quality and correctness.
-
-### Example using Gemini CLI
-
-If you wanted to implement the "copy button" feature described above, you could use a command like this:
-
-```bash
-gemini
-
-@docs/tech.md {YOUR PROMPT}
-```
-
-This command tells Gemini to edit using your prompt, with the additional context of the technical documentation.
+Gemini Power Kit is available under the [MIT License](LICENSE).
