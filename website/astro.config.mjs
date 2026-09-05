@@ -31,6 +31,7 @@ export default defineConfig({
 			favicon: '/favicon.png',
 			social: [
 				{ icon: 'github', label: 'GitHub', href: 'https://github.com/RonkTsang/gemini-chat-extension' },
+				{ icon: 'x.com', label: 'X', href: 'https://x.com/RonkTsang' },
 			],
 			customCss: [
 				'./src/styles/custom.css',
@@ -76,6 +77,7 @@ export default defineConfig({
 					label: 'Support',
 					translations: { 'zh-CN': '支持' },
 					items: [
+						{ label: 'Get Help', translations: { 'zh-CN': '获取帮助' }, slug: 'support' },
 						{ label: 'FAQ', translations: { 'zh-CN': '常见问题' }, slug: 'support/faq' },
 						{ label: 'Notification Troubleshooting', translations: { 'zh-CN': '通知问题排查' }, slug: 'support/notification-troubleshooting' },
 						{ label: "What's New", translations: { 'zh-CN': '最新动态' }, slug: 'support/whats-new' },
