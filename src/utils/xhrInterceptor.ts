@@ -32,7 +32,7 @@ export interface XHRRequestSnapshot {
   /** HTTP Method (GET, POST, etc.) */
   method: string
   /** Request body (for POST/PUT) */
-  body?: any
+  body?: Document | XMLHttpRequestBodyInit | null
 }
 
 /**
@@ -47,7 +47,11 @@ export interface XHRInterceptorConfig {
   onResponse?: (url: string, responseText: string, status: number, request: XHRRequestSnapshot) => void
 
   /** Callback when request is sent */
-  onRequest?: (url: string, method: string, data?: string) => void
+  onRequest?: (
+    url: string,
+    method: string,
+    data?: Document | XMLHttpRequestBodyInit | null,
+  ) => void
 
   /** Callback when error occurs */
   onError?: (error: Error) => void
@@ -134,7 +138,7 @@ class XHRInterceptor {
 
       let requestUrl: string = ''
       let requestMethod: string = ''
-      let requestData: any
+      let requestData: Document | XMLHttpRequestBodyInit | null | undefined
 
       // Patch open method
       const originalOpen = xhr.open
@@ -148,6 +152,7 @@ class XHRInterceptor {
       const originalSend = xhr.send
       xhr.send = function (data?: Document | XMLHttpRequestBodyInit | null) {
         requestData = data
+        self.notifyRequest(requestUrl, requestMethod, data)
         return originalSend.apply(xhr, [data] as any)
       }
 
@@ -233,7 +238,11 @@ class XHRInterceptor {
   /**
    * Notify all matching interceptors of a request
    */
-  private notifyRequest(url: string, method: string, data?: string): void {
+  private notifyRequest(
+    url: string,
+    method: string,
+    data?: Document | XMLHttpRequestBodyInit | null,
+  ): void {
     for (const registration of this.interceptors.values()) {
       if (!registration.active) continue
 
