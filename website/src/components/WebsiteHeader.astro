@@ -22,6 +22,7 @@ const quickStartLabel = isChinese ? '快速开始' : 'Quick Start';
     {shouldRenderSearch && <Search />}
   </div>
   <div class="sl-hidden md:sl-flex print:hidden right-group">
+    <a class="quick-start-link" href={isChinese ? '/zh-cn/support/' : '/support/'}>{isChinese ? '获取帮助' : 'Support'}</a>
     <a class="quick-start-link" href={quickStartHref}>{quickStartLabel}</a>
     <div class="sl-flex social-icons">
       <SocialIcons />

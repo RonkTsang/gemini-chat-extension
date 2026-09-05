@@ -32,6 +32,7 @@ This website documents the public product, installation flow, feature behavior, 
 ## Support And Policy
 
 - [FAQ](https://gpk.ronktsang.com/support/faq/): Common questions about Gemini Power Kit.
+- [Support](https://gpk.ronktsang.com/support/): Email support, public GitHub feedback, and troubleshooting resources.
 - [Notification Troubleshooting](https://gpk.ronktsang.com/support/notification-troubleshooting/): Browser and operating-system checks for notification delivery.
 - [What's New](https://gpk.ronktsang.com/support/whats-new/): Product release notes and feature updates.
 - [Privacy Policy](https://gpk.ronktsang.com/privacy-policy/): Privacy policy for Gemini Power Kit.
@@ -39,6 +40,7 @@ This website documents the public product, installation flow, feature behavior, 
 ## Chinese Docs
 
 - [Chinese Overview](https://gpk.ronktsang.com/zh-cn/): Gemini Power Kit Chinese overview.
+- [Chinese Support](https://gpk.ronktsang.com/zh-cn/support/): Chinese support page with email and GitHub contact channels.
 - [Chinese Install](https://gpk.ronktsang.com/zh-cn/guide/install/): Chinese installation guide.
 - [Chinese Quick Start](https://gpk.ronktsang.com/zh-cn/guide/quick-start/): Chinese quick-start guide.
 - [Chinese Features Overview](https://gpk.ronktsang.com/zh-cn/features/): Chinese feature index.
