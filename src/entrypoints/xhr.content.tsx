@@ -1,4 +1,5 @@
 import { startStuffMonitor } from './main-world/stuff-monitor'
+import { startGeminiRpcRuntime } from '@/integrations/gemini-rpc/main-world-runtime'
 
 export default defineContentScript({
   include: ['chrome'],
@@ -6,6 +7,7 @@ export default defineContentScript({
   world: 'MAIN',
   runAt: 'document_start',
   main() {
+    startGeminiRpcRuntime()
     startStuffMonitor()
   }
 });
