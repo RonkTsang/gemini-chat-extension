@@ -1,3 +1,10 @@
+## [0.12.1](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.12.0...v0.12.1) (2026-09-06)
+
+
+### Bug Fixes
+
+* make bulk deletion target the correct pinned chat ([#58](https://github.com/RonkTsang/gemini-chat-extension/issues/58)) ([9767d13](https://github.com/RonkTsang/gemini-chat-extension/commit/9767d13d82b3600d2dcc7e67539dfb639d8ca1ac))
+
 # [0.12.0](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.11.0...v0.12.0) (2026-08-16)
 
 
