@@ -12,6 +12,7 @@ const CHAT_HEADER_SELECTORS = [
   'button.expandable-section-header',
 ]
 const CONVERSATION_LIST_SELECTOR = 'conversations-list[data-test-id="all-conversations"], conversations-list, gem-nav-list-item[data-test-id="conversation"]'
+const CONVERSATIONS_LIST_SELECTOR = 'conversations-list[data-test-id="all-conversations"], conversations-list'
 
 const ENTRY_SPACER_ATTR = 'data-gpk-bulk-delete-entry-spacer'
 const ENTRY_ROOT_ATTR = 'data-gpk-bulk-delete-entry-root'
@@ -51,16 +52,8 @@ const CHAT_HISTORY_CONTAINER_SELECTORS = [
   '[data-test-id="conversations-list"]',
 ]
 
-const SHOW_MORE_SELECTORS = [
-  '.show-more-button',
-  'button[data-test-id*="show-more"]',
-  'button[aria-label*="more conversations" i]',
-  'button[aria-label*="show more" i]',
-]
-
-const LOADING_HISTORY_SELECTORS = [
-  '[data-test-id="loading-history-spinner"]',
-]
+const LOADING_HISTORY_CONTAINER_SELECTOR = '.loading-history-spinner-container.is-loading'
+const LOADING_HISTORY_SPINNER_SELECTOR = '[data-test-id="loading-history-spinner"]'
 
 const LOAD_FAILED_PATTERN = /couldn['’]?t load recent chats|try reloading this page/i
 const EXCLUDED_APP_PATHS = new Set(['activity', 'apikey', 'extensions', 'gems', 'help', 'settings', 'signin', 'tasks'])
@@ -543,24 +536,6 @@ export function isPinnedChatRow(row: Element): boolean {
   return /BardVeMetadataKey:.*\["c_[^"]+",null,1,/i.test(jslog.replace(/&quot;/g, '"'))
 }
 
-function isVisibleElement(element: Element | null): element is HTMLElement {
-  if (!(element instanceof HTMLElement)) {
-    return false
-  }
-  const rect = element.getBoundingClientRect()
-  return rect.width > 0 && rect.height > 0 && element.offsetParent !== null
-}
-
-function findFirstVisible(selectors: string[]): HTMLElement | null {
-  for (const selector of selectors) {
-    const element = document.querySelector<HTMLElement>(selector)
-    if (isVisibleElement(element) && !element.hasAttribute('disabled')) {
-      return element
-    }
-  }
-  return null
-}
-
 function hasLoadFailure(): boolean {
   const statusElements = document.querySelectorAll(['mat-snack-bar-container', '.mat-mdc-snack-bar-container', '[role="status"]', '[aria-live]'].join(','))
   return Array.from(statusElements).some(element => LOAD_FAILED_PATTERN.test(element.textContent ?? ''))
@@ -632,26 +607,111 @@ function wait(ms: number, signal?: AbortSignal): Promise<void> {
       reject(new Error('aborted'))
       return
     }
-    const timeout = window.setTimeout(resolve, ms)
-    signal?.addEventListener('abort', () => {
+
+    const cleanup = () => signal?.removeEventListener('abort', onAbort)
+    const timeout = window.setTimeout(() => {
+      cleanup()
+      resolve()
+    }, ms)
+    const onAbort = () => {
       window.clearTimeout(timeout)
+      cleanup()
       reject(new Error('aborted'))
-    }, { once: true })
+    }
+    signal?.addEventListener('abort', onAbort, { once: true })
   })
 }
 
-async function waitForLoadingHidden(timeoutMs = 7000, signal?: AbortSignal): Promise<void> {
-  const startedAt = Date.now()
-  while (Date.now() - startedAt < timeoutMs) {
+function findCurrentConversationsList(scroller: HTMLElement): HTMLElement | null {
+  if (scroller.matches(CONVERSATIONS_LIST_SELECTOR)) {
+    return scroller
+  }
+  return scroller.querySelector<HTMLElement>(CONVERSATIONS_LIST_SELECTOR)
+}
+
+function findLoadingRegion(conversationsList: HTMLElement): HTMLElement | null {
+  return conversationsList.parentElement
+}
+
+function findAdjacentLoadingContainer(conversationsList: HTMLElement): HTMLElement | null {
+  const container = conversationsList.nextElementSibling
+  if (!(container instanceof HTMLElement) || !container.matches(LOADING_HISTORY_CONTAINER_SELECTOR)) {
+    return null
+  }
+
+  return container.querySelector(LOADING_HISTORY_SPINNER_SELECTOR) ? container : null
+}
+
+function waitForAnimationFrame(signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
     if (signal?.aborted) {
-      throw new Error('aborted')
-    }
-    const loading = LOADING_HISTORY_SELECTORS.some(selector => isVisibleElement(document.querySelector(selector)))
-    if (!loading) {
+      reject(new Error('aborted'))
       return
     }
-    await wait(100, signal)
+
+    let frameId: number | null = null
+    const cleanup = () => signal?.removeEventListener('abort', onAbort)
+    const onAbort = () => {
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId)
+      }
+      cleanup()
+      reject(new Error('aborted'))
+    }
+
+    signal?.addEventListener('abort', onAbort, { once: true })
+    frameId = window.requestAnimationFrame(() => {
+      cleanup()
+      resolve()
+    })
+  })
+}
+
+function waitForLoadingRemoved(
+  conversationsList: HTMLElement,
+  timeoutMs = 7000,
+  signal?: AbortSignal,
+): Promise<'not-found' | 'removed' | 'timeout'> {
+  const region = findLoadingRegion(conversationsList)
+  if (!region || !findAdjacentLoadingContainer(conversationsList)) {
+    return Promise.resolve('not-found')
   }
+
+  return new Promise((resolve, reject) => {
+    let settled = false
+    let timeoutId: number | null = null
+    const observer = new MutationObserver(() => {
+      if (!findAdjacentLoadingContainer(conversationsList)) {
+        finish('removed')
+      }
+    })
+    const onAbort = () => finish('timeout', new Error('aborted'))
+    const finish = (result: 'removed' | 'timeout', error?: Error) => {
+      if (settled) {
+        return
+      }
+
+      settled = true
+      observer.disconnect()
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId)
+      }
+      signal?.removeEventListener('abort', onAbort)
+      if (error) {
+        reject(error)
+      } else {
+        resolve(result)
+      }
+    }
+
+    observer.observe(region, { childList: true, subtree: true })
+    signal?.addEventListener('abort', onAbort, { once: true })
+    timeoutId = window.setTimeout(() => finish('timeout'), timeoutMs)
+
+    if (!findAdjacentLoadingContainer(conversationsList)) {
+      finish('removed')
+    }
+  })
 }
 
 export async function loadLatestChatRows(
@@ -666,7 +726,6 @@ export async function loadLatestChatRows(
     return { completed: false, reason: 'scroller-not-found' }
   }
 
-  let previousCount = -1
   let stagnantRounds = 0
   const startedAt = Date.now()
 
@@ -681,31 +740,36 @@ export async function loadLatestChatRows(
     }
 
     scrollToBottom(scroller)
-    await wait(600, signal)
-    await waitForLoadingHidden(7000, signal)
+    await wait(150, signal)
+
+    let conversationsList = findCurrentConversationsList(scroller)
+    let loadingResult = conversationsList
+      ? await waitForLoadingRemoved(conversationsList, 7000, signal)
+      : 'not-found'
+
+    if (loadingResult === 'not-found') {
+      await wait(450, signal)
+      conversationsList = findCurrentConversationsList(scroller)
+      loadingResult = conversationsList
+        ? await waitForLoadingRemoved(conversationsList, 7000, signal)
+        : 'not-found'
+    }
+
+    if (loadingResult === 'removed') {
+      await waitForAnimationFrame(signal)
+    }
 
     if (hasLoadFailure()) {
       return { completed: false, reason: 'gemini-load-failed' }
     }
 
-    const showMoreButton = findFirstVisible(SHOW_MORE_SELECTORS)
-    if (showMoreButton) {
-      showMoreButton.click()
-      await wait(500, signal)
-      await waitForLoadingHidden(7000, signal)
-      if (hasLoadFailure()) {
-        return { completed: false, reason: 'gemini-load-failed' }
-      }
-    }
-
     const nextRows = reconcileChatCheckboxes(selectedKeys, onChange)
     const nearBottom = Math.abs(scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop) <= 96
-    if (nearBottom && nextRows.length === previousCount) {
+    if (nearBottom && nextRows.length <= rows.length) {
       stagnantRounds++
     } else {
       stagnantRounds = 0
     }
-    previousCount = nextRows.length
   }
 
   return { completed: true }

@@ -140,8 +140,8 @@ checkbox 注入：
 1. reconcile 当前已渲染 checkbox。
 2. 如果当前 chat rows 少于 50，定位 Gemini 侧栏历史滚动容器。
 3. 将滚动容器滚到底部，触发 Gemini 加载更早的 chat。
-4. 等待 loading spinner 消失。
-5. 如果存在 Show more 按钮，则点击它并再次等待 loading spinner 消失。
+4. 短暂等待 loading spinner 挂载；如果检测到 spinner，则通过局部 `MutationObserver` 等待它消失。
+5. 如果没有检测到 spinner，则沿用已有的 DOM 数量与滚动位置判断。
 6. 重复加载，直到收集到 50 个 chat rows，或确认到底/超时/加载失败。
 7. 选择前 50 个 chat rows。
 8. 更新 `Delete (number)`。
@@ -170,30 +170,49 @@ const CHAT_HISTORY_CONTAINER_SELECTORS = [
 - 位于 Gemini sidenav/navigation 内
 - 排除 main/chat-window 内容区
 
-加载更多相关 selector：
+加载状态相关 selector：
 
 ```ts
-const SHOW_MORE_SELECTORS = [
-  '.show-more-button',
-  'button[data-test-id*="show-more"]',
-  'button[aria-label*="more conversations" i]',
-  'button[aria-label*="show more" i]',
-]
+const CONVERSATION_LIST_SELECTOR =
+  'conversations-list[data-test-id="all-conversations"], conversations-list'
 
-const LOADING_HISTORY_SELECTORS = [
-  '[data-test-id="loading-history-spinner"]',
-]
+const LOADING_HISTORY_SPINNER_SELECTOR =
+  '.loading-history-spinner-container.is-loading '
+  + '[data-test-id="loading-history-spinner"]'
 ```
+
+当前 Gemini 会在 `<conversations-list>` 后插入
+`.loading-history-spinner-container.is-loading`。Spinner 查询必须从当前
+`conversations-list` 的相邻局部区域开始，不得使用全局 `document.querySelector()`，
+以免命中聊天主区域或其他功能的 loading 节点。原页面没有 Show more 按钮，因此
+加载流程不再查找或点击任何 Show more 控件。
 
 加载循环规则：
 
 1. 每轮先 `reconcileChatCheckboxes()` 并检查数量。
 2. `scroller.scrollTo({ top: scroller.scrollHeight - scroller.clientHeight, behavior: 'auto' })`。
-3. 等待约 `600ms`，再等待 loading spinner hidden，最长约 `7s`。
-4. 若 Show more 可见且可用，点击后再次等待 spinner hidden。
-5. 记录上一轮 chat 数量和滚动位置；如果接近底部且数量连续 3 轮不增长，则停止。
-6. 总循环设置上限，例如 24 轮或 30s，避免无限滚动。
-7. 如果 Gemini 出现 `Couldn't load recent chats` / `Try reloading this page` 等加载失败提示，则停止并给出轻量 warning。
+3. 先等待约 `150ms`，让 Gemini 有机会挂载 loading spinner。
+4. 优先检查 `conversationsList.nextElementSibling` 是否为 loading container，并在
+   `conversationsList.parentElement` 这个局部区域内确认 spinner。若首次未发现，等待
+   剩余约 `450ms` 后再检查一次；仍未发现时直接进入已有的 DOM 数量比较逻辑。
+5. 若发现 spinner，在 `conversationsList.parentElement` 上创建短生命周期
+   `MutationObserver`，使用 `{ childList: true, subtree: true }` 等待局部区域内不再存在
+   spinner。不要只监听 spinner 的直接父容器，因为 Gemini 可能一次移除整个 loading
+   container，该 mutation 会发生在 container 的父节点上。
+6. Observer 必须在 spinner 消失、约 `7s` 超时以及当前操作的 `AbortSignal` 触发时统一
+   `disconnect()`，同时清理 timeout 和 abort listener。每轮按需创建，不能跨轮或保存在
+   模块级。开始 observe 后立即复查一次 spinner，避免节点在检查与监听之间消失。
+7. Spinner 消失后等待一个 `requestAnimationFrame`，再重新读取 conversation keys。
+   Spinner 只表示“正在加载”；实际新增的唯一 conversation keys 才表示列表加载产生了结果。
+8. 记录上一轮 chat 数量和滚动位置；如果接近底部且数量连续 3 轮不增长，则停止。
+9. 总循环设置上限，例如 24 轮或 30s，避免无限滚动。Observer 超时本身不表示加载成功，
+   仍需回到 DOM 数量与停滞判断。
+10. 如果 Gemini 出现 `Couldn't load recent chats` / `Try reloading this page` 等加载失败提示，则停止并给出轻量 warning。
+
+列表变化判断使用唯一 conversation keys，而不是任意 DOM mutation。Bulk Delete 注入的
+checkbox、属性更新以及 Gemini hover action 的变化都不能算作历史列表增长。对于
+`Exclude pinned`，总 conversation keys 是否增长用于判断本轮加载是否有效，过滤后的
+chat rows 是否达到目标数量用于判断快捷选择是否完成。
 
 加载中禁用 `select latest 50` 按钮，并将按钮文案临时切换为 `Loading...`。加载完成或失败后恢复。
 
