@@ -1,13 +1,7 @@
-const ACTIONS_MENU_BUTTON_SELECTORS = [
-  'button[data-test-id="actions-menu-button"]',
-  '[data-test-id*="menu" i]',
-  'button[aria-label*="actions" i]',
-  'button[aria-label*="menu" i]',
-  'button[aria-label*="more" i]',
-  'button[aria-label*="options" i]',
-  'button[aria-haspopup="menu"]',
-  'button.mat-mdc-menu-trigger',
-]
+import {
+  findActionMenuButton,
+  findConversationRowByKey,
+} from './deleteQueue.dom'
 
 const DELETE_MENU_BUTTON_SELECTORS = [
   'button[data-test-id="delete-button"]',
@@ -99,68 +93,6 @@ function findFirstVisibleByKeywords(keywords: string[], root: ParentNode = docum
     }) ?? null
 }
 
-function dispatchHover(element: Element): void {
-  const options = { bubbles: true, cancelable: true, view: window }
-  element.dispatchEvent(new MouseEvent('pointerover', options))
-  element.dispatchEvent(new MouseEvent('mouseover', options))
-  element.dispatchEvent(new MouseEvent('mouseenter', options))
-}
-
-function scoreActionButton(button: HTMLElement, row: HTMLElement): number {
-  if (button.classList.contains('gpk-bulk-delete-checkbox') || button.closest('.cdk-overlay-container')) {
-    return -1
-  }
-  if (!isVisibleElement(button) || button.hasAttribute('disabled')) {
-    return -1
-  }
-
-  const rowRect = row.getBoundingClientRect()
-  const buttonRect = button.getBoundingClientRect()
-  const rowCenterY = rowRect.top + rowRect.height / 2
-  const buttonCenterY = buttonRect.top + buttonRect.height / 2
-  const maxDistance = Math.max(rowRect.height, 44)
-  const distance = Math.abs(buttonCenterY - rowCenterY)
-  if (rowRect.height > 0 && distance > maxDistance) {
-    return -1
-  }
-
-  const text = getElementSearchText(button)
-  let score = 0
-  if (button.matches(ACTIONS_MENU_BUTTON_SELECTORS.join(','))) score += 30
-  if (button.getAttribute('aria-haspopup') === 'menu') score += 30
-  if (/(more|menu|option|action)/.test(text)) score += 40
-  if (/(more_vert|more_horiz|⋮|…)/.test(text)) score += 30
-  if (/(delete|share|copy|rename|pin|unpin)/.test(text) && !/(more|menu|option|action)/.test(text)) score -= 50
-  return score - distance / 10
-}
-
-function findActionMenuButton(row: HTMLElement): HTMLElement | null {
-  const candidates = new Set<HTMLElement>()
-  const addButtons = (element: Element | null) => {
-    element?.querySelectorAll<HTMLElement>('button, [role="button"], gem-icon-button').forEach(button => candidates.add(button))
-  }
-
-  addButtons(row)
-  addButtons(row.nextElementSibling)
-  addButtons(row.previousElementSibling)
-  let parent = row.parentElement
-  for (let depth = 0; parent && parent !== document.body && depth < 4; depth++) {
-    addButtons(parent)
-    addButtons(parent.nextElementSibling)
-    addButtons(parent.previousElementSibling)
-    if (parent.matches('chat-history, .chat-history, .chat-history-scroll-container, bard-sidenav-content, side-navigation-v2, side-navigation-content')) {
-      break
-    }
-    parent = parent.parentElement
-  }
-
-  return Array.from(candidates)
-    .map(button => ({ button, score: scoreActionButton(button, row) }))
-    .filter(candidate => candidate.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .map(candidate => candidate.button.querySelector<HTMLElement>('button') ?? candidate.button)[0] ?? null
-}
-
 async function waitForActionable(
   selectors: string[],
   root: ParentNode = document,
@@ -206,17 +138,19 @@ async function waitForRowRemoved(row: HTMLElement, timeoutMs = 15000, signal?: A
   throw new Error('conversation row did not disappear')
 }
 
-async function deleteOneConversation(row: HTMLElement, signal?: AbortSignal): Promise<void> {
-  row.scrollIntoView({ block: 'center', inline: 'nearest' })
-  dispatchHover(row)
-  await wait(100, signal)
-
-  let actionButton = findActionMenuButton(row)
-  if (!actionButton) {
-    await wait(250, signal)
-    dispatchHover(row)
-    actionButton = findActionMenuButton(row)
+async function deleteOneConversation(originalRow: HTMLElement, signal?: AbortSignal): Promise<void> {
+  const conversationKey = originalRow.dataset.gpkConversationKey
+  if (!conversationKey) {
+    throw new Error('conversation key not found')
   }
+
+  const row = findConversationRowByKey(conversationKey)
+  if (!row) {
+    throw new Error('conversation row not found')
+  }
+
+  row.scrollIntoView({ block: 'center', inline: 'nearest' })
+  const actionButton = findActionMenuButton(row)
   if (!actionButton) {
     throw new Error('actions menu button not found')
   }
@@ -285,7 +219,7 @@ export async function deleteConversationRows(
     if (signal?.aborted) {
       return { status: 'cancelled', succeeded }
     }
-    if (!document.body.contains(row)) {
+    if (!document.body.contains(row) && !row.dataset.gpkConversationKey) {
       await callbacks.onSkipped?.()
       continue
     }
