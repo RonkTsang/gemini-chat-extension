@@ -9,8 +9,10 @@ src/entrypoints/content/bulk-delete/
   BulkDeleteEntry.tsx    # header 右侧 LuTrash 入口
   dom.ts                 # Gemini DOM 查找、checkbox 注入、菜单插入
   deleteQueue.ts         # 串行删除流程
+  deleteQueue.dom.ts     # 删除队列的 row/ActionButton DOM 契约与 resolver
   style.css              # 主文档注入样式
   index.test.tsx
+  deleteQueue.dom.test.ts
 ```
 
 在 `src/entrypoints/content/index.tsx` 中随 content script 启动：
@@ -138,8 +140,8 @@ checkbox 注入：
 1. reconcile 当前已渲染 checkbox。
 2. 如果当前 chat rows 少于 50，定位 Gemini 侧栏历史滚动容器。
 3. 将滚动容器滚到底部，触发 Gemini 加载更早的 chat。
-4. 等待 loading spinner 消失。
-5. 如果存在 Show more 按钮，则点击它并再次等待 loading spinner 消失。
+4. 短暂等待 loading spinner 挂载；如果检测到 spinner，则通过局部 `MutationObserver` 等待它消失。
+5. 如果没有检测到 spinner，则沿用已有的 DOM 数量与滚动位置判断。
 6. 重复加载，直到收集到 50 个 chat rows，或确认到底/超时/加载失败。
 7. 选择前 50 个 chat rows。
 8. 更新 `Delete (number)`。
@@ -168,30 +170,49 @@ const CHAT_HISTORY_CONTAINER_SELECTORS = [
 - 位于 Gemini sidenav/navigation 内
 - 排除 main/chat-window 内容区
 
-加载更多相关 selector：
+加载状态相关 selector：
 
 ```ts
-const SHOW_MORE_SELECTORS = [
-  '.show-more-button',
-  'button[data-test-id*="show-more"]',
-  'button[aria-label*="more conversations" i]',
-  'button[aria-label*="show more" i]',
-]
+const CONVERSATION_LIST_SELECTOR =
+  'conversations-list[data-test-id="all-conversations"], conversations-list'
 
-const LOADING_HISTORY_SELECTORS = [
-  '[data-test-id="loading-history-spinner"]',
-]
+const LOADING_HISTORY_SPINNER_SELECTOR =
+  '.loading-history-spinner-container.is-loading '
+  + '[data-test-id="loading-history-spinner"]'
 ```
+
+当前 Gemini 会在 `<conversations-list>` 后插入
+`.loading-history-spinner-container.is-loading`。Spinner 查询必须从当前
+`conversations-list` 的相邻局部区域开始，不得使用全局 `document.querySelector()`，
+以免命中聊天主区域或其他功能的 loading 节点。原页面没有 Show more 按钮，因此
+加载流程不再查找或点击任何 Show more 控件。
 
 加载循环规则：
 
 1. 每轮先 `reconcileChatCheckboxes()` 并检查数量。
 2. `scroller.scrollTo({ top: scroller.scrollHeight - scroller.clientHeight, behavior: 'auto' })`。
-3. 等待约 `600ms`，再等待 loading spinner hidden，最长约 `7s`。
-4. 若 Show more 可见且可用，点击后再次等待 spinner hidden。
-5. 记录上一轮 chat 数量和滚动位置；如果接近底部且数量连续 3 轮不增长，则停止。
-6. 总循环设置上限，例如 24 轮或 30s，避免无限滚动。
-7. 如果 Gemini 出现 `Couldn't load recent chats` / `Try reloading this page` 等加载失败提示，则停止并给出轻量 warning。
+3. 先等待约 `150ms`，让 Gemini 有机会挂载 loading spinner。
+4. 优先检查 `conversationsList.nextElementSibling` 是否为 loading container，并在
+   `conversationsList.parentElement` 这个局部区域内确认 spinner。若首次未发现，等待
+   剩余约 `450ms` 后再检查一次；仍未发现时直接进入已有的 DOM 数量比较逻辑。
+5. 若发现 spinner，在 `conversationsList.parentElement` 上创建短生命周期
+   `MutationObserver`，使用 `{ childList: true, subtree: true }` 等待局部区域内不再存在
+   spinner。不要只监听 spinner 的直接父容器，因为 Gemini 可能一次移除整个 loading
+   container，该 mutation 会发生在 container 的父节点上。
+6. Observer 必须在 spinner 消失、约 `7s` 超时以及当前操作的 `AbortSignal` 触发时统一
+   `disconnect()`，同时清理 timeout 和 abort listener。每轮按需创建，不能跨轮或保存在
+   模块级。开始 observe 后立即复查一次 spinner，避免节点在检查与监听之间消失。
+7. Spinner 消失后等待一个 `requestAnimationFrame`，再重新读取 conversation keys。
+   Spinner 只表示“正在加载”；实际新增的唯一 conversation keys 才表示列表加载产生了结果。
+8. 记录上一轮 chat 数量和滚动位置；如果接近底部且数量连续 3 轮不增长，则停止。
+9. 总循环设置上限，例如 24 轮或 30s，避免无限滚动。Observer 超时本身不表示加载成功，
+   仍需回到 DOM 数量与停滞判断。
+10. 如果 Gemini 出现 `Couldn't load recent chats` / `Try reloading this page` 等加载失败提示，则停止并给出轻量 warning。
+
+列表变化判断使用唯一 conversation keys，而不是任意 DOM mutation。Bulk Delete 注入的
+checkbox、属性更新以及 Gemini hover action 的变化都不能算作历史列表增长。对于
+`Exclude pinned`，总 conversation keys 是否增长用于判断本轮加载是否有效，过滤后的
+chat rows 是否达到目标数量用于判断快捷选择是否完成。
 
 加载中禁用 `select latest 50` 按钮，并将按钮文案临时切换为 `Loading...`。加载完成或失败后恢复。
 
@@ -230,50 +251,157 @@ const PINNED_SIGNAL_SELECTORS = [
 
 单项删除流程：
 
-1. 将 row scroll 到可视区域。
-2. hover row，显示更多操作按钮。
-3. 找到 row 对应三点/更多按钮。
-4. 点击菜单。
+1. 从入队 row 读取 conversation key。
+2. 用 conversation key 重新解析当前唯一 row，避免持有 Gemini 重绘前的旧节点。
+3. 将当前 row scroll 到可视区域。
+4. 仅在当前 row 内解析唯一 ActionButton，并点击其内部原生 `button`。
 5. 在 overlay 中点击 Delete。
 6. 在确认弹窗中点击确认 Delete。
 7. 等待 row 从 DOM 消失或超时。
 
-关键选择器降级：
+本次最小改造只覆盖步骤 1–4；Delete menu item、confirmation dialog 和删除完成判断保持现状。
+
+### 6.1 目标与安全边界
+
+row 与 ActionButton 必须通过确定性链路关联：
+
+```text
+conversation key
+  -> 当前唯一 row
+  -> row 内唯一 Action trigger
+  -> trigger 内唯一未 disabled 的原生 button
+```
+
+任意一步为空或出现多个候选时必须停止当前删除，不得扩大到 parent、sibling 或其他 row 继续猜测。
+
+### 6.2 DOM 契约与选择器管理
+
+row/ActionButton 选择器和纯 DOM resolver 集中维护在 `deleteQueue.dom.ts`，不内联到 `deleteQueue.ts` 的删除过程中。
+
+当前已验证的选择器直接使用完整 CSS 字符串，不将一个复合选择器拆分后 `join('')`：
 
 ```ts
-const ACTIONS_MENU_BUTTON_SELECTORS = [
-  'button[data-test-id="actions-menu-button"]',
-  '[data-test-id*="menu" i]',
-  'button[aria-label*="actions" i]',
-  'button[aria-label*="menu" i]',
-  'button[aria-label*="more" i]',
-  'button[aria-label*="options" i]',
-  'button[aria-haspopup="menu"]',
-  'button.mat-mdc-menu-trigger',
-]
+const CONVERSATION_ROW_SELECTOR =
+  'gem-nav-list-item[data-test-id="conversation"][data-gpk-conversation-key]'
 
-const DELETE_MENU_BUTTON_SELECTORS = [
-  'button[data-test-id="delete-button"]',
-  '[data-test-id*="delete" i]',
-  'button[aria-label*="delete" i]',
-  '[role="menuitem"][aria-label*="delete" i]',
-]
+const CONVERSATION_LINK_SELECTOR = ':scope > a[href^="/app/"]'
 
-const CONFIRM_DELETE_BUTTON_SELECTORS = [
-  'button[data-test-id="confirm-button"]',
-  '[data-test-id="confirm-button"]',
-  'button[aria-label*="confirm" i]',
-  'button[aria-label*="delete" i]',
+const ACTION_MENU_TRIGGER_SELECTOR =
+  'gem-icon-button[data-test-id="actions-menu-button"][aria-haspopup="menu"]'
+
+const ACTION_MENU_BUTTON_SELECTOR = ':scope > button:not([disabled])'
+```
+
+选择器不依赖：
+
+- `.visible` 或 `always-show-hovered-trailing-content` 等瞬时状态 class。
+- `.hovered-trailing-content` 等用于布局或 hover 展示的 class 和 wrapper 层级。
+- `aria-label` 或菜单文案等受语言影响的内容。
+- `more_vert` 或 pin icon 等展示信号。
+- 节点可见性或几何位置。
+
+未来如果出现经验证的新 DOM 结构，改为维护“完整候选选择器”数组，并由 resolver 按优先级逐个尝试。不应使用逗号 union 混合多套结构，也不应为尚未出现的变化预先加入宽泛 fallback。
+
+### 6.3 Row 解析
+
+`findConversationRowByKey()` 从 `CONVERSATION_ROW_SELECTOR` 的命中结果中同时验证扩展注入的 key 和当前原生 link。row 必须只有一个直接子级的 `CONVERSATION_LINK_SELECTOR` 命中，且该 link 相对 `window.location.origin` 规范化后的 pathname 必须与 `conversationKey` 一致：
+
+```ts
+export function findConversationRowByKey(
+  conversationKey: string,
+  root: ParentNode = document,
+): HTMLElement | null {
+  const matches = Array.from(
+    root.querySelectorAll<HTMLElement>(CONVERSATION_ROW_SELECTOR),
+  ).filter((row) => {
+    if (row.dataset.gpkConversationKey !== conversationKey) {
+      return false
+    }
+
+    const links = row.querySelectorAll<HTMLAnchorElement>(CONVERSATION_LINK_SELECTOR)
+    return links.length === 1
+      && new URL(links[0].getAttribute('href') ?? '', window.location.origin)
+        .pathname === conversationKey
+  })
+
+  return matches.length === 1 ? matches[0] : null
+}
+```
+
+不使用标题、列表索引或几何位置消除歧义。dataset key 命中但原生 link 已指向另一会话、row 内零个或多个 conversation link、零个或多个同时通过双重校验的 row，均返回 `null`；这可避免 Gemini 复用 row 后 extension dataset 尚未 reconcile 时误删新会话。
+
+### 6.4 ActionButton 解析
+
+`findActionMenuButton()` 只查找当前 row 内的 DOM 契约。`row.querySelectorAll()` 已将范围限制在当前 row 的后代节点，因此 trigger 选择器不需要依赖 `.hovered-trailing-content` 或其直接子级层级：
+
+```ts
+export function findActionMenuButton(row: HTMLElement): HTMLButtonElement | null {
+  if (!row.isConnected) {
+    return null
+  }
+
+  const triggers = row.querySelectorAll<HTMLElement>(ACTION_MENU_TRIGGER_SELECTOR)
+  if (triggers.length !== 1) {
+    return null
+  }
+
+  const buttons = triggers[0].querySelectorAll<HTMLButtonElement>(ACTION_MENU_BUTTON_SELECTOR)
+  if (buttons.length !== 1 || !buttons[0].isConnected) {
+    return null
+  }
+
+  return buttons[0]
+}
+```
+
+需删除的旧逻辑：
+
+- `dispatchHover()` 及其固定延时。合成事件不能建立可信的 CSS `:hover` 状态。
+- `addButtons()` 对 parent、previous sibling 和 next sibling 的扫描。
+- `scoreActionButton()` 及文案、图标、几何距离评分。
+- ActionButton 的 `isVisibleElement()` 门槛。当 row 范围和技术属性已唯一确定 trigger 时，隐藏状态不应否定节点身份。
+
+菜单是否真正打开应在 `.click()` 之后验证，不应通过点击前的可见性推测。
+
+### 6.5 过程代码
+
+`deleteQueue.ts` 只负责串联 resolver 与原生交互：
+
+```ts
+const conversationKey = originalRow.dataset.gpkConversationKey
+if (!conversationKey) {
+  throw new Error('conversation key not found')
+}
+
+const row = findConversationRowByKey(conversationKey)
+if (!row) {
+  throw new Error('conversation row not found')
+}
+
+row.scrollIntoView({ block: 'center', inline: 'nearest' })
+
+const actionButton = findActionMenuButton(row)
+if (!actionButton) {
+  throw new Error('actions menu button not found')
+}
+
+actionButton.click()
+```
+
+后续 Delete menu item 和 ConfirmButton 流程本次不做技术改造。
+
+### 6.6 后续候选选择器的扩展规则
+
+当且仅当已获得新版 Gemini DOM 样本并验证身份关系时，才增加完整候选：
+
+```ts
+const CONVERSATION_ROW_SELECTORS = [
+  'gem-nav-list-item[data-test-id="conversation"][data-gpk-conversation-key]',
+  // 仅在新 DOM 契约经验证后添加完整选择器。
 ]
 ```
 
-如果静态 selector 找不到更多按钮，则采用参考项目的评分策略：
-
-- 命中 actions menu selector：加分。
-- `aria-haspopup="menu"`：加分。
-- 文案/属性包含 `more | menu | option | action`：加分。
-- 文案/属性包含 `delete | share | copy | rename | pin | unpin` 且不含 menu 语义：扣分。
-- 与 row 垂直中心距离越远，分数越低。
+resolver 按数组顺序逐个尝试，每个候选都独立执行“按 key 精确匹配且结果唯一”验证。一个候选出现多个同 key row 时应立即失败，不继续用更宽泛的候选消除歧义。
 
 ## 7. 运行与清理
 执行删除时：
@@ -303,6 +431,16 @@ stop/退出批量模式时：
 6. `select unpinned` 跳过 pinned rows。
 7. `Delete (number)` 随选择变化。
 8. 删除队列按顺序调用 DOM 操作，单项失败继续。
+9. ActionButton 即使 `offsetParent === null` 也能通过 row 内唯一技术契约解析。
+10. target row 的 ActionButton 隐藏、相邻 row 的 ActionButton 可见时，仍只返回 target row 内的按钮。
+11. target row 无 ActionButton，但 parent 或 sibling 存在 ActionButton 时返回 `null`。
+12. 同一 row 出现多个 trigger 时返回 `null`。
+13. 原始 row 被重绘替换后，可根据 conversation key 解析到最新 row。
+14. 同一 conversation key 出现多个 row 时返回 `null`。
+15. dataset key 命中但原生 conversation link 已变更时返回 `null`；正常相对 href 可匹配。
+16. 同一 row 出现多个原生 conversation link 时返回 `null`。
+17. trigger 内部原生 button 为 disabled 时返回 `null`。
+18. Action wrapper class 改名或增加一层 wrapper 后，仍能在当前 row 内解析唯一 trigger。
 
 手动验证：
 

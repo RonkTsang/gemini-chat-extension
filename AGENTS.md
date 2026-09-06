@@ -102,6 +102,10 @@ Verifies all locale files against English base.
 2. Starts `urlMonitor` then `chatChangeDetector`
 3. Mounts UI overlay via `renderOverlay`
 
+### Gemini DOM Integration
+
+- For code that queries, traverses, observes, or mutates Gemini-owned DOM, follow [`docs/agent_guides/gemini-dom.md`](docs/agent_guides/gemini-dom.md).
+
 ### Data Layer (Dexie/IndexedDB)
 - Database: `src/data/db.ts` (name: `gemini_extension`)
 - Access via repositories in `src/data/repositories`
