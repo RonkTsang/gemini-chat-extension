@@ -147,14 +147,15 @@ function QuickFollowUp() {
       const message = prompt.template
         .split(QUICK_FOLLOW_PLACEHOLDER)
         .join(selectedText)
-      const inserted = insertTextToEditor(message)
+      const chatWindow = document.querySelector('chat-window') ?? undefined
+      const inserted = insertTextToEditor(message, chatWindow)
       if (!inserted) {
         return
       }
 
       await sleep(500)
       
-      const result = sendMessage()
+      const result = sendMessage(chatWindow)
       if (!result.success) {
         console.warn('Failed to send quick follow-up prompt:', result.reason)
       }

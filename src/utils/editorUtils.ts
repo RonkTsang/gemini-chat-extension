@@ -32,7 +32,7 @@ export interface DetailedButtonStatus {
  * @returns Content editor element or null if not found
  */
 export function getContentEditor(chatWindow?: Element): HTMLElement | null {
-  const container = chatWindow || document;
+  const container = chatWindow || document.querySelector('chat-window') || document;
   
   // Find rich text editor: editable div under rich-textarea
   const editor = container.querySelector('rich-textarea .ql-editor.textarea.new-input-ui[contenteditable="true"]') as HTMLElement;
@@ -75,7 +75,7 @@ export function focusContentEditor(chatWindow?: Element): boolean {
  * @returns Send button element or null if not found
  */
 export function getSendButton(chatWindow?: Element): HTMLElement | null {
-  const container = chatWindow || document;
+  const container = chatWindow || document.querySelector('chat-window') || document;
 
   const selectors = [
     '[data-node-type="input-area"] [data-test-id="send-button-container"] .send-button',

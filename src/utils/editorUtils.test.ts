@@ -2,8 +2,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   focusContentEditor,
+  getContentEditor,
   getDetailedButtonStatus,
   getSendButton,
+  insertTextToEditor,
   isReadyToSend,
   isResponding,
   sendMessage,
@@ -89,5 +91,51 @@ describe('editorUtils send button detection', () => {
 
     expect(focusContentEditor()).toBe(true)
     expect(document.activeElement?.classList.contains('ql-editor')).toBe(true)
+  })
+
+  it('prioritizes content editor and send button inside chat-window when multiple exist', () => {
+    document.body.innerHTML = `
+      <!-- External input area outside chat-window (e.g. spark / canvas workspace) -->
+      <div id="external-container">
+        <rich-textarea id="external-rta">
+          <div class="ql-editor textarea new-input-ui" contenteditable="true">
+            <p>External</p>
+          </div>
+        </rich-textarea>
+        <div data-node-type="input-area">
+          <div data-test-id="send-button-container">
+            <gem-icon-button class="send-button submit has-input" aria-disabled="false" id="external-send-btn">
+              <button aria-label="Send message"></button>
+            </gem-icon-button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main chat window -->
+      <chat-window>
+        <rich-textarea id="chat-window-rta">
+          <div class="ql-editor textarea new-input-ui" contenteditable="true" id="chat-window-editor">
+            <p>Chat</p>
+          </div>
+        </rich-textarea>
+        <div data-node-type="input-area">
+          <div data-test-id="send-button-container">
+            <gem-icon-button class="send-button submit has-input" aria-disabled="false" id="chat-window-send-btn">
+              <button aria-label="Send message"></button>
+            </gem-icon-button>
+          </div>
+        </div>
+      </chat-window>
+    `
+
+    const editor = getContentEditor()
+    expect(editor?.id).toBe('chat-window-editor')
+
+    const sendButton = getSendButton()
+    expect(sendButton?.id).toBe('chat-window-send-btn')
+
+    // Test text insertion into editor inside chat-window
+    insertTextToEditor('Follow up question')
+    expect(editor?.textContent).toContain('Follow up question')
   })
 })

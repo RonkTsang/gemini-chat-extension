@@ -334,7 +334,7 @@ const waitForNewChatReady = (previousMessageCount: number): Promise<boolean> => 
       }
       
       // Check 3: Input box is ready and enabled
-      const inputBox = document.querySelector('rich-textarea')
+      const inputBox = chatWindow.querySelector('rich-textarea') ?? document.querySelector('rich-textarea')
       const inputReady = inputBox && !inputBox.hasAttribute('disabled')
       
       if (!inputReady) {
@@ -388,6 +388,6 @@ const waitForNewChatReady = (previousMessageCount: number): Promise<boolean> => 
  * @returns boolean - true if input is ready
  */
 export const isInputReady = (): boolean => {
-  const inputBox = document.querySelector('rich-textarea')
+  const inputBox = document.querySelector('chat-window rich-textarea') ?? document.querySelector('rich-textarea')
   return !!inputBox && !inputBox.hasAttribute('disabled')
 }

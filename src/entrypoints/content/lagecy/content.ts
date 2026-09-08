@@ -1118,7 +1118,7 @@ function focusEditorWithRetry(editor) {
 }
 
 function addQuoteUI(selectedText) {
-  const inputContainer = document.querySelector('rich-textarea');
+  const inputContainer = document.querySelector('chat-window rich-textarea') ?? document.querySelector('rich-textarea');
   if (!inputContainer) return;
 
   // --- Truncation Constants ---
