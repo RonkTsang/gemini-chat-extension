@@ -4,6 +4,7 @@ import type { MediaItem } from "@/utils/stuffMediaParser";
 type SettingsOpenSource =
   | 'prompt-entrance'
   | 'popup'
+  | 'folders'
   | 'whats-new'
   | 'theme-floating-panel'
   | 'shortcut'

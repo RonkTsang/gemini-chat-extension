@@ -123,6 +123,7 @@ Verifies all locale files against English base.
 - Use Chakra components and the configured system theme from `src/components/ui/theme`
 - Keep UI rendering within the Shadow DOM subtree
 - When using Chakra overlay anchors such as `Popover.Trigger asChild`, the direct child must be a DOM element or a component that forwards `ref` and trigger props to the underlying Chakra/DOM element. If a custom trigger component does not use `forwardRef` and prop passthrough, Popover positioning can fall back to the viewport origin and appear in the top-left corner.
+- Before adding or changing a Chakra Dialog in the content-script UI, read [`docs/agent-guides/chakra-dialog.md`](docs/agent-guides/chakra-dialog.md).
 - Common modules:
   - Settings panel: `src/components/setting-panel`
   - Toaster: `src/components/ui/toaster.tsx`

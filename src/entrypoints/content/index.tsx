@@ -7,6 +7,7 @@ import { renderOverlay } from "./overlay"
 import { startPowerKitEntry, stopPowerKitEntry } from './power-kit-entry'
 import { createTopBarCustomizationController } from './top-bar-customization'
 import { createChatSettingsController } from './chat-settings'
+import { createFoldersController } from './folders'
 import { startBulkDelete, stopBulkDelete } from './bulk-delete'
 import { setDevForceBulkDeleteFailure } from './bulk-delete/deleteQueue'
 import { createBulkDeleteSettingsController } from './bulk-delete/settings'
@@ -210,6 +211,8 @@ export default defineContentScript({
       stop: stopBulkDelete,
     })
     await bulkDeleteSettings.start()
+    const foldersController = createFoldersController()
+    await foldersController.start()
     const gemAvatarSettings = createGemAvatarSettingsController({
       setting: enableGemAvatar,
       start: () => gemAvatarModule.start(),
@@ -229,6 +232,7 @@ export default defineContentScript({
         )
       }
       bulkDeleteSettings.stop()
+      foldersController.stop()
       gemAvatarSettings.stop()
       themeBloomSettings.stop()
       stopPowerKitEntry()

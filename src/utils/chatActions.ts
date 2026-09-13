@@ -117,6 +117,28 @@ function navigateToNewChatViaSpa(): void {
 }
 
 /**
+ * Open an existing Gemini conversation without replacing the page document.
+ * The standard popstate event lets Gemini's router and the extension's URL
+ * monitor react to the same in-page transition.
+ */
+export function openChatViaSpa(chatId: string): boolean {
+  const normalizedChatId = chatId.trim()
+  if (!normalizedChatId || /[/?#]/u.test(normalizedChatId)) {
+    console.error('[Chat Action] Refused invalid chat route', { chatId })
+    return false
+  }
+
+  const path = `/app/${encodeURIComponent(normalizedChatId)}`
+  if (window.location.pathname === path) {
+    return true
+  }
+
+  window.history.pushState({}, '', path)
+  window.dispatchEvent(new PopStateEvent('popstate', { state: window.history.state }))
+  return true
+}
+
+/**
  * Create a new chat for Chain Prompt, then wait until its editor is ready.
  * This intentionally avoids hard navigation because the Chain Prompt run must
  * continue in the existing content-script context.

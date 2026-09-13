@@ -6,6 +6,7 @@ import { ChainPromptListView } from './chain-prompt/index'
 import { ChainPromptEditorView } from './chain-prompt/editor'
 import { QuickFollowSettingsView } from './quick-follow-up/index'
 import { EnhancementsSettingsView } from './enhancements/index'
+import { FoldersSettingsView } from './folders/index'
 import { NotificationSettingsView } from './notification/index'
 import { ShortcutSettingsView } from './shortcuts/index'
 import { ThemeSettingsView } from './theme/index'
@@ -17,6 +18,7 @@ const chainPromptListView = ChainPromptListView as SettingViewComponent<Navigati
 const chainPromptEditorView = ChainPromptEditorView as SettingViewComponent<NavigationSection>
 const quickFollowSettingsView = QuickFollowSettingsView as SettingViewComponent<NavigationSection>
 const enhancementsSettingsView = EnhancementsSettingsView as SettingViewComponent<NavigationSection>
+const foldersSettingsView = FoldersSettingsView as SettingViewComponent<NavigationSection>
 const notificationSettingsView = NotificationSettingsView as SettingViewComponent<NavigationSection>
 const shortcutSettingsView = ShortcutSettingsView as SettingViewComponent<NavigationSection>
 const themeSettingsView = ThemeSettingsView as SettingViewComponent<NavigationSection>
@@ -29,6 +31,7 @@ export function registerDefaultViews() {
   registerView('chain-prompt/editor', chainPromptEditorView)
   registerView('quick-follow-up/index', quickFollowSettingsView)
   registerView('enhancements/index', enhancementsSettingsView)
+  registerView('folders/index', foldersSettingsView)
   registerView('notification/index', notificationSettingsView)
   registerView('shortcuts/index', shortcutSettingsView)
   registerView('theme/index', themeSettingsView)
