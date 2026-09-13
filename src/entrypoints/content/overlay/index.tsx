@@ -11,6 +11,10 @@ import QuickFollowUp from "./quick-follow-up"
 import ExtensionUpdate from "./extension-update"
 import WhatsNew from "./whats-new"
 import { ThemeBloomOverlay } from '@/components/theme-bloom-overlay'
+import { FolderDialogs } from './folders/FolderDialogs'
+import { FolderPicker } from './folders/FolderPicker'
+import { FolderActionMenu } from './folders/FolderActionMenu'
+import { DevBuildBadge } from './DevBuildBadge'
 
 function App() {
   useSyncColorMode()
@@ -26,6 +30,10 @@ function App() {
       <ExtensionUpdate />
       <WhatsNew />
       <ThemeBloomOverlay />
+      <FolderPicker />
+      <FolderActionMenu />
+      <FolderDialogs />
+      <DevBuildBadge />
     </>
   )
 }

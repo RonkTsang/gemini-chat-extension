@@ -2,6 +2,7 @@ import {
   HiOutlineBell,
   HiOutlineColorSwatch,
   HiOutlineInformationCircle,
+  HiOutlineFolder,
   HiOutlineKey,
   HiOutlineLightningBolt,
   HiOutlineLink,
@@ -22,6 +23,7 @@ export type NavigationSection =
   | 'quickFollowup'
   | 'imagePrompt'
   | 'enhancements'
+  | 'folders'
   | 'notification'
   | 'shortcuts'
   | 'theme'
@@ -92,6 +94,21 @@ export const settingSectionDefinitions: SettingSectionDefinition<NavigationSecti
         componentId: 'enhancements/index'
       }
     ]
+  },
+  {
+    id: 'folders',
+    label: 'Folders',
+    group: 'tools',
+    icon: HiOutlineFolder,
+    title: 'Folders',
+    views: [
+      {
+        id: 'index',
+        title: 'Folders',
+        description: '',
+        componentId: 'folders/index',
+      },
+    ],
   },
   {
     id: 'notification',

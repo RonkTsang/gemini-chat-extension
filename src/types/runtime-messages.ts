@@ -6,6 +6,8 @@ import type { NotificationReadiness } from '@/services/responseCompleteNotificat
 export const STUFF_MEDIA_DATA_RECEIVED_MESSAGE = 'stuff-media:data-received' as const
 export const OPEN_IN_NEW_TAB_MESSAGE = 'stuff-page:open-in-new-tab' as const
 export const FIREFOX_GET_INSTANCE_ID_MESSAGE = 'firefox:get-instance-id' as const
+export const FOLDERS_GET_DEVICE_ID_MESSAGE = 'folders:get-device-id' as const
+export const FOLDERS_SYNC_ACCOUNT_MESSAGE = 'folders:sync-account' as const
 export const RESPONSE_COMPLETE_NOTIFICATION_GET_CONTENT_MESSAGE = 'response-complete-notification:get-content' as const
 export const RESPONSE_COMPLETE_NOTIFICATION_GET_DEEP_RESEARCH_STATUS_MESSAGE = 'response-complete-notification:get-deep-research-status' as const
 export const RESPONSE_COMPLETE_NOTIFICATION_TEST_MESSAGE = 'response-complete-notification:test' as const
@@ -45,6 +47,25 @@ export interface FirefoxGetInstanceIdMessage {
 
 export interface FirefoxGetInstanceIdResponse {
   instanceId: string
+}
+
+export interface FoldersGetDeviceIdMessage {
+  type: typeof FOLDERS_GET_DEVICE_ID_MESSAGE
+}
+
+export interface FoldersGetDeviceIdResponse {
+  deviceId: string
+}
+
+export interface FoldersSyncAccountMessage {
+  type: typeof FOLDERS_SYNC_ACCOUNT_MESSAGE
+  accountScopeId: string
+  traceId?: string
+}
+
+export interface FoldersSyncAccountResponse {
+  ok: boolean
+  error?: string
 }
 
 export interface ResponseCompleteNotificationGetContentMessage {
@@ -178,6 +199,27 @@ export function isFirefoxGetInstanceIdMessage(
 
   const candidate = message as Partial<FirefoxGetInstanceIdMessage>
   return candidate.type === FIREFOX_GET_INSTANCE_ID_MESSAGE
+}
+
+export function isFoldersGetDeviceIdMessage(
+  message: unknown,
+): message is FoldersGetDeviceIdMessage {
+  if (!message || typeof message !== 'object') return false
+  return (message as Partial<FoldersGetDeviceIdMessage>).type === FOLDERS_GET_DEVICE_ID_MESSAGE
+}
+
+export function isFoldersSyncAccountMessage(
+  message: unknown,
+): message is FoldersSyncAccountMessage {
+  if (!message || typeof message !== 'object') return false
+  const candidate = message as Partial<FoldersSyncAccountMessage>
+  return candidate.type === FOLDERS_SYNC_ACCOUNT_MESSAGE
+    && typeof candidate.accountScopeId === 'string'
+    && /^[A-Za-z0-9_-]{16,128}$/u.test(candidate.accountScopeId)
+    && (
+      candidate.traceId === undefined
+      || (typeof candidate.traceId === 'string' && /^[A-Za-z0-9_-]{1,128}$/u.test(candidate.traceId))
+    )
 }
 
 export function isResponseCompleteNotificationGetContentMessage(

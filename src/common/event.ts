@@ -5,6 +5,7 @@ import type { LibraryMediaData } from '@/utils/library/mediaParser'
 type SettingsOpenSource =
   | 'prompt-entrance'
   | 'popup'
+  | 'folders'
   | 'whats-new'
   | 'theme-floating-panel'
   | 'shortcut'

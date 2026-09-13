@@ -10,24 +10,30 @@ type WxtVitePlugin = NonNullable<WxtViteConfig['plugins']>[number]
 export default defineConfig({
   modules: ['@wxt-dev/module-react', '@wxt-dev/i18n/module'],
   srcDir: 'src',
-  vite: (configEnv) => ({
-    define: {
-      global: 'globalThis',
-    },
-    plugins: [
-      svgr() as unknown as WxtVitePlugin,
-      configEnv.mode === 'production' ? removeConsole({ includes: ['log'] }) as unknown as WxtVitePlugin : undefined,
-      process.env.ANALYZE === 'true' ? visualizer({
-        open: true,
-        filename: '.output/stats.html',
-        gzipSize: true,
-        brotliSize: true,
-      }) as unknown as WxtVitePlugin : undefined,
-    ].filter((plugin): plugin is WxtVitePlugin => Boolean(plugin)),
-    esbuild: {
-      charset: 'ascii',
-    },
-  }),
+  vite: (configEnv) => {
+    // Keep this in the factory so every WXT development rebuild gets a new value.
+    const buildTimestamp = new Date().toISOString()
+
+    return {
+      define: {
+        global: 'globalThis',
+        __GPK_BUILD_TIMESTAMP__: JSON.stringify(buildTimestamp),
+      },
+      plugins: [
+        svgr() as unknown as WxtVitePlugin,
+        configEnv.mode === 'production' ? removeConsole({ includes: ['log'] }) as unknown as WxtVitePlugin : undefined,
+        process.env.ANALYZE === 'true' ? visualizer({
+          open: true,
+          filename: '.output/stats.html',
+          gzipSize: true,
+          brotliSize: true,
+        }) as unknown as WxtVitePlugin : undefined,
+      ].filter((plugin): plugin is WxtVitePlugin => Boolean(plugin)),
+      esbuild: {
+        charset: 'ascii',
+      },
+    }
+  },
   manifest: (env) => {
     const isProduction = env.mode === 'production';
 
@@ -40,7 +46,8 @@ export default defineConfig({
       version: version,
       default_locale: "en",
       permissions: [
-        "storage"
+        "storage",
+        "alarms"
       ],
       optional_permissions: [
         "notifications",

@@ -3,11 +3,53 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   createNewChatForChainPrompt,
   openGems,
+  openChatViaSpa,
   openLibrary,
   openNewChat,
   openTemporaryChatByClick,
   toggleSidebar,
 } from './chatActions'
+
+describe('chatActions existing chat', () => {
+  beforeEach(() => {
+    window.history.replaceState({}, '', '/app/current-chat')
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('opens an existing chat through an in-page history transition', () => {
+    const popStateSpy = vi.fn()
+    window.addEventListener('popstate', popStateSpy, { once: true })
+
+    expect(openChatViaSpa('target-chat')).toBe(true)
+
+    expect(window.location.pathname).toBe('/app/target-chat')
+    expect(popStateSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not add history or dispatch popstate for the active chat', () => {
+    const pushStateSpy = vi.spyOn(window.history, 'pushState')
+    const popStateSpy = vi.fn()
+    window.addEventListener('popstate', popStateSpy, { once: true })
+
+    expect(openChatViaSpa('current-chat')).toBe(true)
+
+    expect(pushStateSpy).not.toHaveBeenCalled()
+    expect(popStateSpy).not.toHaveBeenCalled()
+  })
+
+  it('rejects a chat id that could escape the conversation route', () => {
+    const pushStateSpy = vi.spyOn(window.history, 'pushState')
+    vi.spyOn(console, 'error').mockImplementation(() => undefined)
+
+    expect(openChatViaSpa('../settings')).toBe(false)
+
+    expect(window.location.pathname).toBe('/app/current-chat')
+    expect(pushStateSpy).not.toHaveBeenCalled()
+  })
+})
 
 describe('chatActions new chat', () => {
   beforeEach(() => {
