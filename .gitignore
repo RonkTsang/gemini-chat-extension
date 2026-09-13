@@ -27,6 +27,7 @@ stats-*.json
 *.sln
 *.sw?
 .env
+.secrets/
 .original
 
 # python
