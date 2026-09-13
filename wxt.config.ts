@@ -70,6 +70,13 @@ export default defineConfig({
       ]
     };
 
+    // An ignored local .env can provide a development public key so unpacked
+    // builds on multiple devices retain one Chrome extension ID. CI has no
+    // such variable, so release builds keep their normal store identity.
+    if (env.browser === 'chrome' && process.env.GPK_DEV_EXTENSION_KEY) {
+      manifest.key = process.env.GPK_DEV_EXTENSION_KEY.trim();
+    }
+
     if (env.browser === 'firefox') {
       delete manifest.optional_permissions
       manifest.permissions.push(
