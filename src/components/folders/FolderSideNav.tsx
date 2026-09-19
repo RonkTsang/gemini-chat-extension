@@ -12,9 +12,10 @@ import {
   HiOutlineDotsVertical,
   HiOutlinePlus,
 } from 'react-icons/hi'
-import { type ReactNode, useEffect, useState, useSyncExternalStore } from 'react'
+import { type ReactNode, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 
 import { getFolderColor, getFolderIcon } from './folderAppearance'
+import { createFolderTitleClickController } from './folderTitleClick'
 import { Tooltip } from '@/components/ui/tooltip'
 import { compareAscii } from '@/domain/folder/order-key'
 import { ROOT_FOLDER_ID } from '@/domain/folder/types'
@@ -154,9 +155,11 @@ export function FolderSideNav() {
   const [currentChatId, setCurrentChatId] = useState(() => getChatId(window.location.href))
   const [draggedItem, setDraggedItem] = useState<DraggedItem | null>(null)
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null)
+  const folderTitleClicks = useRef(createFolderTitleClickController())
   const projection = state.projection
 
   useEffect(() => eventBus.on('urlchange', ({ url }) => setCurrentChatId(getChatId(url))), [])
+  useEffect(() => () => folderTitleClicks.current.cancel(), [])
 
   if (state.identity.status !== 'available') {
     return (
@@ -364,11 +367,28 @@ export function FolderSideNav() {
                     color="inherit"
                     font="inherit"
                     _hover={{ bg: 'transparent' }}
-                    onClick={() => void folderRuntime.setFolderCollapsed(folder.id, !isCollapsed)}
+                    onClick={(event) => {
+                      if ((event.target as HTMLElement).closest('[data-gpk-folder-icon]')) {
+                        folderTitleClicks.current.cancel()
+                        void folderRuntime.setFolderCollapsed(folder.id, !isCollapsed)
+                        return
+                      }
+                      if (event.detail === 1) {
+                        folderTitleClicks.current.scheduleSingleClick(() => {
+                          void folderRuntime.setFolderCollapsed(folder.id, !isCollapsed)
+                        })
+                      }
+                    }}
+                    onDoubleClick={(event) => {
+                      if ((event.target as HTMLElement).closest('[data-gpk-folder-icon]')) return
+                      event.preventDefault()
+                      folderTitleClicks.current.handleDoubleClick(() => folderRuntime.openEditDialog(folder.id))
+                    }}
                     aria-expanded={!isCollapsed}
                   >
                     <Box
                       as={FolderIcon}
+                      data-gpk-folder-icon
                       color={getFolderColor(folder.colorValue)}
                       boxSize="20px"
                       strokeWidth={1.5}
