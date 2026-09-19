@@ -12,7 +12,6 @@ import {
   parseColor,
 } from '@chakra-ui/react'
 import { useEffect, useMemo, useState } from 'react'
-import { LuChevronDown } from 'react-icons/lu'
 
 import {
   FOLDER_ICON_CATALOG,
@@ -181,41 +180,34 @@ export function FolderAppearancePicker({ value, onChange }: FolderAppearancePick
                         </IconButton>
                       )
                     })}
-                  </SimpleGrid>
-                </Box>
-
-                <Box>
-                  <Button
-                    width="100%"
-                    height="40px"
-                    px="6px"
-                    variant="ghost"
-                    color={PANEL_FOREGROUND}
-                    justifyContent="flex-start"
-                    onClick={selectCustomColor}
-                    aria-expanded={customExpanded}
-                  >
-                    <Box
-                      boxSize="24px"
+                    <IconButton
+                      aria-label={tt('folders_custom_color', 'Custom color')}
+                      aria-pressed={isFolderCustomColor(value.colorValue)}
+                      variant="ghost"
+                      boxSize="36px"
+                      minW="36px"
+                      p={0}
                       borderRadius="full"
-                      bg={lastCustomColor}
-                      borderWidth="2px"
-                      borderColor="border.muted"
-                      boxShadow={isFolderCustomColor(value.colorValue)
-                        ? `0 0 0 2px ${value.colorValue}`
-                        : undefined}
-                    />
-                    <Text flex="1" textAlign="start">
-                      {tt('folders_custom_color', 'Custom color')}
-                    </Text>
-                    <LuChevronDown
-                      aria-hidden
-                      style={{ transform: customExpanded ? 'rotate(180deg)' : undefined }}
-                    />
-                  </Button>
+                      onClick={selectCustomColor}
+                    >
+                      <Box
+                        boxSize="24px"
+                        borderRadius="full"
+                        borderWidth={isFolderCustomColor(value.colorValue) ? '2px' : '1px'}
+                        borderColor={isFolderCustomColor(value.colorValue) ? 'bg.panel' : 'border.muted'}
+                        boxShadow={isFolderCustomColor(value.colorValue)
+                          ? `0 0 0 2px ${value.colorValue}`
+                          : undefined}
+                        css={{
+                          background: 'conic-gradient(from 45deg, #FA433F, #F6C643, #53B559, #3A83F7, #8952EE, #F177AF, #FA433F)',
+                        }}
+                      />
+                    </IconButton>
+                  </SimpleGrid>
 
                   {customExpanded ? (
                     <ColorPicker.Root
+                      inline
                       value={pickerValue}
                       onValueChange={(details) => {
                         const hex = toHexColor(details.value.toString('hexa'))
