@@ -304,10 +304,10 @@ describe('styleController', () => {
     )
 
     expect(css).toMatch(
-      /:root\[data-gpk-bg-enabled="true"\]\[data-gpk-msg-glass="true"\] model-response response-container>div\.response-container \{\s*box-sizing: border-box;\s*width: 100%;\s*max-width: calc\(var\(--bard-chat-window-content-width-default, 708px\) \+ 48px\);\s*margin-inline: auto;/,
+      /:root\[data-gpk-bg-enabled="true"\]\[data-gpk-msg-glass="true"\] chat-window:not\(\.preview-chat-window\):not\(\.in-gems-mode\) model-response response-container>div\.response-container \{\s*box-sizing: border-box;\s*width: 100%;\s*max-width: calc\(var\(--bard-chat-window-content-width-default, 708px\) \+ 48px\);\s*margin-inline: auto;/,
     )
     expect(css).toMatch(
-      /:root\[data-gpk-chat-width\]\[data-gpk-bg-enabled="true"\]\[data-gpk-msg-glass="true"\] model-response response-container>div\.response-container \{\s*max-width: 100%;\s*padding-inline: 24px;/,
+      /:root\[data-gpk-chat-width\]\[data-gpk-bg-enabled="true"\]\[data-gpk-msg-glass="true"\] chat-window:not\(\.preview-chat-window\):not\(\.in-gems-mode\) model-response response-container>div\.response-container \{\s*max-width: 100%;\s*padding-inline: 24px;/,
     )
   })
 
