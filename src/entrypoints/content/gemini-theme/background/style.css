@@ -159,6 +159,18 @@
   padding: 12px;
 }
 
+:root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] model-response response-container>div.response-container {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: calc(var(--bard-chat-window-content-width-default, 708px) + 48px);
+  margin-inline: auto;
+}
+
+:root[data-gpk-chat-width][data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] model-response response-container>div.response-container {
+  max-width: 100%;
+  padding-inline: 24px;
+}
+
 :root[data-gpk-bg-enabled="true"] dual-model-response {
   padding: 12px;
   border-radius: 16px;

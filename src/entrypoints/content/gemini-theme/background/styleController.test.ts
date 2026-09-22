@@ -294,6 +294,23 @@ describe('styleController', () => {
     expect(css).toContain('!important')
   })
 
+  it('keeps the model response surface aligned with Gemini content width', () => {
+    const css = readFileSync(
+      join(
+        process.cwd(),
+        'src/entrypoints/content/gemini-theme/background/style.css',
+      ),
+      'utf8',
+    )
+
+    expect(css).toMatch(
+      /:root\[data-gpk-bg-enabled="true"\]\[data-gpk-msg-glass="true"\] model-response response-container>div\.response-container \{\s*box-sizing: border-box;\s*width: 100%;\s*max-width: calc\(var\(--bard-chat-window-content-width-default, 708px\) \+ 48px\);\s*margin-inline: auto;/,
+    )
+    expect(css).toMatch(
+      /:root\[data-gpk-chat-width\]\[data-gpk-bg-enabled="true"\]\[data-gpk-msg-glass="true"\] model-response response-container>div\.response-container \{\s*max-width: 100%;\s*padding-inline: 24px;/,
+    )
+  })
+
   it('removes the autosuggest scrim when a wallpaper is enabled', () => {
     const css = readFileSync(
       join(
