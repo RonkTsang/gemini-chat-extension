@@ -25,6 +25,12 @@ const STYLE = `
   max-width: 100% !important;
 }
 
+:root[${CHAT_WIDTH_ATTR}] ${CHAT_SETTINGS_SCOPE_SELECTOR} infinite-scroller > div.conversation-container model-response .response-container-header,
+:root[${CHAT_WIDTH_ATTR}] ${CHAT_SETTINGS_SCOPE_SELECTOR} infinite-scroller > div.conversation-container model-response message-content > .markdown > *,
+:root[${CHAT_WIDTH_ATTR}] ${CHAT_SETTINGS_SCOPE_SELECTOR} infinite-scroller > div.conversation-container model-response .response-container-footer {
+  max-width: 100% !important;
+}
+
 :root[${CHAT_WIDTH_ATTR}] ${CHAT_SETTINGS_SCOPE_SELECTOR} infinite-scroller > div.conversation-container table-block,
 :root[${CHAT_WIDTH_ATTR}] ${CHAT_SETTINGS_SCOPE_SELECTOR} infinite-scroller > div.conversation-container .table-block {
   box-sizing: border-box !important;

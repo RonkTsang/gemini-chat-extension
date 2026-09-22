@@ -33,6 +33,15 @@ describe('Chat layout style controller', () => {
       `:root[data-gpk-chat-width] ${CHAT_SETTINGS_SCOPE} infinite-scroller > div.conversation-container user-query {\n  max-width: 100% !important;\n}`,
     )
     expect(css).toContain(
+      `${CHAT_SETTINGS_SCOPE} infinite-scroller > div.conversation-container model-response .response-container-header`,
+    )
+    expect(css).toContain(
+      `${CHAT_SETTINGS_SCOPE} infinite-scroller > div.conversation-container model-response message-content > .markdown > *`,
+    )
+    expect(css).toContain(
+      `${CHAT_SETTINGS_SCOPE} infinite-scroller > div.conversation-container model-response .response-container-footer`,
+    )
+    expect(css).toContain(
       `:root[data-gpk-input-width] ${CHAT_SETTINGS_SCOPE} input-container > fieldset {`,
     )
   })
