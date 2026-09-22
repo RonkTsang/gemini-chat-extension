@@ -1,3 +1,11 @@
+## [0.12.2](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.12.1...v0.12.2) (2026-09-22)
+
+
+### Bug Fixes
+
+* align model glass bubble with chat width ([#60](https://github.com/RonkTsang/gemini-chat-extension/issues/60)) ([abce877](https://github.com/RonkTsang/gemini-chat-extension/commit/abce877fa4a2d37ec08f4c67d96b713f4644005b))
+* **quick-follow:** scope input targeting to chat-window in spark mode ([#59](https://github.com/RonkTsang/gemini-chat-extension/issues/59)) ([084d2e4](https://github.com/RonkTsang/gemini-chat-extension/commit/084d2e4d6d8d23dee4376c72b6ed11d4d31e0e4c))
+
 ## [0.12.1](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.12.0...v0.12.1) (2026-09-06)
 
 
