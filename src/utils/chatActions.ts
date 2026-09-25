@@ -31,6 +31,15 @@ const NEW_CHAT_SELECTORS = [
   'gem-nav-list-item[data-test-id="new-chat-button"] > a',
 ] as const
 
+const SIDEBAR_CLOSE_BUTTON_SELECTORS = [
+  'bard-sidenav gem-icon-button.close-sidenav-button',
+  'bard-sidenav button.close-sidenav-button',
+] as const
+
+const SIDEBAR_OPEN_BUTTON_SELECTORS = [
+  'side-nav-sparkle-button > button',
+] as const
+
 function isElementVisible(element: HTMLElement): boolean {
   let currentElement: HTMLElement | null = element
 
@@ -290,13 +299,13 @@ export const openGems = (): boolean => openSideNavEntry([
  * Toggle Gemini's sidebar by clicking the visible native control.
  */
 export const toggleSidebar = (): boolean => {
-  const closeButton = document.querySelector<HTMLElement>('bard-sidenav button.close-sidenav-button')
+  const closeButton = findFirstElement(SIDEBAR_CLOSE_BUTTON_SELECTORS)
   if (closeButton) {
     closeButton.click()
     return true
   }
 
-  const openButton = document.querySelector<HTMLElement>('side-nav-sparkle-button > button')
+  const openButton = findFirstElement(SIDEBAR_OPEN_BUTTON_SELECTORS)
   if (openButton) {
     openButton.click()
     return true
