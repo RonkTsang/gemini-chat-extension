@@ -56,7 +56,27 @@ export function extractMediaInfoFromJslog(jslog: string | null): MediaInfo | nul
       return { status, timestamp }
     }
 
-    return null
+    // Gemini now stores the card metadata in a base64-encoded JSON payload.
+    // The observed shape ends with [status, [timestamp, nanoseconds]].
+    const metadataMatch = jslog.match(/BardVeMetadataKey:([A-Za-z0-9+/]+={0,2})/)
+    if (!metadataMatch) return null
+
+    const metadata = JSON.parse(atob(metadataMatch[1])) as unknown
+    if (!Array.isArray(metadata)) return null
+
+    const mediaInfo = metadata[metadata.length - 1]
+    if (!Array.isArray(mediaInfo) || mediaInfo.length !== 2 || typeof mediaInfo[0] !== 'number') {
+      return null
+    }
+
+    const timestamps = mediaInfo[1]
+    if (!Array.isArray(timestamps)) return null
+
+    const timestamp = timestamps[0]
+    return {
+      status: mediaInfo[0],
+      timestamp: typeof timestamp === 'number' && Number.isFinite(timestamp) ? timestamp : null,
+    }
   } catch (error) {
     console.error('[Navigation] Error extracting info from jslog:', error)
     return null
