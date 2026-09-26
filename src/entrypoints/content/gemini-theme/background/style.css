@@ -335,6 +335,11 @@
   display: none !important;
 }
 
+/* Hide Gemini's New Chat glow when a custom background is active. */
+:root[data-gpk-bg-enabled="true"] chat-window > div.lm-glow {
+  display: none !important;
+}
+
 :root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] chat-window-content>div.chat-history-scroll-container.lm {
   mask-image: none !important;
   -webkit-mask-image: none !important;

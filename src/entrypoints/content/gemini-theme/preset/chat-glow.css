@@ -1,0 +1,5 @@
+/* Override the New Chat glow variable on both its element and drawing layer. */
+chat-window > div.lm-glow,
+chat-window > div.lm-glow::before {
+  --bard-color-lm-glow-chat: var(--theme-75, var(--theme-100)) !important;
+}

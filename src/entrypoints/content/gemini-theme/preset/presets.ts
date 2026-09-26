@@ -13,6 +13,11 @@ import tealCss from './teal.css?raw'
 import greenCss from './green.css?raw'
 import yellowCss from './yellow.css?raw'
 import orangeCss from './orange.css?raw'
+import chatGlowCss from './chat-glow.css?raw'
+
+function withChatGlowTheme(css: string): string {
+  return `${css}\n${chatGlowCss}`
+}
 
 export interface ThemePreset {
   /** Unique key — matches Chakra colorPalette name */
@@ -25,15 +30,15 @@ export interface ThemePreset {
 
 export const themePresets: ThemePreset[] = [
   { key: 'blue', primary: '#4285f4', css: null },
-  { key: 'gray', primary: '#52525b', css: grayCss },
-  { key: 'red', primary: '#dc2626', css: redCss },
-  { key: 'pink', primary: '#db2777', css: pinkCss },
-  { key: 'purple', primary: '#9333ea', css: purpleCss },
-  { key: 'cyan', primary: '#0891b2', css: cyanCss },
-  { key: 'teal', primary: '#0d9488', css: tealCss },
-  { key: 'green', primary: '#16a34a', css: greenCss },
-  { key: 'yellow', primary: '#ca8a04', css: yellowCss },
-  { key: 'orange', primary: '#ea580c', css: orangeCss },
+  { key: 'gray', primary: '#52525b', css: withChatGlowTheme(grayCss) },
+  { key: 'red', primary: '#dc2626', css: withChatGlowTheme(redCss) },
+  { key: 'pink', primary: '#db2777', css: withChatGlowTheme(pinkCss) },
+  { key: 'purple', primary: '#9333ea', css: withChatGlowTheme(purpleCss) },
+  { key: 'cyan', primary: '#0891b2', css: withChatGlowTheme(cyanCss) },
+  { key: 'teal', primary: '#0d9488', css: withChatGlowTheme(tealCss) },
+  { key: 'green', primary: '#16a34a', css: withChatGlowTheme(greenCss) },
+  { key: 'yellow', primary: '#ca8a04', css: withChatGlowTheme(yellowCss) },
+  { key: 'orange', primary: '#ea580c', css: withChatGlowTheme(orangeCss) },
 ]
 
 export function getPresetByKey(key: string): ThemePreset | undefined {
