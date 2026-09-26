@@ -31,16 +31,27 @@ const STYLE = `
   max-width: 100% !important;
 }
 
+:root[${CHAT_WIDTH_ATTR}] ${CHAT_SETTINGS_SCOPE_SELECTOR} infinite-scroller > div.conversation-container model-response .response-container-footer message-actions {
+  margin: 0 !important;
+}
+
 :root[${CHAT_WIDTH_ATTR}] ${CHAT_SETTINGS_SCOPE_SELECTOR} infinite-scroller > div.conversation-container table-block,
 :root[${CHAT_WIDTH_ATTR}] ${CHAT_SETTINGS_SCOPE_SELECTOR} infinite-scroller > div.conversation-container .table-block {
   box-sizing: border-box !important;
   max-width: 100% !important;
+  padding: 0 !important;
+}
+
+:root[${CHAT_WIDTH_ATTR}] ${CHAT_SETTINGS_SCOPE_SELECTOR} infinite-scroller > div.conversation-container table-block .table-footer,
+:root[${CHAT_WIDTH_ATTR}] ${CHAT_SETTINGS_SCOPE_SELECTOR} infinite-scroller > div.conversation-container .table-block .table-footer {
+  padding: 0 !important;
 }
 
 :root[${CHAT_WIDTH_ATTR}] ${CHAT_SETTINGS_SCOPE_SELECTOR} infinite-scroller > div.conversation-container table-block .table-content,
 :root[${CHAT_WIDTH_ATTR}] ${CHAT_SETTINGS_SCOPE_SELECTOR} infinite-scroller > div.conversation-container .table-block .table-content {
   max-width: 100% !important;
   overflow-x: auto !important;
+  padding: 0 !important;
 }
 
 :root[${INPUT_WIDTH_ATTR}] ${CHAT_SETTINGS_SCOPE_SELECTOR} input-container > fieldset {
