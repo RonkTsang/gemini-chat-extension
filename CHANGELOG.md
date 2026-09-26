@@ -1,3 +1,12 @@
+## [0.12.3](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.12.2...v0.12.3) (2026-09-26)
+
+
+### Bug Fixes
+
+* align tables and actions in custom chat width ([#63](https://github.com/RonkTsang/gemini-chat-extension/issues/63)) ([dd15bdc](https://github.com/RonkTsang/gemini-chat-extension/commit/dd15bdc8732333d01f704232866fd94f6143a33d))
+* **open-in-new-tab:** parse encoded library card metadata ([#61](https://github.com/RonkTsang/gemini-chat-extension/issues/61)) ([d532b7a](https://github.com/RonkTsang/gemini-chat-extension/commit/d532b7a55ad25119ec1853d1995854849166c734))
+* **shortcut:** add selectors for opening and closing the sidebar ([#62](https://github.com/RonkTsang/gemini-chat-extension/issues/62)) ([a7dba1e](https://github.com/RonkTsang/gemini-chat-extension/commit/a7dba1e711b02d2b5842291048bdb7fff35f0529))
+
 ## [0.12.2](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.12.1...v0.12.2) (2026-09-22)
 
 
