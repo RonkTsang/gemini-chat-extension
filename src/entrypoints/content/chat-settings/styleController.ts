@@ -54,9 +54,21 @@ const STYLE = `
   padding: 0 !important;
 }
 
+/* Legacy Gemini input-container structure: fieldset is a direct child. */
 :root[${INPUT_WIDTH_ATTR}] ${CHAT_SETTINGS_SCOPE_SELECTOR} input-container > fieldset {
   box-sizing: border-box !important;
   max-width: var(${INPUT_WIDTH_VAR}) !important;
+}
+
+/* Current Gemini input-container v2 structure: center the width-constrained fieldset. */
+:root[${INPUT_WIDTH_ATTR}] ${CHAT_SETTINGS_SCOPE_SELECTOR} input-container > div.input-area-container {
+  max-width: 100% !important;
+  align-items: center !important;
+}
+
+:root[${INPUT_WIDTH_ATTR}] ${CHAT_SETTINGS_SCOPE_SELECTOR} input-container > div.input-area-container > fieldset {
+  box-sizing: border-box !important;
+  width: var(${INPUT_WIDTH_VAR}) !important;
 }
 
 :root[${USER_MESSAGE_LEFT_ATTR}] ${CHAT_SETTINGS_SCOPE_SELECTOR} user-query-content {
