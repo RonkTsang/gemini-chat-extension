@@ -28,6 +28,32 @@ library-item-card:hover .gem-ext-open-new-tab-btn {
   display: flex;
 }
 
+.gem-ext-library-island-card {
+  position: relative;
+}
+
+.gem-ext-library-island-card:hover > .gem-ext-open-new-tab-btn,
+.gem-ext-library-island-card:focus-within > .gem-ext-open-new-tab-btn {
+  display: flex;
+}
+
+.gem-ext-library-island-card > .gem-ext-open-new-tab-btn {
+  top: 8px;
+  right: 48px;
+}
+
+[data-root-style="light"] .gem-ext-library-island-card > .gem-ext-open-new-tab-btn,
+[data-root-style="light"] .gem-ext-library-island-card > .gem-ext-open-new-tab-btn:hover {
+  background-color: #e7d0be;
+  color: black;
+}
+
+[data-root-style="dark"] .gem-ext-library-island-card > .gem-ext-open-new-tab-btn,
+[data-root-style="dark"] .gem-ext-library-island-card > .gem-ext-open-new-tab-btn:hover {
+  background-color: #5a4331;
+  color: #e3e3e3;
+}
+
 /* Support for different theme modes */
 .gem-ext-open-new-tab-btn svg {
   width: 16px;

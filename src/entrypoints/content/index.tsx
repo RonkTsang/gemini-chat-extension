@@ -222,6 +222,7 @@ export default defineContentScript({
     const topBarCustomization = createTopBarCustomizationController()
     await topBarCustomization.start()
     ctx.onInvalidated(() => {
+      stuffPageModule.stop()
       if (import.meta.env.DEV) {
         window.removeEventListener(
           GEM_DEV_EVENTS.DEV_BULK_DELETE_FORCE_FAILURE_CHANGE,
