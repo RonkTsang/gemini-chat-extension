@@ -1,6 +1,9 @@
 import { z } from 'zod'
 import { extractGeminiAccountRoutePrefix } from '../geminiAccountRoute'
 
+// MAIN-world Trusted Types blocks Zod's JIT probe; use its normal parser directly.
+z.config({ jitless: true })
+
 export const LIBRARY_QUERY_PATH = '/_/BardChatUi/graphql/schemas/GEMINI_WEB_GRAPHQL/executeQuery'
 export const MAX_LIBRARY_RESPONSE_BYTES = 2 * 1024 * 1024
 
