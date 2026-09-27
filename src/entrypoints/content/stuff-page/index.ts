@@ -17,7 +17,12 @@ import {
   isStuffMediaDataReceivedMessage,
 } from '@/types/runtime-messages'
 import { stuffDataCache } from './dataCache'
-import { reconcileOpenInNewTabButtons, startButtonInjector, stopButtonInjector } from './buttonInjector'
+import { reconcileOpenInNewTabButtons } from './buttonInjector'
+import { startLibraryAdapters, stopLibraryAdapters } from './libraryAdapters'
+import { clearLibraryMediaCache, receiveLibraryMediaData } from './libraryIsland'
+import { libraryMediaDataSchema } from '@/utils/library/mediaParser'
+import { resolveLibraryPage } from './dom'
+import { logLibraryTrace } from '@/utils/library/logger'
 
 /**
  * Stuff Page Module State
@@ -41,7 +46,7 @@ class StuffPageModule {
     this.setupEventListeners()
 
     // Start button injector
-    startButtonInjector()
+    startLibraryAdapters()
 
     this.isStarted = true
     console.log('[StuffPageModule] Started successfully')
@@ -65,7 +70,8 @@ class StuffPageModule {
     }
 
     // Stop button injector
-    stopButtonInjector()
+    stopLibraryAdapters()
+    clearLibraryMediaCache()
 
     // Clear cache
     stuffDataCache.clear()
@@ -95,7 +101,9 @@ class StuffPageModule {
         totalCached: stuffDataCache.size,
       })
 
-      reconcileOpenInNewTabButtons()
+      if (resolveLibraryPage()?.kind === 'legacy') {
+        reconcileOpenInNewTabButtons()
+      }
 
       // Emit to event bus for other modules (if needed)
       eventBus.emit('stuff-media:data-received', {
@@ -111,6 +119,25 @@ class StuffPageModule {
       handleStuffMediaData(customEvent.detail, 'main world')
     }
 
+    const handleLibraryData = (data: unknown, source: string): void => {
+      const parsed = libraryMediaDataSchema.safeParse(data)
+      if (!parsed.success) {
+        logLibraryTrace('content:payload-rejected', () => ({ source,
+          issues: parsed.error.issues.slice(0, 3).map((issue) => ({
+            path: issue.path.map(String).join('.'), code: issue.code,
+          })) }))
+        return
+      }
+      logLibraryTrace('content:received', () => ({ source,
+        items: parsed.data.items.length, timestamp: parsed.data.timestamp }))
+      receiveLibraryMediaData(parsed.data)
+      eventBus.emit('library-media:data-received', parsed.data)
+    }
+
+    const handleLibraryEvent = (event: Event): void => {
+      handleLibraryData((event as CustomEvent<unknown>).detail, 'main-world')
+    }
+
     const handleRuntimeMessage = (message: unknown): void => {
       if (!isStuffMediaDataReceivedMessage(message)) {
         return
@@ -123,11 +150,16 @@ class StuffPageModule {
 
     // Listen to the CustomEvent from main world
     window.addEventListener(GEM_EXT_EVENTS.STUFF_MEDIA_DATA, handleMainWorldEvent)
+    window.addEventListener(GEM_EXT_EVENTS.LIBRARY_MEDIA_DATA, handleLibraryEvent)
     browser.runtime.onMessage.addListener(handleRuntimeMessage)
+    logLibraryTrace('content:listeners-ready', () => ({ platform: import.meta.env.FIREFOX ? 'firefox' : 'chrome' }))
+
+    window.dispatchEvent(new Event(GEM_EXT_EVENTS.LIBRARY_MEDIA_REQUEST))
 
     // Store cleanup function
     this.eventCleanup = () => {
       window.removeEventListener(GEM_EXT_EVENTS.STUFF_MEDIA_DATA, handleMainWorldEvent)
+      window.removeEventListener(GEM_EXT_EVENTS.LIBRARY_MEDIA_DATA, handleLibraryEvent)
       browser.runtime.onMessage.removeListener(handleRuntimeMessage)
       console.log('[StuffPageModule] Event listeners cleaned up')
     }

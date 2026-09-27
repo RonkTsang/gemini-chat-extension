@@ -9,9 +9,13 @@ This project builds separate Chrome and Firefox extension variants with WXT. Kee
 
 ## Request Interception
 
-- Chrome uses `src/entrypoints/xhr.content.tsx` with `include: ['chrome']`, `world: 'MAIN'`, and `runAt: 'document_start'` to hook page XHR early.
-- Firefox uses `src/entrypoints/background/index.ts` with `include: ['firefox']`, then `src/entrypoints/background/firefox.ts` with `webRequest` and `filterResponseData`.
-- Both paths normalize data into `stuff-media:data-received` and feed `src/entrypoints/content/stuff-page/index.ts`.
+- Chrome and Firefox use `src/entrypoints/library.content.ts` with `world: 'MAIN'` and `runAt: 'document_start'` to capture new Library GraphQL Fetch responses through the same monitor. Firefox's minimum version is 140, which supports MAIN-world content scripts.
+- Shared Fetch subscription, response cloning, optional observation of native body reads, error isolation and patch cleanup live in `src/utils/fetchInterceptor.ts`; feature monitors provide request matching and response processing. Native body reads are observed on matching response instances, without changing Fetch or body-reader promises. Library uses page reads as a second capture source when cancellation interrupts the clone, with each request dispatched once. Bytes retained from an interrupted stream are accepted only if they form a complete JSON response and pass the same media schema.
+- Legacy Library interception remains platform-specific: Chrome uses `src/entrypoints/xhr.content.tsx` with `include: ['chrome']`, `world: 'MAIN'`, and `runAt: 'document_start'`; Firefox uses `src/entrypoints/background/firefox.ts` with `webRequest` and `filterResponseData` for the legacy `batchexecute` endpoint only.
+- Both browsers deliver new Library data through the same CustomEvent carrying a plain `{ items, timestamp }` object, validated with Zod in `src/entrypoints/content/stuff-page/index.ts`, then emit `library-media:data-received`. A bounded MAIN-world cache retains early records for startup replay; the content script requests replay with a payload-free Event. No DOM elements are transferred between worlds. Legacy responses continue to emit `stuff-media:data-received`.
+- The content module selects the adapter from `library-sections-overview-page` or `library-island-page`. The new adapter scans images within its root and matches `src` prefixes against API thumbnail URLs, with an empty or `=` suffix boundary and a unique candidate requirement. The matched image's native preview button supplies its parent as the insertion target; logging attributes and button counts are not identity checks. Each intercepted media response updates the index; the extension does not request pagination itself.
+- Library keeps two in-memory caches: the MAIN-world startup replay buffer holds up to 500 records for 60 seconds; the content resource index holds up to 3000 records without time-based expiry. New responses update matching index records, and module shutdown clears the index.
+- New Library request matching accepts Gemini's numeric `/u/{index}` account prefix while still requiring the exact origin and GraphQL endpoint. Generated conversation links retain the current page's account prefix.
 
 ## Manifest And Permissions
 

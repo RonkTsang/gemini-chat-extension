@@ -1,5 +1,6 @@
 import { NavigationSection } from "@/components/setting-panel/config";
 import type { MediaItem } from "@/utils/stuffMediaParser";
+import type { LibraryMediaData } from '@/utils/library/mediaParser'
 
 type SettingsOpenSource =
   | 'prompt-entrance'
@@ -18,6 +19,8 @@ type SettingsCloseSource =
 export const GEM_EXT_EVENTS = {
   URL_CHANGE: 'gem-ext:urlchange',
   STUFF_MEDIA_DATA: 'gem-ext:stuff-media-data',
+  LIBRARY_MEDIA_DATA: 'gem-ext:library-media-data',
+  LIBRARY_MEDIA_REQUEST: 'gem-ext:library-media-request',
   THEME_APPEARANCE_APPLY: 'gem-ext:theme-appearance-apply',
 } as const
 
@@ -68,6 +71,8 @@ export interface StuffMediaDataEvent {
   timestamp: number
 }
 
+export type LibraryMediaDataEvent = LibraryMediaData
+
 export interface AppEvents {
   // common
   'urlchange': URLChangeEvent;
@@ -75,6 +80,7 @@ export interface AppEvents {
 
   // Stuff Page
   'stuff-media:data-received': StuffMediaDataEvent;
+  'library-media:data-received': LibraryMediaDataEvent;
 
   // Quick Follow Up
   'quick-follow-up:show': {

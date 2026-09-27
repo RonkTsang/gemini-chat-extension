@@ -14,15 +14,17 @@ export function logDevEvent(
   level: Exclude<DevLogLevel, 'debug'>,
   label: string,
   event: string,
-  details: DevLogDetails = {},
+  details: DevLogDetails | (() => DevLogDetails) = {},
 ): void {
   if (!import.meta.env.DEV) {
     return
   }
 
+  // Resolve diagnostic details only in development builds.
+  const resolvedDetails = typeof details === 'function' ? details() : details
   logDevMessage(level, label, JSON.stringify({
     timestamp: new Date().toISOString(),
     event,
-    ...details,
+    ...resolvedDetails,
   }))
 }
