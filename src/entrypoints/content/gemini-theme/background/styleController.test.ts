@@ -304,14 +304,42 @@ describe('styleController', () => {
     )
 
     expect(css).toMatch(
-      /:root\[data-gpk-bg-enabled="true"\] chat-window:not\(\.preview-chat-window\):not\(\.in-gems-mode\) model-response response-container>div\.response-container \{\s*box-sizing: border-box;\s*width: 100%;\s*max-width: calc\(var\(--bard-chat-window-content-width-default, 708px\) \+ 48px\);\s*margin-inline: auto;/,
+      /:root\[data-gpk-bg-enabled="true"\]\[data-gpk-msg-glass\] chat-window:not\(\.preview-chat-window\):not\(\.in-gems-mode\) model-response response-container>div\.response-container \{\s*box-sizing: border-box;\s*width: 100%;\s*max-width: calc\(var\(--bard-chat-window-content-width-default, 708px\) \+ 48px\);\s*margin-inline: auto;/,
     )
     expect(css).toMatch(
-      /:root\[data-gpk-chat-width\]\[data-gpk-bg-enabled="true"\] chat-window:not\(\.preview-chat-window\):not\(\.in-gems-mode\) model-response response-container>div\.response-container \{\s*max-width: 100%;\s*padding-inline: 24px;/,
+      /:root\[data-gpk-chat-width\]\[data-gpk-bg-enabled="true"\]\[data-gpk-msg-glass\] chat-window:not\(\.preview-chat-window\):not\(\.in-gems-mode\) model-response response-container>div\.response-container \{\s*max-width: 100%;\s*padding-inline: 24px;/,
     )
     expect(css).toMatch(
-      /:root\[data-gpk-bg-enabled="true"\] model-response response-container>div\.response-container \{\s*padding: 12px;/,
+      /:root\[data-gpk-bg-enabled="true"\]\[data-gpk-msg-glass\] model-response response-container>div\.response-container \{\s*padding: 12px;/,
     )
+  })
+
+  it('keeps response padding with and without message glass', () => {
+    const style = document.createElement('style')
+    style.textContent = readFileSync(
+      join(process.cwd(), 'src/entrypoints/content/gemini-theme/background/style.css'),
+      'utf8',
+    )
+    document.head.appendChild(style)
+    const root = document.documentElement
+
+    try {
+      root.setAttribute('data-gpk-bg-enabled', 'true')
+      for (const glassEnabled of [false, true]) {
+        root.setAttribute('data-gpk-msg-glass', String(glassEnabled))
+        const chat = document.createElement('chat-window')
+        chat.innerHTML = '<model-response><response-container><div class="response-container"></div></response-container></model-response>'
+        document.body.appendChild(chat)
+        const response = chat.querySelector<HTMLElement>('div.response-container')!
+
+        expect(getComputedStyle(response).padding).toBe('12px')
+        chat.remove()
+      }
+    } finally {
+      style.remove()
+      root.removeAttribute('data-gpk-bg-enabled')
+      root.removeAttribute('data-gpk-msg-glass')
+    }
   })
 
   it('clears the new Library surface only while a background is active', () => {
