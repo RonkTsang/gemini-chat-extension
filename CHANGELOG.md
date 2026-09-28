@@ -1,3 +1,13 @@
+## [0.12.4](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.12.3...v0.12.4) (2026-09-28)
+
+
+### Bug Fixes
+
+* support Gemini input container v2 width ([#65](https://github.com/RonkTsang/gemini-chat-extension/issues/65)) ([186d9ec](https://github.com/RonkTsang/gemini-chat-extension/commit/186d9ec6138bc4825e1f9b2a834db8ac969385ad))
+* support open in new tab on new Library page ([#66](https://github.com/RonkTsang/gemini-chat-extension/issues/66)) ([5e9719c](https://github.com/RonkTsang/gemini-chat-extension/commit/5e9719c8979247506e0b197fa97cbd9c2cdf5b1e))
+* **theme:** adapt Gemini New Chat glow ([#64](https://github.com/RonkTsang/gemini-chat-extension/issues/64)) ([38bb9a3](https://github.com/RonkTsang/gemini-chat-extension/commit/38bb9a3fc0569207c419089a01389579807175f7))
+* **theme:** Theme reply width and Library background surfaces ([#67](https://github.com/RonkTsang/gemini-chat-extension/issues/67)) ([050f6fd](https://github.com/RonkTsang/gemini-chat-extension/commit/050f6fd3f937f2c0f040b4e4c1c68d49d9452b6f))
+
 ## [0.12.3](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.12.2...v0.12.3) (2026-09-26)
 
 
