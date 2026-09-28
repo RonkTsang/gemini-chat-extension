@@ -304,11 +304,58 @@ describe('styleController', () => {
     )
 
     expect(css).toMatch(
-      /:root\[data-gpk-bg-enabled="true"\]\[data-gpk-msg-glass="true"\] chat-window:not\(\.preview-chat-window\):not\(\.in-gems-mode\) model-response response-container>div\.response-container \{\s*box-sizing: border-box;\s*width: 100%;\s*max-width: calc\(var\(--bard-chat-window-content-width-default, 708px\) \+ 48px\);\s*margin-inline: auto;/,
+      /:root\[data-gpk-bg-enabled="true"\] chat-window:not\(\.preview-chat-window\):not\(\.in-gems-mode\) model-response response-container>div\.response-container \{\s*box-sizing: border-box;\s*width: 100%;\s*max-width: calc\(var\(--bard-chat-window-content-width-default, 708px\) \+ 48px\);\s*margin-inline: auto;/,
     )
     expect(css).toMatch(
-      /:root\[data-gpk-chat-width\]\[data-gpk-bg-enabled="true"\]\[data-gpk-msg-glass="true"\] chat-window:not\(\.preview-chat-window\):not\(\.in-gems-mode\) model-response response-container>div\.response-container \{\s*max-width: 100%;\s*padding-inline: 24px;/,
+      /:root\[data-gpk-chat-width\]\[data-gpk-bg-enabled="true"\] chat-window:not\(\.preview-chat-window\):not\(\.in-gems-mode\) model-response response-container>div\.response-container \{\s*max-width: 100%;\s*padding-inline: 24px;/,
     )
+    expect(css).toMatch(
+      /:root\[data-gpk-bg-enabled="true"\] model-response response-container>div\.response-container \{\s*padding: 12px;/,
+    )
+  })
+
+  it('clears the new Library surface only while a background is active', () => {
+    const fixture = readFileSync(
+      join(process.cwd(), 'src/entrypoints/content/stuff-page/__fixtures__/library-island.html'),
+      'utf8',
+    )
+    const container = document.createElement('div')
+    container.innerHTML = fixture
+    document.body.appendChild(container)
+    const rootStyle = container.querySelector<HTMLElement>('[data-root-style]')
+    const surface = rootStyle?.firstElementChild as HTMLElement | null
+
+    expect(surface).not.toBeNull()
+    const nativeStyle = document.createElement('style')
+    nativeStyle.textContent = 'library-island-page [data-root-style] > div { background-color: rgb(12, 34, 56); }'
+    document.head.appendChild(nativeStyle)
+    const backgroundStyle = document.createElement('style')
+    backgroundStyle.textContent = readFileSync(
+      join(process.cwd(), 'src/entrypoints/content/gemini-theme/background/style.css'),
+      'utf8',
+    )
+    document.head.appendChild(backgroundStyle)
+
+    try {
+      expect(getComputedStyle(surface!).backgroundColor).toBe('rgb(12, 34, 56)')
+
+      for (const mode of ['light', 'dark']) {
+        rootStyle!.setAttribute('data-root-style', mode)
+        applyThemeBackgroundStyle(createState({
+          isBackgroundRenderable: true,
+          resolvedBackgroundUrl: 'blob:preview',
+        }))
+        expect(getComputedStyle(surface!).backgroundColor).toBe('transparent')
+
+        applyThemeBackgroundStyle(createState())
+        expect(document.documentElement.getAttribute('data-gpk-bg-enabled')).toBe('false')
+      }
+    } finally {
+      clearThemeBackgroundStyle()
+      backgroundStyle.remove()
+      nativeStyle.remove()
+      container.remove()
+    }
   })
 
   it('removes the autosuggest scrim when a wallpaper is enabled', () => {
