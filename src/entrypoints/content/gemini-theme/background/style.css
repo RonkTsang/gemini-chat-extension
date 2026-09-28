@@ -45,7 +45,8 @@
   z-index: 1;
 }
 
-:root[data-gpk-bg-enabled="true"] library-island-page [data-library-island-root] > [data-root-style] > div {
+:root[data-gpk-bg-enabled="true"] library-island-page [data-library-island-root] > [data-root-style] > div,
+:root[data-gpk-bg-enabled="true"] library-island-page [data-library-island-root] > [data-root-style] > div > header {
   background-color: transparent !important;
 }
 

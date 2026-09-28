@@ -352,10 +352,15 @@ describe('styleController', () => {
     document.body.appendChild(container)
     const rootStyle = container.querySelector<HTMLElement>('[data-root-style]')
     const surface = rootStyle?.firstElementChild as HTMLElement | null
+    const header = surface?.querySelector<HTMLElement>('header')
 
     expect(surface).not.toBeNull()
+    expect(header).not.toBeNull()
     const nativeStyle = document.createElement('style')
-    nativeStyle.textContent = 'library-island-page [data-root-style] > div { background-color: rgb(12, 34, 56); }'
+    nativeStyle.textContent = `
+library-island-page [data-root-style] > div { background-color: rgb(12, 34, 56); }
+library-island-page [data-root-style] > div > header { background-color: rgb(56, 34, 12); }
+`
     document.head.appendChild(nativeStyle)
     const backgroundStyle = document.createElement('style')
     backgroundStyle.textContent = readFileSync(
@@ -366,6 +371,7 @@ describe('styleController', () => {
 
     try {
       expect(getComputedStyle(surface!).backgroundColor).toBe('rgb(12, 34, 56)')
+      expect(getComputedStyle(header!).backgroundColor).toBe('rgb(56, 34, 12)')
 
       for (const mode of ['light', 'dark']) {
         rootStyle!.setAttribute('data-root-style', mode)
@@ -374,6 +380,7 @@ describe('styleController', () => {
           resolvedBackgroundUrl: 'blob:preview',
         }))
         expect(getComputedStyle(surface!).backgroundColor).toBe('transparent')
+        expect(getComputedStyle(header!).backgroundColor).toBe('transparent')
 
         applyThemeBackgroundStyle(createState())
         expect(document.documentElement.getAttribute('data-gpk-bg-enabled')).toBe('false')
