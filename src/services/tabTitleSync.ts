@@ -11,7 +11,6 @@ export class TabTitleSync {
   private titleContentObserver: MutationObserver | null = null // Inner: monitors title content
   private currentTitleElement: HTMLElement | null = null       // Current title element reference
   private lastTitle: string = ''                               // Cache for debouncing
-  private fallbackTitle: string = ''                           // Fallback title when no chat title exists
   private currentUrl: string = window.location.href
   private isActive = false
 
@@ -85,13 +84,13 @@ export class TabTitleSync {
   }
 
   /**
-   * URL change callback: reset stale chat title state on blank new chat pages.
+   * URL change callback: update title lookup state after SPA navigation.
    */
   private onURLChange = (eventData: URLChangeEvent): void => {
     this.currentUrl = eventData.url
 
     if (this.isBlankNewChatUrl(this.currentUrl)) {
-      this.detachTitleObserver()
+      this.checkAndAttachTitleObserver()
       return
     }
 
@@ -110,19 +109,27 @@ export class TabTitleSync {
       return
     }
 
-    // Priority 1: Chat conversation title
-    let titleElement = document.querySelector('top-bar-actions .conversation-title-container') as HTMLElement | null
-    let titleType = 'chat'
+    // Priority 1: Spark Task title
+    let titleSelector = 'remy-viewer span[data-test-id="remy-split-pane-title"]'
+    let titleElement = document.querySelector(titleSelector) as HTMLElement | null
+    let titleType = 'spark-task'
+
+    if (!titleElement) {
+      titleSelector = 'remy-viewer span.chat-thread-title'
+      titleElement = document.querySelector(titleSelector) as HTMLElement | null
+    }
     
     // Priority 2: MyStuff page title (with parent container for precision)
     if (!titleElement) {
-      titleElement = document.querySelector('library-sections-overview-page .library-overview-page-container .headline.gds-headline-m') as HTMLElement | null
+      titleSelector = 'library-sections-overview-page .library-overview-page-container .headline.gds-headline-m'
+      titleElement = document.querySelector(titleSelector) as HTMLElement | null
       titleType = 'mystuff'
     }
 
     // Priority 3: Document page title
     if (!titleElement) {
-      titleElement = document.querySelector('library-page .headline.gds-headline-m') as HTMLElement | null
+      titleSelector = 'library-page .headline.gds-headline-m'
+      titleElement = document.querySelector(titleSelector) as HTMLElement | null
       titleType = 'document'
     }
     
@@ -181,12 +188,6 @@ export class TabTitleSync {
     }
     this.currentTitleElement = null
     this.lastTitle = ''  // Clear cache to force update on next title appearance
-    
-    // Restore fallback title when chat title element disappears
-    if (this.fallbackTitle) {
-      document.title = this.fallbackTitle
-      console.log('[TabTitleSync] Restored fallback title:', this.fallbackTitle)
-    }
   }
 
   /**
@@ -207,12 +208,6 @@ export class TabTitleSync {
    */
   private updateTabTitle(title: string): void {
     if (!title) return  // Skip empty titles
-    
-    // Save current document.title as fallback on first update
-    if (!this.fallbackTitle) {
-      this.fallbackTitle = document.title
-      console.log('[TabTitleSync] Fallback title saved:', this.fallbackTitle)
-    }
     
     if (title !== this.lastTitle) {
       document.title = title
