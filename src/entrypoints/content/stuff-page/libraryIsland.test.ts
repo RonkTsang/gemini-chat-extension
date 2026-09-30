@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import fixture from './__fixtures__/library-query.json'
 import html from './__fixtures__/library-island.html?raw'
+import declaredHtml from './__fixtures__/library-declared-island.html?raw'
+import preload from './__fixtures__/library-preload.json'
+import { GEM_EXT_EVENTS } from '@/common/event'
+import { startLibraryMonitor } from '@/entrypoints/main-world/library-monitor'
+import { inspectLibraryPage } from './dom'
 import { parseLibraryMediaResponse } from '@/utils/library/mediaParser'
 import { startLibraryAdapters, stopLibraryAdapters } from './libraryAdapters'
 import { clearLibraryMediaCache, receiveLibraryMediaData, reconcileIslandButtons } from './libraryIsland'
@@ -30,6 +35,69 @@ afterEach(() => {
 })
 
 describe('Library island adapter with the captured music and image DOM', () => {
+  it('injects buttons from initial HTML via the late-listener replay without a media request', () => {
+    document.body.innerHTML = declaredHtml
+    const script = document.createElement('script')
+    script.type = 'application/json'
+    script.setAttribute('data-bg3-relay-preload', '')
+    script.textContent = JSON.stringify(preload)
+    document.body.appendChild(script)
+    const stopMonitor = startLibraryMonitor()
+    const listener = (event: Event): void => {
+      receiveLibraryMediaData((event as CustomEvent).detail)
+    }
+    window.addEventListener(GEM_EXT_EVENTS.LIBRARY_MEDIA_DATA, listener)
+    try {
+      startLibraryAdapters()
+      expect(document.querySelectorAll(buttonSelector)).toHaveLength(0)
+      window.dispatchEvent(new Event(GEM_EXT_EVENTS.LIBRARY_MEDIA_REQUEST))
+      const buttons = document.querySelectorAll<HTMLElement>(buttonSelector)
+      expect(buttons).toHaveLength(2)
+      expect(buttons[0].dataset.openUrl).toBe(`${window.location.origin}/app/abc123#111aaa`)
+      expect(buttons[1].dataset.openUrl).toBe(`${window.location.origin}/app/def456#222bbb`)
+      window.dispatchEvent(new Event(GEM_EXT_EVENTS.LIBRARY_MEDIA_REQUEST))
+      expect(document.querySelectorAll(buttonSelector)).toHaveLength(2)
+    } finally {
+      window.removeEventListener(GEM_EXT_EVENTS.LIBRARY_MEDIA_DATA, listener)
+      stopMonitor()
+    }
+  })
+
+  it('uses the island adapter for the declared route Library and excludes Documents', () => {
+    document.body.innerHTML = declaredHtml
+    expect(inspectLibraryPage().page?.kind).toBe('island')
+    startLibraryAdapters()
+    receive()
+    receive()
+    const buttons = document.querySelectorAll<HTMLElement>(buttonSelector)
+    expect(buttons).toHaveLength(2)
+    expect(buttons[0].dataset.openUrl).toBe(`${window.location.origin}/app/abc123#111aaa`)
+    expect(buttons[1].dataset.openUrl).toBe(`${window.location.origin}/app/def456#222bbb`)
+    expect(document.querySelector('section')?.querySelector(buttonSelector)).toBeNull()
+  })
+
+  it('ignores unrelated declared route islands', () => {
+    document.body.innerHTML = '<declared-route-island-page><div data-root-style="light"></div></declared-route-island-page>'
+    expect(inspectLibraryPage().reason).toBe('no-library-page')
+    document.body.insertAdjacentHTML('beforeend', declaredHtml)
+    expect(inspectLibraryPage().page?.kind).toBe('island')
+    startLibraryAdapters()
+    receive()
+    expect(document.querySelectorAll(buttonSelector)).toHaveLength(2)
+  })
+
+  it('rejects multiple declared Library pages or multiple Library roots', () => {
+    document.body.innerHTML = declaredHtml + declaredHtml
+    expect(inspectLibraryPage().reason).toBe('ambiguous-island-page')
+    document.body.innerHTML = declaredHtml
+    document.querySelector('declared-route-island-page')!
+      .insertAdjacentHTML('beforeend', '<div data-library-island-root></div>')
+    expect(inspectLibraryPage().reason).toBe('invalid-island-root-count')
+    startLibraryAdapters()
+    receive()
+    expect(document.querySelectorAll(buttonSelector)).toHaveLength(0)
+  })
+
   it('handles DOM before data, injects each media button once, and excludes Documents', () => {
     startLibraryAdapters()
     expect(document.querySelectorAll(buttonSelector)).toHaveLength(0)

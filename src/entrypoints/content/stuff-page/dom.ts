@@ -7,7 +7,12 @@ export function inspectLibraryPage(): {
   islandRoots: number | null
   legacyPages: number | null
 } {
-  const islands = document.querySelectorAll('library-island-page')
+  let islands = Array.from(document.querySelectorAll('library-island-page'))
+  if (!islands.length) {
+    // Declared route islands also host other pages; require the Library marker.
+    islands = Array.from(document.querySelectorAll('declared-route-island-page'))
+      .filter((page) => page.querySelector('[data-library-island-root]'))
+  }
   const result = { page: null as LibraryPage | null, reason: '',
     islandPages: islands.length, islandRoots: null as number | null, legacyPages: null as number | null }
   if (islands.length) {
