@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import fixture from '@/entrypoints/content/stuff-page/__fixtures__/library-query.json'
+import preload from '@/entrypoints/content/stuff-page/__fixtures__/library-preload.json'
 import { GEM_EXT_EVENTS } from '@/common/event'
 import { LIBRARY_QUERY_PATH } from '@/utils/library/mediaParser'
 import { startLibraryMonitor } from './library-monitor'
@@ -11,13 +12,35 @@ beforeEach(() => {
   window.location.href = 'https://gemini.google.com/app'
   vi.stubGlobal('fetch', nativeFetch)
   nativeFetch.mockReset()
+  document.body.innerHTML = ''
 })
 afterEach(() => {
   stop?.()
   vi.unstubAllGlobals()
+  document.body.innerHTML = ''
 })
 
 describe('Library Fetch monitor', () => {
+  it('replays initial HTML media for late listeners and merges a subsequent SPA response', async () => {
+    const script = document.createElement('script')
+    script.type = 'application/json'
+    script.setAttribute('data-bg3-relay-preload', '')
+    script.textContent = JSON.stringify(preload)
+    document.body.appendChild(script)
+    stop = startLibraryMonitor()
+    const listener = vi.fn()
+    window.addEventListener(GEM_EXT_EVENTS.LIBRARY_MEDIA_DATA, listener)
+    window.dispatchEvent(new Event(GEM_EXT_EVENTS.LIBRARY_MEDIA_REQUEST))
+    expect(listener).toHaveBeenCalledTimes(1)
+    expect(listener.mock.calls[0][0].detail.items).toHaveLength(2)
+    nativeFetch.mockResolvedValue(new Response(JSON.stringify(fixture)))
+    await window.fetch(LIBRARY_QUERY_PATH)
+    await vi.waitFor(() => expect(listener).toHaveBeenCalledTimes(2))
+    window.dispatchEvent(new Event(GEM_EXT_EVENTS.LIBRARY_MEDIA_REQUEST))
+    expect(listener.mock.calls[2][0].detail.items).toHaveLength(2)
+    window.removeEventListener(GEM_EXT_EVENTS.LIBRARY_MEDIA_DATA, listener)
+  })
+
   it('returns the native promise and leaves the response body readable, then replays early data', async () => {
     const text = JSON.stringify(fixture)
     const response = new Response(text)

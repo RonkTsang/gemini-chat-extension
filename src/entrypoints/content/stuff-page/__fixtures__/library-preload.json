@@ -1,0 +1,13 @@
+{
+  "events": [
+    {
+      "id": "overview:0",
+      "kind": "chunk",
+      "chunk": "[{\"data\":{\"viewer\":{\"media\":{\"edges\":[{\"__typename\":\"ViewerGeminiAppArtifactsEdge\",\"node\":{\"responseIdentifier\":{\"conversationId\":\"c_abc123\",\"requestId\":\"r_111aaa\"},\"responseId\":\"rc_0\",\"artifactType\":\"TYPE_MY_STUFF_GENERATED_MUSIC\",\"metadata\":{\"thumbnailUrl\":\"https://lh3.googleusercontent.com/gg/musicResource\"},\"canDelete\":null,\"__typename\":\"assistant_lamda_GeminiAppArtifact\"}},{\"__typename\":\"ViewerGeminiAppArtifactsEdge\",\"node\":{\"responseIdentifier\":{\"conversationId\":\"c_def456\",\"requestId\":\"r_222bbb\"},\"responseId\":\"rc_1\",\"artifactType\":\"TYPE_MY_STUFF_GENERATED_IMAGE\",\"metadata\":{\"thumbnailUrl\":\"https://lh3.googleusercontent.com/gg/imageResource\"},\"canDelete\":null,\"__typename\":\"assistant_lamda_GeminiAppArtifact\"}}]},\"documents\":{\"edges\":[]}}},\"path\":[]}]"
+    },
+    {
+      "id": "overview:0",
+      "kind": "complete"
+    }
+  ]
+}

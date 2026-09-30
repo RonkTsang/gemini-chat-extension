@@ -3,25 +3,31 @@ import { fetchInterceptor, type FetchRequestSnapshot } from '@/utils/fetchInterc
 import { LibraryMediaCache } from '@/utils/library/mediaCache'
 import { isLibraryMediaRequest, inspectLibraryMediaResponse, MAX_LIBRARY_RESPONSE_BYTES } from '@/utils/library/mediaParser'
 import { logLibraryTrace } from '@/utils/library/logger'
+import { startLibraryPreloadMonitor } from './library-preload'
 
 export function startLibraryMonitor(): () => void {
   const replayCache = new LibraryMediaCache(500, 60_000)
   const capturedRequests = new WeakSet<FetchRequestSnapshot>()
   let active = true
 
-  const capture = (text: string, request: FetchRequestSnapshot, source: string): void => {
-    if (!active || capturedRequests.has(request)) return
+  const captureMedia = (text: string, source: string): boolean => {
+    if (!active) return false
     const { items, ...diagnostics } = inspectLibraryMediaResponse(text)
     logLibraryTrace('main:parsed', () => ({ ...diagnostics, source, responseLength: text.length,
       items: items?.length ?? 0, thumbnails: items?.filter((item) => item.thumbnailUrl).length ?? 0 }))
-    if (!items) return
-    capturedRequests.add(request)
+    if (!items) return false
     const timestamp = Date.now()
     replayCache.addItems(items, timestamp)
     logLibraryTrace('main:dispatch', () => ({ timestamp, items: items.length, source }))
     window.dispatchEvent(new CustomEvent(GEM_EXT_EVENTS.LIBRARY_MEDIA_DATA, {
       detail: { items, timestamp },
     }))
+    return true
+  }
+
+  const capture = (text: string, request: FetchRequestSnapshot, source: string): void => {
+    if (capturedRequests.has(request)) return
+    if (captureMedia(text, source)) capturedRequests.add(request)
   }
 
   const replay = () => {
@@ -74,11 +80,13 @@ export function startLibraryMonitor(): () => void {
     subscribers: fetchInterceptor.count, fetchWrapperIsCurrent: fetchInterceptor.ownsFetch }))
 
   window.addEventListener(GEM_EXT_EVENTS.LIBRARY_MEDIA_REQUEST, replay)
+  const stopPreload = startLibraryPreloadMonitor((text) => captureMedia(text, 'preload'))
 
   return () => {
     active = false
     logLibraryTrace('main:monitor-stop', () => ({}))
     unregister()
+    stopPreload()
     window.removeEventListener(GEM_EXT_EVENTS.LIBRARY_MEDIA_REQUEST, replay)
     replayCache.clear()
   }
