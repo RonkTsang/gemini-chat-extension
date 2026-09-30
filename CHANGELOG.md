@@ -1,3 +1,11 @@
+## [0.12.5](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.12.4...v0.12.5) (2026-09-30)
+
+
+### Bug Fixes
+
+* **library:** support declared route DOM and initial media preload ([#69](https://github.com/RonkTsang/gemini-chat-extension/issues/69)) ([647c0db](https://github.com/RonkTsang/gemini-chat-extension/commit/647c0db9030a9c86d38322c6b97fce74998b8e5c))
+* **tab-title:** support Spark Task titles and remove obsolete chat fallback ([#68](https://github.com/RonkTsang/gemini-chat-extension/issues/68)) ([88e3687](https://github.com/RonkTsang/gemini-chat-extension/commit/88e36875e4cd9333069870f3f8be0bd706f8cd2c))
+
 ## [0.12.4](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.12.3...v0.12.4) (2026-09-28)
 
 
