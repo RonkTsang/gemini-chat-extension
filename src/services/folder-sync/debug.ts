@@ -1,4 +1,5 @@
 import { decodeLzStringBase64 } from './codec'
+import { logDevEvent } from '@/utils/devLogger'
 
 const FOLDER_DECOMPRESS_DEBUG_GLOBAL = 'decompressFolderData'
 
@@ -19,9 +20,7 @@ export function installFolderSyncDebugGlobal(
     FOLDER_DECOMPRESS_DEBUG_GLOBAL,
   )
   if (previousDescriptor && !previousDescriptor.configurable) {
-    console.warn(
-      '[Folders] Cannot expose decompressFolderData: globalThis.decompressFolderData is not configurable',
-    )
+    logDevEvent('warn', '[Folders][sync]', 'browser-sync.debug-global-unavailable', {})
     return () => undefined
   }
 

@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
-import { chatReferenceRowSchema, folderExportPayloadSchema, folderMembershipRowSchema, folderRowSchema } from './schemas'
+import { chatReferenceRowSchema, folderExportPayloadSchema, folderSettingsPatchSchema, folderMembershipRowSchema, folderRowSchema } from './schemas'
+import { BROWSER_SYNC_CAPACITY_NOTICE_THRESHOLD_PERCENT } from './types'
 
 export const FOLDER_RPC_NAMESPACE = 'folders' as const
 export const FOLDER_RPC_PROTOCOL_VERSION = 1 as const
@@ -24,6 +25,8 @@ export const folderRpcMethodSchema = z.enum([
   'updateFolder', 'moveFolder', 'deleteFolder', 'addMembership', 'moveMembership',
   'removeMembership', 'removeChatAfterGeminiDelete', 'updateSettings', 'createSnapshot',
   'importBackup', 'restoreSnapshot', 'exportBackup', 'retrySync', 'activityHint',
+  'dismissCapacityNotice',
+  'measureBrowserSyncUsage',
 ])
 export type FolderRpcMethod = z.infer<typeof folderRpcMethodSchema>
 
@@ -78,13 +81,15 @@ export const folderRpcParams = {
   moveMembership: z.object({ folderId: z.string().min(1), targetFolderId: z.string().min(1), chatId: z.string().min(1), expectedRevision: z.string().min(1).optional() }).merge(positionSchema),
   removeMembership: z.object({ folderId: z.string().min(1), chatId: z.string().min(1) }),
   removeChatAfterGeminiDelete: z.object({ chatId: z.string().min(1), deletionReceipt: z.string().min(1).max(512) }),
-  updateSettings: z.object({ patch: z.object({ enabled: z.boolean().optional(), hideOrganizedChats: z.boolean().optional(), collapsedFolderIds: z.array(z.string().min(1)).max(500).optional() }) }),
+  updateSettings: z.object({ patch: folderSettingsPatchSchema }),
   createSnapshot: z.object({}),
   importBackup: z.object({ payload: folderExportPayloadSchema }),
   restoreSnapshot: z.object({ snapshotId: z.string().min(1), expectedRevision: z.string().min(1).optional() }),
   exportBackup: z.object({}),
   retrySync: z.object({}),
   activityHint: z.object({}),
+  dismissCapacityNotice: z.object({ displayedUsagePercent: z.number().finite().min(BROWSER_SYNC_CAPACITY_NOTICE_THRESHOLD_PERCENT).max(100) }),
+  measureBrowserSyncUsage: z.object({}),
 } as const
 
 export const folderRpcDataSchemas = {
@@ -92,4 +97,3 @@ export const folderRpcDataSchemas = {
   membership: folderMembershipRowSchema,
   chatReference: chatReferenceRowSchema,
 } as const
-

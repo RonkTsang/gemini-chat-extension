@@ -99,7 +99,10 @@ export class FolderCommandService {
       default:
         throw new Error('INVALID_REQUEST')
     }
-    this.schedule(request)
+    const localViewOnly = request.method === 'updateSettings'
+      && !('enabled' in (params as { patch: FolderSettingsPatch }).patch)
+      && !('hideOrganizedChats' in (params as { patch: FolderSettingsPatch }).patch)
+    if (!localViewOnly) this.schedule(request)
     return data
   }
 }

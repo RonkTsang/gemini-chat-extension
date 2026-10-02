@@ -76,7 +76,7 @@ export const SettingPanel = () => {
             <Dialog.Body p={0} height="100%">
               <Flex height="100%">
                 <Sidebar />
-                <ContentArea />
+                <ContentArea isPanelOpen={open} />
               </Flex>
             </Dialog.Body>
           </Dialog.Content>

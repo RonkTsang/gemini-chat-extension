@@ -29,6 +29,7 @@ export interface SettingSectionDefinition<TSection extends string = string> {
 }
 
 export interface SettingViewComponentProps<TSection extends string = string> {
+  isPanelOpen?: boolean
   route: SettingRoute<TSection>
   openView: (viewId: string, params?: Record<string, unknown>) => void
   goBack: () => void
@@ -44,4 +45,3 @@ export type SettingViewRegistry<TSection extends string = string> = Record<strin
 export interface ResolvedSettingView<TSection extends string = string> extends SettingViewDefinition<TSection> {
   Component: SettingViewComponent<TSection>
 }
-

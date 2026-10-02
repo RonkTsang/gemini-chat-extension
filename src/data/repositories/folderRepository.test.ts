@@ -19,10 +19,15 @@ vi.mock('wxt/browser', () => ({
 
 import { db } from '../db'
 import { FolderRepositoryImpl } from './folderRepository'
-import { decodeAndVerifyEnvelopePayload } from '@/services/folder-sync/codec'
+import { FolderQueryService } from '@/entrypoints/background/folders/query-service'
+import { decodeLzStringBase64 } from '@/services/folder-sync/codec'
 
 const scopeA = 'account-scope-0001'
 const scopeB = 'account-scope-0002'
+
+function usage(folderBytes: number) {
+  return { folderBytes, folderBudgetBytes: 1000, totalBytes: folderBytes + 100, quotaBytes: 2000, usagePercent: folderBytes / 10 }
+}
 
 async function clearFolderTables(): Promise<void> {
   await Promise.all([
@@ -32,6 +37,7 @@ async function clearFolderTables(): Promise<void> {
     db.folder_settings.clear(),
     db.folder_operations.clear(),
     db.folder_sync_states.clear(),
+    db.folder_sync_generations.clear(),
     db.folder_snapshots.clear(),
     db.folder_coordinator_leases.clear(),
   ])
@@ -59,7 +65,94 @@ describe('FolderRepository', () => {
     expect(new Set(operations.map((operation) => operation.deviceId)).size).toBe(1)
     expect(operations[0].deviceId).toMatch(/^folder-device-/u)
     expect(new Set(operations.map((operation) => operation.versionStamp)).size).toBe(2)
-    expect(state).toMatchObject({ accountScopeId: scopeA, provider: 'browser-sync', authorityEpoch: expect.any(String), dataRevision: expect.any(String) })
+    expect(state).toMatchObject({ accountScopeId: scopeA, provider: 'browser-sync', authorityEpoch: expect.any(String), localDataRevision: expect.any(String) })
+  })
+
+  it('keeps a transient incomplete replica out of the warning state and clears recovery state once complete', async () => {
+    const repository = new FolderRepositoryImpl()
+    await repository.createFolder(scopeA, { name: 'Sync state' })
+
+    await repository.recordBrowserSyncFailure(scopeA, 'incomplete-replica', 'incomplete-replica')
+    expect(await db.folder_sync_states.get(scopeA)).toMatchObject({
+      retryCount: 1,
+      lastErrorCode: 'incomplete-replica',
+      browserSyncWarning: undefined,
+      incompleteReplicaSince: expect.any(String),
+    })
+
+    await db.folder_sync_states.update(scopeA, {
+      incompleteReplicaSince: new Date(Date.now() - 60_000).toISOString(),
+    })
+    await repository.recordBrowserSyncFailure(scopeA, 'incomplete-replica', 'incomplete-replica')
+    expect(await db.folder_sync_states.get(scopeA)).toMatchObject({
+      retryCount: 2,
+      browserSyncWarning: 'incomplete-replica',
+    })
+
+    expect(await repository.recordBrowserSyncReplicaObserved(scopeA, 'complete-generation')).toBe(true)
+    const recovered = await db.folder_sync_states.get(scopeA)
+    expect(recovered?.lastObservedReplicaGenerationId).toBe('complete-generation')
+    for (const field of ['retryAt', 'retryCount', 'lastErrorCode', 'browserSyncWarning', 'incompleteReplicaSince'] as const) {
+      expect(recovered?.[field]).toBeUndefined()
+    }
+  })
+
+  it('shows capacity notice at 80 percent and again only 10 points after dismissal', async () => {
+    const repository = new FolderRepositoryImpl()
+    const queries = new FolderQueryService()
+    await repository.createFolder(scopeA, { name: 'Capacity state' })
+    await repository.recordBrowserSyncUsage(scopeA, usage(790))
+    expect((await queries.getSyncStatus(scopeA)).showCapacityNotice).toBe(false)
+    expect(await repository.dismissBrowserSyncCapacityNotice(scopeA, 79)).toBe(false)
+
+    await repository.recordBrowserSyncUsage(scopeA, usage(800))
+    expect((await queries.getSyncStatus(scopeA)).showCapacityNotice).toBe(true)
+    expect(await repository.dismissBrowserSyncCapacityNotice(scopeA, 80)).toBe(true)
+    expect((await queries.getSyncStatus(scopeA)).showCapacityNotice).toBe(false)
+
+    await repository.recordBrowserSyncUsage(scopeA, usage(899))
+    expect((await queries.getSyncStatus(scopeA)).showCapacityNotice).toBe(false)
+    await repository.recordBrowserSyncUsage(scopeA, usage(900))
+    expect((await queries.getSyncStatus(scopeA)).showCapacityNotice).toBe(true)
+
+    // A stale tab can dismiss only the usage it actually displayed.
+    await repository.recordBrowserSyncUsage(scopeA, usage(1000))
+    expect(await repository.dismissBrowserSyncCapacityNotice(scopeA, 90)).toBe(true)
+    expect((await queries.getSyncStatus(scopeA)).showCapacityNotice).toBe(true)
+
+    await db.folder_sync_states.update(scopeA, { browserSyncWarning: 'quota-exceeded' })
+    expect(await queries.getSyncStatus(scopeA)).toMatchObject({ state: 'needs-attention', showCapacityNotice: false })
+
+    const generation = await repository.getOrCreateBrowserSyncGeneration(scopeA)
+    await repository.markBrowserSyncGenerationAccepted(scopeA, generation.id, usage(790))
+    expect((await db.folder_sync_states.get(scopeA))?.browserSyncLastDismissedUsagePercent).toBeUndefined()
+    await repository.recordBrowserSyncUsage(scopeA, usage(800))
+    expect((await queries.getSyncStatus(scopeA)).showCapacityNotice).toBe(true)
+  })
+
+  it('keeps rejected projected usage separate and resets dismissal on explicit actual measurement without clearing hard errors', async () => {
+    const repository = new FolderRepositoryImpl()
+    const queries = new FolderQueryService()
+    await repository.createFolder(scopeA, { name: 'Measured state' })
+    const initial = await repository.getSyncState(scopeA)
+    await repository.recordBrowserSyncUsage(scopeA, usage(850))
+    await repository.dismissBrowserSyncCapacityNotice(scopeA, 85)
+    await repository.recordBrowserSyncFailure(scopeA, 'folder-budget-exceeded', 'quota-exceeded', usage(1200))
+    expect(await queries.getSyncStatus(scopeA)).toMatchObject({
+      currentUsageBytes: 850, projectedUsageBytes: 1200, usagePercent: 85, warning: 'quota-exceeded', showCapacityNotice: false,
+    })
+
+    await repository.recordBrowserSyncUsage(scopeA, usage(790))
+    expect(await repository.getSyncState(scopeA)).toMatchObject({
+      browserSyncCurrentUsageBytes: 790,
+      browserSyncProjectedUsageBytes: 1200,
+      browserSyncWarning: 'quota-exceeded',
+      localDataRevision: initial?.localDataRevision,
+    })
+    expect((await repository.getSyncState(scopeA))?.browserSyncLastDismissedUsagePercent).toBeUndefined()
+    expect(await repository.hasPendingOperations(scopeA)).toBe(true)
+    expect(await db.folder_sync_generations.count()).toBe(0)
+    expect(await queries.getSyncStatus(scopeA)).toMatchObject({ currentUsageBytes: 790, state: 'needs-attention', showCapacityNotice: false })
   })
 
   it('enforces account scope, NFKC name uniqueness, and default-top position bounds', async () => {
@@ -140,7 +233,7 @@ describe('FolderRepository', () => {
 
     expect((await repository.listFolders(scopeA)).map((entry) => entry.name)).toEqual(['Before restore'])
     expect(await repository.getSettings(scopeA)).toMatchObject({ enabled: false, hideOrganizedChats: true, collapsedFolderIds: [] })
-    expect((await repository.getSettings(scopeA)).fieldVersions).toEqual(currentSettings.fieldVersions)
+    expect((await repository.getSettings(scopeA)).settingsVersion).toEqual(currentSettings.settingsVersion)
     expect((await repository.listSnapshots(scopeA)).some((entry) => entry.reason === 'before-restore')).toBe(true)
   })
 
@@ -170,36 +263,82 @@ describe('FolderRepository', () => {
     await expect(repository.acquireCoordinatorLease(scopeA, 'owner-b')).resolves.toMatchObject({ ownerId: 'owner-b' })
   })
 
-  it('verifies the compressed Envelope content hash before decoding it', async () => {
+  it('persists compressed business data without settings, export metadata or repeated row scopes', async () => {
     const repository = new FolderRepositoryImpl()
-    await repository.createFolder(scopeA, { name: 'Envelope data' })
-    const envelope = await repository.createSyncEnvelope(scopeA)
-    await expect(decodeAndVerifyEnvelopePayload(envelope)).resolves.toMatchObject({ accountScopeId: scopeA })
-    await expect(decodeAndVerifyEnvelopePayload({ ...envelope, payload: `${envelope.payload}A` })).rejects.toThrow('hash')
+    const folder = await repository.createFolder(scopeA, { name: 'Business data' })
+    await repository.updateSettings(scopeA, { collapsedFolderIds: [folder.id] })
+    const generation = await repository.getOrCreateBrowserSyncGeneration(scopeA)
+    const data = decodeLzStringBase64<Record<string, unknown>>(generation.payload)
+    expect(Object.keys(data).sort()).toEqual(['chatReferences', 'folders', 'memberships'])
+    expect((data.folders as object[])[0]).not.toHaveProperty('accountScopeId')
+    expect(generation.payloadHash).toMatch(/^[a-f0-9]{64}$/)
+    expect(await repository.exportAccountData(scopeA)).toMatchObject({ settings: { enabled: true, hideOrganizedChats: false } })
+    expect(JSON.stringify(await repository.exportAccountData(scopeA))).not.toContain('collapsedFolderIds')
   })
 
-  it('rebuilds a locally malformed prepared generation from the durable outbox', async () => {
+  it('rebuilds a corrupted prepared payload from the durable outbox', async () => {
     const repository = new FolderRepositoryImpl()
     await repository.createFolder(scopeA, { name: 'Recoverable generation' })
     const malformed = await repository.getOrCreateBrowserSyncGeneration(scopeA)
-    await db.folder_sync_generations.update(malformed.id, { serializedEnvelope: '{not-json' })
-
+    await db.folder_sync_generations.update(malformed.id, { payload: 'corrupted' })
     const rebuilt = await repository.getOrCreateBrowserSyncGeneration(scopeA)
-
     expect(rebuilt.id).not.toBe(malformed.id)
     expect(await db.folder_sync_generations.get(malformed.id)).toMatchObject({ state: 'superseded' })
-    await expect(decodeAndVerifyEnvelopePayload(JSON.parse(rebuilt.serializedEnvelope))).resolves.toMatchObject({ accountScopeId: scopeA })
   })
 
-  it('persists a single authority epoch and revision when an empty account creates consecutive Envelopes', async () => {
+  it('reuses one persisted epoch, revision and prepared generation for an empty account', async () => {
     const repository = new FolderRepositoryImpl()
     const [first, second] = await Promise.all([
-      repository.createSyncEnvelope(scopeA),
-      repository.createSyncEnvelope(scopeA),
+      repository.getOrCreateBrowserSyncGeneration(scopeA), repository.getOrCreateBrowserSyncGeneration(scopeA),
     ])
-    expect(second.authority).toEqual(first.authority)
+    expect(second.id).toBe(first.id)
+    expect(second.syncEpoch).toBe(first.syncEpoch)
     expect(second.dataRevision).toBe(first.dataRevision)
-    expect(await db.folder_sync_states.get(scopeA)).toMatchObject({ authorityEpoch: first.authority.epoch, dataRevision: first.dataRevision })
+  })
+
+  it('preserves local collapse on incoming data and import and keeps newer switches pending after an old acknowledgement', async () => {
+    const repository = new FolderRepositoryImpl()
+    const folder = await repository.createFolder(scopeA, { name: 'Local view' })
+    await repository.updateSettings(scopeA, { collapsedFolderIds: [folder.id] })
+    const data = await repository.getAccountData(scopeA)
+    await repository.applyBrowserSyncPayload(scopeA, data, 'remote-revision', 'remote-epoch', false)
+    expect((await repository.getSettings(scopeA)).collapsedFolderIds).toEqual([folder.id])
+    const exported = await repository.exportAccountData(scopeA)
+    await repository.importAccountData(scopeA, exported)
+    expect((await repository.getSettings(scopeA)).collapsedFolderIds).toEqual([folder.id])
+    const first = await repository.updateSettings(scopeA, { enabled: false })
+    const latest = await repository.updateSettings(scopeA, { hideOrganizedChats: true })
+    await repository.applyBrowserSyncSettings(scopeA, { enabled: first.enabled, hideOrganizedChats: first.hideOrganizedChats }, first.settingsVersion)
+    expect(await repository.getSettings(scopeA)).toMatchObject({ settingsVersion: latest.settingsVersion, settingsPending: true, hideOrganizedChats: true })
+    expect((await repository.getSettings(scopeB)).collapsedFolderIds).toEqual([])
+  })
+
+  it('keeps collapse changes local without outbox operations, revisions or pending settings', async () => {
+    const repository = new FolderRepositoryImpl()
+    const folder = await repository.createFolder(scopeA, { name: 'Local view' })
+    const before = await repository.getSyncState(scopeA)
+    const settings = await repository.getSettings(scopeA)
+    const operations = await db.folder_operations.count()
+    await repository.updateSettings(scopeA, { collapsedFolderIds: [folder.id] })
+    expect((await repository.getSyncState(scopeA))?.localDataRevision).toBe(before?.localDataRevision)
+    expect(await db.folder_operations.count()).toBe(operations)
+    expect(await repository.getSettings(scopeA)).toMatchObject({ collapsedFolderIds: [folder.id], settingsVersion: settings.settingsVersion, settingsPending: false })
+  })
+
+  it('merges switches as one register while retaining the local view and detecting later offline edits', async () => {
+    const repository = new FolderRepositoryImpl()
+    await repository.updateSettings(scopeA, { collapsedFolderIds: ['local-folder'] })
+    const newer = '9999999999000:000000:remote-device'
+    await repository.applyBrowserSyncSettings(scopeA, { enabled: false, hideOrganizedChats: true }, newer)
+    expect(await repository.getSettings(scopeA)).toMatchObject({ enabled: false, hideOrganizedChats: true, collapsedFolderIds: ['local-folder'], settingsPending: false })
+    await repository.updateSettings(scopeA, { enabled: true })
+    const local = await repository.getSettings(scopeA)
+    expect(local.settingsVersion > newer).toBe(true)
+    expect(local.settingsPending).toBe(true)
+    await repository.applyBrowserSyncSettings(scopeA, { enabled: false, hideOrganizedChats: false }, newer)
+    expect(await repository.getSettings(scopeA)).toEqual(local)
+    expect(await repository.listBrowserSyncWakeScopes()).toContain(scopeA)
+    expect(await db.folder_operations.count()).toBe(0)
   })
 
   it('removes every local membership and title cache only through the post-Gemini-delete repository command', async () => {

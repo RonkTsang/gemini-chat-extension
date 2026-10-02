@@ -9,6 +9,7 @@ import {
 import {
   HiOutlineChevronDown,
   HiOutlineCog,
+  HiOutlineDotsHorizontal,
   HiOutlineDotsVertical,
   HiOutlinePlus,
 } from 'react-icons/hi'
@@ -85,6 +86,11 @@ type DropTarget =
   | { kind: 'folder', folderId: string, placement: 'before' | 'after' }
   | { kind: 'membership', folderId: string, membershipId: string, placement: 'before' | 'after' }
 
+interface CollapsePreview {
+  folderId: string
+  collapsed: boolean
+}
+
 function matchesDropTarget(left: DropTarget | null, right: DropTarget | null): boolean {
   return left?.kind === right?.kind
     && left?.folderId === right?.folderId
@@ -155,11 +161,19 @@ export function FolderSideNav() {
   const [currentChatId, setCurrentChatId] = useState(() => getChatId(window.location.href))
   const [draggedItem, setDraggedItem] = useState<DraggedItem | null>(null)
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null)
+  const [collapsePreviews, setCollapsePreviews] = useState<Record<string, CollapsePreview>>({})
+  const pendingTitlePreview = useRef<CollapsePreview | undefined>(undefined)
   const folderTitleClicks = useRef(createFolderTitleClickController())
   const projection = state.projection
+  const accountScopeId = state.identity.status === 'available' ? state.identity.identity.accountScopeId : undefined
 
   useEffect(() => eventBus.on('urlchange', ({ url }) => setCurrentChatId(getChatId(url))), [])
   useEffect(() => () => folderTitleClicks.current.cancel(), [])
+  useEffect(() => {
+    folderTitleClicks.current.cancel()
+    pendingTitlePreview.current = undefined
+    setCollapsePreviews({})
+  }, [accountScopeId])
 
   if (state.identity.status !== 'available') {
     return (
@@ -183,6 +197,31 @@ export function FolderSideNav() {
     const rows = membershipsByFolder.get(membership.folderId) ?? []
     rows.push(membership)
     membershipsByFolder.set(membership.folderId, rows)
+  }
+
+  const clearPreview = (preview: CollapsePreview) => {
+    setCollapsePreviews((current) => {
+      if (current[preview.folderId] !== preview) return current
+      const next = { ...current }
+      delete next[preview.folderId]
+      return next
+    })
+  }
+
+  const cancelTitlePreview = () => {
+    folderTitleClicks.current.cancel()
+    if (pendingTitlePreview.current) clearPreview(pendingTitlePreview.current)
+    pendingTitlePreview.current = undefined
+  }
+
+  const commitPreview = async (preview: CollapsePreview) => {
+    try {
+      await folderRuntime.setFolderCollapsed(preview.folderId, preview.collapsed)
+    } catch (error) {
+      console.warn('[Folders] Failed to save folder expansion', error)
+    } finally {
+      clearPreview(preview)
+    }
   }
 
   const updateDropTarget = (nextTarget: DropTarget | null) => {
@@ -305,7 +344,7 @@ export function FolderSideNav() {
       <CollapsibleContent expanded={panelExpanded}>
         <VStack align="stretch" gap={0}>
           {visibleFolders.map((folder) => {
-            const isCollapsed = collapsed.has(folder.id)
+            const isCollapsed = collapsePreviews[folder.id]?.collapsed ?? collapsed.has(folder.id)
             const memberships = sortByOrder(membershipsByFolder.get(folder.id) ?? [])
             const FolderIcon = getFolderIcon(folder.iconKey)
             return (
@@ -368,20 +407,27 @@ export function FolderSideNav() {
                     font="inherit"
                     _hover={{ bg: 'transparent' }}
                     onClick={(event) => {
-                      if ((event.target as HTMLElement).closest('[data-gpk-folder-icon]')) {
-                        folderTitleClicks.current.cancel()
-                        void folderRuntime.setFolderCollapsed(folder.id, !isCollapsed)
-                        return
-                      }
-                      if (event.detail === 1) {
+                      const clickedIcon = Boolean((event.target as HTMLElement).closest('[data-gpk-folder-icon]'))
+                      if (clickedIcon || event.detail <= 1) {
+                        cancelTitlePreview()
+                        const preview = { folderId: folder.id, collapsed: !isCollapsed }
+                        setCollapsePreviews((current) => ({ ...current, [folder.id]: preview }))
+                        if (clickedIcon || event.detail === 0) {
+                          void commitPreview(preview)
+                          return
+                        }
+                        // Preview immediately; defer only persistence so a double-click can cancel it.
+                        pendingTitlePreview.current = preview
                         folderTitleClicks.current.scheduleSingleClick(() => {
-                          void folderRuntime.setFolderCollapsed(folder.id, !isCollapsed)
+                          pendingTitlePreview.current = undefined
+                          void commitPreview(preview)
                         })
                       }
                     }}
                     onDoubleClick={(event) => {
                       if ((event.target as HTMLElement).closest('[data-gpk-folder-icon]')) return
                       event.preventDefault()
+                      cancelTitlePreview()
                       folderTitleClicks.current.handleDoubleClick(() => folderRuntime.openEditDialog(folder.id))
                     }}
                     aria-expanded={!isCollapsed}
@@ -437,7 +483,9 @@ export function FolderSideNav() {
                             : null}
                           <HStack
                             data-gpk-folder-chat-row
-                            role="group"
+                            role="button"
+                            tabIndex={0}
+                            aria-current={isActive ? 'page' : undefined}
                             minH={NATIVE_ITEM_HEIGHT}
                             marginInlineStart={NATIVE_ITEM_INSET}
                             pl="39px"
@@ -446,76 +494,17 @@ export function FolderSideNav() {
                             borderRadius="full"
                             bg={isActive ? ACTIVE_BACKGROUND : 'transparent'}
                             color={ITEM_COLOR}
+                            cursor="pointer"
                             fontSize={FONT_SIZE}
                             lineHeight={LINE_HEIGHT}
                             transition="background-color 120ms ease"
                             css={hiddenActionsStyles}
                             _hover={{ bg: HOVER_BACKGROUND }}
-                          >
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              h={NATIVE_ITEM_HEIGHT}
-                              minH={NATIVE_ITEM_HEIGHT}
-                              minW={0}
-                              flex="1"
-                              px={0}
-                              justifyContent="flex-start"
-                              bg="transparent"
-                              color="inherit"
-                              font="inherit"
-                              draggable
-                              aria-current={isActive ? 'page' : undefined}
-                              _hover={{ bg: HOVER_BACKGROUND }}
-                              onDragStart={(event) => {
-                                event.dataTransfer.effectAllowed = 'copyMove'
-                                event.dataTransfer.setData(MEMBERSHIP_DRAG_MIME, `${folder.id}\n${membership.chatId}`)
-                                setDraggedItem({
-                                  kind: 'membership',
-                                  folderId: folder.id,
-                                  chatId: membership.chatId,
-                                })
-                                updateDropTarget(null)
-                              }}
-                              onDragEnd={finishDrag}
-                              onDragOver={(event) => {
-                                if (
-                                  draggedItem?.kind !== 'membership'
-                                  || draggedItem.folderId !== folder.id
-                                  || draggedItem.chatId === membership.chatId
-                                ) {
-                                  return
-                                }
+                            draggable
+                            onKeyDown={(event) => {
+                              if (event.target !== event.currentTarget) return
+                              if (event.key === 'Enter' || event.key === ' ') {
                                 event.preventDefault()
-                                event.stopPropagation()
-                                event.dataTransfer.dropEffect = 'move'
-                                updateDropTarget({
-                                  kind: 'membership',
-                                  folderId: folder.id,
-                                  membershipId: membership.id,
-                                  placement: getDropPlacement(event),
-                                })
-                              }}
-                              onDrop={(event) => {
-                                if (
-                                  draggedItem?.kind === 'membership'
-                                  && draggedItem.folderId === folder.id
-                                  && draggedItem.chatId !== membership.chatId
-                                ) {
-                                  event.preventDefault()
-                                  event.stopPropagation()
-                                  const chatId = draggedItem.chatId
-                                  const placement = getDropPlacement(event)
-                                  finishDrag()
-                                  void folderRuntime.moveMembership(
-                                    folder.id,
-                                    chatId,
-                                    placement === 'before' ? membership.id : undefined,
-                                    placement === 'after' ? membership.id : undefined,
-                                  )
-                                }
-                              }}
-                              onClick={() => {
                                 console.info('[Folders][navigation]', {
                                   step: 'chat-clicked',
                                   chatId: membership.chatId,
@@ -527,10 +516,71 @@ export function FolderSideNav() {
                                   chatId: membership.chatId,
                                   toPath: window.location.pathname,
                                 })
-                              }}
-                            >
-                              <Text truncate title={chatTitle}>{chatTitle}</Text>
-                            </Button>
+                              }
+                            }}
+                            onClick={() => {
+                              console.info('[Folders][navigation]', {
+                                step: 'chat-clicked',
+                                chatId: membership.chatId,
+                                fromPath: window.location.pathname,
+                              })
+                              const navigated = openChatViaSpa(membership.chatId)
+                              console.info('[Folders][navigation]', {
+                                step: navigated ? 'spa-route-dispatched' : 'route-rejected',
+                                chatId: membership.chatId,
+                                toPath: window.location.pathname,
+                              })
+                            }}
+                            onDragStart={(event) => {
+                              event.dataTransfer.effectAllowed = 'copyMove'
+                              event.dataTransfer.setData(MEMBERSHIP_DRAG_MIME, `${folder.id}\n${membership.chatId}`)
+                              setDraggedItem({
+                                kind: 'membership',
+                                folderId: folder.id,
+                                chatId: membership.chatId,
+                              })
+                              updateDropTarget(null)
+                            }}
+                            onDragEnd={finishDrag}
+                            onDragOver={(event) => {
+                              if (
+                                draggedItem?.kind !== 'membership'
+                                || draggedItem.folderId !== folder.id
+                                || draggedItem.chatId === membership.chatId
+                              ) {
+                                return
+                              }
+                              event.preventDefault()
+                              event.stopPropagation()
+                              event.dataTransfer.dropEffect = 'move'
+                              updateDropTarget({
+                                kind: 'membership',
+                                folderId: folder.id,
+                                membershipId: membership.id,
+                                placement: getDropPlacement(event),
+                              })
+                            }}
+                            onDrop={(event) => {
+                              if (
+                                draggedItem?.kind === 'membership'
+                                && draggedItem.folderId === folder.id
+                                && draggedItem.chatId !== membership.chatId
+                              ) {
+                                event.preventDefault()
+                                event.stopPropagation()
+                                const chatId = draggedItem.chatId
+                                const placement = getDropPlacement(event)
+                                finishDrag()
+                                void folderRuntime.moveMembership(
+                                  folder.id,
+                                  chatId,
+                                  placement === 'before' ? membership.id : undefined,
+                                  placement === 'after' ? membership.id : undefined,
+                                )
+                              }
+                            }}
+                          >
+                            <Text flex="1" truncate title={chatTitle}>{chatTitle}</Text>
                             <Box data-gpk-folder-actions flexShrink={0} transition="opacity 120ms ease">
                               <IconButton
                                 size="xs"
@@ -545,6 +595,7 @@ export function FolderSideNav() {
                                   && state.menu.folderId === folder.id
                                   && state.menu.chatId === membership.chatId}
                                 onClick={(event) => {
+                                  event.stopPropagation()
                                   if (
                                     state.menu?.kind === 'chat'
                                     && state.menu.folderId === folder.id
@@ -574,6 +625,31 @@ export function FolderSideNav() {
                         </Box>
                       )
                     })}
+                    {projection.chatCursors?.[folder.id] ? (
+                      <Button
+                        data-gpk-folder-load-more-chats
+                        size="sm"
+                        h={NATIVE_ITEM_HEIGHT}
+                        minH={NATIVE_ITEM_HEIGHT}
+                        variant="ghost"
+                        marginInlineStart={NATIVE_ITEM_INSET}
+                        pl="39px"
+                        pr={NATIVE_ITEM_PADDING}
+                        justifyContent="flex-start"
+                        bg="transparent"
+                        color="var(--lumi-sys-color--on-surface-variant, #777)"
+                        font="inherit"
+                        fontSize={FONT_SIZE}
+                        lineHeight={LINE_HEIGHT}
+                        borderRadius="full"
+                        _hover={{ bg: HOVER_BACKGROUND }}
+                        disabled={state.loadingChatFolderIds?.includes(folder.id)}
+                        aria-busy={state.loadingChatFolderIds?.includes(folder.id)}
+                        onClick={() => void folderRuntime.loadMoreChats(folder.id)}
+                      >
+                        {tt('folders_see_more', 'See more')}
+                      </Button>
+                    ) : null}
                   </VStack>
                 </CollapsibleContent>
                 {dropTarget?.kind === 'folder'
@@ -623,6 +699,7 @@ export function FolderSideNav() {
               minH={NATIVE_ITEM_HEIGHT}
               marginInlineStart={NATIVE_ITEM_INSET}
               px={NATIVE_ITEM_PADDING}
+              gap="11px"
               justifyContent="flex-start"
               bg="transparent"
               color={ITEM_COLOR}
@@ -633,9 +710,21 @@ export function FolderSideNav() {
               _hover={{ bg: HOVER_BACKGROUND }}
               onClick={() => setShowAllFolders((value) => !value)}
             >
-              {showAllFolders
-                ? tt('folders_show_less', 'Show less')
-                : tt('folders_see_more', 'See more')}
+              <Box
+                boxSize="20px"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                flexShrink={0}
+                aria-hidden
+              >
+                <HiOutlineDotsHorizontal size={16} strokeWidth={1} />
+              </Box>
+              <Text truncate>
+                {showAllFolders
+                  ? tt('folders_show_less', 'Show less')
+                  : tt('folders_see_more', 'See more')}
+              </Text>
             </Button>
           ) : null}
         </VStack>

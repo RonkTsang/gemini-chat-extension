@@ -14,9 +14,11 @@ import {
 import type { FolderUpdateInput } from '@/domain/folder/commands'
 import { HybridLogicalClock } from '@/domain/folder/hlc'
 import { compareAscii, keyBetween, rebalanceOrderKeys } from '@/domain/folder/order-key'
-import { parseFolderExportPayload } from '@/domain/folder/schemas'
+import { parseFolderAccountData, parseFolderExportPayload, folderSyncSettingsSchema, folderSettingsPatchSchema, settingsVersionSchema, parseFolderSyncData } from '@/domain/folder/schemas'
 import {
+  BROWSER_SYNC_CAPACITY_NOTICE_THRESHOLD_PERCENT,
   ROOT_FOLDER_ID,
+  type BrowserSyncUsage,
   type ChatReferenceRow,
   type FolderCoordinatorLeaseRow,
   type FolderExportPayload,
@@ -28,19 +30,38 @@ import {
   type FolderSettingsRow,
   type FolderSnapshotRow,
   type FolderSyncGenerationRow,
-  type FolderSyncEnvelope,
+  type FolderAccountData,
+  type FolderSyncSettings,
   type FolderSyncStateRow,
 } from '@/domain/folder/types'
-import { decodeAndVerifyEnvelopePayload, decodeLzStringBase64, encodeLzStringBase64, sha256Hex } from '@/services/folder-sync/codec'
+import { decodeLzStringBase64, encodeLzStringBase64, fromFolderSyncData, newestSyncSettings, sha256Hex, toFolderSyncData } from '@/services/folder-sync/codec'
 import {
   createFolderTraceId,
   logFolderTrace,
   logFolderTraceError,
 } from '@/utils/folderTrace'
+import { logDevError } from '@/utils/devLogger'
 
 const SNAPSHOT_LIMIT = 30
 const SNAPSHOT_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000
+// The first retry is scheduled after one minute. Do not surface a replica that
+// is merely between the manifest and chunk writes until that recovery window
+// has elapsed.
+const INCOMPLETE_REPLICA_WARNING_GRACE_MS = 60_000
 const FOLDER_DEVICE_ID_STORAGE_KEY = 'gpk.folders.device-id.v1'
+
+function currentUsagePatch(state: FolderSyncStateRow, usage: BrowserSyncUsage): Partial<FolderSyncStateRow> {
+  return {
+    browserSyncCurrentUsageBytes: usage.folderBytes,
+    browserSyncCurrentTotalBytes: usage.totalBytes,
+    browserSyncQuotaBytes: usage.quotaBytes,
+    browserSyncBudgetBytes: usage.folderBudgetBytes,
+    browserSyncUsageMeasuredAt: now(),
+    browserSyncLastDismissedUsagePercent: usage.folderBytes * 100 < usage.folderBudgetBytes * BROWSER_SYNC_CAPACITY_NOTICE_THRESHOLD_PERCENT
+      ? undefined
+      : state.browserSyncLastDismissedUsagePercent,
+  }
+}
 const runtimeStampTieBreaker = nanoid()
 let sharedClock: HybridLogicalClock | undefined
 let runtimeDeviceIdReady: Promise<string> | undefined
@@ -121,14 +142,22 @@ export interface FolderRepository {
   restoreSnapshot(accountScopeId: string, snapshotId: string): Promise<void>
   exportAccountData(accountScopeId: string): Promise<FolderExportPayload>
   importAccountData(accountScopeId: string, payload: FolderExportPayload): Promise<void>
-  createSyncEnvelope(accountScopeId: string): Promise<FolderSyncEnvelope>
+  getAccountData(accountScopeId: string): Promise<FolderAccountData>
+  applyBrowserSyncSettings(accountScopeId: string, settings: FolderSyncSettings, settingsVersion: string): Promise<boolean>
   getSyncState(accountScopeId: string): Promise<FolderSyncStateRow | undefined>
+  listBrowserSyncWakeScopes(): Promise<string[]>
   hasPendingOperations(accountScopeId: string): Promise<boolean>
-  applyBrowserSyncPayload(accountScopeId: string, payload: FolderExportPayload, appliedRevision: string, authorityEpoch: string, preservePending?: boolean): Promise<void>
-  markBrowserSyncUploaded(accountScopeId: string, revision: string, warning?: 'near-quota'): Promise<void>
-  recordBrowserSyncFailure(accountScopeId: string, errorCode: string): Promise<void>
+  applyBrowserSyncPayload(accountScopeId: string, payload: FolderAccountData, appliedRevision: string, authorityEpoch: string, preservePending?: boolean): Promise<void>
+  recordBrowserSyncReplicaObserved(accountScopeId: string, generationId: string): Promise<boolean>
+  recordBrowserSyncFailure(accountScopeId: string, errorCode: string, warning?: FolderSyncStateRow['browserSyncWarning'], projectedUsage?: BrowserSyncUsage): Promise<string>
+  recordBrowserSyncUsage(accountScopeId: string, usage: BrowserSyncUsage): Promise<void>
   getOrCreateBrowserSyncGeneration(accountScopeId: string): Promise<FolderSyncGenerationRow>
-  markBrowserSyncGenerationAccepted(accountScopeId: string, generationId: string, warning?: 'near-quota'): Promise<void>
+  getRecoverableBrowserSyncGeneration(accountScopeId: string, replacedGenerationId: string): Promise<FolderSyncGenerationRow | undefined>
+  listReclaimableBrowserSyncGenerationIds(accountScopeId: string): Promise<string[]>
+  markBrowserSyncGenerationWriting(accountScopeId: string, generationId: string, replacedGenerationId?: string): Promise<void>
+  markBrowserSyncSettingsAccepted(accountScopeId: string, usage: BrowserSyncUsage): Promise<void>
+  markBrowserSyncGenerationAccepted(accountScopeId: string, generationId: string, usage: BrowserSyncUsage): Promise<void>
+  dismissBrowserSyncCapacityNotice(accountScopeId: string, displayedUsagePercent: number): Promise<boolean>
   acquireCoordinatorLease(accountScopeId: string, ownerId: string, ttlMs?: number): Promise<FolderCoordinatorLeaseRow>
   releaseCoordinatorLease(accountScopeId: string, ownerId: string): Promise<void>
 }
@@ -218,24 +247,21 @@ export class FolderRepositoryImpl implements FolderRepository {
     return deviceId
   }
 
-  private stamp(): string {
+  private stamp(after?: string): string {
     if (!sharedClock) throw new Error('Folder device id must be preheated before a transaction')
+    if (after) sharedClock.observe(after)
     return sharedClock.next()
   }
 
   private defaultSettings(accountScopeId: string): FolderSettingsRow {
-    const versionStamp = this.stamp()
     return {
       accountScopeId,
       enabled: true,
       hideOrganizedChats: false,
       collapsedFolderIds: [],
       updatedAt: now(),
-      fieldVersions: {
-        enabled: versionStamp,
-        hideOrganizedChats: versionStamp,
-        collapsedFolderIds: versionStamp,
-      },
+      settingsVersion: '0000000000000:000000:default',
+      settingsPending: false,
     }
   }
 
@@ -247,19 +273,17 @@ export class FolderRepositoryImpl implements FolderRepository {
     return settings
   }
 
-  private async rawAccountData(accountScopeId: string): Promise<Omit<FolderExportPayload, 'schemaVersion' | 'exportedAt'>> {
-    const [folders, memberships, chatReferences, settings] = await Promise.all([
+  private async rawAccountData(accountScopeId: string): Promise<FolderAccountData> {
+    const [folders, memberships, chatReferences] = await Promise.all([
       db.folders.where('accountScopeId').equals(accountScopeId).toArray(),
       db.folder_memberships.where('accountScopeId').equals(accountScopeId).toArray(),
       db.folder_chat_references.where('accountScopeId').equals(accountScopeId).toArray(),
-      this.ensureSettings(accountScopeId),
     ])
     return {
       accountScopeId,
       folders: sortByOrder(folders),
       memberships: sortByOrder(memberships),
       chatReferences: [...chatReferences].sort((left, right) => compareAscii(left.chatId, right.chatId)),
-      settings,
     }
   }
 
@@ -278,17 +302,28 @@ export class FolderRepositoryImpl implements FolderRepository {
       deviceId,
       provider: prior?.provider ?? 'browser-sync',
       authorityEpoch: prior?.authorityEpoch ?? `epoch-${nanoid()}`,
-      dataRevision: revision,
-      lastAppliedRevision: prior?.lastAppliedRevision,
-      lastUploadedRevision: prior?.lastUploadedRevision,
+      localDataRevision: revision,
+      lastObservedReplicaGenerationId: prior?.lastObservedReplicaGenerationId,
+      lastAppliedReplicaRevision: prior?.lastAppliedReplicaRevision,
+      lastWrittenReplicaGenerationId: prior?.lastWrittenReplicaGenerationId,
+      lastBrowserStorageWriteAt: prior?.lastBrowserStorageWriteAt,
       driveFileId: prior?.driveFileId,
       driveFileVersion: prior?.driveFileVersion,
       driveChangePageToken: prior?.driveChangePageToken,
-      lastSuccessfulSyncAt: prior?.lastSuccessfulSyncAt,
       lastAttemptAt: prior?.lastAttemptAt,
       retryAt: prior?.retryAt,
+      retryCount: prior?.retryCount,
       lastErrorCode: prior?.lastErrorCode,
       browserSyncWarning: prior?.browserSyncWarning,
+      browserSyncCurrentUsageBytes: prior?.browserSyncCurrentUsageBytes,
+      browserSyncCurrentTotalBytes: prior?.browserSyncCurrentTotalBytes,
+      browserSyncQuotaBytes: prior?.browserSyncQuotaBytes,
+      browserSyncProjectedUsageBytes: prior?.browserSyncProjectedUsageBytes,
+      browserSyncProjectedTotalBytes: prior?.browserSyncProjectedTotalBytes,
+      browserSyncUsageMeasuredAt: prior?.browserSyncUsageMeasuredAt,
+      browserSyncBudgetBytes: prior?.browserSyncBudgetBytes,
+      browserSyncLastDismissedUsagePercent: prior?.browserSyncLastDismissedUsagePercent,
+      incompleteReplicaSince: prior?.incompleteReplicaSince,
       updatedAt: now(),
     }
     const opId = nanoid()
@@ -297,7 +332,7 @@ export class FolderRepositoryImpl implements FolderRepository {
       opId,
       accountScopeId,
       deviceId,
-      baseRevision: prior?.lastAppliedRevision ?? prior?.dataRevision,
+      baseRevision: prior?.lastAppliedReplicaRevision ?? prior?.localDataRevision,
       operationType,
       entityId,
       versionStamp,
@@ -319,7 +354,7 @@ export class FolderRepositoryImpl implements FolderRepository {
         deviceId,
         provider: 'browser-sync',
         authorityEpoch: `epoch-${nanoid()}`,
-        dataRevision: `${deviceId}:initial-${nanoid()}`,
+        localDataRevision: `${deviceId}:initial-${nanoid()}`,
         updatedAt: now(),
       }
       if (!existing) await db.folder_sync_states.put(state)
@@ -400,28 +435,48 @@ export class FolderRepositoryImpl implements FolderRepository {
 
   async updateSettings(accountScopeId: string, patch: FolderSettingsPatch): Promise<FolderSettingsRow> {
     requireScope(accountScopeId)
+    patch = folderSettingsPatchSchema.parse(patch)
     const deviceId = await this.preheatDevice()
+    await this.ensureSyncState(accountScopeId, deviceId)
     let result!: FolderSettingsRow
-    await db.transaction('rw', db.folder_settings, db.folder_operations, db.folder_sync_states, async () => {
+    await db.transaction('rw', db.folder_settings, async () => {
       const prior = await this.ensureSettings(accountScopeId)
-      const versionStamp = this.stamp()
-      const collapsedFolderIds = patch.collapsedFolderIds === undefined
-        ? prior.collapsedFolderIds
-        : [...new Set(patch.collapsedFolderIds)]
+      const settings = folderSyncSettingsSchema.parse({
+        enabled: patch.enabled ?? prior.enabled,
+        hideOrganizedChats: patch.hideOrganizedChats ?? prior.hideOrganizedChats,
+      })
+      const changed = settings.enabled !== prior.enabled || settings.hideOrganizedChats !== prior.hideOrganizedChats
       result = {
-        ...prior,
-        ...patch,
-        collapsedFolderIds,
-        updatedAt: now(),
-        fieldVersions: {
-          ...prior.fieldVersions,
-          ...Object.fromEntries(Object.keys(patch).map((key) => [key, versionStamp])),
-        },
+        ...prior, ...settings,
+        collapsedFolderIds: patch.collapsedFolderIds === undefined ? prior.collapsedFolderIds : [...new Set(patch.collapsedFolderIds)],
+        updatedAt: changed ? now() : prior.updatedAt,
+        settingsVersion: changed ? this.stamp(prior.settingsVersion) : prior.settingsVersion,
+        settingsPending: prior.settingsPending || changed,
       }
       await db.folder_settings.put(result)
-      await this.writeOperation(accountScopeId, deviceId, 'settings.update', accountScopeId, versionStamp, { patch })
     })
     return result
+  }
+
+  async applyBrowserSyncSettings(accountScopeId: string, settings: FolderSyncSettings, settingsVersion: string): Promise<boolean> {
+    requireScope(accountScopeId)
+    const remote = { settings: folderSyncSettingsSchema.parse(settings), settingsVersion: settingsVersionSchema.parse(settingsVersion) }
+    await this.preheatDevice()
+    return db.transaction('rw', db.folder_settings, async () => {
+      const prior = await this.ensureSettings(accountScopeId)
+      const local = { settings: { enabled: prior.enabled, hideOrganizedChats: prior.hideOrganizedChats }, settingsVersion: prior.settingsVersion }
+      const selected = newestSyncSettings(local, remote)
+      const accepted = selected === remote || (local.settingsVersion === remote.settingsVersion && local.settings.enabled === remote.settings.enabled && local.settings.hideOrganizedChats === remote.settings.hideOrganizedChats)
+      if (!accepted) return false
+      const changed = prior.settingsVersion !== remote.settingsVersion || prior.enabled !== settings.enabled || prior.hideOrganizedChats !== settings.hideOrganizedChats
+      await db.folder_settings.put({ ...prior, ...remote.settings, settingsVersion: remote.settingsVersion, settingsPending: false, updatedAt: changed ? now() : prior.updatedAt })
+      return changed
+    })
+  }
+
+  async getAccountData(accountScopeId: string): Promise<FolderAccountData> {
+    requireScope(accountScopeId)
+    return db.transaction('r', db.folders, db.folder_memberships, db.folder_chat_references, () => this.rawAccountData(accountScopeId))
   }
 
   async listFolders(accountScopeId: string): Promise<FolderRow[]> {
@@ -965,11 +1020,17 @@ export class FolderRepositoryImpl implements FolderRepository {
   async exportAccountData(accountScopeId: string): Promise<FolderExportPayload> {
     requireScope(accountScopeId)
     await this.preheatDevice()
-    return {
-      schemaVersion: 1,
-      ...(await this.rawAccountData(accountScopeId)),
-      exportedAt: now(),
-    }
+    await this.getSettings(accountScopeId)
+    return db.transaction('r', db.folders, db.folder_memberships, db.folder_chat_references, db.folder_settings, async () => {
+      const settings = (await db.folder_settings.get(accountScopeId))!
+      return {
+        schemaVersion: 1,
+        ...(await this.rawAccountData(accountScopeId)),
+        settings: { enabled: settings.enabled, hideOrganizedChats: settings.hideOrganizedChats },
+        settingsVersion: settings.settingsVersion,
+        exportedAt: now(),
+      }
+    })
   }
 
   async createSnapshot(accountScopeId: string, reason: FolderSnapshotRow['reason']): Promise<FolderSnapshotRow> {
@@ -985,7 +1046,7 @@ export class FolderRepositoryImpl implements FolderRepository {
       accountScopeId,
       reason,
       schemaVersion: 1,
-      dataRevision: state?.dataRevision ?? 'local-unpublished',
+      dataRevision: state?.localDataRevision ?? 'local-unpublished',
       createdAt: now(),
       contentHash: await sha256Hex(compressedPayload),
       compressedPayload,
@@ -1016,7 +1077,7 @@ export class FolderRepositoryImpl implements FolderRepository {
       if (traceId) {
         logFolderTraceError(traceId, 'repository.snapshot-failed', error, { accountScopeId })
       } else {
-        console.warn('[Folders] Failed to create an automatic recovery point', error)
+        logDevError('[Folders]', 'repository.snapshot-failed', error, { accountScopeId })
       }
     }
   }
@@ -1044,17 +1105,12 @@ export class FolderRepositoryImpl implements FolderRepository {
       await db.folders.bulkPut(payload.folders)
       await db.folder_memberships.bulkPut(payload.memberships)
       await db.folder_chat_references.bulkPut(payload.chatReferences)
-      const incomingSettings = preserveSettings
-        ? {
-            ...payload.settings,
-            enabled: currentSettings.enabled,
-            hideOrganizedChats: currentSettings.hideOrganizedChats,
-            collapsedFolderIds: currentSettings.collapsedFolderIds,
-            fieldVersions: currentSettings.fieldVersions,
-            updatedAt: now(),
-          }
-        : payload.settings
-      await db.folder_settings.put(incomingSettings)
+      const incomingSettings: FolderSettingsRow = preserveSettings ? currentSettings : {
+        ...currentSettings, ...payload.settings,
+        settingsVersion: this.stamp(currentSettings.settingsVersion > payload.settingsVersion ? currentSettings.settingsVersion : payload.settingsVersion), settingsPending: true, updatedAt: now(),
+      }
+      const liveIds = new Set(payload.folders.filter(isLive).map((folder) => folder.id))
+      await db.folder_settings.put({ ...incomingSettings, collapsedFolderIds: currentSettings.collapsedFolderIds.filter((id) => liveIds.has(id)) })
       await this.writeOperation(accountScopeId, deviceId, operationType, accountScopeId, versionStamp, { exportedAt: payload.exportedAt })
     })
   }
@@ -1083,35 +1139,28 @@ export class FolderRepositoryImpl implements FolderRepository {
     await this.createAutomaticSnapshot(accountScopeId)
   }
 
-  async createSyncEnvelope(accountScopeId: string): Promise<FolderSyncEnvelope> {
-    requireScope(accountScopeId)
-    const deviceId = await this.preheatDevice()
-    const state = await this.ensureSyncState(accountScopeId, deviceId)
-    const payload = await this.exportAccountData(accountScopeId)
-    const encodedPayload = encodeLzStringBase64(payload)
-    return {
-      appId: 'gemini-power-kit-folders',
-      schemaVersion: 1,
-      syncProtocolVersion: 1,
-      accountScopeId,
-      authority: {
-        provider: state.provider,
-        epoch: state.authorityEpoch,
-      },
-      dataRevision: state.dataRevision,
-      parentRevisions: state.lastAppliedRevision ? [state.lastAppliedRevision] : [],
-      generatedByDeviceId: deviceId,
-      generatedAt: now(),
-      encoding: { codec: 'lz-string-base64', codecVersion: 1 },
-      contentHash: await sha256Hex(encodedPayload),
-      payload: encodedPayload,
-    }
-  }
-
   async getSyncState(accountScopeId: string): Promise<FolderSyncStateRow | undefined> {
     requireScope(accountScopeId)
     await this.preheatDevice()
     return await db.folder_sync_states.get(accountScopeId)
+  }
+
+  async listBrowserSyncWakeScopes(): Promise<string[]> {
+    const [states, operations, generations, settings] = await Promise.all([
+      db.folder_sync_states.toArray(),
+      db.folder_operations.toArray(),
+      db.folder_sync_generations.toArray(),
+      db.folder_settings.toArray(),
+    ])
+    const pendingScopes = new Set(operations.filter((operation) => operation.state === 'pending').map((operation) => operation.accountScopeId))
+    const preparedScopes = new Set(generations
+      .filter((generation) => generation.state === 'prepared' || generation.state === 'writing')
+      .map((generation) => generation.accountScopeId))
+    const settingsScopes = new Set(settings.filter((row) => row.settingsPending).map((row) => row.accountScopeId))
+    return states
+      .filter((state) => state.provider === 'browser-sync'
+        && (pendingScopes.has(state.accountScopeId) || settingsScopes.has(state.accountScopeId) || preparedScopes.has(state.accountScopeId) || Boolean(state.retryAt)))
+      .map((state) => state.accountScopeId)
   }
 
   async hasPendingOperations(accountScopeId: string): Promise<boolean> {
@@ -1123,14 +1172,14 @@ export class FolderRepositoryImpl implements FolderRepository {
 
   async applyBrowserSyncPayload(
     accountScopeId: string,
-    payload: FolderExportPayload,
+    payload: FolderAccountData,
     appliedRevision: string,
     authorityEpoch: string,
     preservePending = false,
   ): Promise<void> {
     requireScope(accountScopeId)
     const deviceId = await this.preheatDevice()
-    const parsed = parseFolderExportPayload(payload)
+    const parsed = parseFolderAccountData(payload)
     if (parsed.accountScopeId !== accountScopeId) throw new Error('Browser Sync payload belongs to a different account scope')
     if (!appliedRevision || !authorityEpoch) throw new Error('Browser Sync revision and authority epoch are required')
     await db.transaction('rw', [db.folders, db.folder_memberships, db.folder_chat_references, db.folder_settings, db.folder_operations, db.folder_sync_states], async () => {
@@ -1144,18 +1193,34 @@ export class FolderRepositoryImpl implements FolderRepository {
       await db.folders.bulkPut(parsed.folders)
       await db.folder_memberships.bulkPut(parsed.memberships)
       await db.folder_chat_references.bulkPut(parsed.chatReferences)
-      await db.folder_settings.put(parsed.settings)
+      const settings = await this.ensureSettings(accountScopeId)
+      const liveIds = new Set(parsed.folders.filter(isLive).map((folder) => folder.id))
+      await db.folder_settings.put({ ...settings, collapsedFolderIds: settings.collapsedFolderIds.filter((id) => liveIds.has(id)) })
       const mergedRevision = preservePending ? `${deviceId}:${nanoid()}` : appliedRevision
       const nextState: FolderSyncStateRow = {
         accountScopeId,
         deviceId: prior?.deviceId ?? deviceId,
         provider: 'browser-sync',
         authorityEpoch,
-        dataRevision: mergedRevision,
-        lastAppliedRevision: appliedRevision,
-        lastUploadedRevision: prior?.lastUploadedRevision,
-        lastSuccessfulSyncAt: now(),
+        localDataRevision: mergedRevision,
+        lastObservedReplicaGenerationId: prior?.lastObservedReplicaGenerationId,
+        lastAppliedReplicaRevision: appliedRevision,
+        lastWrittenReplicaGenerationId: prior?.lastWrittenReplicaGenerationId,
+        lastBrowserStorageWriteAt: prior?.lastBrowserStorageWriteAt,
+        lastAttemptAt: now(),
+        retryCount: 0,
+        retryAt: undefined,
+        lastErrorCode: undefined,
         browserSyncWarning: prior?.browserSyncWarning,
+        browserSyncCurrentUsageBytes: prior?.browserSyncCurrentUsageBytes,
+        browserSyncCurrentTotalBytes: prior?.browserSyncCurrentTotalBytes,
+        browserSyncQuotaBytes: prior?.browserSyncQuotaBytes,
+        browserSyncProjectedUsageBytes: prior?.browserSyncProjectedUsageBytes,
+        browserSyncProjectedTotalBytes: prior?.browserSyncProjectedTotalBytes,
+        browserSyncUsageMeasuredAt: prior?.browserSyncUsageMeasuredAt,
+        browserSyncBudgetBytes: prior?.browserSyncBudgetBytes,
+        browserSyncLastDismissedUsagePercent: prior?.browserSyncLastDismissedUsagePercent,
+        incompleteReplicaSince: undefined,
         updatedAt: now(),
       }
       await db.folder_sync_states.put(nextState)
@@ -1179,83 +1244,170 @@ export class FolderRepositoryImpl implements FolderRepository {
     })
   }
 
-  async markBrowserSyncUploaded(accountScopeId: string, revision: string, warning?: 'near-quota'): Promise<void> {
-    requireScope(accountScopeId)
-    await this.preheatDevice()
-    await db.transaction('rw', [db.folder_operations, db.folder_sync_states], async () => {
-      const state = await db.folder_sync_states.get(accountScopeId)
-      if (!state || state.provider !== 'browser-sync') throw new Error('Browser Sync state is unavailable')
-      await db.folder_operations.where('accountScopeId').equals(accountScopeId).modify((operation) => {
-        if (operation.state === 'pending') operation.state = 'accepted-by-browser-storage'
-      })
-      await db.folder_sync_states.put({
-        ...state,
-        dataRevision: revision,
-        lastAppliedRevision: revision,
-        lastUploadedRevision: revision,
-        lastSuccessfulSyncAt: now(),
-        lastAttemptAt: now(),
-        lastErrorCode: undefined,
-        retryAt: undefined,
-        browserSyncWarning: warning,
-        updatedAt: now(),
-      })
-    })
-  }
-
-  async recordBrowserSyncFailure(accountScopeId: string, errorCode: string): Promise<void> {
+  async recordBrowserSyncReplicaObserved(accountScopeId: string, generationId: string): Promise<boolean> {
     requireScope(accountScopeId)
     const deviceId = await this.preheatDevice()
     const state = await this.ensureSyncState(accountScopeId, deviceId)
-    await db.folder_sync_states.put({
-      ...state,
-      lastAttemptAt: now(),
-      lastErrorCode: errorCode,
-      retryAt: new Date(Date.now() + 60_000).toISOString(),
-      browserSyncWarning: 'write-failed',
+    const statusChanged = state.lastObservedReplicaGenerationId !== generationId
+      || state.retryAt !== undefined
+      || state.retryCount !== undefined
+      || state.lastErrorCode !== undefined
+      || state.browserSyncWarning !== undefined
+      || state.incompleteReplicaSince !== undefined
+    if (!statusChanged) return false
+    await db.folder_sync_states.update(accountScopeId, {
+      lastObservedReplicaGenerationId: generationId,
+      retryAt: undefined,
+      retryCount: undefined,
+      lastErrorCode: undefined,
+      browserSyncWarning: undefined,
+      incompleteReplicaSince: undefined,
       updatedAt: now(),
+    })
+    return true
+  }
+
+  async recordBrowserSyncFailure(
+    accountScopeId: string,
+    errorCode: string,
+    warning: FolderSyncStateRow['browserSyncWarning'] = 'write-failed',
+    projectedUsage?: BrowserSyncUsage,
+  ): Promise<string> {
+    requireScope(accountScopeId)
+    const deviceId = await this.preheatDevice()
+    const state = await this.ensureSyncState(accountScopeId, deviceId)
+    const attemptedAt = now()
+    const retryCount = Math.min((state.retryCount ?? 0) + 1, 6)
+    const retryAt = new Date(Date.now() + Math.min(30, 2 ** (retryCount - 1)) * 60_000).toISOString()
+    const incompleteReplicaSince = warning === 'incomplete-replica'
+      ? state.incompleteReplicaSince ?? attemptedAt
+      : undefined
+    const incompleteHasExceededGrace = warning === 'incomplete-replica'
+      && Date.parse(attemptedAt) - Date.parse(incompleteReplicaSince ?? attemptedAt) >= INCOMPLETE_REPLICA_WARNING_GRACE_MS
+    const browserSyncWarning = warning === 'incomplete-replica' && !incompleteHasExceededGrace
+      ? state.browserSyncWarning === 'incomplete-replica' ? undefined : state.browserSyncWarning
+      : warning
+    await db.folder_sync_states.update(accountScopeId, {
+      lastAttemptAt: attemptedAt,
+      lastErrorCode: errorCode,
+      retryAt,
+      retryCount,
+      browserSyncWarning,
+      browserSyncProjectedUsageBytes: projectedUsage?.folderBytes,
+      browserSyncProjectedTotalBytes: projectedUsage?.totalBytes,
+      browserSyncBudgetBytes: projectedUsage?.folderBudgetBytes ?? state.browserSyncBudgetBytes,
+      incompleteReplicaSince,
+      updatedAt: now(),
+    })
+    return retryAt
+  }
+
+  async recordBrowserSyncUsage(accountScopeId: string, usage: BrowserSyncUsage): Promise<void> {
+    requireScope(accountScopeId)
+    const deviceId = await this.preheatDevice()
+    await this.ensureSyncState(accountScopeId, deviceId)
+    await db.transaction('rw', db.folder_sync_states, async () => {
+      const state = await db.folder_sync_states.get(accountScopeId)
+      if (!state) throw new Error('Browser Sync state is unavailable')
+      // Measuring storage is not a local data save, a publication, or error recovery.
+      await db.folder_sync_states.update(accountScopeId, currentUsagePatch(state, usage))
     })
   }
 
   async getOrCreateBrowserSyncGeneration(accountScopeId: string): Promise<FolderSyncGenerationRow> {
     requireScope(accountScopeId)
     const deviceId = await this.preheatDevice()
-    const state = await this.ensureSyncState(accountScopeId, deviceId)
-    const existing = await db.folder_sync_generations
-      .where('[accountScopeId+dataRevision]').equals([accountScopeId, state.dataRevision]).toArray()
-    const reusable = existing.find((row) => row.state === 'prepared' || row.state === 'writing')
-    if (reusable) {
-      try {
-        await decodeAndVerifyEnvelopePayload(JSON.parse(reusable.serializedEnvelope) as FolderSyncEnvelope)
-        return reusable
-      } catch {
-        // A prepared generation must normally be replayed byte-for-byte. A
-        // locally malformed one (for example, produced before a codec fix)
-        // cannot ever publish, so supersede it and rebuild from the durable
-        // entities and pending operations for the same revision.
-        await db.folder_sync_generations.update(reusable.id, { state: 'superseded' })
+    await this.ensureSyncState(accountScopeId, deviceId)
+    return db.transaction('rw', [db.folders, db.folder_memberships, db.folder_chat_references, db.folder_operations, db.folder_sync_states, db.folder_sync_generations], async () => {
+      const state = await db.folder_sync_states.get(accountScopeId)
+      if (!state) throw new Error('Folder sync state is unavailable')
+      const existing = await db.folder_sync_generations
+        .where('[accountScopeId+dataRevision]').equals([accountScopeId, state.localDataRevision]).toArray()
+      const reusable = existing.find((row) => row.state === 'prepared' || row.state === 'writing')
+      if (reusable) {
+        try {
+          if (await Dexie.waitFor(sha256Hex(reusable.payload)) !== reusable.payloadHash) throw new Error('Invalid prepared payload hash')
+          fromFolderSyncData(accountScopeId, parseFolderSyncData(decodeLzStringBase64(reusable.payload)))
+          return reusable
+        } catch {
+          await db.folder_sync_generations.update(reusable.id, { state: 'superseded' })
+        }
       }
-    }
-    const envelope = await this.createSyncEnvelope(accountScopeId)
-    const operations = await db.folder_operations.where('accountScopeId').equals(accountScopeId).toArray()
-    const generation: FolderSyncGenerationRow = {
-      id: nanoid(),
-      accountScopeId,
-      syncMode: 'browser-sync',
-      syncEpoch: state.authorityEpoch,
-      dataRevision: envelope.dataRevision,
-      parentRevisions: envelope.parentRevisions,
-      includedOperationIds: operations.filter((operation) => operation.state === 'pending').map((operation) => operation.id),
-      contentHash: envelope.contentHash,
-      serializedEnvelope: JSON.stringify(envelope),
-      createdAt: now(),
-      state: 'prepared',
-    }
-    await db.folder_sync_generations.put(generation)
-    return generation
+      const payload = encodeLzStringBase64(toFolderSyncData(await this.rawAccountData(accountScopeId)))
+      const operations = await db.folder_operations.where('accountScopeId').equals(accountScopeId).toArray()
+      // Keep data, revision and included operations in one transaction while WebCrypto completes.
+      const payloadHash = await Dexie.waitFor(sha256Hex(payload))
+      const generation: FolderSyncGenerationRow = {
+        id: nanoid(), accountScopeId, syncMode: 'browser-sync', syncEpoch: state.authorityEpoch,
+        dataRevision: state.localDataRevision,
+        includedOperationIds: operations.filter((operation) => operation.state === 'pending').map((operation) => operation.id),
+        payloadHash, payload, createdAt: now(), state: 'prepared',
+      }
+      await db.folder_sync_generations.put(generation)
+      return generation
+    })
   }
 
-  async markBrowserSyncGenerationAccepted(accountScopeId: string, generationId: string, warning?: 'near-quota'): Promise<void> {
+  async listReclaimableBrowserSyncGenerationIds(accountScopeId: string): Promise<string[]> {
+    requireScope(accountScopeId)
+    const [state, generations] = await Promise.all([
+      db.folder_sync_states.get(accountScopeId),
+      db.folder_sync_generations.where('accountScopeId').equals(accountScopeId).toArray(),
+    ])
+    return generations
+      .filter((generation) => generation.id !== state?.lastWrittenReplicaGenerationId
+        && (generation.state === 'accepted-by-browser-storage' || generation.state === 'superseded'))
+      .map((generation) => generation.id)
+  }
+
+  async getRecoverableBrowserSyncGeneration(
+    accountScopeId: string,
+    replacedGenerationId: string,
+  ): Promise<FolderSyncGenerationRow | undefined> {
+    requireScope(accountScopeId)
+    const candidates = await db.folder_sync_generations.where('accountScopeId').equals(accountScopeId).toArray()
+    return candidates.find((generation) => generation.state === 'writing'
+      && generation.replacedGenerationId === replacedGenerationId)
+  }
+
+  async markBrowserSyncGenerationWriting(
+    accountScopeId: string,
+    generationId: string,
+    replacedGenerationId?: string,
+  ): Promise<void> {
+    requireScope(accountScopeId)
+    await this.preheatDevice()
+    const generation = await db.folder_sync_generations.get(generationId)
+    if (!generation || generation.accountScopeId !== accountScopeId || generation.state === 'accepted-by-browser-storage') {
+      throw new Error('Browser Sync generation is unavailable')
+    }
+    if (generation.replacedGenerationId && replacedGenerationId && generation.replacedGenerationId !== replacedGenerationId) {
+      throw new Error('Browser Sync generation replacement target changed')
+    }
+    await db.folder_sync_generations.update(generationId, {
+      state: 'writing',
+      replacedGenerationId: generation.replacedGenerationId ?? replacedGenerationId,
+    })
+  }
+
+  async markBrowserSyncSettingsAccepted(accountScopeId: string, usage: BrowserSyncUsage): Promise<void> {
+    requireScope(accountScopeId)
+    await db.transaction('rw', db.folder_sync_states, async () => {
+      const state = await db.folder_sync_states.get(accountScopeId)
+      if (!state) throw new Error('Folder sync state is unavailable')
+      await db.folder_sync_states.put({
+        ...state, ...currentUsagePatch(state, usage),
+        lastBrowserStorageWriteAt: now(), lastAttemptAt: now(),
+        updatedAt: now(),
+      })
+    })
+  }
+
+  async markBrowserSyncGenerationAccepted(
+    accountScopeId: string,
+    generationId: string,
+    usage: BrowserSyncUsage,
+  ): Promise<void> {
     requireScope(accountScopeId)
     await this.preheatDevice()
     await db.transaction('rw', [db.folder_operations, db.folder_sync_states, db.folder_sync_generations], async () => {
@@ -1269,14 +1421,41 @@ export class FolderRepositoryImpl implements FolderRepository {
       await db.folder_sync_generations.update(generationId, { state: 'accepted-by-browser-storage' })
       await db.folder_sync_states.put({
         ...state,
-        lastUploadedRevision: generation.dataRevision,
-        lastSuccessfulSyncAt: now(),
+        lastWrittenReplicaGenerationId: generation.id,
+        lastBrowserStorageWriteAt: now(),
         lastAttemptAt: now(),
         lastErrorCode: undefined,
         retryAt: undefined,
-        browserSyncWarning: warning,
+        retryCount: 0,
+        browserSyncWarning: undefined,
+        ...currentUsagePatch(state, usage),
+        browserSyncProjectedUsageBytes: undefined,
+        browserSyncProjectedTotalBytes: undefined,
+        incompleteReplicaSince: undefined,
         updatedAt: now(),
       })
+    })
+  }
+
+  async dismissBrowserSyncCapacityNotice(accountScopeId: string, displayedUsagePercent: number): Promise<boolean> {
+    requireScope(accountScopeId)
+    if (!Number.isFinite(displayedUsagePercent) || displayedUsagePercent < BROWSER_SYNC_CAPACITY_NOTICE_THRESHOLD_PERCENT) return false
+    return db.transaction('rw', db.folder_sync_states, async () => {
+      const state = await db.folder_sync_states.get(accountScopeId)
+      const currentUsagePercent = state?.browserSyncCurrentUsageBytes !== undefined && state.browserSyncBudgetBytes
+        ? state.browserSyncCurrentUsageBytes / state.browserSyncBudgetBytes * 100
+        : undefined
+      if (!state || currentUsagePercent === undefined || currentUsagePercent < BROWSER_SYNC_CAPACITY_NOTICE_THRESHOLD_PERCENT) return false
+      const dismissedPercent = Math.max(
+        state.browserSyncLastDismissedUsagePercent ?? 0,
+        Math.min(currentUsagePercent, displayedUsagePercent),
+      )
+      if (dismissedPercent === state.browserSyncLastDismissedUsagePercent) return false
+      await db.folder_sync_states.update(accountScopeId, {
+        browserSyncLastDismissedUsagePercent: dismissedPercent,
+        updatedAt: now(),
+      })
+      return true
     })
   }
 

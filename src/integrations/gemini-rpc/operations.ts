@@ -1,5 +1,3 @@
-import { z } from 'zod'
-
 import { defineGeminiOperation, type GeminiOperation } from './types'
 
 /**
@@ -7,17 +5,28 @@ import { defineGeminiOperation, type GeminiOperation } from './types'
  * belong in this registry.
  */
 export const geminiOperations = {
-  'conversation.delete': defineGeminiOperation({
+  'conversation.delete': defineGeminiOperation<{ conversationId: string }, DeleteConversationResponse>({
     rpcId: 'GzXR5e',
     risk: 'destructive',
-    inputSchema: z.object({
-      conversationId: z.string().regex(/^c_[a-z0-9]+$/i),
-    }),
+    parseInput: parseDeleteConversationInput,
     sourcePath: () => getCurrentSourcePath(),
     buildArgs: ({ conversationId }) => [conversationId],
     parseResponse: parseDeleteConversationResponse,
   }),
 } as const
+
+function parseDeleteConversationInput(input: unknown) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    return { success: false } as const
+  }
+
+  const conversationId = (input as Record<string, unknown>).conversationId
+  if (typeof conversationId !== 'string' || !/^c_[a-z0-9]+$/i.test(conversationId)) {
+    return { success: false } as const
+  }
+
+  return { success: true, data: { conversationId } } as const
+}
 
 export interface DeleteConversationResponse {
   accepted: true
