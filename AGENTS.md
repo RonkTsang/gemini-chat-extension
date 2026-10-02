@@ -165,3 +165,8 @@ Verifies all locale files against English base.
 - **Manifest**: Generated from `wxt.config.ts`. Do not edit the legacy root `manifest.json` for WXT builds.
 - **Post-install**: `postinstall` runs `wxt prepare` automatically.
 - **Legacy files**: See `.cursor/rules/legacy-files-note.mdc` for deprecated files to avoid modifying.
+
+## Git Naming
+
+- Use Conventional Commits: `<type>(<scope>): <description>`.
+- Name branches `<type>/<short-description>`, for example `fix/tab-title-spark-task`.

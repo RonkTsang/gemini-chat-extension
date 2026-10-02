@@ -1,6 +1,6 @@
 ---
 name: gemini-power-kit-verify
-description: Live browser verification workflow for Gemini Power Kit on gemini.google.com using Codex's built-in chrome:control-chrome skill. Use when Codex has completed a feature, fixed a UI/runtime issue, or the user asks to verify plugin behavior on the live Gemini page, including settingPanel, SideNav entry, chat flows, temporary chats, model selection, quick follow-up, user-query/model-response interactions, or Gemini DOM selector checks.
+description: Live browser verification workflow for Gemini Power Kit on gemini.google.com using the @Chrome browser tool. Use when Codex has completed a feature, fixed a UI/runtime issue, or the user asks to verify plugin behavior on the live Gemini page, including settingPanel, SideNav entry, chat flows, temporary chats, model selection, quick follow-up, user-query/model-response interactions, or Gemini DOM selector checks.
 ---
 
 # Gemini Power Kit Verify
@@ -11,9 +11,9 @@ Verify Gemini Power Kit behavior on the live Gemini page with the user's logged-
 
 ## Tool Priority
 
-Use Codex's built-in `chrome:control-chrome` skill for all live browser verification. Follow that skill's bootstrap, interaction, safety, troubleshooting, and tab-finalization instructions. This path uses the user's real Chrome profile, Gemini login, and installed extension state.
+Use [@Chrome](plugin://browser@openai-bundled?browserFamily=chrome) for all live browser verification. Connect to the user's Chrome browser and use its existing tabs or open Gemini there; this path uses the user's real Chrome profile, Gemini login, and installed extension state. Follow the browser tool's own interaction and safety instructions when available.
 
-Do not substitute another browser automation tool, a fresh browser profile, or a headless browser. If `chrome:control-chrome` is unavailable or cannot connect after following its required troubleshooting workflow, report that live verification is blocked.
+Do not substitute another browser automation tool, a fresh browser profile, or a headless browser. If @Chrome is unavailable or cannot connect, report that live verification is blocked; do not report `chrome:control-chrome` as the missing dependency.
 
 ## Safety Rules
 
