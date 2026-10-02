@@ -1,4 +1,5 @@
 import { nanoid } from 'nanoid'
+import { logDevError, logDevEvent } from './devLogger'
 
 const LOG_PREFIX = '[Folders][membership.add]'
 
@@ -18,17 +19,6 @@ function traceDetails(traceId: string, step: string, details?: FolderTraceDetail
   }
 }
 
-function serializeError(error: unknown): { name?: string; message: string; stack?: string } {
-  if (error instanceof Error) {
-    return {
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
-    }
-  }
-  return { message: String(error) }
-}
-
 /** A correlation id shared by the menu, local write, projection refresh, and sync request. */
 export function createFolderTraceId(): string {
   return `membership-add-${nanoid(10)}`
@@ -39,7 +29,7 @@ export function logFolderTrace(
   step: string,
   details?: FolderTraceDetails,
 ): void {
-  console.info(LOG_PREFIX, traceDetails(traceId, step, details))
+  logDevEvent('info', LOG_PREFIX, step, traceDetails(traceId, step, details))
 }
 
 export function logFolderTraceError(
@@ -48,8 +38,5 @@ export function logFolderTraceError(
   error: unknown,
   details?: FolderTraceDetails,
 ): void {
-  console.error(LOG_PREFIX, {
-    ...traceDetails(traceId, step, details),
-    error: serializeError(error),
-  })
+  logDevError(LOG_PREFIX, step, error, traceDetails(traceId, step, details))
 }

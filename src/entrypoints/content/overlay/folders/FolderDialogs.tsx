@@ -1,14 +1,17 @@
 import {
+  Box,
   CloseButton,
   Dialog,
   Field,
   HStack,
   Input,
+  InputGroup,
   Portal,
   Stack,
   Text,
 } from '@chakra-ui/react'
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import TipsAndUpdateIcon from '~/assets/tips-and-update.svg?react'
 
 import { FolderAppearancePicker } from '@/components/folders/FolderAppearancePicker'
 import { GeminiDialogButton, GeminiDialogContent } from '@/components/ui/gemini'
@@ -119,6 +122,7 @@ function FolderEditorDialog({ folderId }: { folderId?: string }) {
                       gap={0}
                       width="100%"
                       height="36px"
+                      overflow="hidden"
                       borderWidth="1px"
                       borderColor={error ? 'red.400' : 'border'}
                       borderRadius="1rem"
@@ -136,28 +140,56 @@ function FolderEditorDialog({ folderId }: { folderId?: string }) {
                           setColorValue(appearance.colorValue)
                         }}
                       />
-                      <Input
-                        autoFocus
-                        value={name}
-                        placeholder={tt(
-                          FOLDER_NAME_PLACEHOLDERS[placeholderIndex].key,
-                          FOLDER_NAME_PLACEHOLDERS[placeholderIndex].fallback,
-                        )}
-                        aria-invalid={Boolean(error)}
-                        maxLength={60}
-                        height="34px"
+                      <InputGroup
+                        flex="1"
                         minW={0}
-                        borderWidth={0}
-                        borderRadius="0 14px 14px 0"
-                        px="8px"
-                        boxShadow="none"
-                        _placeholder={{ color: 'fg.muted', opacity: 1 }}
-                        _focusVisible={{ boxShadow: 'none', outline: 'none' }}
-                        onChange={(event) => setName(event.target.value)}
-                        onKeyDown={(event) => { if (event.key === 'Enter' && canSave) void save() }}
-                      />
+                        endElement={(
+                          <Text fontSize="xs" color="fg.muted" pointerEvents="none">
+                            {name.length}/60
+                          </Text>
+                        )}
+                      >
+                        <Input
+                          autoFocus
+                          value={name}
+                          placeholder={tt(
+                            FOLDER_NAME_PLACEHOLDERS[placeholderIndex].key,
+                            FOLDER_NAME_PLACEHOLDERS[placeholderIndex].fallback,
+                          )}
+                          aria-invalid={Boolean(error)}
+                          maxLength={60}
+                          height="34px"
+                          minW={0}
+                          borderWidth={0}
+                          borderRadius="0 14px 14px 0"
+                          px="8px"
+                          boxShadow="none"
+                          _placeholder={{ color: 'fg.muted', opacity: 1 }}
+                          _focusVisible={{ boxShadow: 'none', outline: 'none' }}
+                          onChange={(event) => setName(event.target.value)}
+                          onKeyDown={(event) => { if (event.key === 'Enter' && canSave) void save() }}
+                        />
+                      </InputGroup>
                     </HStack>
-                    <Field.HelperText>{name.length}/60</Field.HelperText>
+                    <Field.HelperText>
+                      <HStack
+                        align="flex-start"
+                        gap={3}
+                        p={3}
+                        mt={3}
+                        borderRadius="16px"
+                        bg="bg.muted"
+                        color="fg.muted"
+                      >
+                        <Box as={TipsAndUpdateIcon} boxSize="18px" flexShrink={0} mt="1px" />
+                        <Text>
+                          {tt(
+                            'folders_create_help',
+                            'Folders keep chats together so your content stays neat and organized.',
+                          )}
+                        </Text>
+                      </HStack>
+                    </Field.HelperText>
                     <Field.ErrorText>{error}</Field.ErrorText>
                   </Field.Root>
                 </Stack>

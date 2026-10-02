@@ -7,8 +7,10 @@ import {
 } from './appearance'
 import {
   ROOT_FOLDER_ID,
+  type BrowserSyncManifest,
+  type FolderAccountData,
+  type FolderSyncData,
   type FolderExportPayload,
-  type FolderSyncEnvelope,
 } from './types'
 import { validateAndProjectFolderTree } from './tree-projection'
 
@@ -68,27 +70,30 @@ export const chatReferenceRowSchema = z.object({
   titleVersionStamp: versionStampSchema,
 })
 
-const settingsSchema = z.object({
-  accountScopeId: accountScopeSchema,
+export const folderSyncSettingsSchema = z.object({
   enabled: z.boolean(),
   hideOrganizedChats: z.boolean(),
-  collapsedFolderIds: z.array(z.string().min(1)),
-  updatedAt: timestampSchema,
-  fieldVersions: z.record(z.string(), versionStampSchema),
-})
+}).strict()
 
-export const folderExportPayloadSchema = z.object({
-  schemaVersion: z.literal(1),
+export const folderSettingsPatchSchema = z.object({
+  enabled: z.boolean().optional(),
+  hideOrganizedChats: z.boolean().optional(),
+  collapsedFolderIds: z.array(z.string().min(1)).max(500).optional(),
+}).strict()
+
+export const settingsVersionSchema = z.string().regex(/^\d{13}:\d{6}:[A-Za-z0-9_.-]+$/u).max(160)
+
+const accountDataShape = {
   accountScopeId: accountScopeSchema,
   folders: z.array(folderRowSchema),
   memberships: z.array(folderMembershipRowSchema),
   chatReferences: z.array(chatReferenceRowSchema),
-  settings: settingsSchema,
-  exportedAt: timestampSchema,
-}).superRefine((value, ctx) => {
-  const scopedRows = [...value.folders, ...value.memberships, ...value.chatReferences, value.settings]
+}
+
+function validateAccountData(value: FolderAccountData, ctx: z.RefinementCtx): void {
+  const scopedRows = [...value.folders, ...value.memberships, ...value.chatReferences]
   if (scopedRows.some((row) => row.accountScopeId !== value.accountScopeId)) {
-    ctx.addIssue({ code: 'custom', message: 'Export contains a different account scope' })
+    ctx.addIssue({ code: 'custom', message: 'Data contains a different account scope' })
   }
 
   const folderIds = new Set(value.folders.map((row) => row.id))
@@ -119,34 +124,49 @@ export const folderExportPayloadSchema = z.object({
   if (!tree.ok) {
     ctx.addIssue({ code: 'custom', message: `Invalid folder tree: ${tree.reason}` })
   }
-})
+}
 
-export const folderSyncEnvelopeSchema = z.object({
-  appId: z.literal('gemini-power-kit-folders'),
+export const folderAccountDataSchema = z.object(accountDataShape).strict().superRefine(validateAccountData)
+
+export const folderSyncDataSchema = z.object({
+  folders: z.array(folderRowSchema.omit({ accountScopeId: true }).strict()),
+  memberships: z.array(folderMembershipRowSchema.omit({ accountScopeId: true }).strict()),
+  chatReferences: z.array(chatReferenceRowSchema.omit({ accountScopeId: true }).strict()),
+}).strict()
+
+export const folderExportPayloadSchema = z.object({
   schemaVersion: z.literal(1),
-  syncProtocolVersion: z.literal(1),
+  ...accountDataShape,
+  settings: folderSyncSettingsSchema,
+  settingsVersion: settingsVersionSchema,
+  exportedAt: timestampSchema,
+}).strict().superRefine(validateAccountData)
+
+export const browserSyncManifestSchema = z.object({
+  schemaVersion: z.literal(3),
   accountScopeId: accountScopeSchema,
-  authority: z.object({
-    provider: z.enum(['browser-sync', 'google-drive']),
-    epoch: z.string().min(1),
-  }),
-  dataRevision: z.string().min(1),
-  parentRevisions: z.array(z.string().min(1)),
-  generatedByDeviceId: z.string().min(1),
-  generatedAt: timestampSchema,
-  encoding: z.object({ codec: z.literal('lz-string-base64'), codecVersion: z.literal(1) }),
-  contentHash: z.string().regex(/^[a-f0-9]{64}$/),
-  payload: z.string().min(1),
-}).superRefine((value, ctx) => {
-  if (!value.authority.epoch.trim()) {
-    ctx.addIssue({ code: 'custom', message: 'Envelope authority epoch is required' })
-  }
-})
+  generationId: z.string().min(1).max(128),
+  dataRevision: z.string().min(1).max(256),
+  authorityEpoch: z.string().min(1).max(128),
+  chunkCount: z.number().int().min(1).max(512),
+  payloadBytes: z.number().int().positive().max(70 * 1024),
+  payloadHash: z.string().regex(/^[a-f0-9]{64}$/),
+  settings: folderSyncSettingsSchema,
+  settingsVersion: settingsVersionSchema,
+}).strict()
+
+export function parseFolderAccountData(value: unknown): FolderAccountData {
+  return folderAccountDataSchema.parse(value)
+}
+
+export function parseFolderSyncData(value: unknown): FolderSyncData {
+  return folderSyncDataSchema.parse(value)
+}
 
 export function parseFolderExportPayload(value: unknown): FolderExportPayload {
   return folderExportPayloadSchema.parse(value)
 }
 
-export function parseFolderSyncEnvelope(value: unknown): FolderSyncEnvelope {
-  return folderSyncEnvelopeSchema.parse(value)
+export function parseBrowserSyncManifest(value: unknown): BrowserSyncManifest {
+  return browserSyncManifestSchema.parse(value)
 }

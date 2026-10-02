@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
-import type { FolderExportPayload, FolderRow } from '@/domain/folder/types'
+import type { FolderAccountData, FolderRow } from '@/domain/folder/types'
 import { ROOT_FOLDER_ID } from '@/domain/folder/types'
-import { mergeFolderExportPayloads } from './merge'
+import { mergeFolderAccountData } from './merge'
 
 const scope = 'account-scope-0001'
 const baseStamp = '0000000000001:000000:device-a'
@@ -18,25 +18,23 @@ function folder(patch: Partial<FolderRow> = {}): FolderRow {
   }
 }
 
-function payload(folders: FolderRow[]): FolderExportPayload {
+function payload(folders: FolderRow[]): FolderAccountData {
   return {
-    schemaVersion: 1, accountScopeId: scope, folders, memberships: [], chatReferences: [],
-    settings: { accountScopeId: scope, enabled: true, hideOrganizedChats: false, collapsedFolderIds: [], updatedAt: '2026-01-01T00:00:00.000Z', fieldVersions: { enabled: baseStamp, hideOrganizedChats: baseStamp, collapsedFolderIds: baseStamp } },
-    exportedAt: '2026-01-01T00:00:00.000Z',
+    accountScopeId: scope, folders, memberships: [], chatReferences: [],
   }
 }
 
-describe('mergeFolderExportPayloads', () => {
+describe('mergeFolderAccountData', () => {
   it('merges independent fields while keeping a position atomic', () => {
     const local = payload([folder({ name: 'Local rename', colorValue: '#abcdef', fieldVersions: { name: newerStamp, iconKey: baseStamp, colorValue: newerStamp, position: baseStamp }, versionStamp: newerStamp })])
     const remote = payload([folder({ iconKey: 'favorites', orderKey: 'V'.padStart(32, '0'), fieldVersions: { name: baseStamp, iconKey: newerStamp, colorValue: baseStamp, position: newerStamp }, versionStamp: newerStamp })])
-    const merged = mergeFolderExportPayloads(local, remote)
+    const merged = mergeFolderAccountData(local, remote)
     expect(merged.folders[0]).toMatchObject({ name: 'Local rename', iconKey: 'favorites', colorValue: '#abcdef', orderKey: remote.folders[0].orderKey })
   })
 
   it('keeps a tombstone when another device still has the live row', () => {
     const deleted = folder({ deletedAt: '2026-01-02T00:00:00.000Z', deleteVersionStamp: newerStamp, versionStamp: newerStamp })
-    const merged = mergeFolderExportPayloads(payload([folder()]), payload([deleted]))
+    const merged = mergeFolderAccountData(payload([folder()]), payload([deleted]))
     expect(merged.folders[0]).toMatchObject({ deletedAt: '2026-01-02T00:00:00.000Z', deleteVersionStamp: newerStamp })
   })
 })

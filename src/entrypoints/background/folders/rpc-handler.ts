@@ -1,6 +1,7 @@
 import { createExtensionRpcRouter, type ExtensionRpcMessageListener } from '@/integrations/extension-rpc/router'
 import { folderRpcEnvelopeSchema, folderRpcParams, folderRpcResponseSchema, type FolderRpcEnvelope, type FolderRpcErrorCode } from '@/domain/folder/rpc'
 import { folderRepository } from '@/data/repositories/folderRepository'
+import { measureBrowserSyncUsage } from '@/services/folder-sync/providers/browser-sync'
 
 import { FolderCommandService } from './command-service'
 import { publishFolderInvalidation } from './invalidation'
@@ -80,6 +81,16 @@ export function createFolderRpcHandler(scheduler: FolderSyncScheduler): Extensio
           case 'getFolderDeleteImpact': data = await queries.getFolderDeleteImpact(request.accountScopeId, (params as { folderId: string }).folderId); break
           case 'getSettings': data = await queries.getSidebarState(request.accountScopeId, 1).then((result) => result.settings); break
           case 'getSyncStatus': data = await queries.getSyncStatus(request.accountScopeId); break
+          case 'measureBrowserSyncUsage': {
+            await folderRepository.recordBrowserSyncUsage(request.accountScopeId, await measureBrowserSyncUsage())
+            data = await queries.getSyncStatus(request.accountScopeId)
+            break
+          }
+          case 'dismissCapacityNotice': {
+            const input = params as { displayedUsagePercent: number }
+            data = await folderRepository.dismissBrowserSyncCapacityNotice(request.accountScopeId, input.displayedUsagePercent)
+            break
+          }
           case 'listSnapshots': { const input = params as { cursor?: string; limit: number }; data = await queries.listSnapshots(request.accountScopeId, input.cursor, input.limit); break }
           case 'getRestoreImpact': data = { available: true }; break
           case 'exportBackup': data = await folderRepository.exportAccountData(request.accountScopeId); break
@@ -94,6 +105,11 @@ export function createFolderRpcHandler(scheduler: FolderSyncScheduler): Extensio
           // changes made every foreground tab reload its Sidebar needlessly.
           void publishFolderInvalidation(
             { accountScopeId: request.accountScopeId, dataRevision, type: 'folders:data-changed', affected: {} },
+            { excludeTabId: sender.tab?.id },
+          )
+        } else if ((request.method === 'dismissCapacityNotice' && data === true) || request.method === 'measureBrowserSyncUsage') {
+          void publishFolderInvalidation(
+            { accountScopeId: request.accountScopeId, dataRevision, type: 'folders:data-changed', affected: { syncStatus: true } },
             { excludeTabId: sender.tab?.id },
           )
         }

@@ -1,5 +1,3 @@
-import type { z } from 'zod'
-
 import {
   GEMINI_RPC_BRIDGE_SOURCE,
   GEMINI_RPC_PROTOCOL_VERSION,
@@ -7,8 +5,12 @@ import {
 
 export type GeminiOperationRisk = 'read' | 'write' | 'destructive'
 
+export type GeminiOperationInputResult<Input> =
+  | { success: true; data: Input }
+  | { success: false }
+
 export interface GeminiOperation<Input = unknown, Output = unknown> {
-  inputSchema: z.ZodType<Input>
+  parseInput: (input: unknown) => GeminiOperationInputResult<Input>
   rpcId: string
   risk: GeminiOperationRisk
   sourcePath: (input: Input) => string

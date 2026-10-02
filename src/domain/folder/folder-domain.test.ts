@@ -39,14 +39,15 @@ describe('folder domain contracts', () => {
   })
 
   it('rejects cross-scope and dangling references at the import boundary', () => {
-    const payload = { schemaVersion: 1, accountScopeId: scope, folders: [folder('a')], memberships: [{ id: 'm', accountScopeId: scope, folderId: 'missing', chatId: 'chat', orderKey: 'U', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z', versionStamp: stamp, positionVersionStamp: stamp }], chatReferences: [], settings: { accountScopeId: scope, enabled: true, hideOrganizedChats: false, collapsedFolderIds: [], updatedAt: '2026-01-01T00:00:00.000Z', fieldVersions: {} }, exportedAt: '2026-01-01T00:00:00.000Z' }
+    const payload = { schemaVersion: 1, accountScopeId: scope, folders: [folder('a')], memberships: [{ id: 'm', accountScopeId: scope, folderId: 'missing', chatId: 'chat', orderKey: keyBetween(), createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z', versionStamp: stamp, positionVersionStamp: stamp }], chatReferences: [], settings: { enabled: true, hideOrganizedChats: false }, settingsVersion: stamp, exportedAt: '2026-01-01T00:00:00.000Z' }
     expect(folderExportPayloadSchema.safeParse(payload).success).toBe(false)
   })
 
   it('rejects duplicate chat references, duplicate memberships, invalid order keys, and deep trees', () => {
-    const validMembership = { id: 'm', accountScopeId: scope, folderId: 'a', chatId: 'chat', orderKey: 'U', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z', versionStamp: stamp, positionVersionStamp: stamp }
+    const validMembership = { id: 'm', accountScopeId: scope, folderId: 'a', chatId: 'chat', orderKey: keyBetween(), createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z', versionStamp: stamp, positionVersionStamp: stamp }
     const chat = { accountScopeId: scope, chatId: 'chat', cachedTitle: 'Title', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z', titleVersionStamp: stamp }
-    const base = { schemaVersion: 1 as const, accountScopeId: scope, folders: [folder('a')], memberships: [validMembership], chatReferences: [chat], settings: { accountScopeId: scope, enabled: true, hideOrganizedChats: false, collapsedFolderIds: [], updatedAt: '2026-01-01T00:00:00.000Z', fieldVersions: {} }, exportedAt: '2026-01-01T00:00:00.000Z' }
+    const base = { schemaVersion: 1 as const, accountScopeId: scope, folders: [folder('a')], memberships: [validMembership], chatReferences: [chat], settings: { enabled: true, hideOrganizedChats: false }, settingsVersion: stamp, exportedAt: '2026-01-01T00:00:00.000Z' }
+    expect(folderExportPayloadSchema.safeParse(base).success).toBe(true)
     expect(folderExportPayloadSchema.safeParse({ ...base, chatReferences: [chat, chat] }).success).toBe(false)
     expect(folderExportPayloadSchema.safeParse({ ...base, memberships: [validMembership, { ...validMembership, id: 'm2' }] }).success).toBe(false)
     expect(folderExportPayloadSchema.safeParse({ ...base, folders: [{ ...folder('a'), orderKey: 'not-valid!' }] }).success).toBe(false)

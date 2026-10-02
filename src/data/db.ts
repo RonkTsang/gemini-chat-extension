@@ -202,6 +202,34 @@ export class GeminiExtensionDB extends Dexie {
         // Folders has not shipped; this only adds the background-owned
         // generation table and intentionally does not import host-page data.
       })
+    this.version(10)
+      .stores({})
+      .upgrade(async (transaction) => {
+        // Folders has not shipped. V2 deliberately starts from a new local
+        // protocol state rather than supporting a dual-read migration path.
+        await Promise.all([
+          transaction.table('folders').clear(),
+          transaction.table('folder_memberships').clear(),
+          transaction.table('folder_chat_references').clear(),
+          transaction.table('folder_settings').clear(),
+          transaction.table('folder_operations').clear(),
+          transaction.table('folder_sync_states').clear(),
+          transaction.table('folder_sync_generations').clear(),
+          transaction.table('folder_snapshots').clear(),
+          transaction.table('folder_coordinator_leases').clear(),
+        ])
+      })
+    this.version(11)
+      .stores({})
+      .upgrade(async (transaction) => {
+        // Unreleased Folder data starts fresh under the V3 protocol; no legacy parser is retained.
+        await Promise.all([
+          'folders', 'folder_memberships', 'folder_chat_references', 'folder_settings',
+          'folder_operations', 'folder_sync_states', 'folder_sync_generations',
+          'folder_snapshots', 'folder_coordinator_leases',
+        ].map((table) => transaction.table(table).clear()))
+      })
+
   }
 }
 

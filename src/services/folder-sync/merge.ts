@@ -1,11 +1,10 @@
 import { compareVersionStamp } from '@/domain/folder/hlc'
-import { parseFolderExportPayload } from '@/domain/folder/schemas'
+import { parseFolderAccountData } from '@/domain/folder/schemas'
 import type {
   ChatReferenceRow,
-  FolderExportPayload,
+  FolderAccountData,
   FolderMembershipRow,
   FolderRow,
-  FolderSettingsRow,
 } from '@/domain/folder/types'
 
 function newest<T>(left: T, right: T, leftStamp: string | undefined, rightStamp: string | undefined): T {
@@ -67,27 +66,6 @@ function mergeChatReference(left: ChatReferenceRow, right: ChatReferenceRow): Ch
   return newest(left, right, left.titleVersionStamp, right.titleVersionStamp)
 }
 
-function mergeSettings(left: FolderSettingsRow, right: FolderSettingsRow): FolderSettingsRow {
-  const enabled = newest(left, right, left.fieldVersions.enabled, right.fieldVersions.enabled)
-  const hidden = newest(left, right, left.fieldVersions.hideOrganizedChats, right.fieldVersions.hideOrganizedChats)
-  const collapsed = newest(left, right, left.fieldVersions.collapsedFolderIds, right.fieldVersions.collapsedFolderIds)
-  const fieldVersions = { ...left.fieldVersions, ...right.fieldVersions }
-  const assignVersion = (key: 'enabled' | 'hideOrganizedChats' | 'collapsedFolderIds', value: string | undefined) => {
-    if (value) fieldVersions[key] = value
-    else delete fieldVersions[key]
-  }
-  assignVersion('enabled', enabled.fieldVersions.enabled)
-  assignVersion('hideOrganizedChats', hidden.fieldVersions.hideOrganizedChats)
-  assignVersion('collapsedFolderIds', collapsed.fieldVersions.collapsedFolderIds)
-  return {
-    ...newest(left, right, left.updatedAt, right.updatedAt),
-    enabled: enabled.enabled,
-    hideOrganizedChats: hidden.hideOrganizedChats,
-    collapsedFolderIds: collapsed.collapsedFolderIds,
-    fieldVersions,
-  }
-}
-
 function mergeRows<T extends { id: string }>(
   left: T[],
   right: T[],
@@ -99,7 +77,7 @@ function mergeRows<T extends { id: string }>(
 }
 
 /** Deterministically merges two validated account snapshots without trusting wall-clock timestamps. */
-export function mergeFolderExportPayloads(local: FolderExportPayload, remote: FolderExportPayload): FolderExportPayload {
+export function mergeFolderAccountData(local: FolderAccountData, remote: FolderAccountData): FolderAccountData {
   if (local.accountScopeId !== remote.accountScopeId) throw new Error('Cannot merge different Folder account scopes')
   const folders = mergeRows(local.folders, remote.folders, mergeFolder)
   let memberships = mergeRows(local.memberships, remote.memberships, mergeMembership)
@@ -120,13 +98,10 @@ export function mergeFolderExportPayloads(local: FolderExportPayload, remote: Fo
     const prior = references.get(reference.chatId)
     references.set(reference.chatId, prior ? mergeChatReference(prior, reference) : reference)
   }
-  return parseFolderExportPayload({
-    schemaVersion: 1,
+  return parseFolderAccountData({
     accountScopeId: local.accountScopeId,
     folders,
     memberships,
     chatReferences: [...references.values()],
-    settings: mergeSettings(local.settings, remote.settings),
-    exportedAt: new Date().toISOString(),
   })
 }

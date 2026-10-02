@@ -1,200 +1,264 @@
-import { nanoid } from 'nanoid'
 import { browser } from 'wxt/browser'
 
-import { parseFolderSyncEnvelope } from '@/domain/folder/schemas'
-import type { FolderSyncEnvelope } from '@/domain/folder/types'
-import { decodeAndVerifyEnvelopePayload, stableStringify } from '../codec'
+import { parseBrowserSyncManifest } from '@/domain/folder/schemas'
+import type { BrowserSyncManifest, BrowserSyncUsage, FolderAccountData, FolderSettingsRow, FolderSyncGenerationRow, FolderSyncSettings } from '@/domain/folder/types'
+import { logDevEvent } from '@/utils/devLogger'
+import { decodeAndVerifySyncData, newestSyncSettings } from '../codec'
 
-const CHUNK_TARGET_BYTES = 7_000
-const DEFAULT_QUOTA_BYTES = 100_000
+export const FOLDER_SYNC_BUDGET_BYTES = 70 * 1024
+export const CHUNK_TARGET_BYTES = 7_000
+const DEFAULT_QUOTA_BYTES = 100 * 1024
+const DEFAULT_QUOTA_BYTES_PER_ITEM = 8 * 1024
+const DEFAULT_MAX_ITEMS = 512
+const LOG_LABEL = '[Folders][sync]'
 
-interface BrowserSyncGeneration {
-  generation: string
-  chunkCount: number
-  dataRevision: string
-  contentHash: string
+type SyncAreaWithLimits = typeof browser.storage.sync & {
+  QUOTA_BYTES?: number
+  QUOTA_BYTES_PER_ITEM?: number
+  MAX_ITEMS?: number
 }
 
-interface BrowserSyncManifest {
-  active: BrowserSyncGeneration
-  previous?: BrowserSyncGeneration
+interface BrowserSyncLimits {
+  quotaBytes: number
+  quotaBytesPerItem: number
+  maxItems: number
 }
+
+export type BrowserSyncReadResult =
+  | { status: 'absent' }
+  | { status: 'complete'; manifest: BrowserSyncManifest; data: FolderAccountData }
+  | { status: 'incomplete'; manifest: BrowserSyncManifest; missingChunkIndexes: number[] }
+  | { status: 'invalid'; code: string; manifest?: BrowserSyncManifest }
 
 export interface BrowserSyncPublishResult {
-  usedBytes: number
+  settings: FolderSyncSettings
+  settingsVersion: string
+  projectedFolderBytes: number
+  projectedTotalBytes: number
+  projectedItemCount: number
   quotaBytes: number
-  warning: 'near-quota' | undefined
+  folderBudgetBytes: number
+  usagePercent: number
 }
 
-function manifestKey(accountScopeId: string): string {
-  return `folders:${accountScopeId}:manifest`
+export class BrowserSyncQuotaError extends Error {
+  constructor(
+    readonly code: 'item-too-large' | 'folder-budget-exceeded' | 'quota-exceeded' | 'max-items-exceeded',
+    readonly usage?: BrowserSyncPublishResult,
+    readonly currentUsage?: BrowserSyncUsage,
+  ) {
+    super(code)
+  }
 }
 
-function chunkKey(accountScopeId: string, generation: string, index: number): string {
-  return `folders:${accountScopeId}:${generation}:chunk:${index}`
+export function browserSyncManifestKey(accountScopeId: string): string {
+  return `folders:v3:${accountScopeId}:manifest`
 }
 
-function splitChunks(value: string): string[] {
-  return Array.from(
-    { length: Math.ceil(value.length / CHUNK_TARGET_BYTES) },
-    (_, index) => value.slice(index * CHUNK_TARGET_BYTES, (index + 1) * CHUNK_TARGET_BYTES),
-  )
+export function browserSyncChunkKey(accountScopeId: string, generationId: string, index: number): string {
+  return `folders:v3:${accountScopeId}:generation:${generationId}:chunk:${index}`
+}
+
+export function storageItemBytes(key: string, value: unknown): number {
+  const encoder = new TextEncoder()
+  return encoder.encode(key).byteLength + encoder.encode(JSON.stringify(value)).byteLength
+}
+
+function syncLimits(): BrowserSyncLimits {
+  const sync = browser.storage.sync as SyncAreaWithLimits
+  return {
+    quotaBytes: sync.QUOTA_BYTES ?? DEFAULT_QUOTA_BYTES,
+    quotaBytesPerItem: sync.QUOTA_BYTES_PER_ITEM ?? DEFAULT_QUOTA_BYTES_PER_ITEM,
+    maxItems: sync.MAX_ITEMS ?? DEFAULT_MAX_ITEMS,
+  }
+}
+
+function isFolderSyncKey(key: string): boolean {
+  return key.startsWith('folders:v3:')
+}
+
+/** Counts the exact key and JSON/UTF-8 bytes for either a current or projected snapshot. */
+export function calculateBrowserSyncUsage(values: Record<string, unknown>): BrowserSyncUsage {
+  let folderBytes = 0
+  let totalBytes = 0
+  for (const [key, value] of Object.entries(values)) {
+    const bytes = storageItemBytes(key, value)
+    totalBytes += bytes
+    if (isFolderSyncKey(key)) folderBytes += bytes
+  }
+  return {
+    folderBytes,
+    folderBudgetBytes: FOLDER_SYNC_BUDGET_BYTES,
+    totalBytes,
+    quotaBytes: syncLimits().quotaBytes,
+    usagePercent: folderBytes / FOLDER_SYNC_BUDGET_BYTES * 100,
+  }
+}
+
+/** Explicit measurement only; ordinary status queries must not scan Sync storage. */
+export async function measureBrowserSyncUsage(): Promise<BrowserSyncUsage> {
+  const values = await browser.storage.sync.get(null) as Record<string, unknown>
+  return calculateBrowserSyncUsage(values)
+}
+
+function chunksFor(value: string, accountScopeId: string, generationId: string, perItemLimit: number): string[] {
+  const codePoints = Array.from(value)
+  const chunks: string[] = []
+  let cursor = 0
+  while (cursor < codePoints.length) {
+    let low = 1
+    let high = codePoints.length - cursor
+    let best = 0
+    while (low <= high) {
+      const count = Math.floor((low + high) / 2)
+      const candidate = codePoints.slice(cursor, cursor + count).join('')
+      const key = browserSyncChunkKey(accountScopeId, generationId, chunks.length)
+      if (storageItemBytes(key, candidate) <= Math.min(CHUNK_TARGET_BYTES, perItemLimit)) {
+        best = count
+        low = count + 1
+      } else {
+        high = count - 1
+      }
+    }
+    if (!best) throw new BrowserSyncQuotaError('item-too-large')
+    chunks.push(codePoints.slice(cursor, cursor + best).join(''))
+    cursor += best
+  }
+  return chunks
+}
+
+function invalid(code: string, manifest?: BrowserSyncManifest): BrowserSyncReadResult {
+  return { status: 'invalid', code, ...(manifest ? { manifest } : {}) }
 }
 
 function parseManifest(value: unknown): BrowserSyncManifest | undefined {
-  if (!value || typeof value !== 'object') return undefined
-  const manifest = value as Partial<BrowserSyncManifest>
-  const isGeneration = (candidate: unknown): candidate is BrowserSyncGeneration => {
-    if (!candidate || typeof candidate !== 'object') return false
-    const entry = candidate as Partial<BrowserSyncGeneration>
-    return typeof entry.generation === 'string'
-      && typeof entry.chunkCount === 'number'
-      && Number.isInteger(entry.chunkCount)
-      && entry.chunkCount > 0
-      && typeof entry.dataRevision === 'string'
-      && typeof entry.contentHash === 'string'
-  }
-  if (!isGeneration(manifest.active)) return undefined
-  if (manifest.previous !== undefined && !isGeneration(manifest.previous)) return undefined
-  return { active: manifest.active, previous: manifest.previous }
+  if (value === undefined) return undefined
+  return parseBrowserSyncManifest(value)
 }
 
-async function readGeneration(accountScopeId: string, descriptor: BrowserSyncGeneration): Promise<FolderSyncEnvelope> {
-  const keys = Array.from({ length: descriptor.chunkCount }, (_, index) => chunkKey(accountScopeId, descriptor.generation, index))
-  const stored = await browser.storage.sync.get(keys) as Record<string, unknown>
-  if (keys.some((key) => typeof stored[key] !== 'string')) {
-    throw new Error('Browser Sync generation is incomplete')
-  }
-  const serialized = keys.map((key) => stored[key]).join('')
-  const envelope = parseFolderSyncEnvelope(JSON.parse(serialized))
-  if (envelope.accountScopeId !== accountScopeId || envelope.dataRevision !== descriptor.dataRevision || envelope.contentHash !== descriptor.contentHash) {
-    throw new Error('Browser Sync manifest does not match its generation')
-  }
-  await decodeAndVerifyEnvelopePayload(envelope)
-  return envelope
+function activeChunkKeys(manifest: BrowserSyncManifest): string[] {
+  return Array.from({ length: manifest.chunkCount }, (_, index) => browserSyncChunkKey(
+    manifest.accountScopeId,
+    manifest.generationId,
+    index,
+  ))
 }
 
-function quotaBytes(): number {
-  const sync = browser.storage.sync as typeof browser.storage.sync & { QUOTA_BYTES?: number }
-  return sync.QUOTA_BYTES ?? DEFAULT_QUOTA_BYTES
-}
-
-function generationKeys(accountScopeId: string, generation: string, chunkCount: number): string[] {
-  return Array.from({ length: chunkCount }, (_, index) => chunkKey(accountScopeId, generation, index))
-}
-
-/**
- * Immutable-generation Browser Sync transport. It writes and verifies every
- * chunk before atomically switching the small manifest, retaining one complete
- * previous generation for a read fallback.
- */
+/** Browser Sync transport with one active generation and no cloud-confirmation claim. */
 export class BrowserSyncFolderProvider {
-  async publish(envelope: FolderSyncEnvelope, generationId = nanoid()): Promise<BrowserSyncPublishResult> {
-    const accountScopeId = envelope.accountScopeId
-    const generation = generationId
-    const chunks = splitChunks(stableStringify(envelope))
-    const rawManifest = await browser.storage.sync.get(manifestKey(accountScopeId)) as Record<string, unknown>
-    const existing = parseManifest(rawManifest[manifestKey(accountScopeId)])
-    const descriptor: BrowserSyncGeneration = {
-      generation,
+  async read(accountScopeId: string): Promise<BrowserSyncReadResult> {
+    const key = browserSyncManifestKey(accountScopeId)
+    let manifest: BrowserSyncManifest | undefined
+    try {
+      manifest = parseManifest((await browser.storage.sync.get(key) as Record<string, unknown>)[key])
+    } catch {
+      return invalid('invalid-manifest')
+    }
+    if (!manifest) return { status: 'absent' }
+    if (manifest.accountScopeId !== accountScopeId || manifest.schemaVersion !== 3) return invalid('manifest-scope-mismatch')
+
+    const keys = activeChunkKeys(manifest)
+    const stored = await browser.storage.sync.get(keys) as Record<string, unknown>
+    const missingChunkIndexes = keys.flatMap((chunkKey, index) => typeof stored[chunkKey] === 'string' ? [] : [index])
+    if (missingChunkIndexes.length) return { status: 'incomplete', manifest, missingChunkIndexes }
+
+    try {
+      const payload = keys.map((chunkKey) => stored[chunkKey] as string).join('')
+      const data = await decodeAndVerifySyncData(manifest, payload)
+      return { status: 'complete', manifest, data }
+    } catch {
+      return invalid('invalid-payload', manifest)
+    }
+  }
+
+  private preflight(values: Record<string, unknown>, nextEntries: Record<string, unknown>, manifest: BrowserSyncManifest, removedKeys: string[] = []): BrowserSyncPublishResult {
+    const limits = syncLimits()
+    for (const [key, value] of Object.entries(nextEntries)) {
+      if (storageItemBytes(key, value) > limits.quotaBytesPerItem) throw new BrowserSyncQuotaError('item-too-large')
+    }
+    const projectedValues = { ...values }
+    removedKeys.forEach((key) => delete projectedValues[key])
+    Object.assign(projectedValues, nextEntries)
+    const currentUsage = calculateBrowserSyncUsage(values)
+    const usage = calculateBrowserSyncUsage(projectedValues)
+    const result: BrowserSyncPublishResult = {
+      settings: manifest.settings, settingsVersion: manifest.settingsVersion,
+      projectedFolderBytes: usage.folderBytes, projectedTotalBytes: usage.totalBytes,
+      projectedItemCount: Object.keys(projectedValues).length,
+      quotaBytes: limits.quotaBytes, folderBudgetBytes: FOLDER_SYNC_BUDGET_BYTES, usagePercent: usage.usagePercent,
+    }
+    if (usage.folderBytes > FOLDER_SYNC_BUDGET_BYTES) throw new BrowserSyncQuotaError('folder-budget-exceeded', result, currentUsage)
+    if (usage.totalBytes > limits.quotaBytes) throw new BrowserSyncQuotaError('quota-exceeded', result, currentUsage)
+    if (result.projectedItemCount > limits.maxItems) throw new BrowserSyncQuotaError('max-items-exceeded', result, currentUsage)
+    return result
+  }
+
+  /** Preserve the latest data pointer, including while its chunks are still arriving. */
+  async publishSettings(accountScopeId: string, local: FolderSettingsRow): Promise<BrowserSyncPublishResult | undefined> {
+    const values = await browser.storage.sync.get(null) as Record<string, unknown>
+    const key = browserSyncManifestKey(accountScopeId)
+    const current = parseManifest(values[key])
+    if (!current) return undefined
+    if (current.accountScopeId !== accountScopeId) throw new Error('Manifest account scope does not match')
+    const selected = newestSyncSettings(current, {
+      ...current, settings: { enabled: local.enabled, hideOrganizedChats: local.hideOrganizedChats }, settingsVersion: local.settingsVersion,
+    })
+    const nextEntries = { [key]: selected }
+    const result = this.preflight(values, nextEntries, selected)
+    if (selected !== current) await browser.storage.sync.set(nextEntries)
+    return result
+  }
+
+  async publish(
+    generation: FolderSyncGenerationRow,
+    localSettings: FolderSettingsRow,
+    replacedGenerationId?: string,
+  ): Promise<BrowserSyncPublishResult> {
+    const accountScopeId = generation.accountScopeId
+    const chunks = chunksFor(generation.payload, accountScopeId, generation.id, syncLimits().quotaBytesPerItem)
+    const values = await browser.storage.sync.get(null) as Record<string, unknown>
+    const current = parseManifest(values[browserSyncManifestKey(accountScopeId)])
+    if (current && current.accountScopeId !== accountScopeId) throw new Error('Manifest account scope does not match')
+    if (current?.generationId !== replacedGenerationId) throw new Error('Browser Sync active generation changed before publish')
+    const local = {
+      settings: { enabled: localSettings.enabled, hideOrganizedChats: localSettings.hideOrganizedChats },
+      settingsVersion: localSettings.settingsVersion,
+    }
+    const selected = current ? newestSyncSettings(local, current) : local
+    const manifest: BrowserSyncManifest = parseBrowserSyncManifest({
+      schemaVersion: 3, accountScopeId, generationId: generation.id,
+      dataRevision: generation.dataRevision, authorityEpoch: generation.syncEpoch,
       chunkCount: chunks.length,
-      dataRevision: envelope.dataRevision,
-      contentHash: envelope.contentHash,
-    }
-    const entries = Object.fromEntries(chunks.map((chunk, index) => [chunkKey(accountScopeId, generation, index), chunk]))
-    const usedBytes = await browser.storage.sync.getBytesInUse(null)
-    const estimatedWriteBytes = Object.entries(entries).reduce((total, [key, value]) => total + key.length + value.length, 0)
-    const quota = quotaBytes()
-    if (usedBytes + estimatedWriteBytes > quota) {
-      throw new Error('Browser Sync does not have enough peak storage for a safe generation write')
-    }
-
-    try {
-      await browser.storage.sync.set(entries)
-      await readGeneration(accountScopeId, descriptor)
-      const manifest: BrowserSyncManifest = { active: descriptor, previous: existing?.active }
-      await browser.storage.sync.set({ [manifestKey(accountScopeId)]: manifest })
-
-      // A concurrent Browser Sync write may supersede us after set() resolves.
-      // Do not mark this local generation accepted unless it is still visible
-      // through the manifest.
-      const committed = parseManifest((await browser.storage.sync.get(manifestKey(accountScopeId)) as Record<string, unknown>)[manifestKey(accountScopeId)])
-      if (committed?.active.generation !== generation) {
-        throw new Error('Browser Sync generation was superseded before manifest verification')
-      }
-      await this.cleanupLocalOrphans(accountScopeId, envelope.generatedByDeviceId)
-    } catch (error) {
-      // Chunk writes precede the manifest switch. If the switch (or its
-      // verification) failed, remove only this unreferenced generation; the
-      // prior active/previous pair remains untouched.
-      await this.removeGenerationIfUnreferenced(accountScopeId, descriptor)
-      throw error
-    }
-    const finalUsedBytes = await browser.storage.sync.getBytesInUse(null)
-    return {
-      usedBytes: finalUsedBytes,
-      quotaBytes: quota,
-      warning: finalUsedBytes >= quota * 0.6 ? 'near-quota' : undefined,
-    }
+      payloadBytes: new TextEncoder().encode(generation.payload).byteLength,
+      payloadHash: generation.payloadHash,
+      settings: selected.settings, settingsVersion: selected.settingsVersion,
+    })
+    await decodeAndVerifySyncData(manifest, generation.payload)
+    const nextEntries: Record<string, unknown> = Object.fromEntries(chunks.map((chunk, index) => [
+      browserSyncChunkKey(accountScopeId, generation.id, index), chunk,
+    ]))
+    nextEntries[browserSyncManifestKey(accountScopeId)] = manifest
+    const keysToRemove = current ? activeChunkKeys(current) : []
+    const result = this.preflight(values, nextEntries, manifest, keysToRemove)
+    if (keysToRemove.length) await browser.storage.sync.remove(keysToRemove)
+    await browser.storage.sync.set(nextEntries)
+    logDevEvent('info', LOG_LABEL, 'browser-sync.publish.accepted', { accountScopeId, generationId: generation.id, chunkCount: chunks.length })
+    return result
   }
 
-  async read(accountScopeId: string): Promise<FolderSyncEnvelope | undefined> {
-    const raw = await browser.storage.sync.get(manifestKey(accountScopeId)) as Record<string, unknown>
-    const manifest = parseManifest(raw[manifestKey(accountScopeId)])
-    if (!manifest) return undefined
-    try {
-      return await readGeneration(accountScopeId, manifest.active)
-    } catch (error) {
-      if (!manifest.previous) throw error
-      return await readGeneration(accountScopeId, manifest.previous)
+  /** Reclaims only generations explicitly recorded as locally owned by the repository. */
+  async cleanupLocalOrphans(accountScopeId: string, generationIds: string[]): Promise<void> {
+    if (!generationIds.length) return
+    const values = await browser.storage.sync.get(null) as Record<string, unknown>
+    const manifest = (() => {
+      try { return parseManifest(values[browserSyncManifestKey(accountScopeId)]) } catch { return undefined }
+    })()
+    const keys: string[] = []
+    for (const generationId of generationIds) {
+      if (manifest?.generationId === generationId) continue
+      const prefix = `folders:v3:${accountScopeId}:generation:${generationId}:chunk:`
+      keys.push(...Object.keys(values).filter((key) => key.startsWith(prefix)))
     }
-  }
-
-  /** Reclaims stale generations produced by this installation only. */
-  async cleanupLocalOrphans(accountScopeId: string, deviceId: string): Promise<void> {
-    try {
-      const values = await browser.storage.sync.get(null) as Record<string, unknown>
-      const manifest = parseManifest(values[manifestKey(accountScopeId)])
-      const retained = new Set([manifest?.active.generation, manifest?.previous?.generation])
-      const keyPattern = new RegExp(`^folders:${accountScopeId}:([^:]+):chunk:(\\d+)$`, 'u')
-      const candidates = new Map<string, string[]>()
-      for (const [key, value] of Object.entries(values)) {
-        const match = key.match(keyPattern)
-        if (!match || retained.has(match[1])) continue
-        // Metadata appears before the compressed payload, including when the
-        // envelope has multiple chunks. This prevents one device from deleting
-        // another device's in-flight generation.
-        if (typeof value !== 'string' || !value.includes(`\"generatedByDeviceId\":\"${deviceId}\"`)) continue
-        candidates.set(match[1], [...(candidates.get(match[1]) ?? []), key])
-      }
-      const candidateKeys = [...candidates.values()]
-      if (candidateKeys.length === 0) return
-      const results = await Promise.allSettled(candidateKeys.map((keys) => browser.storage.sync.remove(keys)))
-      const removedGenerations = results.filter((result) => result.status === 'fulfilled').length
-      const removedChunks = candidateKeys
-        .filter((_, index) => results[index].status === 'fulfilled')
-        .reduce((total, keys) => total + keys.length, 0)
-      console.info('[Folders][sync] reclaimed local orphan generations', {
-        accountScopeId,
-        removedGenerations,
-        removedChunks,
-      })
-    } catch {
-      // Cleanup is recoverable. A later successful sync retries it.
-    }
-  }
-
-  private async removeGenerationIfUnreferenced(
-    accountScopeId: string,
-    descriptor: BrowserSyncGeneration,
-  ): Promise<void> {
-    try {
-      const manifest = parseManifest((await browser.storage.sync.get(manifestKey(accountScopeId)) as Record<string, unknown>)[manifestKey(accountScopeId)])
-      if (manifest?.active.generation === descriptor.generation || manifest?.previous?.generation === descriptor.generation) return
-      await browser.storage.sync.remove(generationKeys(accountScopeId, descriptor.generation, descriptor.chunkCount))
-    } catch {
-      // Preserve the original publish failure. The next successful sync can
-      // recover any chunks that remain.
-    }
+    if (keys.length) await browser.storage.sync.remove(keys)
   }
 }

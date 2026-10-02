@@ -1,14 +1,15 @@
 import Dexie from 'dexie'
 
 import { db } from '@/data/db'
-import { ROOT_FOLDER_ID, type FolderSettingsRow } from '@/domain/folder/types'
+import { BROWSER_SYNC_CAPACITY_NOTICE_THRESHOLD_PERCENT, ROOT_FOLDER_ID, type FolderSettingsRow } from '@/domain/folder/types'
 
 const DEFAULT_SETTINGS: Omit<FolderSettingsRow, 'accountScopeId'> = {
   enabled: true,
   hideOrganizedChats: false,
   collapsedFolderIds: [],
   updatedAt: '',
-  fieldVersions: {},
+  settingsVersion: '0000000000000:000000:default',
+  settingsPending: false,
 }
 
 export interface CursorPage<T> { items: T[]; nextCursor?: string }
@@ -50,7 +51,7 @@ export class FolderQueryService {
   }
 
   async revision(accountScopeId: string): Promise<string> {
-    return (await db.folder_sync_states.get(accountScopeId))?.dataRevision ?? 'uninitialized'
+    return (await db.folder_sync_states.get(accountScopeId))?.localDataRevision ?? 'uninitialized'
   }
 
   async getSidebarState(accountScopeId: string, folderLimit: number) {
@@ -119,21 +120,38 @@ export class FolderQueryService {
   }
 
   async getSyncStatus(accountScopeId: string) {
-    const [state, pending] = await Promise.all([
+    const [state, pending, settings] = await Promise.all([
       db.folder_sync_states.get(accountScopeId),
       db.folder_operations.where('accountScopeId').equals(accountScopeId).toArray(),
+      db.folder_settings.get(accountScopeId),
     ])
+    const usagePercent = state?.browserSyncCurrentUsageBytes !== undefined && state.browserSyncBudgetBytes
+      ? state.browserSyncCurrentUsageBytes / state.browserSyncBudgetBytes * 100
+      : undefined
     return {
       mode: 'browser-sync' as const,
-      state: state?.browserSyncWarning === 'write-failed'
+      state: state?.browserSyncWarning
         ? 'needs-attention' as const
-        : pending.some((operation) => operation.state === 'pending')
+        : settings?.settingsPending || pending.some((operation) => operation.state === 'pending')
           ? 'local-changes-pending' as const
           : 'accepted-by-browser-storage' as const,
-      lastLocalSaveAt: state?.updatedAt,
-      lastBrowserStorageWriteAt: state?.lastSuccessfulSyncAt,
+      lastLocalSaveAt: [state?.updatedAt, settings?.updatedAt].filter((value): value is string => !!value).sort().at(-1),
+      lastBrowserStorageWriteAt: state?.lastBrowserStorageWriteAt,
       retryAt: state?.retryAt,
       warning: state?.browserSyncWarning,
+      currentUsageBytes: state?.browserSyncCurrentUsageBytes,
+      currentTotalBytes: state?.browserSyncCurrentTotalBytes,
+      quotaBytes: state?.browserSyncQuotaBytes,
+      projectedUsageBytes: state?.browserSyncProjectedUsageBytes,
+      projectedTotalBytes: state?.browserSyncProjectedTotalBytes,
+      usageMeasuredAt: state?.browserSyncUsageMeasuredAt,
+      usageBudgetBytes: state?.browserSyncBudgetBytes,
+      usagePercent,
+      showCapacityNotice: !state?.browserSyncWarning
+        && usagePercent !== undefined
+        && usagePercent >= BROWSER_SYNC_CAPACITY_NOTICE_THRESHOLD_PERCENT
+        && (state?.browserSyncLastDismissedUsagePercent === undefined
+          || usagePercent >= state.browserSyncLastDismissedUsagePercent + 10),
     }
   }
 

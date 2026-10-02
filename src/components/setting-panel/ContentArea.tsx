@@ -43,7 +43,7 @@ const SettingSectionContainer: React.FC<SettingSectionContainerProps> = ({ secti
   )
 }
 
-export const ContentArea: React.FC = () => {
+export const ContentArea: React.FC<{ isPanelOpen?: boolean }> = ({ isPanelOpen }) => {
   const route = useSettingStore((state) => state.route)
   const navigateToView = useSettingStore((state) => state.navigateToView)
   const goBack = useSettingStore((state) => state.goBack)
@@ -72,6 +72,7 @@ export const ContentArea: React.FC = () => {
   )
 
   const componentProps: SettingViewComponentProps<NavigationSection> = {
+    isPanelOpen,
     route,
     openView: handleOpenView,
     goBack,

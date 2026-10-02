@@ -1,6 +1,5 @@
 import {
   Box,
-  Button,
   ColorPicker,
   HStack,
   IconButton,
@@ -111,7 +110,7 @@ export function FolderAppearancePicker({ value, onChange }: FolderAppearancePick
     <Popover.Root
       open={open}
       onOpenChange={handleOpenChange}
-      positioning={{ placement: 'bottom-start', gutter: 4, strategy: 'fixed' }}
+      positioning={{ placement: 'bottom-start', gutter: 4, strategy: 'fixed', fitViewport: true }}
       closeOnEscape
       closeOnInteractOutside
     >
@@ -123,11 +122,11 @@ export function FolderAppearancePicker({ value, onChange }: FolderAppearancePick
           minW="34px"
           p={0}
           flexShrink={0}
-          borderRadius="14px"
+          borderRadius="0"
           bg="transparent"
-          _hover={{ bg: 'transparent' }}
+          _hover={{ bg: 'bg.muted' }}
           _active={{ bg: 'transparent' }}
-          css={{ '&[data-state=open]': { background: 'transparent' } }}
+          css={{ '&[data-state=open]': { background: 'var(--chakra-colors-bg-muted)' } }}
         >
           <Box as={CurrentIcon} color={getFolderColor(value.colorValue)} boxSize="20px" strokeWidth={1.8} />
         </IconButton>
@@ -137,15 +136,15 @@ export function FolderAppearancePicker({ value, onChange }: FolderAppearancePick
           <Popover.Content
             width="260px"
             maxWidth="calc(100vw - 16px)"
-            maxHeight="calc(100dvh - 16px)"
-            overflowY="auto"
+            maxHeight="min(var(--available-height, 100dvh), calc(100dvh - 16px))"
+            overflow="hidden"
             bg="bg.panel"
             color={PANEL_FOREGROUND}
             borderColor="border.muted"
             borderRadius="16px"
             shadow="lg"
           >
-            <Popover.Body p="10px">
+            <Popover.Body p="10px" pb="12px" minHeight={0} overflowY="auto" overscrollBehaviorY="contain">
               <Stack gap="10px">
                 <Box>
                   <Text id="folder-color-presets-label" srOnly>
@@ -164,6 +163,7 @@ export function FolderAppearancePicker({ value, onChange }: FolderAppearancePick
                           minW="36px"
                           p={0}
                           borderRadius="full"
+                          _hover={{ bg: 'bg.muted' }}
                           onClick={() => {
                             onChange({ ...value, colorValue: color.key })
                             setCustomExpanded(false)
@@ -188,6 +188,7 @@ export function FolderAppearancePicker({ value, onChange }: FolderAppearancePick
                       minW="36px"
                       p={0}
                       borderRadius="full"
+                      _hover={{ bg: 'bg.muted' }}
                       onClick={selectCustomColor}
                     >
                       <Box
@@ -263,6 +264,7 @@ export function FolderAppearancePicker({ value, onChange }: FolderAppearancePick
                           borderRadius="full"
                           bg={selected ? 'bg.muted' : 'transparent'}
                           color={PANEL_FOREGROUND}
+                          _hover={{ bg: 'bg.muted' }}
                           onClick={() => onChange({ ...value, iconKey: definition.key })}
                         >
                           <definition.Icon size="20px" strokeWidth={1.8} />
@@ -273,16 +275,6 @@ export function FolderAppearancePicker({ value, onChange }: FolderAppearancePick
                 </Box>
               </Stack>
             </Popover.Body>
-            <Popover.Footer borderTopWidth="1px" borderColor="border.muted" p="6px" justifyContent="flex-start">
-              <Button
-                variant="ghost"
-                size="sm"
-                color={PANEL_FOREGROUND}
-                onClick={() => setOpen(false)}
-              >
-                {tt('folders_done', 'Done')}
-              </Button>
-            </Popover.Footer>
           </Popover.Content>
         </Popover.Positioner>
       </Portal>

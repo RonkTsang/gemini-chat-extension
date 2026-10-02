@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import { z } from 'zod'
 
 import {
   buildBatchExecuteRequest,
@@ -76,10 +75,18 @@ describe('buildBatchExecuteRequest', () => {
   it('builds an account-scoped form request from a verified operation definition', () => {
     window.history.replaceState({}, '', '/u/2/app')
     document.documentElement.lang = 'en-US'
-    const operation = defineGeminiOperation({
+    const operation = defineGeminiOperation<{ pageToken: string | null }, null>({
       rpcId: 'testRpc',
       risk: 'read' as const,
-      inputSchema: z.object({ pageToken: z.string().nullable() }),
+      parseInput: (input) => {
+        if (!input || typeof input !== 'object' || Array.isArray(input)) {
+          return { success: false }
+        }
+        const pageToken = (input as { pageToken?: unknown }).pageToken
+        return pageToken === null || typeof pageToken === 'string'
+          ? { success: true, data: { pageToken } }
+          : { success: false }
+      },
       sourcePath: () => '/library',
       buildArgs: (input) => [input.pageToken],
       parseResponse: () => null,

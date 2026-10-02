@@ -1,11 +1,38 @@
 import type { FolderColorValue, FolderIconKey } from './appearance'
 
 export const ROOT_FOLDER_ID = '__root__' as const
+export const BROWSER_SYNC_CAPACITY_NOTICE_THRESHOLD_PERCENT = 80
+
+export interface BrowserSyncUsage {
+  folderBytes: number
+  folderBudgetBytes: number
+  totalBytes: number
+  quotaBytes: number
+  usagePercent: number
+}
 
 export type FolderVersionStamp = string
 export type FolderOrderKey = string
 export type FolderParentId = string | typeof ROOT_FOLDER_ID
 export type FolderSyncProvider = 'browser-sync' | 'google-drive'
+
+export interface FolderSyncSettings {
+  enabled: boolean
+  hideOrganizedChats: boolean
+}
+
+export interface BrowserSyncManifest {
+  schemaVersion: 3
+  accountScopeId: string
+  generationId: string
+  dataRevision: string
+  authorityEpoch: string
+  chunkCount: number
+  payloadBytes: number
+  payloadHash: string
+  settings: FolderSyncSettings
+  settingsVersion: string
+}
 
 export interface FolderRow {
   id: string
@@ -57,7 +84,8 @@ export interface FolderSettingsRow {
   hideOrganizedChats: boolean
   collapsedFolderIds: string[]
   updatedAt: string
-  fieldVersions: Record<string, FolderVersionStamp>
+  settingsVersion: FolderVersionStamp
+  settingsPending: boolean
 }
 
 export type FolderOperationType =
@@ -70,7 +98,6 @@ export type FolderOperationType =
   | 'membership.remove'
   | 'chat-reference.update'
   | 'order.rebalance'
-  | 'settings.update'
   | 'snapshot.restore'
 
 export interface FolderOperationRow {
@@ -93,11 +120,12 @@ export interface FolderSyncGenerationRow {
   syncMode: 'browser-sync' | 'google-drive'
   syncEpoch: string
   dataRevision: string
-  parentRevisions: string[]
   includedOperationIds: string[]
-  contentHash: string
-  serializedEnvelope: string
+  payloadHash: string
+  payload: string
   createdAt: string
+  /** Active replica replaced by this local write; retained for crash recovery. */
+  replacedGenerationId?: string
   state: 'prepared' | 'writing' | 'accepted-by-browser-storage' | 'confirmed-by-remote-provider' | 'superseded'
 }
 
@@ -106,17 +134,28 @@ export interface FolderSyncStateRow {
   deviceId: string
   provider: FolderSyncProvider
   authorityEpoch: string
-  dataRevision: string
-  lastAppliedRevision?: string
-  lastUploadedRevision?: string
+  localDataRevision: string
+  lastObservedReplicaGenerationId?: string
+  lastAppliedReplicaRevision?: string
+  lastWrittenReplicaGenerationId?: string
+  lastBrowserStorageWriteAt?: string
   driveFileId?: string
   driveFileVersion?: string
   driveChangePageToken?: string
-  lastSuccessfulSyncAt?: string
   lastAttemptAt?: string
   retryAt?: string
+  retryCount?: number
   lastErrorCode?: string
-  browserSyncWarning?: 'near-quota' | 'write-failed'
+  browserSyncWarning?: 'quota-exceeded' | 'write-failed' | 'incomplete-replica' | 'invalid-replica'
+  browserSyncCurrentUsageBytes?: number
+  browserSyncCurrentTotalBytes?: number
+  browserSyncQuotaBytes?: number
+  browserSyncProjectedUsageBytes?: number
+  browserSyncProjectedTotalBytes?: number
+  browserSyncUsageMeasuredAt?: string
+  browserSyncBudgetBytes?: number
+  browserSyncLastDismissedUsagePercent?: number
+  incompleteReplicaSince?: string
   updatedAt: string
 }
 
@@ -139,33 +178,30 @@ export interface FolderCoordinatorLeaseRow {
 }
 
 export interface FolderProjection {
+  chatCursors?: Record<string, string | undefined>
   folders: FolderRow[]
   memberships: FolderMembershipRow[]
   chatReferences: ChatReferenceRow[]
   settings: FolderSettingsRow
 }
 
-export interface FolderExportPayload {
-  schemaVersion: 1
+export interface FolderAccountData {
   accountScopeId: string
   folders: FolderRow[]
   memberships: FolderMembershipRow[]
   chatReferences: ChatReferenceRow[]
-  settings: FolderSettingsRow
+}
+
+/** Account ownership is supplied by the validated Manifest when persisted locally. */
+export interface FolderSyncData {
+  folders: Omit<FolderRow, 'accountScopeId'>[]
+  memberships: Omit<FolderMembershipRow, 'accountScopeId'>[]
+  chatReferences: Omit<ChatReferenceRow, 'accountScopeId'>[]
+}
+
+export interface FolderExportPayload extends FolderAccountData {
+  schemaVersion: 1
+  settings: FolderSyncSettings
+  settingsVersion: string
   exportedAt: string
-}
-
-export interface FolderSyncEnvelope {
-  appId: 'gemini-power-kit-folders'
-  schemaVersion: 1
-  syncProtocolVersion: 1
-  accountScopeId: string
-  authority: { provider: FolderSyncProvider; epoch: string }
-  dataRevision: string
-  parentRevisions: string[]
-  generatedByDeviceId: string
-  generatedAt: string
-  encoding: { codec: 'lz-string-base64'; codecVersion: 1 }
-  contentHash: string
-  payload: string
 }

@@ -4,13 +4,28 @@ import { ExtensionRpcClient } from '@/integrations/extension-rpc/client'
 import { folderRpcResponseSchema, type FolderRpcMethod, type FolderRpcResponse } from '@/domain/folder/rpc'
 import type { FolderProjection, FolderSettingsRow } from '@/domain/folder/types'
 
+export interface FolderChatPage {
+  memberships: FolderProjection['memberships']
+  chatReferences: FolderProjection['chatReferences']
+  nextCursor?: string
+}
+
 export interface BrowserSyncStatusProjection {
   mode: 'browser-sync'
   state: 'local-changes-pending' | 'accepted-by-browser-storage' | 'needs-attention'
   lastLocalSaveAt?: string
   lastBrowserStorageWriteAt?: string
   retryAt?: string
-  warning?: 'near-quota' | 'write-failed'
+  warning?: 'quota-exceeded' | 'write-failed' | 'incomplete-replica' | 'invalid-replica'
+  currentUsageBytes?: number
+  currentTotalBytes?: number
+  quotaBytes?: number
+  projectedUsageBytes?: number
+  projectedTotalBytes?: number
+  usageMeasuredAt?: string
+  usageBudgetBytes?: number
+  usagePercent?: number
+  showCapacityNotice: boolean
 }
 
 export class FolderRpcError extends Error {
@@ -52,7 +67,7 @@ export class FolderBackgroundClient {
     }
   }
 
-  /** Loads only the visible SideNav page and chats for its expanded rows. */
+  /** Loads all Folder summaries so SideNav can reveal rows beyond its preview. */
   async getProjection(accountScopeId: string, identitySource: 'observed' | 'manual-confirmed'): Promise<FolderProjection> {
     const first = await this.request<{
       settings: FolderSettingsRow
@@ -60,26 +75,49 @@ export class FolderBackgroundClient {
       nextCursor?: string
     }>(accountScopeId, identitySource, 'getSidebarState', { folderLimit: 5 })
     const folders = first.data.folders
+    let foldersCursor = first.data.nextCursor
+    while (foldersCursor) {
+      const next = await this.request<{
+        items: typeof folders
+        nextCursor?: string
+      }>(accountScopeId, identitySource, 'listFolders', { cursor: foldersCursor, limit: 100 })
+      folders.push(...next.data.items)
+      foldersCursor = next.data.nextCursor
+    }
     const memberships: FolderProjection['memberships'] = []
     const chatReferences: FolderProjection['chatReferences'] = []
+    const chatCursors: Record<string, string | undefined> = {}
     for (const folder of folders.filter((row) => !first.data.settings.collapsedFolderIds.includes(row.id))) {
-      let chatsCursor: string | undefined
-      do {
-        const chats = await this.request<{ items: Array<{ chatId: string; cachedTitle: string; orderKey: string }>; nextCursor?: string }>(accountScopeId, identitySource, 'listFolderChats', { folderId: folder.id, cursor: chatsCursor, limit: 100 })
-        chats.data.items.forEach((chat) => {
-          memberships.push({ id: `${accountScopeId}:${folder.id}:${chat.chatId}`, accountScopeId, folderId: folder.id, chatId: chat.chatId, orderKey: chat.orderKey } as FolderProjection['memberships'][number])
-          if (!chatReferences.some((reference) => reference.chatId === chat.chatId)) {
-            chatReferences.push({ accountScopeId, chatId: chat.chatId, cachedTitle: chat.cachedTitle } as FolderProjection['chatReferences'][number])
-          }
-        })
-        chatsCursor = chats.data.nextCursor
-      } while (chatsCursor)
+      const chats = await this.getChatPage(accountScopeId, identitySource, folder.id)
+      memberships.push(...chats.memberships)
+      for (const reference of chats.chatReferences) {
+        if (!chatReferences.some((row) => row.chatId === reference.chatId)) chatReferences.push(reference)
+      }
+      chatCursors[folder.id] = chats.nextCursor
     }
     return {
       folders: folders as FolderProjection['folders'],
       memberships,
       chatReferences,
       settings: first.data.settings,
+      chatCursors,
+    }
+  }
+
+  async getChatPage(accountScopeId: string, identitySource: 'observed' | 'manual-confirmed', folderId: string, cursor?: string): Promise<FolderChatPage> {
+    const result = await this.request<{
+      items: Array<{ chatId: string; cachedTitle: string; orderKey: string }>
+      nextCursor?: string
+    }>(accountScopeId, identitySource, 'listFolderChats', { folderId, cursor, limit: 10 })
+    return {
+      memberships: result.data.items.map((chat) => ({
+        id: `${accountScopeId}:${folderId}:${chat.chatId}`, accountScopeId, folderId,
+        chatId: chat.chatId, orderKey: chat.orderKey,
+      } as FolderProjection['memberships'][number])),
+      chatReferences: result.data.items.map((chat) => ({
+        accountScopeId, chatId: chat.chatId, cachedTitle: chat.cachedTitle,
+      } as FolderProjection['chatReferences'][number])),
+      nextCursor: result.data.nextCursor,
     }
   }
 

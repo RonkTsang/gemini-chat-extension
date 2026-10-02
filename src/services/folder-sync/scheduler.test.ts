@@ -8,7 +8,7 @@ const scope = 'account-scope-0001'
 
 describe('FolderSyncScheduler', () => {
   it('rate-limits activity hints across tabs but never suppresses a write-triggered run', async () => {
-    const coordinator = { sync: vi.fn(async () => undefined) }
+    const coordinator = { sync: vi.fn(async () => ({})) }
     const scheduler = new FolderSyncScheduler(coordinator as never)
 
     scheduler.requestRun(scope, 'content-activity-hint')
@@ -20,6 +20,67 @@ describe('FolderSyncScheduler', () => {
     expect(coordinator.sync).toHaveBeenCalledTimes(1)
 
     scheduler.requestRun(scope, 'outbox-created')
+    await vi.waitFor(() => expect(coordinator.sync).toHaveBeenCalledTimes(2))
+  })
+
+  it('runs once more when an Outbox wake-up arrives during an active run', async () => {
+    let finishFirstRun!: () => void
+    const firstRun = new Promise<void>((resolve) => { finishFirstRun = resolve })
+    const coordinator = {
+      sync: vi.fn()
+        .mockImplementationOnce(async () => { await firstRun; return {} })
+        .mockResolvedValue({}),
+    }
+    const scheduler = new FolderSyncScheduler(coordinator as never)
+
+    scheduler.requestRun(scope, 'background-resume')
+    await vi.waitFor(() => expect(coordinator.sync).toHaveBeenCalledTimes(1))
+    scheduler.requestRun(scope, 'outbox-created')
+    expect(coordinator.sync).toHaveBeenCalledTimes(1)
+
+    finishFirstRun()
+    await vi.waitFor(() => expect(coordinator.sync).toHaveBeenCalledTimes(2))
+    expect(coordinator.sync).toHaveBeenLastCalledWith(scope, undefined)
+  })
+
+  it('does not let a later activity hint overwrite a queued Outbox run', async () => {
+    let finishFirstRun!: () => void
+    const firstRun = new Promise<void>((resolve) => { finishFirstRun = resolve })
+    const coordinator = {
+      sync: vi.fn()
+        .mockImplementationOnce(async () => { await firstRun; return {} })
+        .mockResolvedValue({}),
+    }
+    const scheduler = new FolderSyncScheduler(coordinator as never)
+
+    scheduler.requestRun(scope, 'background-resume')
+    await vi.waitFor(() => expect(coordinator.sync).toHaveBeenCalledTimes(1))
+    scheduler.requestRun(scope, 'outbox-created')
+    scheduler.requestRun(scope, 'content-activity-hint')
+    const trailing = (scheduler as unknown as {
+      rerunRequested: Map<string, { reason: string }>
+    }).rerunRequested.get(scope)
+    expect(trailing).toEqual({ reason: 'outbox-created', traceId: undefined })
+
+    finishFirstRun()
+    await vi.waitFor(() => expect(coordinator.sync).toHaveBeenCalledTimes(2))
+  })
+
+  it('consumes an accepted trailing activity hint without throttling it a second time', async () => {
+    let finishFirstRun!: () => void
+    const firstRun = new Promise<void>((resolve) => { finishFirstRun = resolve })
+    const coordinator = {
+      sync: vi.fn()
+        .mockImplementationOnce(async () => { await firstRun; return {} })
+        .mockResolvedValue({}),
+    }
+    const scheduler = new FolderSyncScheduler(coordinator as never)
+
+    scheduler.requestRun(scope, 'background-resume')
+    await vi.waitFor(() => expect(coordinator.sync).toHaveBeenCalledTimes(1))
+    scheduler.requestRun(scope, 'content-activity-hint')
+    finishFirstRun()
+
     await vi.waitFor(() => expect(coordinator.sync).toHaveBeenCalledTimes(2))
   })
 })

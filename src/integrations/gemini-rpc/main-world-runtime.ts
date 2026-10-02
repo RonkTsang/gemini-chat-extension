@@ -299,9 +299,9 @@ async function executeOperation(
     return createFailure('operation_unavailable', 'not-sent')
   }
 
-  // Gemini enables Trusted Types reporting. Zod's object-schema JIT uses
-  // Function(), so keep Main World validation on its interpreter path.
-  const parsedInput = operation.inputSchema.safeParse(input, { jitless: true })
+  // Avoid Zod in the Main World: its object-schema capability probe calls
+  // Function() even when parsing is configured to skip JIT compilation.
+  const parsedInput = operation.parseInput(input)
   if (!parsedInput.success) {
     return createFailure('invalid_input', 'not-sent')
   }

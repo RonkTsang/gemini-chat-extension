@@ -55,6 +55,7 @@ export type FolderDialogState =
   | { kind: 'delete-chat'; folderId: string; chatId: string }
 
 export interface FolderRuntimeState {
+  loadingChatFolderIds?: string[]
   identity: GeminiIdentityResult
   projection?: FolderProjection
   syncState?: BrowserSyncStatusProjection
@@ -147,6 +148,7 @@ export class FolderRuntime {
   }
 
   stop(): void {
+    ++this.sequence
     this.unsubscribeIdentity?.()
     this.unsubscribeIdentity = undefined
     geminiIdentityService.stop()
@@ -163,6 +165,7 @@ export class FolderRuntime {
 
   private async loadIdentity(identity: GeminiIdentityResult): Promise<void> {
     const sequence = ++this.sequence
+    this.publish({ loadingChatFolderIds: [] })
     const currentIdentity = this.state.identity
     const isSameAccount = currentIdentity.status === 'available'
       && identity.status === 'available'
@@ -173,9 +176,29 @@ export class FolderRuntime {
     }
 
     try {
-      const projection = await folderBackgroundClient.getProjection(identity.identity.accountScopeId, identity.identity.source)
+      let projection = await folderBackgroundClient.getProjection(identity.identity.accountScopeId, identity.identity.source)
       const syncState = await folderBackgroundClient.getSyncStatus(identity.identity.accountScopeId, identity.identity.source)
       if (sequence === this.sequence) {
+        if (isSameAccount && this.state.projection) {
+          // Collapsed rows are not fetched. Keep their loaded contents mounted for the exit transition.
+          const collapsedIds = new Set(projection.settings.collapsedFolderIds)
+          const retainedFolderIds = new Set(projection.folders.filter((folder) => collapsedIds.has(folder.id)).map((folder) => folder.id))
+          const retainedMemberships = this.state.projection.memberships.filter((row) => retainedFolderIds.has(row.folderId))
+          const retainedChatIds = new Set(retainedMemberships.map((row) => row.chatId))
+          const referenceById = new Map(this.state.projection.chatReferences
+            .filter((row) => retainedChatIds.has(row.chatId)).map((row) => [row.chatId, row]))
+          projection.chatReferences.forEach((row) => referenceById.set(row.chatId, row))
+          const chatCursors = { ...projection.chatCursors }
+          for (const folderId of retainedFolderIds) {
+            chatCursors[folderId] = this.state.projection.chatCursors?.[folderId]
+          }
+          projection = {
+            ...projection,
+            memberships: [...projection.memberships, ...retainedMemberships],
+            chatReferences: [...referenceById.values()],
+            chatCursors,
+          }
+        }
         // A sync refresh is also requested whenever the Gemini tab regains
         // focus. Keep active same-account UI surfaces so an unrelated refresh
         // cannot dismiss an editor or action menu mid-interaction. Account
@@ -221,6 +244,40 @@ export class FolderRuntime {
 
   private async refresh(): Promise<void> {
     await this.loadIdentity(this.state.identity)
+  }
+
+  async loadMoreChats(folderId: string): Promise<void> {
+    const cursor = this.state.projection?.chatCursors?.[folderId]
+    if (!cursor || this.state.loadingChatFolderIds?.includes(folderId)) return
+    const accountScopeId = this.scope()
+    const sequence = this.sequence
+    this.publish({ loadingChatFolderIds: [...(this.state.loadingChatFolderIds ?? []), folderId] })
+    try {
+      const page = await folderBackgroundClient.getChatPage(accountScopeId, this.identitySource(), folderId, cursor)
+      if (sequence !== this.sequence || !this.state.projection) return
+      const projection = this.state.projection
+      const memberships = new Map(projection.memberships.map((row) => [row.id, row]))
+      const references = new Map(projection.chatReferences.map((row) => [row.chatId, row]))
+      page.memberships.forEach((row) => memberships.set(row.id, row))
+      page.chatReferences.forEach((row) => references.set(row.chatId, row))
+      this.publish({
+        projection: {
+          ...projection,
+          memberships: [...memberships.values()],
+          chatReferences: [...references.values()],
+          chatCursors: { ...projection.chatCursors, [folderId]: page.nextCursor },
+        },
+        error: undefined,
+      })
+    } catch (error) {
+      if (sequence === this.sequence) {
+        this.publish({ error: error instanceof Error ? error.message : 'Unable to load Folder chats' })
+      }
+    } finally {
+      if (sequence === this.sequence) {
+        this.publish({ loadingChatFolderIds: this.state.loadingChatFolderIds?.filter((id) => id !== folderId) })
+      }
+    }
   }
 
   private async refreshSyncStatus(): Promise<void> {
@@ -288,6 +345,33 @@ export class FolderRuntime {
       await folderBackgroundClient.request(identity.identity.accountScopeId, identity.identity.source, 'retrySync', {})
     } finally {
       await this.refresh()
+    }
+  }
+
+  async dismissCapacityNotice(displayedUsagePercent: number): Promise<void> {
+    const identity = this.state.identity
+    if (identity.status !== 'available') return
+    await folderBackgroundClient.request(
+      identity.identity.accountScopeId,
+      identity.identity.source,
+      'dismissCapacityNotice',
+      { displayedUsagePercent },
+    )
+    await this.refreshSyncStatus()
+  }
+
+  async measureBrowserSyncUsage(): Promise<void> {
+    const identity = this.state.identity
+    if (identity.status !== 'available') return
+    const result = await folderBackgroundClient.request<BrowserSyncStatusProjection>(
+      identity.identity.accountScopeId,
+      identity.identity.source,
+      'measureBrowserSyncUsage',
+      {},
+    )
+    if (this.state.identity.status === 'available'
+      && this.state.identity.identity.accountScopeId === identity.identity.accountScopeId) {
+      this.publish({ syncState: result.data })
     }
   }
 
