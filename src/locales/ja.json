@@ -74,6 +74,8 @@
   "folders_edit_folder": "フォルダを編集",
   "folders_delete_folder": "フォルダを削除",
   "folders_rename_chat": "名前を変更",
+  "folders_pin_chat": "ピン留め",
+  "folders_unpin_chat": "ピン留めを解除",
   "folders_chat_title": "チャットのタイトル",
   "folders_chat_title_required": "チャットのタイトルを入力してください。",
   "folders_chat_title_save_failed": "チャットのタイトルを保存できませんでした。",

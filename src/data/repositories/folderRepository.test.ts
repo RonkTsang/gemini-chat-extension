@@ -20,7 +20,8 @@ vi.mock('wxt/browser', () => ({
 import { db } from '../db'
 import { FolderRepositoryImpl } from './folderRepository'
 import { FolderQueryService } from '@/entrypoints/background/folders/query-service'
-import { decodeLzStringBase64 } from '@/services/folder-sync/codec'
+import { decodeLzStringBase64, toFolderSyncData, fromFolderSyncData } from '@/services/folder-sync/codec'
+import { parseFolderSyncData } from '@/domain/folder/schemas'
 
 const scopeA = 'account-scope-0001'
 const scopeB = 'account-scope-0002'
@@ -47,6 +48,139 @@ describe('FolderRepository', () => {
   beforeEach(async () => {
     storage.clear()
     await clearFolderTables()
+  })
+
+  it('pins only the current membership, preserves ordinary order, and treats repeated pin requests as idempotent', async () => {
+    const repository = new FolderRepositoryImpl()
+    const folder = await repository.createFolder(scopeA, { name: 'First' })
+    const other = await repository.createFolder(scopeA, { name: 'Second' })
+    const foreign = await repository.createFolder(scopeB, { name: 'Foreign' })
+    for (const chatId of ['d', 'c', 'b', 'a']) await repository.upsertMembership(scopeA, { folderId: folder.id, chatId })
+    await repository.upsertMembership(scopeA, { folderId: other.id, chatId: 'b' })
+    const prior = (await repository.listMemberships(scopeA)).find((row) => row.folderId === folder.id && row.chatId === 'b')!
+    await repository.setMembershipPinned(scopeA, folder.id, 'c', true)
+    const pinned = await repository.setMembershipPinned(scopeA, folder.id, 'b', true)
+    expect(pinned.orderKey).toBe(prior.orderKey)
+    expect(pinned.positionVersionStamp).toBe(prior.positionVersionStamp)
+    expect((await repository.listMemberships(scopeA)).find((row) => row.folderId === other.id)?.pinnedOrderKey).toBeUndefined()
+    const queries = new FolderQueryService()
+    expect((await queries.listFolderChats(scopeA, folder.id, undefined, 10)).items.map((row) => row.chatId)).toEqual(['b', 'c', 'a', 'd'])
+    const operations = await db.folder_operations.count()
+    expect(await repository.setMembershipPinned(scopeA, folder.id, 'b', true)).toEqual(pinned)
+    expect(await db.folder_operations.count()).toBe(operations)
+    await repository.setMembershipPinned(scopeA, folder.id, 'c', false)
+    expect((await queries.listFolderChats(scopeA, folder.id, undefined, 10)).items.map((row) => row.chatId)).toEqual(['b', 'a', 'c', 'd'])
+    await expect(repository.setMembershipPinned(scopeA, foreign.id, 'b', true)).rejects.toThrow('unavailable')
+    await expect(repository.setMembershipPinned(scopeA, folder.id, 'missing', true)).rejects.toThrow('unavailable')
+    await repository.removeMembership(scopeA, folder.id, 'b')
+    await repository.upsertMembership(scopeA, { folderId: folder.id, chatId: 'b' })
+    const readded = (await queries.listFolderChats(scopeA, folder.id, undefined, 10)).items[0]
+    expect(readded.chatId).toBe('b')
+    expect(readded.pinnedOrderKey).toBeUndefined()
+  })
+
+  it('reorders each pin group independently and puts newly added chats below all pins', async () => {
+    const repository = new FolderRepositoryImpl()
+    const folder = await repository.createFolder(scopeA, { name: 'Reorder' })
+    const rows = []
+    for (const chatId of ['d', 'c', 'b', 'a']) rows.push(await repository.upsertMembership(scopeA, { folderId: folder.id, chatId }))
+    await repository.setMembershipPinned(scopeA, folder.id, 'c', true)
+    await repository.setMembershipPinned(scopeA, folder.id, 'b', true)
+    await repository.moveMembership(scopeA, folder.id, 'c', folder.id, { beforeId: rows[2].id })
+    await repository.upsertMembership(scopeA, { folderId: folder.id, chatId: 'new' })
+    const queries = new FolderQueryService()
+    expect((await queries.listFolderChats(scopeA, folder.id, undefined, 10)).items.map((row) => row.chatId)).toEqual(['c', 'b', 'new', 'a', 'd'])
+    await expect(repository.moveMembership(scopeA, folder.id, 'a', folder.id, { beforeId: rows[2].id })).rejects.toThrow('pin groups')
+    await repository.moveMembership(scopeA, folder.id, 'd', folder.id, { beforeId: rows[3].id })
+    await repository.setMembershipPinned(scopeA, folder.id, 'c', false)
+    await repository.setMembershipPinned(scopeA, folder.id, 'b', false)
+    expect((await queries.listFolderChats(scopeA, folder.id, undefined, 10)).items.map((row) => row.chatId)).toEqual(['new', 'd', 'a', 'b', 'c'])
+  })
+
+  it('pages in display order across the pinned boundary without omitting or duplicating chats', async () => {
+    const repository = new FolderRepositoryImpl()
+    const folder = await repository.createFolder(scopeA, { name: 'Pagination' })
+    for (let index = 0; index < 18; index += 1) await repository.upsertMembership(scopeA, { folderId: folder.id, chatId: `chat-${index}` })
+    for (let index = 0; index < 12; index += 1) await repository.setMembershipPinned(scopeA, folder.id, `chat-${index}`, true)
+    const queries = new FolderQueryService()
+    const sidebar = await queries.getSidebarState(scopeA, 5)
+    const first = sidebar.chatsByFolder[folder.id]
+    expect(first.items.map((row) => row.chatId)).toEqual(Array.from({ length: 10 }, (_, index) => `chat-${11 - index}`))
+    const next = await queries.listFolderChats(scopeA, folder.id, first.nextCursor, 10)
+    expect(next.items.map((row) => row.chatId)).toEqual(['chat-1', 'chat-0', 'chat-17', 'chat-16', 'chat-15', 'chat-14', 'chat-13', 'chat-12'])
+    expect(next.nextCursor).toBeUndefined()
+    expect(new Set([...first.items, ...next.items].map((row) => row.chatId)).size).toBe(18)
+  })
+
+  it('round trips pin data through sync, backups, and restore points while accepting older unpinned data', async () => {
+    const repository = new FolderRepositoryImpl()
+    const folder = await repository.createFolder(scopeA, { name: 'Recovery' })
+    const membership = await repository.upsertMembership(scopeA, { folderId: folder.id, chatId: 'chat' })
+    const pinned = await repository.setMembershipPinned(scopeA, folder.id, 'chat', true)
+    const sync = parseFolderSyncData(toFolderSyncData(await repository.getAccountData(scopeA)))
+    expect(fromFolderSyncData(scopeA, sync).memberships[0]).toEqual(pinned)
+    const backup = await repository.exportAccountData(scopeA)
+    const snapshot = await repository.createSnapshot(scopeA, 'automatic')
+    await repository.setMembershipPinned(scopeA, folder.id, 'chat', false)
+    await repository.restoreSnapshot(scopeA, snapshot.id)
+    expect((await repository.listMemberships(scopeA))[0]).toEqual(pinned)
+    await repository.setMembershipPinned(scopeA, folder.id, 'chat', false)
+    await repository.importAccountData(scopeA, backup)
+    expect((await repository.listMemberships(scopeA))[0]).toEqual(pinned)
+    const { pinVersionStamp: _, ...legacy } = membership
+    await repository.importAccountData(scopeA, { ...backup, memberships: [legacy] })
+    expect((await repository.listMemberships(scopeA))[0].pinnedOrderKey).toBeUndefined()
+  })
+
+  it('rebalances exhausted pinned keys without changing ordinary positions', async () => {
+    const repository = new FolderRepositoryImpl()
+    const folder = await repository.createFolder(scopeA, { name: 'Rebalance' })
+    const rows = []
+    for (const chatId of ['a', 'b', 'c']) rows.push(await repository.upsertMembership(scopeA, { folderId: folder.id, chatId }))
+    await repository.setMembershipPinned(scopeA, folder.id, 'a', true)
+    await db.folder_memberships.update(rows[0].id, { pinnedOrderKey: '1'.padStart(32, '0') })
+    await repository.setMembershipPinned(scopeA, folder.id, 'b', true)
+    const updated = await repository.listMemberships(scopeA)
+    for (const row of rows) expect(updated.find((item) => item.id === row.id)?.orderKey).toBe(row.orderKey)
+    expect(updated.map((row) => row.chatId)).toEqual(['b', 'a', 'c'])
+    expect((await db.folder_operations.toArray()).some((operation) => operation.operationType === 'order.rebalance' && operation.payload.pinned)).toBe(true)
+  })
+
+  it('bundles the first sidebar folders with ten chats and independent cursors, including collapsed folders', async () => {
+    const repository = new FolderRepositoryImpl()
+    for (let index = 0; index < 5; index += 1) {
+      await repository.createFolder(scopeA, { name: `Empty ${index}` })
+    }
+    const folder = await repository.createFolder(scopeA, { name: 'With chats' })
+    for (let index = 0; index < 13; index += 1) {
+      await repository.upsertMembership(scopeA, { folderId: folder.id, chatId: `chat-${index}`, cachedTitle: `Chat ${index}` })
+    }
+    await repository.removeMembership(scopeA, folder.id, 'chat-12')
+    await repository.updateSettings(scopeA, { collapsedFolderIds: [folder.id] })
+    const other = await repository.createFolder(scopeB, { name: 'Other account' })
+    await repository.upsertMembership(scopeB, { folderId: other.id, chatId: 'other-chat', cachedTitle: 'Other chat' })
+
+    const queries = new FolderQueryService()
+    const sidebar = await queries.getSidebarState(scopeA, 5)
+    expect(sidebar.folders).toHaveLength(5)
+    expect(sidebar.nextCursor).toBeDefined()
+    expect(sidebar.folders.find((row) => row.id === folder.id)).toMatchObject({ chatCount: 12, collapsed: true })
+    expect(Object.keys(sidebar.chatsByFolder).sort()).toEqual(sidebar.folders.map((row) => row.id).sort())
+    const firstPage = sidebar.chatsByFolder[folder.id]
+    expect(firstPage.items).toHaveLength(10)
+    expect(firstPage.items.every((row) => row.cachedTitle.startsWith('Chat '))).toBe(true)
+    expect(firstPage.nextCursor).toBeDefined()
+    const lastPage = await queries.listFolderChats(scopeA, folder.id, firstPage.nextCursor, 10)
+    expect(lastPage.items).toHaveLength(2)
+    expect(lastPage.nextCursor).toBeUndefined()
+    const ids = [...firstPage.items, ...lastPage.items].map((row) => row.chatId)
+    expect(new Set(ids).size).toBe(12)
+    expect(ids).not.toContain('chat-12')
+    expect(ids).not.toContain('other-chat')
+    expect(sidebar.chatsByFolder[other.id]).toBeUndefined()
+    for (const row of sidebar.folders.filter((row) => row.id !== folder.id)) {
+      expect(sidebar.chatsByFolder[row.id]).toEqual({ items: [], nextCursor: undefined })
+    }
   })
 
   it('uses one persisted installation id and atomically writes a folder, outbox operation, and sync state', async () => {

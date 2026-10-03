@@ -74,6 +74,8 @@
   "folders_edit_folder": "Modifier le dossier",
   "folders_delete_folder": "Supprimer le dossier",
   "folders_rename_chat": "Renommer",
+  "folders_pin_chat": "Épingler",
+  "folders_unpin_chat": "Détacher",
   "folders_chat_title": "Titre du chat",
   "folders_chat_title_required": "Saisissez un titre de chat.",
   "folders_chat_title_save_failed": "Impossible d’enregistrer le titre de ce chat.",

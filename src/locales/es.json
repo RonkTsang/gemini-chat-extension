@@ -74,6 +74,8 @@
   "folders_edit_folder": "Editar carpeta",
   "folders_delete_folder": "Eliminar carpeta",
   "folders_rename_chat": "Renombrar",
+  "folders_pin_chat": "Fijar",
+  "folders_unpin_chat": "Dejar de fijar",
   "folders_chat_title": "Título del chat",
   "folders_chat_title_required": "Introduce un título para el chat.",
   "folders_chat_title_save_failed": "No se pudo guardar el título de este chat.",

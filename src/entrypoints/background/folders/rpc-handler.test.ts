@@ -27,7 +27,7 @@ const sender: Browser.runtime.MessageSender = {
   },
 }
 const scheduler = { requestRun: vi.fn() } as unknown as FolderSyncScheduler
-function request(method: 'getSyncStatus' | 'measureBrowserSyncUsage' | 'updateChatTitle', params: unknown = {}) {
+function request(method: 'getSyncStatus' | 'measureBrowserSyncUsage' | 'updateChatTitle' | 'setMembershipPinned', params: unknown = {}) {
   return { namespace: 'folders', protocolVersion: 1, requestId: 'request-1', accountScopeId: scope, identitySource: 'observed', method, params }
 }
 
@@ -66,6 +66,16 @@ describe('Folders usage RPC', () => {
     const handler = createFolderRpcHandler(scheduler)
     await expect(handler(request('updateChatTitle', { chatId: 'e314bf90da4c7254', title: 'New title' }), sender))
       .resolves.toMatchObject({ ok: true })
+    expect(state.execute).toHaveBeenCalledTimes(1)
+    expect(state.invalidation).toHaveBeenCalledWith(
+      { accountScopeId: scope, dataRevision: 'local-revision', type: 'folders:data-changed', affected: {} },
+      { excludeTabId: 1 },
+    )
+  })
+
+  it('broadcasts committed pin changes to other Folder views', async () => {
+    const handler = createFolderRpcHandler(scheduler)
+    await expect(handler(request('setMembershipPinned', { folderId: 'folder-1', chatId: 'chat-1', pinned: true }), sender)).resolves.toMatchObject({ ok: true })
     expect(state.execute).toHaveBeenCalledTimes(1)
     expect(state.invalidation).toHaveBeenCalledWith(
       { accountScopeId: scope, dataRevision: 'local-revision', type: 'folders:data-changed', affected: {} },

@@ -60,6 +60,11 @@ export class FolderCommandService {
         data = await folderRepository.moveMembership(request.accountScopeId, input.folderId, input.chatId, input.targetFolderId, input)
         break
       }
+      case 'setMembershipPinned': {
+        const input = params as { folderId: string; chatId: string; pinned: boolean }
+        data = await folderRepository.setMembershipPinned(request.accountScopeId, input.folderId, input.chatId, input.pinned)
+        break
+      }
       case 'removeMembership': {
         const input = params as { folderId: string; chatId: string }
         await folderRepository.removeMembership(request.accountScopeId, input.folderId, input.chatId)

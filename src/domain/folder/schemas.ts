@@ -57,6 +57,8 @@ export const folderMembershipRowSchema = z.object({
   updatedAt: timestampSchema,
   versionStamp: versionStampSchema,
   positionVersionStamp: versionStampSchema,
+  pinnedOrderKey: orderKeySchema.optional(),
+  pinVersionStamp: versionStampSchema.optional(),
   deletedAt: timestampSchema.optional(),
   deleteVersionStamp: versionStampSchema.optional(),
 })

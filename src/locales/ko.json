@@ -74,6 +74,8 @@
   "folders_edit_folder": "폴더 수정",
   "folders_delete_folder": "폴더 삭제",
   "folders_rename_chat": "이름 변경",
+  "folders_pin_chat": "고정",
+  "folders_unpin_chat": "고정 해제",
   "folders_chat_title": "채팅 제목",
   "folders_chat_title_required": "채팅 제목을 입력하세요.",
   "folders_chat_title_save_failed": "이 채팅 제목을 저장할 수 없습니다.",

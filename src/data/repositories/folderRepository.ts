@@ -14,6 +14,7 @@ import {
 import type { FolderUpdateInput } from '@/domain/folder/commands'
 import { HybridLogicalClock } from '@/domain/folder/hlc'
 import { compareAscii, keyBetween, rebalanceOrderKeys } from '@/domain/folder/order-key'
+import { compareMembershipOrder } from '@/domain/folder/membership-order'
 import { parseFolderAccountData, parseFolderExportPayload, folderSyncSettingsSchema, folderSettingsPatchSchema, settingsVersionSchema, parseFolderSyncData } from '@/domain/folder/schemas'
 import {
   BROWSER_SYNC_CAPACITY_NOTICE_THRESHOLD_PERCENT,
@@ -133,6 +134,7 @@ export interface FolderRepository {
   deleteFolder(accountScopeId: string, folderId: string): Promise<void>
   upsertMembership(accountScopeId: string, input: FolderMembershipInput): Promise<FolderMembershipRow>
   moveMembership(accountScopeId: string, folderId: string, chatId: string, targetFolderId: string, position?: FolderPosition): Promise<FolderMembershipRow>
+  setMembershipPinned(accountScopeId: string, folderId: string, chatId: string, pinned: boolean): Promise<FolderMembershipRow>
   removeMembership(accountScopeId: string, folderId: string, chatId: string): Promise<void>
   upsertChatReference(accountScopeId: string, chatId: string, cachedTitle: string): Promise<ChatReferenceRow>
   removeChatReference(accountScopeId: string, chatId: string): Promise<void>
@@ -398,27 +400,32 @@ export class FolderRepositoryImpl implements FolderRepository {
     siblings: FolderMembershipRow[],
     position: FolderPosition | undefined,
     deviceId: string,
+    pinned = false,
   ): Promise<string> {
+    const orderedRows = () => siblings.map((row) => ({ ...row, orderKey: pinned ? row.pinnedOrderKey! : row.orderKey }))
     try {
-      return resolveOrderKey(siblings, position)
+      return resolveOrderKey(orderedRows(), position)
     } catch (error) {
       if (!(error instanceof Error) || !error.message.includes('space exhausted')) throw error
-      const ordered = sortByOrder([...siblings])
+      const ordered = sortByOrder(orderedRows())
       const keys = rebalanceOrderKeys(ordered.map((membership) => membership.id))
-      const versionStamp = this.stamp()
-      const updated = ordered.map((membership) => ({
+      const latestStamp = siblings.map((row) => pinned ? row.pinVersionStamp ?? '' : row.positionVersionStamp).sort().at(-1)
+      const versionStamp = this.stamp(latestStamp)
+      const updated = siblings.map((membership) => ({
         ...membership,
-        orderKey: keys.get(membership.id)!,
+        ...(pinned
+          ? { pinnedOrderKey: keys.get(membership.id)!, pinVersionStamp: versionStamp }
+          : { orderKey: keys.get(membership.id)!, positionVersionStamp: versionStamp }),
         updatedAt: now(),
         versionStamp,
-        positionVersionStamp: versionStamp,
       }))
       await db.folder_memberships.bulkPut(updated)
       await this.writeOperation(accountScopeId, deviceId, 'order.rebalance', folderId, versionStamp, {
         folderId,
         membershipIds: ordered.map((membership) => membership.id),
+        pinned,
       })
-      return resolveOrderKey(updated, position)
+      return resolveOrderKey(updated.map((row) => ({ ...row, orderKey: pinned ? row.pinnedOrderKey! : row.orderKey })), position)
     }
   }
 
@@ -488,7 +495,7 @@ export class FolderRepositoryImpl implements FolderRepository {
   async listMemberships(accountScopeId: string): Promise<FolderMembershipRow[]> {
     requireScope(accountScopeId)
     await this.preheatDevice()
-    return sortByOrder((await db.folder_memberships.where('accountScopeId').equals(accountScopeId).toArray()).filter(isLive))
+    return (await db.folder_memberships.where('accountScopeId').equals(accountScopeId).toArray()).filter(isLive).sort(compareMembershipOrder)
   }
 
   async listChatReferences(accountScopeId: string): Promise<ChatReferenceRow[]> {
@@ -509,7 +516,7 @@ export class FolderRepositoryImpl implements FolderRepository {
     ])
     const folders = sortByOrder(allFolders.filter(isLive))
     const folderIds = new Set(folders.map((folder) => folder.id))
-    const memberships = sortByOrder(allMemberships.filter((membership) => isLive(membership) && folderIds.has(membership.folderId)))
+    const memberships = allMemberships.filter((membership) => isLive(membership) && folderIds.has(membership.folderId)).sort(compareMembershipOrder)
     const chatIds = new Set(memberships.map((membership) => membership.chatId))
     return {
       folders,
@@ -593,7 +600,7 @@ export class FolderRepositoryImpl implements FolderRepository {
       membership = {
         id: membershipId(accountScopeId, folder.id, chatId), accountScopeId, folderId: folder.id, chatId,
         orderKey: keyBetween(undefined, undefined), createdAt: timestamp, updatedAt: timestamp,
-        versionStamp, positionVersionStamp: versionStamp,
+        versionStamp, positionVersionStamp: versionStamp, pinVersionStamp: versionStamp,
       }
       const existingReference = await db.folder_chat_references.get([accountScopeId, chatId])
       const reference: ChatReferenceRow = {
@@ -825,7 +832,7 @@ export class FolderRepositoryImpl implements FolderRepository {
         }
         const memberships = await db.folder_memberships.where('[accountScopeId+folderId]').equals([accountScopeId, input.folderId]).toArray()
         const siblings = memberships.filter((membership) => isLive(membership) && membership.id !== id)
-        const versionStamp = this.stamp()
+        const versionStamp = this.stamp(prior?.pinVersionStamp)
         const timestamp = now()
         result = {
           id,
@@ -837,6 +844,7 @@ export class FolderRepositoryImpl implements FolderRepository {
           updatedAt: timestamp,
           versionStamp,
           positionVersionStamp: versionStamp,
+          pinVersionStamp: versionStamp,
         }
         await db.folder_memberships.put(result)
         const existingChat = await db.folder_chat_references.get([accountScopeId, input.chatId])
@@ -898,16 +906,28 @@ export class FolderRepositoryImpl implements FolderRepository {
       if (existingTarget && isLive(existingTarget) && targetId !== sourceId) throw new Error('Chat already belongs to the target folder')
       const siblings = (await db.folder_memberships.where('[accountScopeId+folderId]').equals([accountScopeId, targetFolderId]).toArray())
         .filter((membership) => isLive(membership) && membership.id !== sourceId && membership.id !== targetId)
-      const versionStamp = this.stamp()
+      const sameFolder = sourceId === targetId
+      const pinned = sameFolder && Boolean(prior.pinnedOrderKey)
+      for (const anchorId of [position?.beforeId, position?.afterId]) {
+        const anchor = siblings.find((row) => row.id === anchorId)
+        if (anchor && Boolean(anchor.pinnedOrderKey) !== pinned) throw new Error('Cannot reorder chats across pin groups')
+      }
+      const orderKey = await this.resolveMembershipOrderKey(
+        accountScopeId, targetFolderId, pinned ? siblings.filter((row) => row.pinnedOrderKey) : siblings,
+        position, deviceId, pinned,
+      )
+      const versionStamp = this.stamp(pinned || !sameFolder ? prior.pinVersionStamp : prior.positionVersionStamp)
       const timestamp = now()
       result = {
         ...prior,
         id: targetId,
         folderId: targetFolderId,
-        orderKey: await this.resolveMembershipOrderKey(accountScopeId, targetFolderId, siblings, position, deviceId),
+        ...(pinned
+          ? { pinnedOrderKey: orderKey, pinVersionStamp: versionStamp }
+          : { orderKey, positionVersionStamp: versionStamp }),
+        ...(!sameFolder ? { pinnedOrderKey: undefined, pinVersionStamp: versionStamp } : {}),
         updatedAt: timestamp,
         versionStamp,
-        positionVersionStamp: versionStamp,
         deletedAt: undefined,
         deleteVersionStamp: undefined,
       }
@@ -925,6 +945,36 @@ export class FolderRepositoryImpl implements FolderRepository {
       await this.writeOperation(accountScopeId, deviceId, 'membership.move', result.id, versionStamp, { row: result, sourceTombstone })
     })
     await this.createAutomaticSnapshot(accountScopeId)
+    return result
+  }
+
+  async setMembershipPinned(accountScopeId: string, folderId: string, chatId: string, pinned: boolean): Promise<FolderMembershipRow> {
+    requireScope(accountScopeId)
+    const deviceId = await this.preheatDevice()
+    let result!: FolderMembershipRow
+    let changed = false
+    await db.transaction('rw', db.folders, db.folder_memberships, db.folder_operations, db.folder_sync_states, async () => {
+      const prior = await db.folder_memberships.get(membershipId(accountScopeId, folderId, chatId))
+      const folder = await db.folders.get(folderId)
+      if (!prior || !isLive(prior) || !folder || folder.accountScopeId !== accountScopeId || !isLive(folder)) {
+        throw new Error('Membership or folder is unavailable')
+      }
+      if (Boolean(prior.pinnedOrderKey) === pinned) {
+        result = prior
+        return
+      }
+      const siblings = (await db.folder_memberships.where('[accountScopeId+folderId]').equals([accountScopeId, folderId]).toArray())
+        .filter((row) => isLive(row) && row.id !== prior.id && row.pinnedOrderKey)
+      const pinnedOrderKey = pinned
+        ? await this.resolveMembershipOrderKey(accountScopeId, folderId, siblings, undefined, deviceId, true)
+        : undefined
+      const versionStamp = this.stamp(prior.pinVersionStamp)
+      result = { ...prior, pinnedOrderKey, pinVersionStamp: versionStamp, versionStamp, updatedAt: now() }
+      await db.folder_memberships.put(result)
+      await this.writeOperation(accountScopeId, deviceId, 'membership.pin', result.id, versionStamp, { row: result })
+      changed = true
+    })
+    if (changed) await this.createAutomaticSnapshot(accountScopeId)
     return result
   }
 

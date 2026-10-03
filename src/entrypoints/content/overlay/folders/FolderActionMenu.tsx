@@ -1,7 +1,7 @@
 import { Separator, VStack } from '@chakra-ui/react'
 import { useSyncExternalStore } from 'react'
 import { HiOutlinePencilAlt, HiOutlineTrash, HiOutlineX } from 'react-icons/hi'
-import { LuPencil } from 'react-icons/lu'
+import { LuFolderOutput, LuPencil, LuPin, LuPinOff } from 'react-icons/lu'
 
 import { folderRuntime } from '@/entrypoints/content/folders/runtime'
 import { tt } from '@/utils/i18n'
@@ -41,6 +41,7 @@ export function FolderActionMenu() {
     )
   }
 
+  const pinned = Boolean(state.projection?.memberships.find((row) => row.folderId === menu.folderId && row.chatId === menu.chatId)?.pinnedOrderKey)
   return (
     <AnchoredGeminiMenu
       anchorElement={menu.anchorElement}
@@ -57,9 +58,15 @@ export function FolderActionMenu() {
         >
           {tt('folders_rename_chat', 'Rename')}
         </AnchoredGeminiMenuItem>
+        <AnchoredGeminiMenuItem
+          icon={pinned ? <LuPinOff /> : <LuPin />}
+          onClick={() => void folderRuntime.setMembershipPinned(menu.folderId, menu.chatId, !pinned)}
+        >
+          {pinned ? tt('folders_unpin_chat', 'Unpin') : tt('folders_pin_chat', 'Pin')}
+        </AnchoredGeminiMenuItem>
         <Separator my={1} borderColor="border" />
         <AnchoredGeminiMenuItem
-          icon={<HiOutlineX />}
+          icon={<LuFolderOutput />}
           onClick={() => folderRuntime.openRemoveMembershipDialog(menu.folderId, menu.chatId)}
         >
           {tt('folders_remove_from_folder', 'Remove from folder')}
