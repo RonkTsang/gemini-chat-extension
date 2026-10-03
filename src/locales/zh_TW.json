@@ -74,6 +74,8 @@
   "folders_edit_folder": "編輯資料夾",
   "folders_delete_folder": "刪除資料夾",
   "folders_rename_chat": "重新命名",
+  "folders_pin_chat": "置頂",
+  "folders_unpin_chat": "取消置頂",
   "folders_chat_title": "對話標題",
   "folders_chat_title_required": "請輸入對話標題。",
   "folders_chat_title_save_failed": "無法儲存此對話標題。",

@@ -1,7 +1,9 @@
 import Dexie from 'dexie'
 
 import { db } from '@/data/db'
-import { BROWSER_SYNC_CAPACITY_NOTICE_THRESHOLD_PERCENT, ROOT_FOLDER_ID, type FolderSettingsRow } from '@/domain/folder/types'
+import { compareMembershipOrder } from '@/domain/folder/membership-order'
+import type { FolderChatSummary, FolderSidebarState } from '@/domain/folder/sidebar'
+import { BROWSER_SYNC_CAPACITY_NOTICE_THRESHOLD_PERCENT, ROOT_FOLDER_ID, type FolderRow, type FolderSettingsRow } from '@/domain/folder/types'
 
 const DEFAULT_SETTINGS: Omit<FolderSettingsRow, 'accountScopeId'> = {
   enabled: true,
@@ -13,17 +15,10 @@ const DEFAULT_SETTINGS: Omit<FolderSettingsRow, 'accountScopeId'> = {
 }
 
 export interface CursorPage<T> { items: T[]; nextCursor?: string }
-export interface FolderSummary {
-  id: string
-  parentFolderId: string
-  name: string
-  iconKey: string
-  colorValue: string
-  orderKey: string
+export interface FolderSummary extends FolderRow {
   chatCount: number
   collapsed: boolean
 }
-export interface FolderChatSummary { chatId: string; cachedTitle: string; orderKey: string }
 
 function parseCursor(cursor?: string): { orderKey: string; id: string } | undefined {
   if (!cursor) return undefined
@@ -32,18 +27,18 @@ function parseCursor(cursor?: string): { orderKey: string; id: string } | undefi
   return { orderKey: cursor.slice(0, separator), id: cursor.slice(separator + 1) }
 }
 
-function page<T extends { id: string; orderKey: string }>(rows: T[], cursor: string | undefined, limit: number): CursorPage<T> {
+function page<T extends { id: string; orderKey: string }>(rows: T[], cursor: string | undefined, limit: number, getOrderKey = (row: T) => row.orderKey): CursorPage<T> {
   const boundary = parseCursor(cursor)
   const eligible = boundary
-    ? rows.filter((row) => row.orderKey > boundary.orderKey || (row.orderKey === boundary.orderKey && row.id > boundary.id))
+    ? rows.filter((row) => getOrderKey(row) > boundary.orderKey || (getOrderKey(row) === boundary.orderKey && row.id > boundary.id))
     : rows
   const items = eligible.slice(0, limit)
   const last = items.at(-1)
-  return { items, nextCursor: eligible.length > items.length && last ? `${last.orderKey}.${last.id}` : undefined }
+  return { items, nextCursor: eligible.length > items.length && last ? `${getOrderKey(last)}.${last.id}` : undefined }
 }
 
 export class FolderQueryService {
-  private async settings(accountScopeId: string): Promise<FolderSettingsRow> {
+  async getSettings(accountScopeId: string): Promise<FolderSettingsRow> {
     return (await db.folder_settings.get(accountScopeId)) ?? {
       accountScopeId,
       ...DEFAULT_SETTINGS,
@@ -54,9 +49,9 @@ export class FolderQueryService {
     return (await db.folder_sync_states.get(accountScopeId))?.localDataRevision ?? 'uninitialized'
   }
 
-  async getSidebarState(accountScopeId: string, folderLimit: number) {
+  async getSidebarState(accountScopeId: string, folderLimit: number): Promise<FolderSidebarState> {
     const [settings, folders] = await Promise.all([
-      this.settings(accountScopeId),
+      this.getSettings(accountScopeId),
       db.folders.where('[accountScopeId+parentFolderId+orderKey]')
         .between([accountScopeId, ROOT_FOLDER_ID, Dexie.minKey], [accountScopeId, ROOT_FOLDER_ID, Dexie.maxKey])
         .toArray(),
@@ -69,16 +64,20 @@ export class FolderQueryService {
     })))
     const countById = new Map(counts.map(({ id, count }) => [id, count]))
     const result = page(live, undefined, folderLimit)
+    const chatPages = await Promise.all(result.items.map(async (folder) => (
+      [folder.id, await this.listFolderChats(accountScopeId, folder.id, undefined, 10)] as const
+    )))
     return {
       settings,
       folders: result.items.map((folder) => this.summary(folder, countById.get(folder.id) ?? 0, settings)),
       nextCursor: result.nextCursor,
+      chatsByFolder: Object.fromEntries(chatPages),
     }
   }
 
   async listFolders(accountScopeId: string, cursor: string | undefined, limit: number): Promise<CursorPage<FolderSummary>> {
     const [settings, rows] = await Promise.all([
-      this.settings(accountScopeId),
+      this.getSettings(accountScopeId),
       db.folders.where('[accountScopeId+parentFolderId+orderKey]')
         .between([accountScopeId, ROOT_FOLDER_ID, Dexie.minKey], [accountScopeId, ROOT_FOLDER_ID, Dexie.maxKey]).toArray(),
     ])
@@ -94,11 +93,14 @@ export class FolderQueryService {
 
   async listFolderChats(accountScopeId: string, folderId: string, cursor: string | undefined, limit: number): Promise<CursorPage<FolderChatSummary>> {
     const rows = (await db.folder_memberships.where('[accountScopeId+folderId]').equals([accountScopeId, folderId]).toArray())
-      .filter((row) => !row.deletedAt).sort((a, b) => a.orderKey.localeCompare(b.orderKey) || a.id.localeCompare(b.id))
-    const result = page(rows, cursor, limit)
+      .filter((row) => !row.deletedAt).sort(compareMembershipOrder)
+    const result = page(rows, cursor, limit, (row) => row.pinnedOrderKey ? `0${row.pinnedOrderKey}` : `1${row.orderKey}`)
     const references = await Promise.all(result.items.map((row) => db.folder_chat_references.get([accountScopeId, row.chatId])))
     return {
-      items: result.items.map((row, index) => ({ chatId: row.chatId, cachedTitle: references[index]?.cachedTitle ?? '', orderKey: row.orderKey })),
+      items: result.items.map((row, index) => ({
+        chatId: row.chatId, cachedTitle: references[index]?.cachedTitle ?? '', orderKey: row.orderKey,
+        ...(row.pinnedOrderKey ? { pinnedOrderKey: row.pinnedOrderKey } : {}),
+      })),
       nextCursor: result.nextCursor,
     }
   }
@@ -163,7 +165,7 @@ export class FolderQueryService {
     return { items: result.items.map(({ orderKey: _, ...row }) => row), nextCursor: result.nextCursor }
   }
 
-  private summary(folder: { id: string; parentFolderId: string; name: string; iconKey: string; colorValue: string; orderKey: string }, chatCount: number, settings: FolderSettingsRow): FolderSummary {
+  private summary(folder: FolderRow, chatCount: number, settings: FolderSettingsRow): FolderSummary {
     return { ...folder, chatCount, collapsed: settings.collapsedFolderIds.includes(folder.id) }
   }
 }

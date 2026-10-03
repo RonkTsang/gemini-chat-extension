@@ -8,17 +8,20 @@ import {
 } from '@chakra-ui/react'
 import {
   HiOutlineChevronDown,
+  HiOutlineChevronUp,
   HiOutlineCog,
   HiOutlineDotsHorizontal,
   HiOutlineDotsVertical,
   HiOutlinePlus,
 } from 'react-icons/hi'
 import { type ReactNode, useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { LuPin } from 'react-icons/lu'
 
 import { getFolderColor, getFolderIcon } from './folderAppearance'
 import { createFolderTitleClickController } from './folderTitleClick'
 import { Tooltip } from '@/components/ui/tooltip'
 import { compareAscii } from '@/domain/folder/order-key'
+import { compareMembershipOrder } from '@/domain/folder/membership-order'
 import { ROOT_FOLDER_ID } from '@/domain/folder/types'
 import { folderRuntime } from '@/entrypoints/content/folders/runtime'
 import { openChatViaSpa } from '@/utils/chatActions'
@@ -62,9 +65,14 @@ const trailingIconButtonStyles = {
       width: '16px',
       height: '16px',
     },
+    '& [data-gpk-folder-pin-icon] svg': {
+      width: '13px',
+      height: '13px',
+    },
   },
 } as const
 
+const activeActionsSelector = '&:hover, &:focus-within, &:has([aria-haspopup="menu"][aria-expanded="true"])'
 const hiddenActionsStyles = {
   '& [data-gpk-folder-actions]': {
     opacity: 0,
@@ -75,6 +83,16 @@ const hiddenActionsStyles = {
     opacity: 1,
     pointerEvents: 'auto',
     visibility: 'visible',
+  },
+  '&[data-gpk-folder-pinned="true"] [data-gpk-folder-actions]': {
+    opacity: 1,
+    pointerEvents: 'auto',
+    visibility: 'visible',
+  },
+  '&[data-gpk-folder-pinned="true"] [data-gpk-folder-menu-icon]': { visibility: 'hidden' },
+  [activeActionsSelector]: {
+    '& [data-gpk-folder-pin-icon]': { visibility: 'hidden' },
+    '& [data-gpk-folder-menu-icon]': { visibility: 'visible' },
   },
 }
 
@@ -345,7 +363,8 @@ export function FolderSideNav() {
         <VStack align="stretch" gap={0}>
           {visibleFolders.map((folder) => {
             const isCollapsed = collapsePreviews[folder.id]?.collapsed ?? collapsed.has(folder.id)
-            const memberships = sortByOrder(membershipsByFolder.get(folder.id) ?? [])
+            const memberships = [...(membershipsByFolder.get(folder.id) ?? [])].sort(compareMembershipOrder)
+            const chatMembershipById = new Map(memberships.map((row) => [row.chatId, row]))
             const FolderIcon = getFolderIcon(folder.iconKey)
             return (
               <Box key={folder.id} data-gpk-folder-block>
@@ -483,6 +502,7 @@ export function FolderSideNav() {
                             : null}
                           <HStack
                             data-gpk-folder-chat-row
+                            data-gpk-folder-pinned={Boolean(membership.pinnedOrderKey)}
                             role="button"
                             tabIndex={0}
                             aria-current={isActive ? 'page' : undefined}
@@ -547,6 +567,7 @@ export function FolderSideNav() {
                                 draggedItem?.kind !== 'membership'
                                 || draggedItem.folderId !== folder.id
                                 || draggedItem.chatId === membership.chatId
+                                || Boolean(chatMembershipById.get(draggedItem.chatId)?.pinnedOrderKey) !== Boolean(membership.pinnedOrderKey)
                               ) {
                                 return
                               }
@@ -565,6 +586,7 @@ export function FolderSideNav() {
                                 draggedItem?.kind === 'membership'
                                 && draggedItem.folderId === folder.id
                                 && draggedItem.chatId !== membership.chatId
+                                && Boolean(chatMembershipById.get(draggedItem.chatId)?.pinnedOrderKey) === Boolean(membership.pinnedOrderKey)
                               ) {
                                 event.preventDefault()
                                 event.stopPropagation()
@@ -583,6 +605,7 @@ export function FolderSideNav() {
                             <Text flex="1" truncate title={chatTitle}>{chatTitle}</Text>
                             <Box data-gpk-folder-actions flexShrink={0} transition="opacity 120ms ease">
                               <IconButton
+                                position="relative"
                                 size="xs"
                                 {...trailingIconButtonStyles}
                                 variant="ghost"
@@ -612,7 +635,14 @@ export function FolderSideNav() {
                                   }
                                 }}
                               >
-                                <HiOutlineDotsVertical />
+                                {membership.pinnedOrderKey ? (
+                                  <Box as="span" data-gpk-folder-pin-icon position="absolute" inset={0} display="flex" alignItems="center" justifyContent="center" aria-hidden="true">
+                                    <LuPin strokeWidth={1.5} />
+                                  </Box>
+                                ) : null}
+                                <Box as="span" data-gpk-folder-menu-icon display="flex" aria-hidden="true">
+                                  <HiOutlineDotsVertical />
+                                </Box>
                               </IconButton>
                             </Box>
                           </HStack>
@@ -718,7 +748,9 @@ export function FolderSideNav() {
                 flexShrink={0}
                 aria-hidden
               >
-                <HiOutlineDotsHorizontal size={16} strokeWidth={1} />
+                {showAllFolders
+                  ? <HiOutlineChevronUp size={16} strokeWidth={1} />
+                  : <HiOutlineDotsHorizontal size={16} strokeWidth={1} />}
               </Box>
               <Text truncate>
                 {showAllFolders

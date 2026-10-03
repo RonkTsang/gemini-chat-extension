@@ -74,6 +74,8 @@
   "folders_edit_folder": "Edit folder",
   "folders_delete_folder": "Delete folder",
   "folders_rename_chat": "Rename",
+  "folders_pin_chat": "Pin",
+  "folders_unpin_chat": "Unpin",
   "folders_chat_title": "Chat title",
   "folders_chat_title_required": "Enter a chat title.",
   "folders_chat_title_save_failed": "Could not save this chat title.",

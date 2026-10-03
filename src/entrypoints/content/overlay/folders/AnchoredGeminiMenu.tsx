@@ -245,11 +245,11 @@ export function AnchoredGeminiMenuItem({
       {icon ? (
         <Box
           display="inline-flex"
-          boxSize="24px"
+          boxSize="16px"
           flexShrink={0}
           alignItems="center"
           justifyContent="center"
-          css={{ '& svg': { width: '20px', height: '20px', strokeWidth: 1.5 } }}
+          css={{ '& svg': { width: '16px', height: '16px', strokeWidth: 1.5 } }}
           aria-hidden
         >
           {icon}

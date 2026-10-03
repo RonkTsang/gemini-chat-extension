@@ -74,6 +74,8 @@
   "folders_edit_folder": "编辑文件夹",
   "folders_delete_folder": "删除文件夹",
   "folders_rename_chat": "重命名",
+  "folders_pin_chat": "置顶",
+  "folders_unpin_chat": "取消置顶",
   "folders_chat_title": "聊天标题",
   "folders_chat_title_required": "请输入聊天标题。",
   "folders_chat_title_save_failed": "无法保存此聊天标题。",

@@ -27,6 +27,37 @@ describe('FolderRuntime background boundary', () => {
     state.request.mockReset().mockResolvedValue({ data: undefined, dataRevision: 'revision-1' })
   })
 
+  it('closes the menu and refreshes the folder after the pin is committed', async () => {
+    state.getProjection.mockResolvedValue({ ...state.projection, memberships: [{ id: 'member-1', folderId: 'folder-1', chatId: 'chat-1' }] })
+    const runtime = new FolderRuntime()
+    await runtime.start()
+    runtime.openChatMenu('folder-1', 'chat-1', 'Chat', document.createElement('button'))
+    const pending = runtime.setMembershipPinned('folder-1', 'chat-1', true)
+    expect(runtime.getSnapshot().menu).toBeUndefined()
+    await pending
+    expect(state.request).toHaveBeenCalledWith('account-scope-0001', 'observed', 'setMembershipPinned', { folderId: 'folder-1', chatId: 'chat-1', pinned: true })
+    expect(state.getProjection).toHaveBeenCalledTimes(2)
+    runtime.stop()
+  })
+
+  it('retains the list on a failed pin and ignores late failures after stop', async () => {
+    const runtime = new FolderRuntime()
+    await runtime.start()
+    const projection = runtime.getSnapshot().projection
+    state.request.mockRejectedValueOnce(new Error('Pin save failed'))
+    await runtime.setMembershipPinned('folder-1', 'chat-1', true)
+    expect(runtime.getSnapshot().error).toBe('Pin save failed')
+    expect(runtime.getSnapshot().projection).toBe(projection)
+    let reject!: (error: Error) => void
+    state.request.mockImplementationOnce(() => new Promise((_resolve, fail) => { reject = fail }))
+    const pending = runtime.setMembershipPinned('folder-1', 'chat-1', true)
+    runtime.stop()
+    reject(new Error('Late failure'))
+    await pending
+    expect(runtime.getSnapshot().error).toBeUndefined()
+    expect(runtime.getSnapshot().projection).toBeUndefined()
+  })
+
   it('loads only through the background client and forwards an explicit command', async () => {
     const runtime = new FolderRuntime()
     await runtime.start()
@@ -88,8 +119,11 @@ describe('FolderRuntime background boundary', () => {
     state.getProjection.mockResolvedValue({
       ...state.projection,
       settings: { ...state.projection.settings, collapsedFolderIds: ['folder-1'] },
+      memberships: [membership], chatReferences: [reference], chatCursors: { 'folder-1': 'cursor-1' },
     })
+    const previousProjection = runtime.getSnapshot().projection
     await runtime.setFolderCollapsed('folder-1', true)
+    expect(state.getProjection).toHaveBeenLastCalledWith('account-scope-0001', 'observed', previousProjection)
     expect(runtime.getSnapshot().projection?.settings.collapsedFolderIds).toEqual(['folder-1'])
     expect(runtime.getSnapshot().projection?.memberships).toEqual([membership])
     expect(runtime.getSnapshot().projection?.chatReferences).toEqual([reference])

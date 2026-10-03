@@ -74,6 +74,8 @@
   "folders_edit_folder": "Ordner bearbeiten",
   "folders_delete_folder": "Ordner löschen",
   "folders_rename_chat": "Umbenennen",
+  "folders_pin_chat": "Anheften",
+  "folders_unpin_chat": "Lösen",
   "folders_chat_title": "Chat-Titel",
   "folders_chat_title_required": "Geben Sie einen Chat-Titel ein.",
   "folders_chat_title_save_failed": "Dieser Chat-Titel konnte nicht gespeichert werden.",

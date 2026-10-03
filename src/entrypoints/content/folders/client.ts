@@ -2,7 +2,8 @@ import { nanoid } from 'nanoid'
 
 import { ExtensionRpcClient } from '@/integrations/extension-rpc/client'
 import { folderRpcResponseSchema, type FolderRpcMethod, type FolderRpcResponse } from '@/domain/folder/rpc'
-import type { FolderProjection, FolderSettingsRow } from '@/domain/folder/types'
+import type { FolderProjection } from '@/domain/folder/types'
+import type { FolderChatSummaryPage, FolderSidebarState } from '@/domain/folder/sidebar'
 
 export interface FolderChatPage {
   memberships: FolderProjection['memberships']
@@ -68,12 +69,8 @@ export class FolderBackgroundClient {
   }
 
   /** Loads all Folder summaries so SideNav can reveal rows beyond its preview. */
-  async getProjection(accountScopeId: string, identitySource: 'observed' | 'manual-confirmed'): Promise<FolderProjection> {
-    const first = await this.request<{
-      settings: FolderSettingsRow
-      folders: Array<{ id: string; parentFolderId: string; name: string; iconKey: string; colorValue: string; orderKey: string }>
-      nextCursor?: string
-    }>(accountScopeId, identitySource, 'getSidebarState', { folderLimit: 5 })
+  async getProjection(accountScopeId: string, identitySource: 'observed' | 'manual-confirmed', previousProjection?: FolderProjection): Promise<FolderProjection> {
+    const first = await this.request<FolderSidebarState>(accountScopeId, identitySource, 'getSidebarState', { folderLimit: 5 })
     const folders = first.data.folders
     let foldersCursor = first.data.nextCursor
     while (foldersCursor) {
@@ -87,13 +84,29 @@ export class FolderBackgroundClient {
     const memberships: FolderProjection['memberships'] = []
     const chatReferences: FolderProjection['chatReferences'] = []
     const chatCursors: Record<string, string | undefined> = {}
-    for (const folder of folders.filter((row) => !first.data.settings.collapsedFolderIds.includes(row.id))) {
-      const chats = await this.getChatPage(accountScopeId, identitySource, folder.id)
-      memberships.push(...chats.memberships)
-      for (const reference of chats.chatReferences) {
-        if (!chatReferences.some((row) => row.chatId === reference.chatId)) chatReferences.push(reference)
-      }
-      chatCursors[folder.id] = chats.nextCursor
+    const previousCounts = new Map<string, number>()
+    for (const membership of previousProjection?.memberships ?? []) {
+      previousCounts.set(membership.folderId, (previousCounts.get(membership.folderId) ?? 0) + 1)
+    }
+    // Prepare the first page even for collapsed folders so opening never starts with an empty layout.
+    for (const folder of folders) {
+      const targetCount = Math.max(10, previousCounts.get(folder.id) ?? 0)
+      let loadedCount = 0
+      let cursor: string | undefined
+      let initialPage: FolderChatSummaryPage | undefined = first.data.chatsByFolder[folder.id]
+      do {
+        const chats = initialPage
+          ? this.projectChatPage(accountScopeId, folder.id, initialPage)
+          : await this.getChatPage(accountScopeId, identitySource, folder.id, cursor)
+        initialPage = undefined
+        memberships.push(...chats.memberships)
+        loadedCount += chats.memberships.length
+        for (const reference of chats.chatReferences) {
+          if (!chatReferences.some((row) => row.chatId === reference.chatId)) chatReferences.push(reference)
+        }
+        cursor = chats.nextCursor
+      } while (cursor && loadedCount < targetCount)
+      chatCursors[folder.id] = cursor
     }
     return {
       folders: folders as FolderProjection['folders'],
@@ -105,19 +118,20 @@ export class FolderBackgroundClient {
   }
 
   async getChatPage(accountScopeId: string, identitySource: 'observed' | 'manual-confirmed', folderId: string, cursor?: string): Promise<FolderChatPage> {
-    const result = await this.request<{
-      items: Array<{ chatId: string; cachedTitle: string; orderKey: string }>
-      nextCursor?: string
-    }>(accountScopeId, identitySource, 'listFolderChats', { folderId, cursor, limit: 10 })
+    const result = await this.request<FolderChatSummaryPage>(accountScopeId, identitySource, 'listFolderChats', { folderId, cursor, limit: 10 })
+    return this.projectChatPage(accountScopeId, folderId, result.data)
+  }
+
+  private projectChatPage(accountScopeId: string, folderId: string, page: FolderChatSummaryPage): FolderChatPage {
     return {
-      memberships: result.data.items.map((chat) => ({
+      memberships: page.items.map((chat) => ({
         id: `${accountScopeId}:${folderId}:${chat.chatId}`, accountScopeId, folderId,
-        chatId: chat.chatId, orderKey: chat.orderKey,
+        chatId: chat.chatId, orderKey: chat.orderKey, pinnedOrderKey: chat.pinnedOrderKey,
       } as FolderProjection['memberships'][number])),
-      chatReferences: result.data.items.map((chat) => ({
+      chatReferences: page.items.map((chat) => ({
         accountScopeId, chatId: chat.chatId, cachedTitle: chat.cachedTitle,
       } as FolderProjection['chatReferences'][number])),
-      nextCursor: result.data.nextCursor,
+      nextCursor: page.nextCursor,
     }
   }
 

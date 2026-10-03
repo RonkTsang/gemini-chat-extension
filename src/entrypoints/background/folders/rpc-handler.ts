@@ -11,7 +11,7 @@ import { browser, type Browser } from 'wxt/browser'
 
 const mutatingMethods = new Set<FolderRpcEnvelope['method']>([
   'createFolder', 'createFolderAndAddChat', 'updateFolder', 'moveFolder', 'deleteFolder',
-  'addMembership', 'moveMembership', 'removeMembership', 'removeChatAfterGeminiDelete',
+  'addMembership', 'moveMembership', 'setMembershipPinned', 'removeMembership', 'removeChatAfterGeminiDelete',
   'updateChatTitle',
   'updateSettings', 'createSnapshot', 'importBackup', 'restoreSnapshot',
 ])
@@ -80,7 +80,7 @@ export function createFolderRpcHandler(scheduler: FolderSyncScheduler): Extensio
           case 'getPickerOptions': { const input = params as { chatId: string; cursor?: string; limit: number }; data = await queries.getPickerOptions(request.accountScopeId, input.chatId, input.cursor, input.limit); break }
           case 'resolveChatMemberships': data = await queries.resolveChatMemberships(request.accountScopeId, (params as { chatIds: string[] }).chatIds); break
           case 'getFolderDeleteImpact': data = await queries.getFolderDeleteImpact(request.accountScopeId, (params as { folderId: string }).folderId); break
-          case 'getSettings': data = await queries.getSidebarState(request.accountScopeId, 1).then((result) => result.settings); break
+          case 'getSettings': data = await queries.getSettings(request.accountScopeId); break
           case 'getSyncStatus': data = await queries.getSyncStatus(request.accountScopeId); break
           case 'measureBrowserSyncUsage': {
             await folderRepository.recordBrowserSyncUsage(request.accountScopeId, await measureBrowserSyncUsage())

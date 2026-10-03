@@ -51,12 +51,15 @@ function mergeMembership(left: FolderMembershipRow, right: FolderMembershipRow):
     return { ...deleted, versionStamp: newest(left, right, left.versionStamp, right.versionStamp).versionStamp }
   }
   const position = newest(left, right, left.positionVersionStamp, right.positionVersionStamp)
+  const pin = newest(left, right, left.pinVersionStamp, right.pinVersionStamp)
   const base = newest(left, right, left.versionStamp, right.versionStamp)
   return {
     ...base,
     folderId: position.folderId,
     orderKey: position.orderKey,
     positionVersionStamp: position.positionVersionStamp,
+    pinnedOrderKey: pin.pinnedOrderKey,
+    pinVersionStamp: pin.pinVersionStamp,
     deletedAt: undefined,
     deleteVersionStamp: undefined,
   }

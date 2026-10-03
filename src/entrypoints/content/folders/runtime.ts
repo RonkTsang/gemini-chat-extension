@@ -180,29 +180,13 @@ export class FolderRuntime {
     }
 
     try {
-      let projection = await folderBackgroundClient.getProjection(identity.identity.accountScopeId, identity.identity.source)
+      const projection = await folderBackgroundClient.getProjection(
+        identity.identity.accountScopeId,
+        identity.identity.source,
+        isSameAccount ? this.state.projection : undefined,
+      )
       const syncState = await folderBackgroundClient.getSyncStatus(identity.identity.accountScopeId, identity.identity.source)
       if (sequence === this.sequence) {
-        if (isSameAccount && this.state.projection) {
-          // Collapsed rows are not fetched. Keep their loaded contents mounted for the exit transition.
-          const collapsedIds = new Set(projection.settings.collapsedFolderIds)
-          const retainedFolderIds = new Set(projection.folders.filter((folder) => collapsedIds.has(folder.id)).map((folder) => folder.id))
-          const retainedMemberships = this.state.projection.memberships.filter((row) => retainedFolderIds.has(row.folderId))
-          const retainedChatIds = new Set(retainedMemberships.map((row) => row.chatId))
-          const referenceById = new Map(this.state.projection.chatReferences
-            .filter((row) => retainedChatIds.has(row.chatId)).map((row) => [row.chatId, row]))
-          projection.chatReferences.forEach((row) => referenceById.set(row.chatId, row))
-          const chatCursors = { ...projection.chatCursors }
-          for (const folderId of retainedFolderIds) {
-            chatCursors[folderId] = this.state.projection.chatCursors?.[folderId]
-          }
-          projection = {
-            ...projection,
-            memberships: [...projection.memberships, ...retainedMemberships],
-            chatReferences: [...referenceById.values()],
-            chatCursors,
-          }
-        }
         // A sync refresh is also requested whenever the Gemini tab regains
         // focus. Keep active same-account UI surfaces so an unrelated refresh
         // cannot dismiss an editor or action menu mid-interaction. Account
@@ -464,6 +448,22 @@ export class FolderRuntime {
   async moveMembership(folderId: string, chatId: string, beforeId?: string, afterId?: string): Promise<void> {
     await folderBackgroundClient.request(this.scope(), this.identitySource(), 'moveMembership', { folderId, targetFolderId: folderId, chatId, beforeId, afterId })
     await this.refresh()
+  }
+
+  async setMembershipPinned(folderId: string, chatId: string, pinned: boolean): Promise<void> {
+    const accountScopeId = this.scope()
+    const identitySource = this.identitySource()
+    const accountPath = window.location.pathname.match(/^\/u\/\d+(?=\/|$)/)?.[0] ?? ''
+    const isCurrentAccount = () => this.state.identity.status === 'available'
+      && this.state.identity.identity.accountScopeId === accountScopeId
+      && (window.location.pathname.match(/^\/u\/\d+(?=\/|$)/)?.[0] ?? '') === accountPath
+    this.closeMenu()
+    try {
+      await folderBackgroundClient.request(accountScopeId, identitySource, 'setMembershipPinned', { folderId, chatId, pinned })
+      if (isCurrentAccount()) await this.refresh()
+    } catch (error) {
+      if (isCurrentAccount()) this.publish({ error: error instanceof Error ? error.message : 'Unable to update chat pin' })
+    }
   }
 
   async removeMembership(folderId: string, chatId: string): Promise<void> {

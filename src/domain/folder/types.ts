@@ -65,6 +65,8 @@ export interface FolderMembershipRow {
   updatedAt: string
   versionStamp: FolderVersionStamp
   positionVersionStamp: FolderVersionStamp
+  pinnedOrderKey?: FolderOrderKey
+  pinVersionStamp?: FolderVersionStamp
   deletedAt?: string
   deleteVersionStamp?: FolderVersionStamp
 }
@@ -95,6 +97,7 @@ export type FolderOperationType =
   | 'folder.delete-subtree'
   | 'membership.add'
   | 'membership.move'
+  | 'membership.pin'
   | 'membership.remove'
   | 'chat-reference.update'
   | 'order.rebalance'
