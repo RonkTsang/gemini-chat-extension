@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const state = vi.hoisted(() => {
   const identity = { status: 'available' as const, identity: { email: 'user@example.com', accountScopeId: 'account-scope-0001', source: 'observed' as const, resolvedAt: '2026-01-01T00:00:00.000Z' } }
   const projection = { folders: [{ id: 'folder-1' }], memberships: [], chatReferences: [], settings: { accountScopeId: identity.identity.accountScopeId, enabled: true, hideOrganizedChats: false, collapsedFolderIds: [], updatedAt: '2026-01-01T00:00:00.000Z', settingsVersion: '0000000000000:000000:default', settingsPending: false } }
-  return { identity, projection, request: vi.fn(), getProjection: vi.fn(), getSyncStatus: vi.fn(), getChatPage: vi.fn() }
+  return { identity, projection, request: vi.fn(), getProjection: vi.fn(), getSyncStatus: vi.fn(), getChatPage: vi.fn(), renameChat: vi.fn() }
 })
 
 vi.mock('./client', () => ({ folderBackgroundClient: { request: state.request, getProjection: state.getProjection, getSyncStatus: state.getSyncStatus, getChatPage: state.getChatPage } }))
@@ -14,6 +14,8 @@ vi.mock('@/services/gemini-identity', () => ({ geminiIdentityService: {
 } }))
 vi.mock('wxt/browser', () => ({ browser: { runtime: { onMessage: { addListener: vi.fn(), removeListener: vi.fn() } } } }))
 vi.mock('@/utils/folderTrace', () => ({ createFolderTraceId: () => 'trace', logFolderTrace: vi.fn(), logFolderTraceError: vi.fn() }))
+vi.mock('@/services/gemini-api', () => ({ geminiApi: { conversations: { renameChat: state.renameChat } } }))
+vi.mock('@/utils/i18n', () => ({ tt: (_key: string, fallback: string) => fallback }))
 
 import { FolderRuntime } from './runtime'
 
@@ -164,6 +166,99 @@ describe('FolderRuntime background boundary', () => {
 
     await vi.waitFor(() => expect(state.getSyncStatus.mock.calls.length).toBe(syncStatusCalls + 1))
     expect(state.getProjection).toHaveBeenCalledTimes(projectionCalls)
+    runtime.stop()
+  })
+})
+
+describe('Folder chat rename', () => {
+  const chatId = 'e314bf90da4c7254'
+  const reference = {
+    accountScopeId: state.identity.identity.accountScopeId, chatId, cachedTitle: 'New title',
+    createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-02T00:00:00.000Z', titleVersionStamp: 'new-version',
+  }
+
+  beforeEach(() => {
+    window.history.replaceState({}, '', '/app/e314bf90da4c7254')
+    state.getProjection.mockReset().mockResolvedValue({
+      ...state.projection,
+      memberships: [
+        { id: 'member-1', folderId: 'folder-1', chatId },
+        { id: 'member-2', folderId: 'folder-2', chatId },
+      ],
+      chatReferences: [{ ...reference, cachedTitle: 'Old title' }],
+      chatCursors: { 'folder-1': 'next-page' },
+    })
+    state.getSyncStatus.mockReset().mockResolvedValue({ mode: 'browser-sync', state: 'accepted-by-browser-storage' })
+    state.request.mockReset().mockImplementation(async (_scope, _source, method) => ({
+      data: method === 'updateChatTitle' ? reference : undefined, dataRevision: 'revision-2',
+    }))
+    state.renameChat.mockReset().mockResolvedValue({
+      ok: true, data: { accepted: true, conversationId: `c_${chatId}`, title: 'New title' },
+    })
+  })
+
+  it('opens with the visible chat title and closes the more menu', async () => {
+    const runtime = new FolderRuntime()
+    await runtime.start()
+    runtime.openChatMenu('folder-1', chatId, 'Old title', document.createElement('button'))
+    runtime.openRenameChatDialog('folder-1', chatId, 'Old title')
+    expect(runtime.getSnapshot().menu).toBeUndefined()
+    expect(runtime.getSnapshot().dialog).toEqual({ kind: 'rename-chat', folderId: 'folder-1', chatId, chatTitle: 'Old title' })
+    runtime.stop()
+  })
+
+  it('persists first, updates the shared title without reloading pages, then renames Gemini', async () => {
+    const runtime = new FolderRuntime()
+    await runtime.start()
+    runtime.openRenameChatDialog('folder-1', chatId, 'Old title')
+    const projection = runtime.getSnapshot().projection!
+    state.renameChat.mockImplementation(async () => {
+      expect(state.request).toHaveBeenCalledWith('account-scope-0001', 'observed', 'updateChatTitle', { chatId, title: 'New title' })
+      expect(runtime.getSnapshot().projection?.chatReferences).toEqual([reference])
+      return { ok: true, data: { accepted: true, conversationId: `c_${chatId}`, title: 'New title' } }
+    })
+    await runtime.renameChat('folder-1', chatId, '  New title  ')
+    expect(state.renameChat).toHaveBeenCalledExactlyOnceWith({ chat_id: chatId, title: 'New title' })
+    expect(runtime.getSnapshot().dialog).toBeUndefined()
+    expect(runtime.getSnapshot().projection?.memberships).toBe(projection.memberships)
+    expect(runtime.getSnapshot().projection?.chatCursors).toBe(projection.chatCursors)
+    expect(state.getProjection).toHaveBeenCalledTimes(1)
+    runtime.stop()
+  })
+
+  it.each(['not-sent', 'unknown'])('retains the saved Folder title and dialog after a Gemini %s failure', async (outcome) => {
+    const runtime = new FolderRuntime()
+    await runtime.start()
+    runtime.openRenameChatDialog('folder-1', chatId, 'Old title')
+    state.renameChat.mockResolvedValueOnce({ ok: false, code: 'timeout', outcome })
+    await expect(runtime.renameChat('folder-1', chatId, 'New title')).rejects.toThrow(
+      outcome === 'unknown' ? 'could not be confirmed' : 'could not be renamed',
+    )
+    expect(runtime.getSnapshot().projection?.chatReferences).toEqual([reference])
+    expect(runtime.getSnapshot().dialog?.kind).toBe('rename-chat')
+    expect(state.renameChat).toHaveBeenCalledTimes(1)
+    runtime.stop()
+  })
+
+  it('does not send to Gemini when local persistence fails', async () => {
+    const runtime = new FolderRuntime()
+    await runtime.start()
+    state.request.mockRejectedValueOnce(new Error('Storage unavailable'))
+    await expect(runtime.renameChat('folder-1', chatId, 'New title')).rejects.toThrow('Storage unavailable')
+    expect(state.renameChat).not.toHaveBeenCalled()
+    expect(runtime.getSnapshot().projection?.chatReferences[0].cachedTitle).toBe('Old title')
+    runtime.stop()
+  })
+
+  it('does not send the rename after the active Gemini account path changes', async () => {
+    const runtime = new FolderRuntime()
+    await runtime.start()
+    state.request.mockImplementationOnce(async () => {
+      window.history.replaceState({}, '', '/u/1/app/e314bf90da4c7254')
+      return { data: reference, dataRevision: 'revision-2' }
+    })
+    await expect(runtime.renameChat('folder-1', chatId, 'New title')).rejects.toThrow('account changed')
+    expect(state.renameChat).not.toHaveBeenCalled()
     runtime.stop()
   })
 })

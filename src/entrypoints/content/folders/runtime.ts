@@ -1,12 +1,15 @@
 import type { FolderColorValue, FolderIconKey } from '@/domain/folder/appearance'
 import type { FolderUpdateInput } from '@/domain/folder/commands'
 import type {
+  ChatReferenceRow,
   FolderMembershipRow,
   FolderProjection,
   FolderRow,
   FolderSnapshotRow,
 } from '@/domain/folder/types'
 import { geminiIdentityService, type GeminiIdentityResult } from '@/services/gemini-identity'
+import { geminiApi } from '@/services/gemini-api'
+import { tt } from '@/utils/i18n'
 import { deleteGeminiChat } from './native-chat-delete'
 import { browser } from 'wxt/browser'
 import { folderBackgroundClient, type BrowserSyncStatusProjection } from './client'
@@ -53,6 +56,7 @@ export type FolderDialogState =
   | { kind: 'delete-folder'; folderId: string; affectedChatCount: number }
   | { kind: 'remove-membership'; folderId: string; chatId: string }
   | { kind: 'delete-chat'; folderId: string; chatId: string }
+  | { kind: 'rename-chat'; folderId: string; chatId: string; chatTitle: string }
 
 export interface FolderRuntimeState {
   loadingChatFolderIds?: string[]
@@ -477,6 +481,52 @@ export class FolderRuntime {
     await this.refresh()
   }
 
+  async renameChat(folderId: string, chatId: string, title: string): Promise<void> {
+    const accountScopeId = this.scope()
+    const identitySource = this.identitySource()
+    const dialog = this.state.dialog
+    const accountPath = window.location.pathname.match(/^\/u\/\d+(?=\/|$)/)?.[0] ?? ''
+    const isCurrentAccount = () => this.state.identity.status === 'available'
+      && this.state.identity.identity.accountScopeId === accountScopeId
+      && (window.location.pathname.match(/^\/u\/\d+(?=\/|$)/)?.[0] ?? '') === accountPath
+    const normalizedTitle = title.normalize('NFKC').trim()
+    if (!normalizedTitle) throw new Error(tt('folders_chat_title_required', 'Enter a chat title.'))
+    if (!this.projection().memberships.some((row) => row.folderId === folderId && row.chatId === chatId && !row.deletedAt)) {
+      throw new Error('The requested Folder chat is unavailable')
+    }
+
+    const { data: reference } = await folderBackgroundClient.request<ChatReferenceRow>(
+      accountScopeId, identitySource, 'updateChatTitle', { chatId, title: normalizedTitle },
+    )
+    if (!isCurrentAccount()) throw new Error('The Gemini account changed during rename')
+
+    // Patch the shared title reference so every loaded membership updates while
+    // expanded pages, cursors, and unrelated controls retain their current state.
+    const projection = this.projection()
+    this.publish({
+      projection: {
+        ...projection,
+        chatReferences: [...projection.chatReferences.filter((row) => row.chatId !== chatId), reference],
+      },
+      syncState: this.state.syncState?.state === 'accepted-by-browser-storage'
+        ? { ...this.state.syncState, state: 'local-changes-pending' }
+        : this.state.syncState,
+    })
+
+    const result = await geminiApi.conversations.renameChat({ chat_id: chatId, title: reference.cachedTitle })
+    if (!isCurrentAccount()) return
+    if (!result.ok) {
+      throw new Error(result.outcome === 'unknown'
+        ? tt('folders_chat_rename_unknown', "Title saved in Folders. Gemini's rename result could not be confirmed. Check Gemini before trying again.")
+        : tt('folders_chat_rename_failed', 'Title saved in Folders, but Gemini could not be renamed. Try again.'))
+    }
+    if (result.data.conversationId !== (chatId.startsWith('c_') ? chatId : `c_${chatId}`)
+      || result.data.title !== reference.cachedTitle) {
+      throw new Error(tt('folders_chat_rename_unknown', "Title saved in Folders. Gemini's rename result could not be confirmed. Check Gemini before trying again."))
+    }
+    if (this.state.dialog === dialog) this.closeDialog()
+  }
+
   async updateSettings(patch: {
     enabled?: boolean
     hideOrganizedChats?: boolean
@@ -599,6 +649,12 @@ export class FolderRuntime {
   openDeleteChatDialog(folderId: string, chatId: string): void {
     if (this.projection().memberships.some((membership) => membership.folderId === folderId && membership.chatId === chatId)) {
       this.publish({ menu: undefined, dialog: { kind: 'delete-chat', folderId, chatId } })
+    }
+  }
+
+  openRenameChatDialog(folderId: string, chatId: string, chatTitle: string): void {
+    if (this.projection().memberships.some((row) => row.folderId === folderId && row.chatId === chatId && !row.deletedAt)) {
+      this.publish({ menu: undefined, dialog: { kind: 'rename-chat', folderId, chatId, chatTitle } })
     }
   }
 

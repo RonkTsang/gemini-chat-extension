@@ -1,6 +1,7 @@
-import { VStack } from '@chakra-ui/react'
+import { Separator, VStack } from '@chakra-ui/react'
 import { useSyncExternalStore } from 'react'
 import { HiOutlinePencilAlt, HiOutlineTrash, HiOutlineX } from 'react-icons/hi'
+import { LuPencil } from 'react-icons/lu'
 
 import { folderRuntime } from '@/entrypoints/content/folders/runtime'
 import { tt } from '@/utils/i18n'
@@ -50,6 +51,13 @@ export function FolderActionMenu() {
       placement="bottom-start"
     >
       <VStack align="stretch" gap={0}>
+        <AnchoredGeminiMenuItem
+          icon={<LuPencil />}
+          onClick={() => folderRuntime.openRenameChatDialog(menu.folderId, menu.chatId, menu.chatTitle)}
+        >
+          {tt('folders_rename_chat', 'Rename')}
+        </AnchoredGeminiMenuItem>
+        <Separator my={1} borderColor="border" />
         <AnchoredGeminiMenuItem
           icon={<HiOutlineX />}
           onClick={() => folderRuntime.openRemoveMembershipDialog(menu.folderId, menu.chatId)}
