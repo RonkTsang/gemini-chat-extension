@@ -24,6 +24,7 @@ import {
 } from '@/domain/folder/appearance'
 import { folderRuntime } from '@/entrypoints/content/folders/runtime'
 import { tt } from '@/utils/i18n'
+import { ChatRenameDialog } from './ChatRenameDialog'
 
 const FOLDER_NAME_PLACEHOLDERS = [
   { key: 'folders_icon_travel', fallback: 'Travel' },
@@ -273,6 +274,12 @@ export function FolderDialogs() {
     <>
       <FolderEditorDialog folderId={folderId} />
       <FolderConfirmationDialog />
+      {state.dialog?.kind === 'rename-chat' ? (
+        <ChatRenameDialog
+          key={`${state.identity.status === 'available' ? state.identity.identity.accountScopeId : ''}:${state.dialog.chatId}`}
+          dialog={state.dialog}
+        />
+      ) : null}
     </>
   )
 }

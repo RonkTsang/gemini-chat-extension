@@ -27,8 +27,8 @@ const sender: Browser.runtime.MessageSender = {
   },
 }
 const scheduler = { requestRun: vi.fn() } as unknown as FolderSyncScheduler
-function request(method: 'getSyncStatus' | 'measureBrowserSyncUsage') {
-  return { namespace: 'folders', protocolVersion: 1, requestId: 'request-1', accountScopeId: scope, identitySource: 'observed', method, params: {} }
+function request(method: 'getSyncStatus' | 'measureBrowserSyncUsage' | 'updateChatTitle', params: unknown = {}) {
+  return { namespace: 'folders', protocolVersion: 1, requestId: 'request-1', accountScopeId: scope, identitySource: 'observed', method, params }
 }
 
 describe('Folders usage RPC', () => {
@@ -60,5 +60,16 @@ describe('Folders usage RPC', () => {
     )
     expect(state.execute).not.toHaveBeenCalled()
     expect(scheduler.requestRun).not.toHaveBeenCalled()
+  })
+
+  it('broadcasts a title write to other Folder views', async () => {
+    const handler = createFolderRpcHandler(scheduler)
+    await expect(handler(request('updateChatTitle', { chatId: 'e314bf90da4c7254', title: 'New title' }), sender))
+      .resolves.toMatchObject({ ok: true })
+    expect(state.execute).toHaveBeenCalledTimes(1)
+    expect(state.invalidation).toHaveBeenCalledWith(
+      { accountScopeId: scope, dataRevision: 'local-revision', type: 'folders:data-changed', affected: {} },
+      { excludeTabId: 1 },
+    )
   })
 })
