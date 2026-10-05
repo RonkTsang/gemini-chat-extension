@@ -1,6 +1,6 @@
 name = "i18n-writer"
 description = "Localization agent for Gemini Power Kit. Use it to add, review, and polish src/locales translations against en.json."
-model = "gpt-5.4-mini"
+model = "gpt-6-luna"
 model_reasoning_effort = "medium"
 nickname_candidates = ["I18n Writer", "Locale Editor", "Copy Localizer"]
 
