@@ -167,6 +167,7 @@
   "folders_see_more": "さらに表示",
   "folders_show_less": "表示を減らす",
   "folders_add_to_folder": "フォルダに追加",
+  "folders_chat_added": "フォルダに追加しました。",
   "folders_no_folders": "このチャットを整理するフォルダを作成してください。",
   "folders_save_failed": "この操作を完了できませんでした。",
   "folders_discard_changes": "変更を破棄しますか？",

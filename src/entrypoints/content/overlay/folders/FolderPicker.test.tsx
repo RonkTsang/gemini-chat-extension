@@ -23,7 +23,10 @@ const runtimeState = vi.hoisted(() => ({
   closePicker: vi.fn(),
   createFolder: vi.fn(),
   openCreateDialog: vi.fn(),
+  toastCreate: vi.fn(),
 }))
+
+vi.mock('@/components/ui/toaster', () => ({ toaster: { create: runtimeState.toastCreate } }))
 
 vi.mock('@/entrypoints/content/folders/runtime', () => ({
   folderRuntime: {
@@ -142,6 +145,11 @@ describe('FolderPicker membership selection', () => {
       'Research chat',
       'membership-add-picker-test',
     )
+    expect(runtimeState.toastCreate).toHaveBeenCalledWith({
+      type: 'success',
+      title: 'Added to Folder.',
+      duration: 3000,
+    })
   })
 
   it('uses the required 20px corner radius', () => {
@@ -159,6 +167,7 @@ describe('FolderPicker membership selection', () => {
 
     expect(shadowRoot.textContent).toContain('Folder is unavailable')
     expect(runtimeState.closePicker).not.toHaveBeenCalled()
+    expect(runtimeState.toastCreate).not.toHaveBeenCalled()
   })
 
   it('opens the shared Folder editor with the originating chat context', () => {

@@ -25,9 +25,14 @@ interface Props {
 export const Toaster = ({ store = toaster, viewportProps }: Props = {}) => {
   return (
     <Portal>
-      <ChakraToaster toaster={store} insetInline={{ mdDown: "4" }} {...viewportProps}>
+      <ChakraToaster
+        toaster={store}
+        width={{ base: "calc(100vw - 32px)", md: "sm" }}
+        insetInline={{ mdDown: "4" }}
+        {...viewportProps}
+      >
         {(toast) => (
-          <Toast.Root width={{ md: "sm" }} maxWidth="100%" flexDirection="column" alignItems="stretch">
+          <Toast.Root width="full" flexDirection="column" alignItems="stretch">
             <HStack gap="3" width="100%">
               {toast.type === "loading" ? (
                 <Spinner size="sm" color="blue.solid" />

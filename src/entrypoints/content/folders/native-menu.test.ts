@@ -16,7 +16,7 @@ vi.mock('./runtime', () => ({
   },
 }))
 
-import { FolderNativeMenuBridge } from './native-menu'
+import { closeOpenConversationActionsMenu, FolderNativeMenuBridge } from './native-menu'
 
 function renderMenu(activeRows = 1): HTMLElement {
   const sideNav = document.createElement('bard-sidenav')
@@ -101,6 +101,22 @@ describe('FolderNativeMenuBridge', () => {
     expect(entry.querySelector('gem-icon')?.getAttribute('fonticonname')).toBe('folder')
     expect(entry.querySelector('mat-icon')?.getAttribute('data-mat-icon-name')).toBe('folder')
     bridge.stop()
+  })
+
+  it('closes only the matching active chat menu after adding a membership', () => {
+    const menu = renderMenu()
+    const trigger = document.querySelector<HTMLElement>('[aria-controls="conversation-actions"]')!
+    const onClick = vi.fn()
+    trigger.addEventListener('click', onClick)
+
+    closeOpenConversationActionsMenu('another-chat')
+    expect(onClick).not.toHaveBeenCalled()
+
+    closeOpenConversationActionsMenu('chat-0')
+    expect(onClick).toHaveBeenCalledOnce()
+    menu.remove()
+    closeOpenConversationActionsMenu('chat-0')
+    expect(onClick).toHaveBeenCalledOnce()
   })
 
   it('does not inject when more than one active row could claim the native menu', () => {

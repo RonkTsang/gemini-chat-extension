@@ -14,6 +14,22 @@ function uniqueMatches(root: ParentNode, selectors: readonly string[]): Element[
   return [...new Set(selectors.flatMap((selector) => Array.from(root.querySelectorAll(selector))))]
 }
 
+export function closeOpenConversationActionsMenu(chatId: string): void {
+  const sideNav = queryFirstMatchingElement([document], geminiDomSelectors.sideNav.root)
+  if (!sideNav) return
+  const rows = uniqueMatches(sideNav, geminiDomSelectors.sideNav.activeConversationRow)
+  if (rows.length !== 1) return
+  const row = rows[0]
+  const links = uniqueMatches(row, geminiDomSelectors.sideNav.conversationLink) as HTMLAnchorElement[]
+  const triggers = uniqueMatches(row, geminiDomSelectors.sideNav.activeConversationMenuTrigger) as HTMLElement[]
+  if (links.length !== 1 || triggers.length !== 1 || chatIdFromConversationLink(links[0]) !== chatId) return
+  const menuId = triggers[0].getAttribute('aria-controls')
+  if (!menuId) return
+  const menus = uniqueMatches(document, geminiDomSelectors.sideNav.openConversationActionsMenu)
+    .filter((menu) => menu.id === menuId && menu.isConnected)
+  if (menus.length === 1) triggers[0].click()
+}
+
 export class FolderNativeMenuBridge {
   private observer?: MutationObserver
   private unsubscribeRuntime?: () => void

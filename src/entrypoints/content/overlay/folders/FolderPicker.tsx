@@ -3,7 +3,9 @@ import { useState, useSyncExternalStore } from 'react'
 import { LuPlus } from 'react-icons/lu'
 
 import { getFolderColor, getFolderIcon } from '@/components/folders/folderAppearance'
+import { toaster } from '@/components/ui/toaster'
 import { compareAscii } from '@/domain/folder/order-key'
+import { closeOpenConversationActionsMenu } from '@/entrypoints/content/folders/native-menu'
 import { folderRuntime } from '@/entrypoints/content/folders/runtime'
 import { logFolderTrace, logFolderTraceError } from '@/utils/folderTrace'
 import { tt } from '@/utils/i18n'
@@ -28,13 +30,20 @@ export function FolderPicker() {
     })
     try {
       await folderRuntime.addMembership(folderId, chatId, cachedTitle, traceId)
-      logFolderTrace(traceId, 'picker.command-resolved', { folderId, chatId })
     } catch (nextError) {
       logFolderTraceError(traceId, 'picker.command-rejected', nextError, { folderId, chatId })
       setError(nextError instanceof Error ? nextError.message : tt('folders_save_failed', 'Could not complete this action.'))
+      return
     } finally {
       setPendingFolderId(undefined)
     }
+    logFolderTrace(traceId, 'picker.command-resolved', { folderId, chatId })
+    closeOpenConversationActionsMenu(chatId)
+    toaster.create({
+      type: 'success',
+      title: tt('folders_chat_added', 'Added to Folder.'),
+      duration: 3000,
+    })
   }
   return (
     <AnchoredGeminiMenu
