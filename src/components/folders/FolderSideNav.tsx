@@ -15,7 +15,7 @@ import {
   HiOutlinePlus,
 } from 'react-icons/hi'
 import { type ReactNode, useEffect, useRef, useState, useSyncExternalStore } from 'react'
-import { LuPin } from 'react-icons/lu'
+import { LuPin, LuUserRound } from 'react-icons/lu'
 
 import { getFolderColor, getFolderIcon } from './folderAppearance'
 import { createFolderTitleClickController } from './folderTitleClick'
@@ -179,11 +179,19 @@ export function FolderSideNav() {
   const [currentChatId, setCurrentChatId] = useState(() => getChatId(window.location.href))
   const [draggedItem, setDraggedItem] = useState<DraggedItem | null>(null)
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null)
+  const [saveError, setSaveError] = useState<string>()
   const [collapsePreviews, setCollapsePreviews] = useState<Record<string, CollapsePreview>>({})
   const pendingTitlePreview = useRef<CollapsePreview | undefined>(undefined)
   const folderTitleClicks = useRef(createFolderTitleClickController())
   const projection = state.projection
   const accountScopeId = state.identity.status === 'available' ? state.identity.identity.accountScopeId : undefined
+  const isCurrentAccount = () => {
+    const identity = folderRuntime.getSnapshot().identity
+    return identity.status === 'available' && identity.identity.accountScopeId === accountScopeId
+  }
+  const showSaveError = (error: unknown) => {
+    if (isCurrentAccount()) setSaveError(error instanceof Error ? error.message : tt('folders_current_change_unsaved', 'This change was not saved.'))
+  }
 
   useEffect(() => eventBus.on('urlchange', ({ url }) => setCurrentChatId(getChatId(url))), [])
   useEffect(() => () => folderTitleClicks.current.cancel(), [])
@@ -191,27 +199,20 @@ export function FolderSideNav() {
     folderTitleClicks.current.cancel()
     pendingTitlePreview.current = undefined
     setCollapsePreviews({})
+    setSaveError(undefined)
   }, [accountScopeId])
 
-  if (state.identity.status !== 'available') {
-    return (
-      <Box p={2} bg="transparent" color="fg.muted">
-        <Text fontSize="xs">
-          {tt('folders_unavailable', 'Folders are unavailable until your Gemini identity is confirmed.')}
-        </Text>
-      </Box>
-    )
-  }
-  if (!projection?.settings.enabled) return null
+  const unavailable = state.identity.status !== 'available'
+  if (!unavailable && !projection?.settings.enabled) return null
 
   // P0 deliberately presents one flat layer even though the persisted model
   // reserves a parentFolderId seam for a future, evidence-backed hierarchy.
-  const folders = sortByOrder(projection.folders.filter((folder) => folder.parentFolderId === ROOT_FOLDER_ID))
+  const folders = sortByOrder(unavailable ? [] : (projection?.folders ?? []).filter((folder) => folder.parentFolderId === ROOT_FOLDER_ID))
   const visibleFolders = showAllFolders ? folders : folders.slice(0, 5)
-  const collapsed = new Set(projection.settings.collapsedFolderIds)
-  const chatById = new Map(projection.chatReferences.map((chat) => [chat.chatId, chat]))
-  const membershipsByFolder = new Map<string, typeof projection.memberships>()
-  for (const membership of projection.memberships) {
+  const collapsed = new Set(projection?.settings.collapsedFolderIds ?? [])
+  const chatById = new Map((projection?.chatReferences ?? []).map((chat) => [chat.chatId, chat]))
+  const membershipsByFolder = new Map<string, NonNullable<typeof projection>['memberships']>()
+  for (const membership of projection?.memberships ?? []) {
     const rows = membershipsByFolder.get(membership.folderId) ?? []
     rows.push(membership)
     membershipsByFolder.set(membership.folderId, rows)
@@ -235,8 +236,10 @@ export function FolderSideNav() {
   const commitPreview = async (preview: CollapsePreview) => {
     try {
       await folderRuntime.setFolderCollapsed(preview.folderId, preview.collapsed)
+      if (isCurrentAccount()) setSaveError(undefined)
     } catch (error) {
       console.warn('[Folders] Failed to save folder expansion', error)
+      showSaveError(error)
     } finally {
       clearPreview(preview)
     }
@@ -264,7 +267,7 @@ export function FolderSideNav() {
         item.folderId,
         placement === 'before' ? targetFolderId : undefined,
         placement === 'after' ? targetFolderId : undefined,
-      )
+      ).then(() => { if (isCurrentAccount()) setSaveError(undefined) }, showSaveError)
     }
   }
 
@@ -323,43 +326,91 @@ export function FolderSideNav() {
             aria-hidden
           />
         </Button>
-        <HStack data-gpk-folder-actions gap={0} flexShrink={0} transition="opacity 120ms ease">
-          <Tooltip content={tt('folders_new_folder', 'New folder')}>
-            <IconButton
-              {...trailingIconButtonStyles}
-              size="xs"
-              variant="ghost"
-              borderRadius="full"
-              color="inherit"
-              _hover={{ bg: HOVER_BACKGROUND }}
-              aria-label={tt('folders_new_folder', 'New folder')}
-              onClick={() => folderRuntime.openCreateDialog()}
-            >
-              <HiOutlinePlus />
-            </IconButton>
-          </Tooltip>
-          <Tooltip content={tt('folders_settings', 'Folder settings')}>
-            <IconButton
-              {...trailingIconButtonStyles}
-              size="xs"
-              variant="ghost"
-              borderRadius="full"
-              color="inherit"
-              _hover={{ bg: HOVER_BACKGROUND }}
-              aria-label={tt('folders_settings', 'Folder settings')}
-              onClick={() => eventBus.emitSync('settings:open', {
-                from: 'folders',
-                open: true,
-                module: 'folders',
-              })}
-            >
-              <HiOutlineCog />
-            </IconButton>
-          </Tooltip>
+        <HStack gap={0} flexShrink={0}>
+          <HStack data-gpk-folder-actions gap={0} flexShrink={0} transition="opacity 120ms ease">
+            <Tooltip content={tt('folders_new_folder', 'New folder')}>
+              <IconButton
+                {...trailingIconButtonStyles}
+                size="xs"
+                variant="ghost"
+                borderRadius="full"
+                color="inherit"
+                _hover={{ bg: HOVER_BACKGROUND }}
+                aria-label={tt('folders_new_folder', 'New folder')}
+                disabled={unavailable}
+                onClick={() => folderRuntime.openCreateDialog()}
+              >
+                <HiOutlinePlus />
+              </IconButton>
+            </Tooltip>
+            <Tooltip content={tt('folders_settings', 'Folder settings')}>
+              <IconButton
+                {...trailingIconButtonStyles}
+                size="xs"
+                variant="ghost"
+                borderRadius="full"
+                color="inherit"
+                _hover={{ bg: HOVER_BACKGROUND }}
+                aria-label={tt('folders_settings', 'Folder settings')}
+                onClick={() => eventBus.emitSync('settings:open', {
+                  from: 'folders',
+                  open: true,
+                  module: 'folders',
+                })}
+              >
+                <HiOutlineCog />
+              </IconButton>
+            </Tooltip>
+          </HStack>
+          {state.identity.status === 'available' && state.identity.identity.selection === 'recent' ? (
+            <Tooltip content={(
+              <VStack align="start" gap={1}>
+                <Text overflowWrap="anywhere">{tt('folders_account_current', 'Currently using')}: {state.identity.identity.email}</Text>
+                <Text>{tt('folders_account_last_used', 'Last used account · Click to switch')}</Text>
+              </VStack>
+            )}>
+              <IconButton
+                {...trailingIconButtonStyles}
+                data-gpk-folder-account
+                size="xs"
+                variant="ghost"
+                borderRadius="full"
+                color="inherit"
+                opacity={0.7}
+                css={{ '& svg': { width: '14px', height: '14px' } }}
+                _hover={{ bg: HOVER_BACKGROUND, opacity: 1 }}
+                _focusVisible={{ opacity: 1 }}
+                aria-label={`${tt('folders_switch_account', 'Switch account')}: ${state.identity.identity.email}`}
+                onClick={() => eventBus.emitSync('settings:open', {
+                  from: 'folders', open: true, module: 'folders', params: { chooseAccount: true },
+                })}
+              >
+                <LuUserRound size={14} aria-hidden />
+              </IconButton>
+            </Tooltip>
+          ) : null}
         </HStack>
       </HStack>
 
+      {saveError ? <Text role="alert" fontSize="xs" color="fg.error" px="14px" py={1}>{saveError}</Text> : null}
       <CollapsibleContent expanded={panelExpanded}>
+        {unavailable ? (
+          <VStack align="stretch" gap={2} px="14px" py={2}>
+            <Text fontSize="xs" color={ITEM_COLOR}>
+              {tt('folders_unavailable', 'Folders are unavailable until your Gemini identity is confirmed.')}
+            </Text>
+            <Button
+              size="xs"
+              variant="outline"
+              alignSelf="flex-start"
+              onClick={() => eventBus.emitSync('settings:open', {
+                from: 'folders', open: true, module: 'folders',
+              })}
+            >
+              {tt('folders_manual_email', 'Manual email')}
+            </Button>
+          </VStack>
+        ) : null}
         <VStack align="stretch" gap={0}>
           {visibleFolders.map((folder) => {
             const isCollapsed = collapsePreviews[folder.id]?.collapsed ?? collapsed.has(folder.id)
@@ -598,7 +649,7 @@ export function FolderSideNav() {
                                   chatId,
                                   placement === 'before' ? membership.id : undefined,
                                   placement === 'after' ? membership.id : undefined,
-                                )
+                                ).then(() => { if (isCurrentAccount()) setSaveError(undefined) }, showSaveError)
                               }
                             }}
                           >
@@ -655,7 +706,7 @@ export function FolderSideNav() {
                         </Box>
                       )
                     })}
-                    {projection.chatCursors?.[folder.id] ? (
+                    {projection?.chatCursors?.[folder.id] ? (
                       <Button
                         data-gpk-folder-load-more-chats
                         size="sm"
@@ -690,7 +741,7 @@ export function FolderSideNav() {
               </Box>
             )
           })}
-          {!folders.length ? (
+          {!unavailable && !folders.length ? (
             <Button
               data-gpk-folder-new-row
               size="sm"

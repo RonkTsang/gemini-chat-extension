@@ -2,6 +2,7 @@ import { createExtensionRpcRouter, type ExtensionRpcMessageListener } from '@/in
 import { folderRpcEnvelopeSchema, folderRpcParams, folderRpcResponseSchema, type FolderRpcEnvelope, type FolderRpcErrorCode } from '@/domain/folder/rpc'
 import { folderRepository } from '@/data/repositories/folderRepository'
 import { measureBrowserSyncUsage } from '@/services/folder-sync/providers/browser-sync'
+import { FolderRecoveryError, getLocalStorageStatus, isQuotaError } from '@/services/folder-recovery/storage'
 
 import { FolderCommandService } from './command-service'
 import { publishFolderInvalidation } from './invalidation'
@@ -18,8 +19,9 @@ const mutatingMethods = new Set<FolderRpcEnvelope['method']>([
 
 function mapError(error: unknown): { code: FolderRpcErrorCode; message: string; retryable: boolean } {
   const message = error instanceof Error ? error.message : 'Folders request failed'
+  if (error instanceof FolderRecoveryError) return { code: error.code, message: error.code, retryable: error.code !== 'SNAPSHOT_TOO_LARGE' }
+  if (isQuotaError(error)) return { code: 'LOCAL_STORAGE_FULL', message: 'LOCAL_STORAGE_FULL', retryable: true }
   if (message === 'STALE_REVISION') return { code: 'STALE_REVISION', message: 'Folders changed in another view. Refresh and try again.', retryable: true }
-  if (message === 'SYNC_DEFERRED') return { code: 'SYNC_DEFERRED', message: 'Browser Sync requires an observed Gemini identity.', retryable: false }
   if (/already exists/i.test(message)) return { code: 'DUPLICATE_NAME', message: 'A Folder with that name already exists.', retryable: false }
   if (/unavailable|not found/i.test(message)) return { code: 'NOT_FOUND', message: 'The requested Folder item is unavailable.', retryable: false }
   if (/valid|required|invalid|must/i.test(message)) return { code: 'VALIDATION_FAILED', message: 'The Folder request is invalid.', retryable: false }
@@ -70,6 +72,7 @@ export function createFolderRpcHandler(scheduler: FolderSyncScheduler): Extensio
         return { ok: false as const, requestId: request.requestId, error: { code: 'INVALID_REQUEST' as const, message: 'The Folder request is invalid.', retryable: false } }
       }
       const params = parameters.data as never
+      let commandCompleted = false
       try {
         console.info('[Folders][rpc] handling request', rpcLogContext(request, params))
         let data: unknown
@@ -82,6 +85,7 @@ export function createFolderRpcHandler(scheduler: FolderSyncScheduler): Extensio
           case 'getFolderDeleteImpact': data = await queries.getFolderDeleteImpact(request.accountScopeId, (params as { folderId: string }).folderId); break
           case 'getSettings': data = await queries.getSettings(request.accountScopeId); break
           case 'getSyncStatus': data = await queries.getSyncStatus(request.accountScopeId); break
+          case 'getLocalStorageStatus': data = await getLocalStorageStatus(request.accountScopeId); break
           case 'measureBrowserSyncUsage': {
             await folderRepository.recordBrowserSyncUsage(request.accountScopeId, await measureBrowserSyncUsage())
             data = await queries.getSyncStatus(request.accountScopeId)
@@ -97,6 +101,7 @@ export function createFolderRpcHandler(scheduler: FolderSyncScheduler): Extensio
           case 'exportBackup': data = await folderRepository.exportAccountData(request.accountScopeId); break
           default:
             data = await commands.execute(request)
+            commandCompleted = true
             break
         }
         const dataRevision = await queries.revision(request.accountScopeId)
@@ -118,6 +123,20 @@ export function createFolderRpcHandler(scheduler: FolderSyncScheduler): Extensio
         return { ok: true as const, requestId: request.requestId, dataRevision, data }
       } catch (error) {
         const mapped = mapError(error)
+        // A failed response read must not reclassify a completed write or invite
+        // callers to repeat that write.
+        if (commandCompleted && mutatingMethods.has(request.method)) {
+          mapped.code = 'INTERNAL_ERROR'
+          mapped.message = 'Folders could not complete that request.'
+          mapped.retryable = false
+        } else if (request.method === 'createSnapshot' && (mapped.code === 'INTERNAL_ERROR' || mapped.code === 'LOCAL_STORAGE_FULL')) {
+          mapped.code = 'MANUAL_SNAPSHOT_FAILED'
+          mapped.message = 'MANUAL_SNAPSHOT_FAILED'
+        } else if (mutatingMethods.has(request.method) && request.method !== 'createSnapshot'
+          && (mapped.code === 'LOCAL_STORAGE_FULL' || mapped.code === 'INTERNAL_ERROR')) {
+          mapped.code = 'FOLDER_SAVE_FAILED'
+          mapped.message = 'FOLDER_SAVE_FAILED'
+        }
         console.error('[Folders][rpc] request failed', {
           ...rpcLogContext(request, params),
           code: mapped.code,
@@ -125,7 +144,13 @@ export function createFolderRpcHandler(scheduler: FolderSyncScheduler): Extensio
             ? { name: error.name, message: error.message, stack: error.stack }
             : { message: String(error) },
         })
-        return { ok: false as const, requestId: request.requestId, error: { ...mapped, currentRevision: await queries.revision(request.accountScopeId) } }
+        const currentRevision = await queries.revision(request.accountScopeId).catch((revisionError: unknown) => {
+          console.error('[Folders][rpc] error response revision read failed', {
+            ...rpcLogContext(request), error: revisionError,
+          })
+          return undefined
+        })
+        return { ok: false as const, requestId: request.requestId, error: { ...mapped, currentRevision } }
       }
     },
   }])

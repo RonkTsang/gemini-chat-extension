@@ -1,6 +1,10 @@
 import Dexie from 'dexie'
 
 import { db } from '@/data/db'
+import { newestSnapshots } from '@/services/folder-recovery/storage'
+import { withSnapshotCounts } from '@/services/folder-recovery/snapshots'
+import { readRecoveryFailure } from '@/services/folder-recovery/failure-fallback'
+import { countFolderOrganization } from '@/domain/folder/organization-summary'
 import { compareMembershipOrder } from '@/domain/folder/membership-order'
 import type { FolderChatSummary, FolderSidebarState } from '@/domain/folder/sidebar'
 import { BROWSER_SYNC_CAPACITY_NOTICE_THRESHOLD_PERCENT, ROOT_FOLDER_ID, type FolderRow, type FolderSettingsRow } from '@/domain/folder/types'
@@ -122,16 +126,22 @@ export class FolderQueryService {
   }
 
   async getSyncStatus(accountScopeId: string) {
-    const [state, pending, settings] = await Promise.all([
+    const [state, pending, settings, recovery, folders, memberships] = await Promise.all([
       db.folder_sync_states.get(accountScopeId),
       db.folder_operations.where('accountScopeId').equals(accountScopeId).toArray(),
       db.folder_settings.get(accountScopeId),
+      db.folder_recovery_states.get(accountScopeId),
+      db.folders.where('accountScopeId').equals(accountScopeId).toArray(),
+      db.folder_memberships.where('accountScopeId').equals(accountScopeId).toArray(),
     ])
     const usagePercent = state?.browserSyncCurrentUsageBytes !== undefined && state.browserSyncBudgetBytes
       ? state.browserSyncCurrentUsageBytes / state.browserSyncBudgetBytes * 100
       : undefined
     return {
       mode: 'browser-sync' as const,
+      ...countFolderOrganization(folders, memberships),
+      localRecoveryWarning: readRecoveryFailure(accountScopeId) ?? recovery?.warning,
+      localAutomaticSnapshotFailed: !!readRecoveryFailure(accountScopeId) || recovery?.automaticSnapshotFailed,
       state: state?.browserSyncWarning
         ? 'needs-attention' as const
         : settings?.settingsPending || pending.some((operation) => operation.state === 'pending')
@@ -160,9 +170,10 @@ export class FolderQueryService {
   async listSnapshots(accountScopeId: string, cursor: string | undefined, limit: number) {
     const rows = await db.folder_snapshots.where('[accountScopeId+createdAt]')
       .between([accountScopeId, Dexie.minKey], [accountScopeId, Dexie.maxKey]).reverse().toArray()
-    const normalized = rows.map((row) => ({ ...row, orderKey: row.createdAt }))
-    const result = page(normalized, cursor, limit)
-    return { items: result.items.map(({ orderKey: _, ...row }) => row), nextCursor: result.nextCursor }
+    const sorted = newestSnapshots(rows)
+    const boundary = cursor ? sorted.findIndex((row) => row.id === cursor) + 1 : 0
+    const items = await Promise.all(sorted.slice(boundary, boundary + limit).map(withSnapshotCounts))
+    return { items, nextCursor: boundary + limit < sorted.length ? items.at(-1)?.id : undefined }
   }
 
   private summary(folder: FolderRow, chatCount: number, settings: FolderSettingsRow): FolderSummary {

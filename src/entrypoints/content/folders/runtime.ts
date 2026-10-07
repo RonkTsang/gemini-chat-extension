@@ -6,7 +6,10 @@ import type {
   FolderProjection,
   FolderRow,
   FolderSnapshotRow,
+  FolderLocalStorageStatus,
 } from '@/domain/folder/types'
+import type { FolderAccountHistory } from '@/domain/folder/account-history'
+import { folderAccountHistory } from '@/services/gemini-identity/account-history'
 import { geminiIdentityService, type GeminiIdentityResult } from '@/services/gemini-identity'
 import { geminiApi } from '@/services/gemini-api'
 import { tt } from '@/utils/i18n'
@@ -81,6 +84,7 @@ export class FolderRuntime {
   private state: FolderRuntimeState = { identity: geminiIdentityService.getCurrent() }
   private readonly listeners = new Set<Listener>()
   private unsubscribeIdentity?: () => void
+  private identityLoad?: Promise<void>
   private sequence = 0
   private invalidationListenerStarted = false
   private lastActivityHint?: { accountScopeId: string; requestedAt: number }
@@ -131,6 +135,7 @@ export class FolderRuntime {
       let initialLoad: Promise<void> | undefined
       this.unsubscribeIdentity = geminiIdentityService.subscribe((result) => {
         const load = this.loadIdentity(result)
+        this.identityLoad = load
         initialLoad ??= load
         void load
       })
@@ -155,6 +160,7 @@ export class FolderRuntime {
     ++this.sequence
     this.unsubscribeIdentity?.()
     this.unsubscribeIdentity = undefined
+    this.identityLoad = undefined
     geminiIdentityService.stop()
     if (this.invalidationListenerStarted) {
       browser.runtime.onMessage.removeListener(this.handleBackgroundMessage)
@@ -179,6 +185,9 @@ export class FolderRuntime {
       return
     }
 
+    if (!isSameAccount) {
+      this.publish({ identity, projection: undefined, syncState: undefined, picker: undefined, menu: undefined, dialog: undefined, error: undefined })
+    }
     try {
       const projection = await folderBackgroundClient.getProjection(
         identity.identity.accountScopeId,
@@ -200,6 +209,7 @@ export class FolderRuntime {
           dialog: isSameAccount ? this.state.dialog : undefined,
           error: undefined,
         })
+        if (!isSameAccount) this.requestBrowserSync(undefined, false)
       }
     } catch (error) {
       if (sequence === this.sequence) {
@@ -285,8 +295,8 @@ export class FolderRuntime {
 
   private requestBrowserSync(traceId?: string, refreshStatus = false): void {
     const identity = this.state.identity
-    if (identity.status !== 'available' || identity.identity.source !== 'observed') {
-      if (traceId) logFolderTrace(traceId, 'sync.skipped', { reason: 'identity-not-observed' })
+    if (identity.status !== 'available') {
+      if (traceId) logFolderTrace(traceId, 'sync.skipped', { reason: 'identity-unavailable' })
       return
     }
     const now = Date.now()
@@ -326,8 +336,8 @@ export class FolderRuntime {
 
   async syncNow(): Promise<void> {
     const identity = this.state.identity
-    if (identity.status !== 'available' || identity.identity.source !== 'observed') {
-      throw new Error('Browser Sync requires a verified Gemini account')
+    if (identity.status !== 'available') {
+      throw new Error('Browser Sync requires an identified Gemini account')
     }
     try {
       await folderBackgroundClient.request(identity.identity.accountScopeId, identity.identity.source, 'retrySync', {})
@@ -364,7 +374,10 @@ export class FolderRuntime {
   }
 
   async reload(): Promise<void> {
-    await this.refresh()
+    const sequence = this.sequence
+    await geminiIdentityService.refresh()
+    if (sequence === this.sequence) await this.refresh()
+    else await this.identityLoad
   }
 
   async createFolder(
@@ -473,12 +486,22 @@ export class FolderRuntime {
   }
 
   async deleteChat(folderId: string, chatId: string): Promise<void> {
-    // The native delete adapter must report Gemini success before this method
-    // is allowed to tombstone any local membership or title cache.
-    await deleteGeminiChat(chatId)
-    await folderBackgroundClient.request(this.scope(), this.identitySource(), 'removeChatAfterGeminiDelete', { chatId, deletionReceipt: 'gemini-native-confirmed' })
-    this.closeDialog()
-    await this.refresh()
+    const accountScopeId = this.scope()
+    const identitySource = this.identitySource()
+    const protection = (await folderBackgroundClient.request<FolderSnapshotRow>(accountScopeId, identitySource, 'prepareChatDeletion', {})).data
+    try {
+      if (this.scope() !== accountScopeId) throw new Error('The Gemini account changed during deletion')
+      await deleteGeminiChat(chatId)
+      await folderBackgroundClient.request(accountScopeId, identitySource, 'removeChatAfterGeminiDelete', {
+        chatId, deletionReceipt: 'gemini-native-confirmed', protectionSnapshotId: protection.id,
+      })
+      this.closeDialog()
+      await this.refresh()
+    } finally {
+      try { await folderBackgroundClient.request(accountScopeId, identitySource, 'releaseSnapshot', { snapshotId: protection.id, protectionToken: protection.protectionToken }) } catch (error) {
+        logFolderTraceError('native-delete', 'recovery.protection-release-failed', error, { accountScopeId })
+      }
+    }
   }
 
   async renameChat(folderId: string, chatId: string, title: string): Promise<void> {
@@ -541,6 +564,10 @@ export class FolderRuntime {
     if (collapsed) collapsedFolderIds.add(folderId)
     else collapsedFolderIds.delete(folderId)
     await this.updateSettings({ collapsedFolderIds: [...collapsedFolderIds] })
+  }
+
+  async getLocalStorageStatus(): Promise<FolderLocalStorageStatus> {
+    return (await folderBackgroundClient.request<FolderLocalStorageStatus>(this.scope(), this.identitySource(), 'getLocalStorageStatus', {})).data
   }
 
   async createSnapshot(): Promise<FolderSnapshotRow> {
@@ -681,7 +708,23 @@ export class FolderRuntime {
   }
 
   async confirmManualEmail(email: string): Promise<void> {
-    await geminiIdentityService.confirmManualEmail(email, true)
+    const identity = await geminiIdentityService.confirmManualEmail(email, true)
+    if (identity.status !== 'available') throw new Error(tt('folders_account_save_error', 'Could not save this email. Try again.'))
+    await this.identityLoad
+  }
+
+  getAccountHistory(): Promise<FolderAccountHistory> {
+    return folderAccountHistory.get()
+  }
+
+  async selectSavedAccount(email: string): Promise<void> {
+    const identity = await geminiIdentityService.confirmManualEmail(email, true, 'history')
+    if (identity.status !== 'available') throw new Error(tt('folders_account_save_error', 'Could not save this email. Try again.'))
+    await this.identityLoad
+  }
+
+  forgetAccount(accountScopeId: string): Promise<FolderAccountHistory> {
+    return folderAccountHistory.forget(accountScopeId)
   }
 
   clearManualEmail(): void {

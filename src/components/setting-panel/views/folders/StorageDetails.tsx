@@ -3,6 +3,7 @@ import { HiOutlineDownload, HiOutlineRefresh } from 'react-icons/hi'
 
 import type { BrowserSyncStatusProjection } from '@/entrypoints/content/folders/client'
 import { tt } from '@/utils/i18n'
+import { formatOrganizationCounts, formatStoragePercent } from './organization-label'
 
 interface StorageDetailsProps {
   syncState?: BrowserSyncStatusProjection
@@ -15,7 +16,11 @@ interface StorageDetailsProps {
 
 export function formatStorageSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
-  return `${Number((bytes / 1024).toFixed(1))} KiB`
+  const units = ['KiB', 'MiB', 'GiB', 'TiB']
+  let value = bytes / 1024
+  let index = 0
+  while (value >= 1024 && index < units.length - 1) { value /= 1024; index += 1 }
+  return `${Number(value.toFixed(1))} ${units[index]}`
 }
 
 export function StorageDetails({ syncState, working, measuring, error, onRefresh, onExport }: StorageDetailsProps) {
@@ -23,7 +28,8 @@ export function StorageDetails({ syncState, working, measuring, error, onRefresh
     {
       label: tt('folders_sync_usage', 'Current Folder sync storage'),
       value: syncState?.currentUsageBytes,
-      suffix: syncState?.usagePercent !== undefined ? ` (${Math.round(syncState.usagePercent)}%)` : '',
+      counts: syncState ? formatOrganizationCounts(syncState) : undefined,
+      suffix: syncState?.usagePercent !== undefined ? ` (${formatStoragePercent(syncState.usagePercent)})` : '',
     },
     { label: tt('folders_sync_capacity_budget', 'Folder sync budget'), value: syncState?.usageBudgetBytes },
     {
@@ -41,7 +47,10 @@ export function StorageDetails({ syncState, working, measuring, error, onRefresh
     <Stack id="folders-storage-details" aria-busy={measuring} gap={3} py={4} borderTopWidth="1px" borderColor="gemOnSurface/6">
       {rows.some((row) => row.value !== undefined) ? rows.map((row) => row.value !== undefined ? (
         <HStack key={row.label} justify="space-between" align="start" gap={4} fontSize="xs" wrap="wrap">
-          <Text color="gemOnSurfaceVariant">{row.label}: </Text>
+          <Stack gap={1}>
+            <Text color="gemOnSurfaceVariant">{row.label}: </Text>
+            {row.counts ? <Text color="gemOnSurfaceVariant">{row.counts}</Text> : null}
+          </Stack>
           <Text fontVariantNumeric="tabular-nums">{row.value} B{row.suffix}</Text>
         </HStack>
       ) : null) : <Text fontSize="sm" color="gemOnSurfaceVariant">{tt('folders_sync_status_checking', 'Checking sync status…')}</Text>}

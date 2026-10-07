@@ -5,13 +5,15 @@ import { useEvent, useEventEmitter } from "../../hooks/useEventBus"
 import { Sidebar } from "./Sidebar"
 import { ContentArea } from "./ContentArea"
 import { registerDefaultViews } from "./views"
-import { setActiveSection } from "../../stores/settingStore"
+import { navigateToView } from "../../stores/settingStore"
 import type { AppEvents } from "@/common/event"
+import { SettingsToaster } from "./toaster"
 
 registerDefaultViews()
 
 export const SettingPanel = () => {
   const [open, setOpen] = useState(false)
+  const [toastAnchor, setToastAnchor] = useState<HTMLDivElement | null>(null)
   const { emit } = useEventEmitter()
 
   useEvent('settings:open', (data: AppEvents['settings:open']) => {
@@ -19,7 +21,7 @@ export const SettingPanel = () => {
 
     // If data.module has a value, set settingPanel to the corresponding NavigationSection
     if (data.module) {
-      setActiveSection(data.module)
+      navigateToView(data.module, 'index', data.params)
     }
   })
 
@@ -48,6 +50,7 @@ export const SettingPanel = () => {
         <Dialog.Backdrop />
         <Dialog.Positioner alignItems="center" justifyContent="center">
           <Dialog.Content
+            ref={setToastAnchor}
             maxWidth="1200px"
             height="90vh"
             maxHeight="860px"
@@ -82,6 +85,7 @@ export const SettingPanel = () => {
           </Dialog.Content>
         </Dialog.Positioner>
       </Portal>
+      <SettingsToaster anchor={toastAnchor} open={open} />
     </Dialog.Root>
   )
 }

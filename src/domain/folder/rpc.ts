@@ -27,6 +27,7 @@ export const folderRpcMethodSchema = z.enum([
   'importBackup', 'restoreSnapshot', 'exportBackup', 'retrySync', 'activityHint',
   'dismissCapacityNotice',
   'measureBrowserSyncUsage',
+  'getLocalStorageStatus', 'prepareChatDeletion', 'releaseSnapshot',
 ])
 export type FolderRpcMethod = z.infer<typeof folderRpcMethodSchema>
 
@@ -45,6 +46,8 @@ export const folderRpcErrorCodeSchema = z.enum([
   'INVALID_REQUEST', 'INVALID_SENDER', 'IDENTITY_UNAVAILABLE', 'ACCOUNT_SCOPE_MISMATCH',
   'NOT_FOUND', 'DUPLICATE_NAME', 'STALE_REVISION', 'VALIDATION_FAILED',
   'STORAGE_UNAVAILABLE', 'SYNC_DEFERRED', 'INTERNAL_ERROR',
+  'LOCAL_STORAGE_FULL', 'SNAPSHOT_BUDGET_EXCEEDED', 'SNAPSHOT_TOO_LARGE', 'SNAPSHOT_PROTECTION_FAILED',
+  'FOLDER_SAVE_FAILED', 'MANUAL_SNAPSHOT_FAILED',
 ])
 export type FolderRpcErrorCode = z.infer<typeof folderRpcErrorCodeSchema>
 
@@ -70,6 +73,9 @@ export const folderRpcParams = {
   getFolderDeleteImpact: z.object({ folderId: z.string().min(1) }),
   getSettings: z.object({}),
   getSyncStatus: z.object({}),
+  getLocalStorageStatus: z.object({}),
+  prepareChatDeletion: z.object({}),
+  releaseSnapshot: z.object({ snapshotId: z.string().min(1), protectionToken: z.string().min(1) }),
   listSnapshots: z.object({ cursor: cursorSchema.optional(), limit: limitSchema }),
   getRestoreImpact: z.object({ snapshotId: z.string().min(1) }),
   createFolder: folderInputSchema,
@@ -81,7 +87,7 @@ export const folderRpcParams = {
   moveMembership: z.object({ folderId: z.string().min(1), targetFolderId: z.string().min(1), chatId: z.string().min(1), expectedRevision: z.string().min(1).optional() }).merge(positionSchema),
   removeMembership: z.object({ folderId: z.string().min(1), chatId: z.string().min(1) }),
   setMembershipPinned: z.object({ folderId: z.string().min(1), chatId: z.string().min(1), pinned: z.boolean() }),
-  removeChatAfterGeminiDelete: z.object({ chatId: z.string().min(1), deletionReceipt: z.string().min(1).max(512) }),
+  removeChatAfterGeminiDelete: z.object({ chatId: z.string().min(1), deletionReceipt: z.string().min(1).max(512), protectionSnapshotId: z.string().min(1).optional() }),
   updateChatTitle: z.object({
     chatId: z.string().regex(/^(?:c_)?[a-z0-9]+$/i),
     title: z.string().transform((value) => value.normalize('NFKC').trim()).pipe(z.string().min(1).max(500)),

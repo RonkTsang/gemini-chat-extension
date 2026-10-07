@@ -47,7 +47,8 @@ export default defineConfig({
       default_locale: "en",
       permissions: [
         "storage",
-        "alarms"
+        "alarms",
+        "unlimitedStorage"
       ],
       optional_permissions: [
         "notifications",
@@ -78,7 +79,7 @@ export default defineConfig({
     }
 
     if (env.browser === 'firefox') {
-      delete manifest.optional_permissions
+      manifest.optional_permissions = []
       manifest.permissions.push(
         'notifications',
         'webRequest',

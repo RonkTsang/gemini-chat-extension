@@ -3,6 +3,7 @@ import { nanoid } from 'nanoid'
 import { ExtensionRpcClient } from '@/integrations/extension-rpc/client'
 import { folderRpcResponseSchema, type FolderRpcMethod, type FolderRpcResponse } from '@/domain/folder/rpc'
 import type { FolderProjection } from '@/domain/folder/types'
+import { tt } from '@/utils/i18n'
 import type { FolderChatSummaryPage, FolderSidebarState } from '@/domain/folder/sidebar'
 
 export interface FolderChatPage {
@@ -19,6 +20,8 @@ export interface BrowserSyncStatusProjection {
   retryAt?: string
   warning?: 'quota-exceeded' | 'write-failed' | 'incomplete-replica' | 'invalid-replica'
   currentUsageBytes?: number
+  folderCount?: number
+  chatCount?: number
   currentTotalBytes?: number
   quotaBytes?: number
   projectedUsageBytes?: number
@@ -27,11 +30,22 @@ export interface BrowserSyncStatusProjection {
   usageBudgetBytes?: number
   usagePercent?: number
   showCapacityNotice: boolean
+  localRecoveryWarning?: 'snapshot-failed' | 'quota-exceeded' | 'budget-exceeded' | 'snapshot-too-large'
+  localAutomaticSnapshotFailed?: boolean
 }
 
 export class FolderRpcError extends Error {
   constructor(readonly response: Extract<FolderRpcResponse, { ok: false }>) {
-    super(response.error.message)
+    const keys = {
+      LOCAL_STORAGE_FULL: 'folders_storage_quota_error',
+      SNAPSHOT_BUDGET_EXCEEDED: 'folders_snapshot_protected_budget_error',
+      SNAPSHOT_TOO_LARGE: 'folders_snapshot_too_large_error',
+      SNAPSHOT_PROTECTION_FAILED: 'folders_recovery_protection_failed',
+      FOLDER_SAVE_FAILED: 'folders_current_change_unsaved',
+      MANUAL_SNAPSHOT_FAILED: 'folders_recovery_manual_failed',
+    }
+    const code = response.error.code
+    super(code in keys ? tt(keys[code as keyof typeof keys], response.error.message) : response.error.message)
   }
 }
 

@@ -165,13 +165,46 @@ export interface FolderSyncStateRow {
 export interface FolderSnapshotRow {
   id: string
   accountScopeId: string
-  reason: 'automatic' | 'before-delete' | 'before-import' | 'before-restore'
+  reason: 'automatic' | 'manual' | 'before-delete' | 'before-import' | 'before-restore'
+  reasons?: FolderSnapshotRow['reason'][]
+  organizationHash?: string
+  folderCount?: number
+  chatCount?: number
+  updatedAt?: string
+  protectedUntil?: string
+  protectionLeases?: Array<{ token: string; expiresAt: string }>
+  /** Returned only to the caller holding a protection lease. */
+  protectionToken?: string
   schemaVersion: 1
   dataRevision: string
   createdAt: string
   contentHash: string
   /** LZ-String Base64 of raw, validated account data including tombstones. */
   compressedPayload: string
+}
+
+/** Local recovery bookkeeping; never included in backups or sync payloads. */
+export interface FolderRecoveryStateRow {
+  accountScopeId: string
+  groupSnapshotId?: string
+  groupStartedAt?: string
+  lastActionAt?: string
+  warning?: 'snapshot-failed' | 'quota-exceeded' | 'budget-exceeded' | 'snapshot-too-large'
+  automaticSnapshotFailed?: boolean
+  updatedAt: string
+}
+
+export interface FolderLocalStorageStatus {
+  snapshotCount?: number
+  lastSnapshotAt?: string
+  usageBytes?: number
+  quotaBytes?: number
+  snapshotBytes: number
+  snapshotBudgetBytes: number
+  low: boolean
+  unlimited: boolean
+  warning?: FolderRecoveryStateRow['warning']
+  automaticSnapshotFailed?: boolean
 }
 
 export interface FolderCoordinatorLeaseRow {

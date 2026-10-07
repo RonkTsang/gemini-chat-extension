@@ -1,9 +1,11 @@
 import { browser } from 'wxt/browser'
 
 import { createFolderRpcHandler } from './rpc-handler'
+import { createFolderAccountHistoryHandler } from './account-history'
 import { folderRepository } from '@/data/repositories/folderRepository'
 import { FolderSyncScheduler } from '@/services/folder-sync/scheduler'
 import { logDevError, logDevEvent } from '@/utils/devLogger'
+import { pruneRecoveryHistory } from '@/services/folder-recovery/storage'
 
 let started = false
 
@@ -30,9 +32,11 @@ export function startFoldersBackground(): void {
   if (started) return
   started = true
   const scheduler = new FolderSyncScheduler()
+  void pruneRecoveryHistory().catch((error) => logDevError('[Folders]', 'recovery.history-prune-failed', error))
   void removeLegacyFolderSyncKeys()
   void schedulePersistedFolderSyncWork(scheduler)
   browser.runtime.onMessage.addListener(createFolderRpcHandler(scheduler))
+  browser.runtime.onMessage.addListener(createFolderAccountHistoryHandler())
   browser.storage.onChanged.addListener((changes, areaName) => {
     if (areaName !== 'sync') return
     for (const key of Object.keys(changes)) {

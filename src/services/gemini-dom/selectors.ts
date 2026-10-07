@@ -1,9 +1,14 @@
 export const geminiDomSelectors = {
-  identity: {
-    globalHeader: ['#gb'],
-    activeAccountLink: ['a[href*="accounts.google.com/SignOutOptions"][aria-label]'],
-    activeAccountAvatar: ['img[src]'],
-  },
+  identity: [
+    {
+      accountLink: 'sidenav-mavatar-footer a[href*="accounts.google.com/SignOutOptions"][aria-label]',
+      avatar: 'img.mavatar-image[src]',
+    },
+    {
+      accountLink: '#gb a[href*="accounts.google.com/SignOutOptions"][aria-label]',
+      avatar: 'img[src][srcset]',
+    },
+  ],
   sideNav: {
     root: ['bard-sidenav[role="navigation"]', 'bard-sidenav'],
     chatsSection: [

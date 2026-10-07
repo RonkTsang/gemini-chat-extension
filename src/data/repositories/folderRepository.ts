@@ -43,8 +43,10 @@ import {
 } from '@/utils/folderTrace'
 import { logDevError } from '@/utils/devLogger'
 
-const SNAPSHOT_LIMIT = 30
-const SNAPSHOT_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000
+import { saveFolderSnapshot, recordRecoveryFailure } from '@/services/folder-recovery/snapshots'
+import { clearRecoveryFailure, rememberRecoveryFailure } from '@/services/folder-recovery/failure-fallback'
+import { classifyRecoveryFailure, FolderRecoveryError, newestSnapshots, SNAPSHOT_PROTECTION_TTL_MS, type FolderRecoveryOptions } from '@/services/folder-recovery/storage'
+
 // The first retry is scheduled after one minute. Do not surface a replica that
 // is merely between the manifest and chunk writes until that recovery window
 // has elapsed.
@@ -138,8 +140,9 @@ export interface FolderRepository {
   removeMembership(accountScopeId: string, folderId: string, chatId: string): Promise<void>
   upsertChatReference(accountScopeId: string, chatId: string, cachedTitle: string): Promise<ChatReferenceRow>
   removeChatReference(accountScopeId: string, chatId: string): Promise<void>
-  removeChatAfterGeminiDelete(accountScopeId: string, chatId: string): Promise<void>
-  createSnapshot(accountScopeId: string, reason: FolderSnapshotRow['reason']): Promise<FolderSnapshotRow>
+  removeChatAfterGeminiDelete(accountScopeId: string, chatId: string, protectionSnapshotId?: string): Promise<void>
+  createSnapshot(accountScopeId: string, reason: FolderSnapshotRow['reason'], hold?: boolean): Promise<FolderSnapshotRow>
+  releaseSnapshot(accountScopeId: string, snapshotId: string, protectionToken: string): Promise<void>
   listSnapshots(accountScopeId: string): Promise<FolderSnapshotRow[]>
   restoreSnapshot(accountScopeId: string, snapshotId: string): Promise<void>
   exportAccountData(accountScopeId: string): Promise<FolderExportPayload>
@@ -240,7 +243,10 @@ function resolveOrderKey<T extends { id: string; orderKey: string }>(
 export class FolderRepositoryImpl implements FolderRepository {
   private deviceReady?: Promise<string>
 
-  constructor(private readonly deviceIdProvider: FolderDeviceIdProvider = runtimeFolderDeviceIdProvider) {}
+  constructor(
+    private readonly deviceIdProvider: FolderDeviceIdProvider = runtimeFolderDeviceIdProvider,
+    private readonly recoveryOptions: FolderRecoveryOptions = {},
+  ) {}
 
   private async preheatDevice(): Promise<string> {
     this.deviceReady ??= this.deviceIdProvider.getDeviceId()
@@ -720,51 +726,51 @@ export class FolderRepositoryImpl implements FolderRepository {
     const deviceId = await this.preheatDevice()
     const target = await db.folders.get(folderId)
     if (!target || target.accountScopeId !== accountScopeId || !isLive(target)) return
-    await this.createSnapshot(accountScopeId, 'before-delete')
-    await db.transaction('rw', [db.folders, db.folder_memberships, db.folder_settings, db.folder_operations, db.folder_sync_states], async () => {
-      const folders = await db.folders.where('accountScopeId').equals(accountScopeId).toArray()
-      const descendants = new Set<string>([folderId])
-      let changed = true
-      while (changed) {
-        changed = false
-        for (const folder of folders) {
-          if (isLive(folder) && descendants.has(folder.parentFolderId) && !descendants.has(folder.id)) {
-            descendants.add(folder.id)
-            changed = true
+    await this.withProtection(accountScopeId, 'before-delete', async () => {
+      await db.transaction('rw', [db.folders, db.folder_memberships, db.folder_settings, db.folder_operations, db.folder_sync_states], async () => {
+        const folders = await db.folders.where('accountScopeId').equals(accountScopeId).toArray()
+        const descendants = new Set<string>([folderId])
+        let changed = true
+        while (changed) {
+          changed = false
+          for (const folder of folders) {
+            if (isLive(folder) && descendants.has(folder.parentFolderId) && !descendants.has(folder.id)) {
+              descendants.add(folder.id)
+              changed = true
+            }
           }
         }
-      }
-      const timestamp = now()
-      const versionStamp = this.stamp()
-      const tombstones = folders.filter((folder) => descendants.has(folder.id) && isLive(folder)).map((folder) => ({
-        ...folder,
-        deletedAt: timestamp,
-        deleteVersionStamp: versionStamp,
-        updatedAt: timestamp,
-        versionStamp,
-      }))
-      const memberships = await db.folder_memberships.where('accountScopeId').equals(accountScopeId).toArray()
-      const membershipTombstones = memberships.filter((membership) => isLive(membership) && descendants.has(membership.folderId)).map((membership) => ({
-        ...membership,
-        deletedAt: timestamp,
-        deleteVersionStamp: versionStamp,
-        updatedAt: timestamp,
-        versionStamp,
-      }))
-      await db.folders.bulkPut(tombstones)
-      await db.folder_memberships.bulkPut(membershipTombstones)
-      const settings = await this.ensureSettings(accountScopeId)
-      await db.folder_settings.put({
-        ...settings,
-        collapsedFolderIds: settings.collapsedFolderIds.filter((id) => !descendants.has(id)),
-        updatedAt: timestamp,
-      })
-      await this.writeOperation(accountScopeId, deviceId, 'folder.delete-subtree', folderId, versionStamp, {
-        folderIds: [...descendants],
-        membershipIds: membershipTombstones.map((membership) => membership.id),
+        const timestamp = now()
+        const versionStamp = this.stamp()
+        const tombstones = folders.filter((folder) => descendants.has(folder.id) && isLive(folder)).map((folder) => ({
+          ...folder,
+          deletedAt: timestamp,
+          deleteVersionStamp: versionStamp,
+          updatedAt: timestamp,
+          versionStamp,
+        }))
+        const memberships = await db.folder_memberships.where('accountScopeId').equals(accountScopeId).toArray()
+        const membershipTombstones = memberships.filter((membership) => isLive(membership) && descendants.has(membership.folderId)).map((membership) => ({
+          ...membership,
+          deletedAt: timestamp,
+          deleteVersionStamp: versionStamp,
+          updatedAt: timestamp,
+          versionStamp,
+        }))
+        await db.folders.bulkPut(tombstones)
+        await db.folder_memberships.bulkPut(membershipTombstones)
+        const settings = await this.ensureSettings(accountScopeId)
+        await db.folder_settings.put({
+          ...settings,
+          collapsedFolderIds: settings.collapsedFolderIds.filter((id) => !descendants.has(id)),
+          updatedAt: timestamp,
+        })
+        await this.writeOperation(accountScopeId, deviceId, 'folder.delete-subtree', folderId, versionStamp, {
+          folderIds: [...descendants],
+          membershipIds: membershipTombstones.map((membership) => membership.id),
+        })
       })
     })
-    await this.createAutomaticSnapshot(accountScopeId)
   }
 
   async upsertMembership(accountScopeId: string, input: FolderMembershipInput): Promise<FolderMembershipRow> {
@@ -1032,39 +1038,49 @@ export class FolderRepositoryImpl implements FolderRepository {
     })
   }
 
-  async removeChatAfterGeminiDelete(accountScopeId: string, chatId: string): Promise<void> {
+  async removeChatAfterGeminiDelete(accountScopeId: string, chatId: string, protectionSnapshotId?: string): Promise<void> {
     requireScope(accountScopeId)
     const deviceId = await this.preheatDevice()
-    await this.createSnapshot(accountScopeId, 'before-delete')
-    await db.transaction('rw', [db.folder_memberships, db.folder_chat_references, db.folder_operations, db.folder_sync_states], async () => {
-      const memberships = await db.folder_memberships.where('[accountScopeId+chatId]').equals([accountScopeId, chatId]).toArray()
-      const active = memberships.filter(isLive)
-      const reference = await db.folder_chat_references.get([accountScopeId, chatId])
-      if (!active.length && !reference) return
-      const versionStamp = this.stamp()
-      const timestamp = now()
-      const tombstones = active.map((membership) => ({
-        ...membership,
-        deletedAt: timestamp,
-        deleteVersionStamp: versionStamp,
-        updatedAt: timestamp,
-        versionStamp,
-      }))
-      if (tombstones.length) {
-        await db.folder_memberships.bulkPut(tombstones)
-        await this.writeOperation(accountScopeId, deviceId, 'membership.remove', chatId, versionStamp, {
-          source: 'gemini-delete', membershipIds: tombstones.map((membership) => membership.id),
-        })
+    const remove = async () => {
+      await db.transaction('rw', [db.folder_memberships, db.folder_chat_references, db.folder_operations, db.folder_sync_states], async () => {
+        const memberships = await db.folder_memberships.where('[accountScopeId+chatId]').equals([accountScopeId, chatId]).toArray()
+        const active = memberships.filter(isLive)
+        const reference = await db.folder_chat_references.get([accountScopeId, chatId])
+        if (!active.length && !reference) return
+        const versionStamp = this.stamp()
+        const timestamp = now()
+        const tombstones = active.map((membership) => ({
+          ...membership,
+          deletedAt: timestamp,
+          deleteVersionStamp: versionStamp,
+          updatedAt: timestamp,
+          versionStamp,
+        }))
+        if (tombstones.length) {
+          await db.folder_memberships.bulkPut(tombstones)
+          await this.writeOperation(accountScopeId, deviceId, 'membership.remove', chatId, versionStamp, {
+            source: 'gemini-delete', membershipIds: tombstones.map((membership) => membership.id),
+          })
+        }
+        if (reference) {
+          await db.folder_chat_references.delete([accountScopeId, chatId])
+          await this.writeOperation(accountScopeId, deviceId, 'chat-reference.update', chatId, versionStamp, {
+            deleted: true,
+            source: 'gemini-delete',
+          })
+        }
+      })
+    }
+    if (protectionSnapshotId) {
+      const protection = await db.folder_snapshots.get(protectionSnapshotId)
+      if (!protection || protection.accountScopeId !== accountScopeId || !(protection.reasons ?? [protection.reason]).includes('before-delete')) {
+        throw new Error('Protection snapshot is unavailable')
       }
-      if (reference) {
-        await db.folder_chat_references.delete([accountScopeId, chatId])
-        await this.writeOperation(accountScopeId, deviceId, 'chat-reference.update', chatId, versionStamp, {
-          deleted: true,
-          source: 'gemini-delete',
-        })
-      }
-    })
-    await this.createAutomaticSnapshot(accountScopeId)
+      await remove()
+      await this.createAutomaticSnapshot(accountScopeId)
+    } else {
+      await this.withProtection(accountScopeId, 'before-delete', remove)
+    }
   }
 
   async exportAccountData(accountScopeId: string): Promise<FolderExportPayload> {
@@ -1083,33 +1099,73 @@ export class FolderRepositoryImpl implements FolderRepository {
     })
   }
 
-  async createSnapshot(accountScopeId: string, reason: FolderSnapshotRow['reason']): Promise<FolderSnapshotRow> {
+  async createSnapshot(accountScopeId: string, reason: FolderSnapshotRow['reason'], hold = false): Promise<FolderSnapshotRow> {
     requireScope(accountScopeId)
     await this.preheatDevice()
     const [payload, state] = await Promise.all([
-      this.exportAccountData(accountScopeId),
-      db.folder_sync_states.get(accountScopeId),
+      this.exportAccountData(accountScopeId), db.folder_sync_states.get(accountScopeId),
     ])
-    const compressedPayload = encodeLzStringBase64(payload)
-    const row: FolderSnapshotRow = {
-      id: nanoid(),
-      accountScopeId,
-      reason,
-      schemaVersion: 1,
-      dataRevision: state?.localDataRevision ?? 'local-unpublished',
-      createdAt: now(),
-      contentHash: await sha256Hex(compressedPayload),
-      compressedPayload,
+    try {
+      const snapshot = await saveFolderSnapshot(payload, state?.localDataRevision ?? 'local-unpublished', reason, this.recoveryOptions, hold)
+      clearRecoveryFailure(accountScopeId)
+      return snapshot
+    } catch (error) {
+      try { await recordRecoveryFailure(accountScopeId, error, reason) } catch (statusError) {
+        logDevError('[Folders]', 'recovery.failure-status-write-failed', statusError)
+        if (reason === 'automatic') rememberRecoveryFailure(accountScopeId, classifyRecoveryFailure(error))
+      }
+      throw error
     }
+  }
+
+  async releaseSnapshot(accountScopeId: string, snapshotId: string, protectionToken: string): Promise<void> {
+    requireScope(accountScopeId)
     await db.transaction('rw', db.folder_snapshots, async () => {
-      await db.folder_snapshots.put(row)
-      const snapshots = await db.folder_snapshots.where('[accountScopeId+createdAt]')
-        .between([accountScopeId, Dexie.minKey], [accountScopeId, Dexie.maxKey]).reverse().toArray()
-      const oldestAllowed = Date.now() - SNAPSHOT_MAX_AGE_MS
-      const expired = snapshots.filter((snapshot, index) => index >= SNAPSHOT_LIMIT || Date.parse(snapshot.createdAt) < oldestAllowed)
-      await db.folder_snapshots.bulkDelete(expired.map((snapshot) => snapshot.id))
+      const row = await db.folder_snapshots.get(snapshotId)
+      if (row?.accountScopeId === accountScopeId) {
+        row.protectionLeases = (row.protectionLeases ?? []).filter((lease) => lease.token !== protectionToken && Date.parse(lease.expiresAt) > Date.now())
+        row.protectedUntil = row.protectionLeases.map((lease) => lease.expiresAt).sort().at(-1)
+        await db.folder_snapshots.put(row)
+      }
     })
-    return row
+  }
+
+  private async withProtection(
+    accountScopeId: string, reason: FolderSnapshotRow['reason'], action: () => Promise<void>, targetId?: string,
+  ): Promise<void> {
+    const targetToken = nanoid()
+    if (targetId) {
+      try {
+        await db.transaction('rw', db.folder_snapshots, async () => {
+          const target = await db.folder_snapshots.get(targetId)
+          if (!target || target.accountScopeId !== accountScopeId) throw new Error('Snapshot is unavailable')
+          const expiresAt = new Date(Date.now() + SNAPSHOT_PROTECTION_TTL_MS).toISOString()
+          await db.folder_snapshots.update(targetId, { protectedUntil: expiresAt,
+            protectionLeases: [...(target.protectionLeases ?? []).filter((lease) => Date.parse(lease.expiresAt) > Date.now()), { token: targetToken, expiresAt }],
+          })
+        })
+      } catch (error) {
+        throw new FolderRecoveryError('SNAPSHOT_PROTECTION_FAILED', { cause: error })
+      }
+    }
+    let protection: FolderSnapshotRow | undefined
+    try {
+      try {
+        protection = await this.createSnapshot(accountScopeId, reason, true)
+      } catch (error) {
+        throw new FolderRecoveryError('SNAPSHOT_PROTECTION_FAILED', { cause: error })
+      }
+      await action()
+      await this.createAutomaticSnapshot(accountScopeId)
+    } finally {
+      try {
+        if (protection?.protectionToken) await this.releaseSnapshot(accountScopeId, protection.id, protection.protectionToken)
+        if (targetId) await this.releaseSnapshot(accountScopeId, targetId, targetToken)
+      } catch (error) {
+        // Persistent leases expire if cleanup cannot be written or the worker stops.
+        logDevError('[Folders]', 'recovery.protection-release-failed', error)
+      }
+    }
   }
 
   private async createAutomaticSnapshot(accountScopeId: string, traceId?: string): Promise<void> {
@@ -1135,8 +1191,7 @@ export class FolderRepositoryImpl implements FolderRepository {
   async listSnapshots(accountScopeId: string): Promise<FolderSnapshotRow[]> {
     requireScope(accountScopeId)
     await this.preheatDevice()
-    return await db.folder_snapshots.where('[accountScopeId+createdAt]')
-      .between([accountScopeId, Dexie.minKey], [accountScopeId, Dexie.maxKey]).reverse().toArray()
+    return newestSnapshots(await db.folder_snapshots.where('accountScopeId').equals(accountScopeId).toArray())
   }
 
   private async replaceAccountData(
@@ -1170,9 +1225,8 @@ export class FolderRepositoryImpl implements FolderRepository {
     const deviceId = await this.preheatDevice()
     const parsed = parseFolderExportPayload(payload)
     if (parsed.accountScopeId !== accountScopeId) throw new Error('Backup belongs to a different account scope')
-    await this.createSnapshot(accountScopeId, 'before-import')
-    await this.replaceAccountData(accountScopeId, parsed, 'snapshot.restore', deviceId, false)
-    await this.createAutomaticSnapshot(accountScopeId)
+    await this.withProtection(accountScopeId, 'before-import', () =>
+      this.replaceAccountData(accountScopeId, parsed, 'snapshot.restore', deviceId, true))
   }
 
   async restoreSnapshot(accountScopeId: string, snapshotId: string): Promise<void> {
@@ -1184,9 +1238,8 @@ export class FolderRepositoryImpl implements FolderRepository {
       throw new Error('Snapshot integrity check failed')
     }
     const payload = parseFolderExportPayload(decodeLzStringBase64<unknown>(snapshot.compressedPayload))
-    await this.createSnapshot(accountScopeId, 'before-restore')
-    await this.replaceAccountData(accountScopeId, payload, 'snapshot.restore', deviceId, true)
-    await this.createAutomaticSnapshot(accountScopeId)
+    await this.withProtection(accountScopeId, 'before-restore', () =>
+      this.replaceAccountData(accountScopeId, payload, 'snapshot.restore', deviceId, true), snapshotId)
   }
 
   async getSyncState(accountScopeId: string): Promise<FolderSyncStateRow | undefined> {

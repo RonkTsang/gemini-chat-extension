@@ -1,30 +1,100 @@
+import type { GeminiUserIdentity } from '@/services/gemini-identity'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const state = vi.hoisted(() => {
-  const identity = { status: 'available' as const, identity: { email: 'user@example.com', accountScopeId: 'account-scope-0001', source: 'observed' as const, resolvedAt: '2026-01-01T00:00:00.000Z' } }
+  const identity: { status: 'available'; identity: GeminiUserIdentity } = { status: 'available' as const, identity: { email: 'user@example.com', accountScopeId: 'account-scope-0001', source: 'observed' as const, resolvedAt: '2026-01-01T00:00:00.000Z' } }
   const projection = { folders: [{ id: 'folder-1' }], memberships: [], chatReferences: [], settings: { accountScopeId: identity.identity.accountScopeId, enabled: true, hideOrganizedChats: false, collapsedFolderIds: [], updatedAt: '2026-01-01T00:00:00.000Z', settingsVersion: '0000000000000:000000:default', settingsPending: false } }
-  return { identity, projection, request: vi.fn(), getProjection: vi.fn(), getSyncStatus: vi.fn(), getChatPage: vi.fn(), renameChat: vi.fn() }
+  return { identity, projection, request: vi.fn(), getProjection: vi.fn(), getSyncStatus: vi.fn(), getChatPage: vi.fn(), renameChat: vi.fn(), deleteNative: vi.fn(), confirmEmail: vi.fn(), identityListener: undefined as ((identity: { status: 'available'; identity: GeminiUserIdentity }) => void) | undefined }
 })
 
 vi.mock('./client', () => ({ folderBackgroundClient: { request: state.request, getProjection: state.getProjection, getSyncStatus: state.getSyncStatus, getChatPage: state.getChatPage } }))
 vi.mock('@/services/gemini-identity', () => ({ geminiIdentityService: {
   getCurrent: () => state.identity,
-  subscribe: (listener: (identity: typeof state.identity) => void) => { listener(state.identity); return () => undefined },
-  start: vi.fn(async () => undefined), stop: vi.fn(), confirmManualEmail: vi.fn(), clearManualEmail: vi.fn(),
+  subscribe: (listener: (identity: typeof state.identity) => void) => { state.identityListener = listener; listener(state.identity); return () => { state.identityListener = undefined } },
+  start: vi.fn(async () => undefined), stop: vi.fn(), refresh: vi.fn(async () => state.identity), confirmManualEmail: state.confirmEmail, clearManualEmail: vi.fn(),
 } }))
 vi.mock('wxt/browser', () => ({ browser: { runtime: { onMessage: { addListener: vi.fn(), removeListener: vi.fn() } } } }))
 vi.mock('@/utils/folderTrace', () => ({ createFolderTraceId: () => 'trace', logFolderTrace: vi.fn(), logFolderTraceError: vi.fn() }))
 vi.mock('@/services/gemini-api', () => ({ geminiApi: { conversations: { renameChat: state.renameChat } } }))
+vi.mock('./native-chat-delete', () => ({ deleteGeminiChat: state.deleteNative }))
 vi.mock('@/utils/i18n', () => ({ tt: (_key: string, fallback: string) => fallback }))
 
 import { FolderRuntime } from './runtime'
 
 describe('FolderRuntime background boundary', () => {
   beforeEach(() => {
+    state.confirmEmail.mockReset()
+    state.identityListener = undefined
+    state.identity.identity.source = 'observed'
     state.getChatPage.mockReset()
     state.getProjection.mockReset().mockResolvedValue(state.projection)
     state.getSyncStatus.mockReset().mockResolvedValue({ mode: 'browser-sync', state: 'accepted-by-browser-storage' })
     state.request.mockReset().mockResolvedValue({ data: undefined, dataRevision: 'revision-1' })
+    state.deleteNative.mockReset().mockResolvedValue(undefined)
+  })
+
+  it('clears the previous account while loading a saved account and waits for its configuration', async () => {
+    const runtime = new FolderRuntime()
+    await runtime.start()
+    let finish!: (projection: typeof state.projection) => void
+    state.getProjection.mockImplementationOnce(() => new Promise((resolve) => { finish = resolve }))
+    const next = { status: 'available' as const, identity: { ...state.identity.identity,
+      email: 'next@example.com', accountScopeId: 'account-scope-0002', source: 'manual-confirmed' as const, selection: 'history' as const } }
+    state.confirmEmail.mockImplementationOnce(async () => { state.identityListener?.(next); return next })
+    let completed = false
+    const selection = runtime.selectSavedAccount('next@example.com').then(() => { completed = true })
+    await vi.waitFor(() => expect(finish).toBeDefined())
+    expect(runtime.getSnapshot().identity).toEqual(next)
+    expect(runtime.getSnapshot().projection).toBeUndefined()
+    await expect(runtime.updateSettings({ hideOrganizedChats: true })).rejects.toThrow('Folders are unavailable')
+    expect(completed).toBe(false)
+    const projection = { ...state.projection, settings: { ...state.projection.settings, accountScopeId: 'account-scope-0002' } }
+    finish(projection)
+    await selection
+    expect(runtime.getSnapshot().projection).toBe(projection)
+    expect(state.confirmEmail).toHaveBeenCalledWith('next@example.com', true, 'history')
+    expect(state.request).toHaveBeenCalledWith('account-scope-0002', 'manual-confirmed', 'activityHint', {})
+    runtime.stop()
+  })
+
+  it('starts sync, measures capacity and retries for a manually confirmed account', async () => {
+    state.identity.identity.source = 'manual-confirmed'
+    const runtime = new FolderRuntime()
+    await runtime.start()
+    expect(state.request).toHaveBeenCalledWith('account-scope-0001', 'manual-confirmed', 'activityHint', {})
+    expect(state.getProjection).toHaveBeenCalledWith('account-scope-0001', 'manual-confirmed', undefined)
+    state.request.mockResolvedValue({ data: { mode: 'browser-sync', state: 'accepted-by-browser-storage', currentUsageBytes: 10 }, dataRevision: 'revision-1' })
+    await runtime.measureBrowserSyncUsage()
+    expect(runtime.getSnapshot().syncState?.currentUsageBytes).toBe(10)
+    expect(state.request).toHaveBeenCalledWith('account-scope-0001', 'manual-confirmed', 'measureBrowserSyncUsage', {})
+    await runtime.syncNow()
+    expect(state.request).toHaveBeenCalledWith('account-scope-0001', 'manual-confirmed', 'retrySync', {})
+    runtime.stop()
+    await expect(runtime.syncNow()).rejects.toThrow('Browser Sync requires an identified Gemini account')
+  })
+
+  it('never calls Gemini deletion if the protection point cannot be saved', async () => {
+    const runtime = new FolderRuntime()
+    await runtime.start()
+    state.request.mockRejectedValueOnce(new Error('LOCAL_STORAGE_FULL'))
+    await expect(runtime.deleteChat('folder-1', 'chat-1')).rejects.toThrow('LOCAL_STORAGE_FULL')
+    expect(state.deleteNative).not.toHaveBeenCalled()
+    runtime.stop()
+  })
+
+  it('saves protection before Gemini deletion and releases it even when Gemini fails', async () => {
+    const runtime = new FolderRuntime()
+    await runtime.start()
+    const order: string[] = []
+    state.request.mockImplementation(async (_scope, _source, method) => {
+      order.push(method)
+      return { data: method === 'prepareChatDeletion' ? { id: 'snapshot-1', protectionToken: 'lease-1' } : undefined }
+    })
+    state.deleteNative.mockImplementation(async () => { order.push('native-delete'); throw new Error('Gemini failed') })
+    await expect(runtime.deleteChat('folder-1', 'chat-1')).rejects.toThrow('Gemini failed')
+    expect(order).toEqual(['prepareChatDeletion', 'native-delete', 'releaseSnapshot'])
+    expect(state.request).toHaveBeenLastCalledWith('account-scope-0001', 'observed', 'releaseSnapshot', { snapshotId: 'snapshot-1', protectionToken: 'lease-1' })
+    runtime.stop()
   })
 
   it('closes the menu and refreshes the folder after the pin is committed', async () => {

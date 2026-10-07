@@ -15,6 +15,8 @@ export const EXTERNAL_LINKS = {
   RELEASE_NOTES: 'https://gpk.ronktsang.com/support/whats-new/',
   THEME_BLOOM_GUIDE: 'https://gpk.ronktsang.com/features/theme/#theme-bloom',
   GEM_AVATAR_GUIDE: 'https://gpk.ronktsang.com/features/gem-avatar/',
+  // Keep the guide action disabled until the website page is published.
+  FOLDER_SYNC_GUIDE: '',
   NOTIFICATION_TROUBLESHOOTING: 'https://gpk.ronktsang.com/support/notification-troubleshooting/',
   NOTIFICATION_TROUBLESHOOTING_ZH_CN: 'https://gpk.ronktsang.com/zh-cn/support/notification-troubleshooting/',
 } as const;

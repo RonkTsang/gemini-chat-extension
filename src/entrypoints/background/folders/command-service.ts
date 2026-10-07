@@ -2,6 +2,7 @@ import { folderRepository, type FolderCreateInput, type FolderSettingsPatch, typ
 import type { FolderRpcEnvelope } from '@/domain/folder/rpc'
 import { ROOT_FOLDER_ID } from '@/domain/folder/types'
 import { FolderSyncScheduler } from '@/services/folder-sync/scheduler'
+import { FolderRecoveryError } from '@/services/folder-recovery/storage'
 
 import { FolderQueryService } from './query-service'
 
@@ -12,7 +13,7 @@ export class FolderCommandService {
   ) {}
 
   private schedule(request: FolderRpcEnvelope): void {
-    if (request.identitySource === 'observed') this.scheduler.requestRun(request.accountScopeId, 'outbox-created')
+    this.scheduler.requestRun(request.accountScopeId, 'outbox-created')
   }
 
   private async assertRevision(accountScopeId: string, expectedRevision?: string): Promise<void> {
@@ -72,8 +73,8 @@ export class FolderCommandService {
         break
       }
       case 'removeChatAfterGeminiDelete': {
-        const input = params as { chatId: string }
-        await folderRepository.removeChatAfterGeminiDelete(request.accountScopeId, input.chatId)
+        const input = params as { chatId: string; protectionSnapshotId?: string }
+        await folderRepository.removeChatAfterGeminiDelete(request.accountScopeId, input.chatId, input.protectionSnapshotId)
         data = undefined
         break
       }
@@ -86,8 +87,16 @@ export class FolderCommandService {
         data = await folderRepository.updateSettings(request.accountScopeId, (params as { patch: FolderSettingsPatch }).patch)
         break
       case 'createSnapshot':
-        data = await folderRepository.createSnapshot(request.accountScopeId, 'automatic')
+        data = await folderRepository.createSnapshot(request.accountScopeId, 'manual')
         break
+      case 'prepareChatDeletion':
+        try {
+          return await folderRepository.createSnapshot(request.accountScopeId, 'before-delete', true)
+        } catch (error) {
+          throw new FolderRecoveryError('SNAPSHOT_PROTECTION_FAILED', { cause: error })
+        }
+      case 'releaseSnapshot':
+        return folderRepository.releaseSnapshot(request.accountScopeId, (params as { snapshotId: string }).snapshotId, (params as { protectionToken: string }).protectionToken)
       case 'importBackup':
         await folderRepository.importAccountData(request.accountScopeId, (params as { payload: never }).payload)
         data = undefined
@@ -100,11 +109,10 @@ export class FolderCommandService {
         break
       }
       case 'retrySync':
-        if (request.identitySource !== 'observed') throw new Error('SYNC_DEFERRED')
         this.scheduler.requestRun(request.accountScopeId, 'user-retry')
         return { deferred: true }
       case 'activityHint':
-        if (request.identitySource === 'observed') this.scheduler.requestRun(request.accountScopeId, 'content-activity-hint')
+        this.scheduler.requestRun(request.accountScopeId, 'content-activity-hint')
         return { accepted: true }
       default:
         throw new Error('INVALID_REQUEST')

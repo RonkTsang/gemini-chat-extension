@@ -9,6 +9,7 @@ import {
   createToaster,
   HStack,
   Box,
+  type ToasterProps,
 } from "@chakra-ui/react"
 
 export const toaster = createToaster({
@@ -16,12 +17,17 @@ export const toaster = createToaster({
   pauseOnPageIdle: true,
 })
 
-export const Toaster = () => {
+interface Props {
+  store?: ReturnType<typeof createToaster>
+  viewportProps?: Omit<ToasterProps, "children" | "toaster">
+}
+
+export const Toaster = ({ store = toaster, viewportProps }: Props = {}) => {
   return (
     <Portal>
-      <ChakraToaster toaster={toaster} insetInline={{ mdDown: "4" }}>
+      <ChakraToaster toaster={store} insetInline={{ mdDown: "4" }} {...viewportProps}>
         {(toast) => (
-          <Toast.Root width={{ md: "sm" }} flexDirection="column" alignItems="stretch">
+          <Toast.Root width={{ md: "sm" }} maxWidth="100%" flexDirection="column" alignItems="stretch">
             <HStack gap="3" width="100%">
               {toast.type === "loading" ? (
                 <Spinner size="sm" color="blue.solid" />
@@ -34,7 +40,15 @@ export const Toaster = () => {
                   <Toast.Description>{toast.description}</Toast.Description>
                 )}
               </Stack>
-              {toast.closable && <Toast.CloseTrigger />}
+              {toast.closable && (
+                <Toast.CloseTrigger
+                  position="static"
+                  flexShrink={0}
+                  alignSelf="center"
+                  color="inherit"
+                  _hover={{ bg: "var(--toast-trigger-bg)" }}
+                />
+              )}
             </HStack>
             {toast.action && (
               <Box pt="2" width="100%" display="flex" justifyContent="flex-end">

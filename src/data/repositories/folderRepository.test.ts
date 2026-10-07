@@ -22,6 +22,8 @@ import { FolderRepositoryImpl } from './folderRepository'
 import { FolderQueryService } from '@/entrypoints/background/folders/query-service'
 import { decodeLzStringBase64, toFolderSyncData, fromFolderSyncData } from '@/services/folder-sync/codec'
 import { parseFolderSyncData } from '@/domain/folder/schemas'
+import { clearRecoveryFailure } from '@/services/folder-recovery/failure-fallback'
+import { FolderRecoveryError, getLocalStorageStatus } from '@/services/folder-recovery/storage'
 
 const scopeA = 'account-scope-0001'
 const scopeB = 'account-scope-0002'
@@ -40,6 +42,7 @@ async function clearFolderTables(): Promise<void> {
     db.folder_sync_states.clear(),
     db.folder_sync_generations.clear(),
     db.folder_snapshots.clear(),
+    db.folder_recovery_states.clear(),
     db.folder_coordinator_leases.clear(),
   ])
 }
@@ -47,7 +50,46 @@ async function clearFolderTables(): Promise<void> {
 describe('FolderRepository', () => {
   beforeEach(async () => {
     storage.clear()
+    clearRecoveryFailure(scopeA)
+    clearRecoveryFailure(scopeB)
     await clearFolderTables()
+  })
+
+  it('reports full account counts and keeps restore point counts tied to their saved payload', async () => {
+    const repository = new FolderRepositoryImpl()
+    const first = await repository.createFolder(scopeA, { name: 'First' })
+    const second = await repository.createFolder(scopeA, { name: 'Second' })
+    const deleted = await repository.createFolder(scopeA, { name: 'Deleted' })
+    const foreign = await repository.createFolder(scopeB, { name: 'Foreign' })
+    for (let index = 0; index < 12; index += 1) {
+      await repository.upsertMembership(scopeA, { folderId: first.id, chatId: `chat-${index}` })
+    }
+    await repository.upsertMembership(scopeA, { folderId: second.id, chatId: 'chat-0' })
+    await repository.upsertMembership(scopeA, { folderId: second.id, chatId: 'removed' })
+    await repository.removeMembership(scopeA, second.id, 'removed')
+    await repository.upsertMembership(scopeA, { folderId: deleted.id, chatId: 'deleted' })
+    await repository.deleteFolder(scopeA, deleted.id)
+    await repository.upsertMembership(scopeB, { folderId: foreign.id, chatId: 'foreign' })
+    await repository.upsertChatReference(scopeA, 'cached-only', 'Cached only')
+    const point = await repository.createSnapshot(scopeA, 'manual')
+    expect(point).toMatchObject({ folderCount: 2, chatCount: 12 })
+    const queries = new FolderQueryService()
+    expect(await queries.getSyncStatus(scopeA)).toMatchObject({ folderCount: 2, chatCount: 12 })
+    expect((await queries.getSidebarState(scopeA, 5)).chatsByFolder[first.id].items).toHaveLength(10)
+    await db.folder_snapshots.update(point.id, { folderCount: undefined, chatCount: undefined })
+    await repository.removeMembership(scopeA, first.id, 'chat-1')
+    expect(await queries.getSyncStatus(scopeA)).toMatchObject({ folderCount: 2, chatCount: 11 })
+    const historical = (await queries.listSnapshots(scopeA, undefined, 100)).items.find((row) => row.id === point.id)
+    expect(historical).toMatchObject({ folderCount: 2, chatCount: 12 })
+    expect((await db.folder_snapshots.get(point.id))?.folderCount).toBeUndefined()
+    await db.folder_snapshots.update(point.id, { compressedPayload: 'corrupted' })
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    try {
+      const corrupt = (await queries.listSnapshots(scopeA, undefined, 100)).items.find((row) => row.id === point.id)
+      expect(corrupt?.folderCount).toBeUndefined()
+      expect(corrupt?.chatCount).toBeUndefined()
+      expect(warning).toHaveBeenCalled()
+    } finally { warning.mockRestore() }
   })
 
   it('pins only the current membership, preserves ordinary order, and treats repeated pin requests as idempotent', async () => {
@@ -120,7 +162,7 @@ describe('FolderRepository', () => {
     const sync = parseFolderSyncData(toFolderSyncData(await repository.getAccountData(scopeA)))
     expect(fromFolderSyncData(scopeA, sync).memberships[0]).toEqual(pinned)
     const backup = await repository.exportAccountData(scopeA)
-    const snapshot = await repository.createSnapshot(scopeA, 'automatic')
+    const snapshot = await repository.createSnapshot(scopeA, 'manual')
     await repository.setMembershipPinned(scopeA, folder.id, 'chat', false)
     await repository.restoreSnapshot(scopeA, snapshot.id)
     expect((await repository.listMemberships(scopeA))[0]).toEqual(pinned)
@@ -358,7 +400,7 @@ describe('FolderRepository', () => {
   it('creates protection snapshots and restores organization without rolling back current UI settings', async () => {
     const repository = new FolderRepositoryImpl()
     const folder = await repository.createFolder(scopeA, { name: 'Before restore' })
-    const snapshot = await repository.createSnapshot(scopeA, 'automatic')
+    const snapshot = await repository.createSnapshot(scopeA, 'manual')
     await repository.updateSettings(scopeA, { enabled: false, hideOrganizedChats: true, collapsedFolderIds: [folder.id] })
     const currentSettings = await repository.getSettings(scopeA)
     await repository.deleteFolder(scopeA, folder.id)
@@ -380,17 +422,97 @@ describe('FolderRepository', () => {
     expect(await db.folder_sync_states.get(scopeA)).toBeUndefined()
   })
 
-  it('rejects a different-scope import, retains 30 snapshots, and honors lease expiry', async () => {
+  it('keeps a completed mutation when automatic recovery fails, but blocks delete, import and restore without protection', async () => {
+    const repository = new FolderRepositoryImpl(undefined, { budgetBytes: 50 })
+    const folder = await repository.createFolder(scopeA, { name: 'Durable without snapshot' })
+    expect((await repository.listFolders(scopeA))[0].id).toBe(folder.id)
+    expect(await repository.hasPendingOperations(scopeA)).toBe(true)
+    expect(await db.folder_recovery_states.get(scopeA)).toMatchObject({ warning: 'snapshot-too-large' })
+    await expect(repository.deleteFolder(scopeA, folder.id)).rejects.toMatchObject({ code: 'SNAPSHOT_PROTECTION_FAILED' })
+    const exported = await repository.exportAccountData(scopeA)
+    const replaced = { ...exported, folders: [{ ...exported.folders[0], name: 'Imported' }] }
+    await expect(repository.importAccountData(scopeA, replaced)).rejects.toMatchObject({ code: 'SNAPSHOT_PROTECTION_FAILED' })
+    const normal = new FolderRepositoryImpl()
+    const snapshot = await normal.createSnapshot(scopeA, 'manual')
+    await expect(repository.restoreSnapshot(scopeA, snapshot.id)).rejects.toMatchObject({ code: 'SNAPSHOT_PROTECTION_FAILED' })
+    expect((await repository.listFolders(scopeA))[0].name).toBe('Durable without snapshot')
+    expect((await db.folder_snapshots.get(snapshot.id))?.protectedUntil).toBeUndefined()
+  })
+
+  it('keeps the original recovery failure visible when its status record cannot be written', async () => {
+    const repository = new FolderRepositoryImpl()
+    const put = vi.spyOn(db.folder_recovery_states, 'put').mockRejectedValue(new DOMException('Quota reached', 'QuotaExceededError'))
+    const folder = await repository.createFolder(scopeA, { name: 'Saved organization' })
+    expect((await repository.listFolders(scopeA))[0].id).toBe(folder.id)
+    expect(await getLocalStorageStatus(scopeA)).toMatchObject({ warning: 'quota-exceeded', automaticSnapshotFailed: true })
+    put.mockRestore()
+    await repository.createSnapshot(scopeA, 'manual')
+    expect(await getLocalStorageStatus(scopeA)).toMatchObject({ warning: undefined, automaticSnapshotFailed: false })
+  })
+
+  it('preserves the oversized snapshot reason in fallback status without rolling back saved organization', async () => {
+    const repository = new FolderRepositoryImpl(undefined, { budgetBytes: 50 })
+    const put = vi.spyOn(db.folder_recovery_states, 'put').mockRejectedValue(new Error('Failure record write failed'))
+    try {
+      const folder = await repository.createFolder(scopeA, { name: 'Saved organization' })
+      expect((await repository.listFolders(scopeA))[0].id).toBe(folder.id)
+      expect(await repository.hasPendingOperations(scopeA)).toBe(true)
+      expect(await db.folder_recovery_states.get(scopeA)).toBeUndefined()
+      expect(await getLocalStorageStatus(scopeA)).toMatchObject({ warning: 'snapshot-too-large', automaticSnapshotFailed: true })
+      expect(await new FolderQueryService().getSyncStatus(scopeA)).toMatchObject({
+        localRecoveryWarning: 'snapshot-too-large', localAutomaticSnapshotFailed: true,
+      })
+    } finally { put.mockRestore() }
+    await new FolderRepositoryImpl().createSnapshot(scopeA, 'manual')
+    expect(await getLocalStorageStatus(scopeA)).toMatchObject({ warning: undefined, automaticSnapshotFailed: false })
+  })
+
+  it.each([
+    [new FolderRecoveryError('SNAPSHOT_BUDGET_EXCEEDED'), 'budget-exceeded'],
+    [new DOMException('Full disk', 'QuotaExceededError'), 'quota-exceeded'],
+    [new Error('Snapshot write failed'), 'snapshot-failed'],
+  ] as const)('preserves the original %s classification when the failure record also fails', async (error, warning) => {
+    const repository = new FolderRepositoryImpl()
+    const snapshotPut = vi.spyOn(db.folder_snapshots, 'put').mockRejectedValue(error)
+    const statusPut = vi.spyOn(db.folder_recovery_states, 'put').mockRejectedValue(new Error('Failure record write failed'))
+    try {
+      const folder = await repository.createFolder(scopeA, { name: 'Saved organization' })
+      expect((await repository.listFolders(scopeA))[0].id).toBe(folder.id)
+      expect(await repository.hasPendingOperations(scopeA)).toBe(true)
+      expect(await getLocalStorageStatus(scopeA)).toMatchObject({ warning, automaticSnapshotFailed: true })
+      expect(await new FolderQueryService().getSyncStatus(scopeA)).toMatchObject({
+        localRecoveryWarning: warning, localAutomaticSnapshotFailed: true,
+      })
+    } finally {
+      snapshotPut.mockRestore()
+      statusPut.mockRestore()
+    }
+    await repository.createSnapshot(scopeA, 'manual')
+    expect(await getLocalStorageStatus(scopeA)).toMatchObject({ warning: undefined, automaticSnapshotFailed: false })
+  })
+
+  it('imports organization without overwriting current preferences and releases the protection lease', async () => {
+    const repository = new FolderRepositoryImpl()
+    const folder = await repository.createFolder(scopeA, { name: 'Before import' })
+    const exported = await repository.exportAccountData(scopeA)
+    await repository.updateSettings(scopeA, { enabled: false, hideOrganizedChats: true, collapsedFolderIds: [folder.id] })
+    await repository.importAccountData(scopeA, { ...exported, folders: [{ ...exported.folders[0], name: 'Imported' }] })
+    expect((await repository.listFolders(scopeA))[0].name).toBe('Imported')
+    expect(await repository.getSettings(scopeA)).toMatchObject({ enabled: false, hideOrganizedChats: true, collapsedFolderIds: [folder.id] })
+    const protection = (await repository.listSnapshots(scopeA)).find((row) => row.reasons?.includes('before-import'))!
+    expect(protection).toBeDefined()
+    expect(protection.protectedUntil).toBeUndefined()
+  })
+
+  it('rejects a different-scope import, retains old restore points, and honors lease expiry', async () => {
     const repository = new FolderRepositoryImpl()
     await repository.createFolder(scopeA, { name: 'Scope data' })
     const exported = await repository.exportAccountData(scopeA)
     await expect(repository.importAccountData(scopeB, exported)).rejects.toThrow('different account scope')
-    const stale = await repository.createSnapshot(scopeA, 'automatic')
-    await db.folder_snapshots.update(stale.id, { createdAt: '2000-01-01T00:00:00.000Z' })
-    await repository.createSnapshot(scopeA, 'automatic')
-    expect((await repository.listSnapshots(scopeA)).some((snapshot) => snapshot.id === stale.id)).toBe(false)
-    for (let index = 0; index < 31; index += 1) await repository.createSnapshot(scopeA, 'automatic')
-    expect(await repository.listSnapshots(scopeA)).toHaveLength(30)
+    const stale = await repository.createSnapshot(scopeA, 'manual')
+    await db.folder_snapshots.update(stale.id, { createdAt: '2000-01-01T00:00:00.000Z', updatedAt: '2000-01-01T00:00:00.000Z' })
+    await repository.createFolder(scopeA, { name: 'Another folder' })
+    expect((await repository.listSnapshots(scopeA)).some((snapshot) => snapshot.id === stale.id)).toBe(true)
     await repository.acquireCoordinatorLease(scopeA, 'owner-a', 10_000)
     await expect(repository.acquireCoordinatorLease(scopeA, 'owner-b')).rejects.toThrow('held by another')
     await db.folder_coordinator_leases.update(scopeA, { expiresAt: '2000-01-01T00:00:00.000Z' })

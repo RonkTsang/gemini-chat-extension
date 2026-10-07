@@ -35,14 +35,14 @@ afterEach(() => {
 })
 
 describe('FolderRecentsVisibilityController', () => {
-  it('only hides organized, non-current, non-pinned rows and restores them on stop', () => {
+  it.each(['observed', 'manual-confirmed'])('only hides organized, non-current, non-pinned rows and restores them on stop (%s)', (source) => {
     history.replaceState({}, '', '/app/current')
     document.body.innerHTML = '<bard-sidenav role="navigation"><expandable-section data-test-id="chats-expandable-section"></expandable-section></bard-sidenav>'
     const organized = appendConversation('organized')
     const current = appendConversation('current')
     const pinned = appendConversation('pinned', true)
     state.snapshot = {
-      identity: { status: 'available', identity: { source: 'observed', accountScopeId: 'account-scope-0001' } },
+      identity: { status: 'available', identity: { source, accountScopeId: 'account-scope-0001' } },
       projection: { settings: { enabled: true, hideOrganizedChats: true }, memberships: [{ chatId: 'organized' }, { chatId: 'current' }, { chatId: 'pinned' }] },
     }
     const controller = new FolderRecentsVisibilityController()
@@ -55,7 +55,7 @@ describe('FolderRecentsVisibilityController', () => {
     expect(organized.style.display).toBe('')
   })
 
-  it('fails closed and restores native rows when identity becomes manual or unavailable', async () => {
+  it('fails closed and restores native rows when identity becomes unavailable', async () => {
     document.body.innerHTML = '<bard-sidenav role="navigation"><expandable-section data-test-id="chats-expandable-section"></expandable-section></bard-sidenav>'
     const row = appendConversation('organized')
     state.snapshot = {
@@ -65,7 +65,7 @@ describe('FolderRecentsVisibilityController', () => {
     const controller = new FolderRecentsVisibilityController()
     controller.start()
     expect(row.style.display).toBe('none')
-    state.snapshot = { identity: { status: 'available', identity: { source: 'manual-confirmed', accountScopeId: 'account-scope-0001' } } }
+    state.snapshot = { ...state.snapshot, identity: { status: 'unavailable', reason: 'email-not-found' } }
     state.listener?.()
     await new Promise<void>((resolve) => queueMicrotask(() => resolve()))
     expect(row.style.display).toBe('')

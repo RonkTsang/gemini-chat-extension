@@ -24,6 +24,7 @@ import type {
   FolderRow,
   FolderSettingsRow,
   FolderSnapshotRow,
+  FolderRecoveryStateRow,
   FolderSyncStateRow,
   FolderSyncGenerationRow,
 } from '@/domain/folder/types'
@@ -96,6 +97,7 @@ export class GeminiExtensionDB extends Dexie {
   folder_sync_states!: Table<FolderSyncStateRow, string>
   folder_sync_generations!: Table<FolderSyncGenerationRow, string>
   folder_snapshots!: Table<FolderSnapshotRow, string>
+  folder_recovery_states!: Table<FolderRecoveryStateRow, string>
   folder_coordinator_leases!: Table<FolderCoordinatorLeaseRow, string>
 
   constructor() {
@@ -230,6 +232,7 @@ export class GeminiExtensionDB extends Dexie {
         ].map((table) => transaction.table(table).clear()))
       })
 
+    this.version(12).stores({ folder_recovery_states: 'accountScopeId, updatedAt' })
   }
 }
 

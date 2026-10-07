@@ -59,7 +59,6 @@ export class FolderRecentsVisibilityController {
     const state = folderRuntime.getSnapshot()
     if (
       state.identity.status !== 'available'
-      || state.identity.identity.source !== 'observed'
       || !state.projection?.settings.enabled
       || !state.projection.settings.hideOrganizedChats
       || state.error
