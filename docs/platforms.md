@@ -19,9 +19,10 @@ This project builds separate Chrome and Firefox extension variants with WXT. Kee
 
 ## Manifest And Permissions
 
-- Base manifest keeps shared permissions minimal, mainly `storage`.
+- Base manifest includes `storage` and `unlimitedStorage` for durable Folder data.
 - Firefox adds `webRequest`, `webRequestBlocking`, `*://gemini.google.com/*`, and `browser_specific_settings.gecko` in `wxt.config.ts`.
 - Chrome builds must not include Gecko settings or Firefox-only response interception logic. Response-complete notifications may use optional `webRequest`.
+- Chrome and Firefox declare `unlimitedStorage` as required. Chrome exempts the extension's IndexedDB from its ordinary quota; Firefox uses the permission to create persistent IndexedDB without a runtime prompt. Actual writes can still fail, and the 10-point / 20 MiB recovery limits remain product limits. `navigator.storage.estimate()` is diagnostic only and is read in the extension background, never on the Gemini content-script origin.
 
 ## Background Runtime
 
