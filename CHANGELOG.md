@@ -1,3 +1,10 @@
+## [0.12.6](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.12.5...v0.12.6) (2026-10-08)
+
+
+### Bug Fixes
+
+* **chat-settings:** add input-area-v2 selector and update styles for improved layout handling ([#71](https://github.com/RonkTsang/gemini-chat-extension/issues/71)) ([6a40913](https://github.com/RonkTsang/gemini-chat-extension/commit/6a409138027a5f3ea4aef279875eebd923cbe1bf))
+
 ## [0.12.5](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.12.4...v0.12.5) (2026-09-30)
 
 
