@@ -3,6 +3,10 @@ import {
   type ChatSettings,
   type ChatWidthMode,
 } from '@/services/chatSettings'
+import {
+  CHAT_SETTINGS_SCOPE_SELECTOR,
+  INPUT_AREA_V2_SELECTOR,
+} from './selectors'
 
 const STYLE_ID = 'gpk-chat-settings-style'
 const CHAT_WIDTH_ATTR = 'data-gpk-chat-width'
@@ -12,8 +16,6 @@ const USER_MESSAGE_FULL_WIDTH_ATTR = 'data-gpk-user-message-full-width'
 
 const CHAT_WIDTH_VAR = '--gpk-chat-width'
 const INPUT_WIDTH_VAR = '--gpk-input-width'
-const CHAT_SETTINGS_SCOPE_SELECTOR =
-  'chat-window:not(.preview-chat-window):not(.in-gems-mode)'
 
 const STYLE = `
 :root[${CHAT_WIDTH_ATTR}] ${CHAT_SETTINGS_SCOPE_SELECTOR} infinite-scroller > div.conversation-container {
@@ -60,15 +62,16 @@ const STYLE = `
   max-width: var(${INPUT_WIDTH_VAR}) !important;
 }
 
-/* Current Gemini input-container v2 structure: center the width-constrained fieldset. */
+/* Center Gemini's prompt surface within the available input area. */
 :root[${INPUT_WIDTH_ATTR}] ${CHAT_SETTINGS_SCOPE_SELECTOR} input-container > div.input-area-container {
   max-width: 100% !important;
   align-items: center !important;
 }
 
-:root[${INPUT_WIDTH_ATTR}] ${CHAT_SETTINGS_SCOPE_SELECTOR} input-container > div.input-area-container > fieldset {
+/* Current Gemini input-area-v2 structure. */
+:root[${INPUT_WIDTH_ATTR}] ${CHAT_SETTINGS_SCOPE_SELECTOR} ${INPUT_AREA_V2_SELECTOR} {
   box-sizing: border-box !important;
-  width: var(${INPUT_WIDTH_VAR}) !important;
+  width: min(var(${INPUT_WIDTH_VAR}), 100%) !important;
 }
 
 :root[${USER_MESSAGE_LEFT_ATTR}] ${CHAT_SETTINGS_SCOPE_SELECTOR} user-query-content {
