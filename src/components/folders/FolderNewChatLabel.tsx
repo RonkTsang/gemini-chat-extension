@@ -24,7 +24,7 @@ export function FolderNewChatLabel() {
       {intent.error ? <Button size="xs" variant="ghost" onClick={folderNewChat.retry}
         title={intent.error}>{tt('folders_new_chat_retry', 'Retry saving')}</Button> : null}
       <IconButton aria-label={tt('folders_new_chat_cancel', 'Cancel Folder assignment')}
-        data-gpk-folder-new-chat-cancel variant="ghost" boxSize="20px" minW="20px" p={0}
+        data-gpk-folder-new-chat-cancel variant="ghost" boxSize="20px" minW="20px" p={0} _icon={{ boxSize: '3' }}
         disabled={intent.phase === 'saving'} onClick={folderNewChat.cancel} borderRadius="full">
         <LuX size={14} />
       </IconButton>
