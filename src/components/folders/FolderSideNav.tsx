@@ -15,7 +15,8 @@ import {
   HiOutlinePlus,
 } from 'react-icons/hi'
 import { type ReactNode, useEffect, useRef, useState, useSyncExternalStore } from 'react'
-import { LuPin, LuUserRound } from 'react-icons/lu'
+import { LuPen, LuPin, LuUserRound } from 'react-icons/lu'
+import { folderNewChat } from '@/entrypoints/content/folders/new-chat'
 
 import { getFolderColor, getFolderIcon } from './folderAppearance'
 import { createFolderTitleClickController } from './folderTitleClick'
@@ -513,7 +514,16 @@ export function FolderSideNav() {
                     />
                     <Text truncate title={folder.name}>{folder.name}</Text>
                   </Button>
-                  <Box data-gpk-folder-actions flexShrink={0} transition="opacity 120ms ease">
+                  <HStack data-gpk-folder-actions flexShrink={0} gap={0} transition="opacity 120ms ease">
+                    <Tooltip content={tt('folders_new_chat', 'New chat')}>
+                      <IconButton size="xs" {...trailingIconButtonStyles} variant="plain"
+                        bg="transparent" borderRadius="full" color="inherit" _hover={{ bg: HOVER_BACKGROUND }}
+                        data-gpk-folder-new-chat={folder.id}
+                        aria-label={`${folder.name}: ${tt('folders_new_chat', 'New chat')}`}
+                        onClick={(event) => { event.stopPropagation(); void folderNewChat.open(folder.id) }}>
+                        <LuPen strokeWidth={1.5} />
+                      </IconButton>
+                    </Tooltip>
                     <IconButton
                       size="xs"
                       {...trailingIconButtonStyles}
@@ -534,7 +544,7 @@ export function FolderSideNav() {
                     >
                       <HiOutlineDotsVertical />
                     </IconButton>
-                  </Box>
+                  </HStack>
                 </HStack>
 
                 <CollapsibleContent expanded={!isCollapsed}>

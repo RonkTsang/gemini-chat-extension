@@ -89,8 +89,12 @@ function findNewChatButton(): HTMLElement | null {
   return findFirstElement(NEW_CHAT_SELECTORS)
 }
 
+function getNewChatPath(): string {
+  return `${window.location.pathname.match(/^\/u\/\d+(?=\/|$)/u)?.[0] ?? ''}${NEW_CHAT_PATH}`
+}
+
 function isNewChatRoute(): boolean {
-  return window.location.pathname === NEW_CHAT_PATH
+  return window.location.pathname === getNewChatPath()
 }
 
 function waitForNewChatRoute(): Promise<boolean> {
@@ -121,7 +125,7 @@ function waitForNewChatRoute(): Promise<boolean> {
 }
 
 function navigateToNewChatViaSpa(): void {
-  window.history.pushState({}, '', NEW_CHAT_PATH)
+  window.history.pushState({}, '', getNewChatPath())
   window.dispatchEvent(new PopStateEvent('popstate', { state: window.history.state }))
 }
 
@@ -188,8 +192,8 @@ export const createNewChatForChainPrompt = async (): Promise<boolean> => {
  * Falls back to a SPA route transition when the control is unavailable or does
  * not update the route promptly.
  */
-export const openNewChat = async (): Promise<void> => {
-  if (isNewChatRoute()) {
+export const openNewChat = async (options?: { reset?: boolean }): Promise<void> => {
+  if (isNewChatRoute() && !options?.reset) {
     return
   }
 

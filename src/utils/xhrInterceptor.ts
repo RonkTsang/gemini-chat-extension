@@ -27,6 +27,8 @@
  * Snapshot of the request information
  */
 export interface XHRRequestSnapshot {
+  /** Extension-local identity for one send attempt, shared by its callbacks. */
+  requestId: string
   /** Request URL */
   url: string
   /** HTTP Method (GET, POST, etc.) */
@@ -52,6 +54,11 @@ export interface XHRInterceptorConfig {
     method: string,
     data?: Document | XMLHttpRequestBodyInit | null,
   ) => void
+
+  onRequestSnapshot?: (request: XHRRequestSnapshot) => void
+  /** Newly received text only; never alters the page's response. */
+  onProgress?: (chunk: string, request: XHRRequestSnapshot) => void
+  onSettled?: (request: XHRRequestSnapshot, status: number) => void
 
   /** Callback when error occurs */
   onError?: (error: Error) => void
@@ -138,7 +145,9 @@ class XHRInterceptor {
 
       let requestUrl: string = ''
       let requestMethod: string = ''
-      let requestData: Document | XMLHttpRequestBodyInit | null | undefined
+      let snapshot: XHRRequestSnapshot | undefined
+      let readOffset = 0
+      let settled = false
 
       // Patch open method
       const originalOpen = xhr.open
@@ -151,14 +160,44 @@ class XHRInterceptor {
       // Patch send method
       const originalSend = xhr.send
       xhr.send = function (data?: Document | XMLHttpRequestBodyInit | null) {
-        requestData = data
+        snapshot = { requestId: crypto.randomUUID(), url: requestUrl, method: requestMethod, body: data }
+        readOffset = 0
+        settled = false
+        self.notifySnapshot('onRequestSnapshot', snapshot)
         self.notifyRequest(requestUrl, requestMethod, data)
-        return originalSend.apply(xhr, [data] as any)
+        try { return originalSend.apply(xhr, [data] as any) }
+        catch (error) {
+          settled = true
+          self.notifySnapshot('onSettled', snapshot, 0)
+          throw error
+        }
       }
+
+      const readProgress = () => {
+        if (!snapshot || settled || (xhr.responseType !== '' && xhr.responseType !== 'text')) return
+        if (!self.hasProgressObserver(snapshot.url)) return
+        if (xhr.readyState < 3 || xhr.status < 200 || xhr.status >= 300) return
+        try {
+          const text = xhr.responseText
+          if (text.length > readOffset) {
+            const chunk = text.slice(readOffset)
+            readOffset = text.length
+            self.notifySnapshot('onProgress', snapshot, chunk)
+          }
+        } catch (error) { self.notifyError(error as Error) }
+      }
+      xhr.addEventListener('progress', readProgress)
+      xhr.addEventListener('loadend', () => {
+        if (!snapshot || settled) return
+        readProgress()
+        settled = true
+        self.notifySnapshot('onSettled', snapshot, xhr.status)
+      })
 
       // Use addEventListener to capture response without overriding onreadystatechange
       xhr.addEventListener('readystatechange', () => {
         if (xhr.readyState === 4) {
+          readProgress()
           try {
             if (xhr.status >= 200 && xhr.status < 300) {
               let responseText = ''
@@ -170,11 +209,7 @@ class XHRInterceptor {
               }
 
               if (responseText) {
-                self.notifyResponse(requestUrl, responseText, xhr.status, {
-                  url: requestUrl,
-                  method: requestMethod,
-                  body: requestData,
-                })
+                if (snapshot) self.notifyResponse(requestUrl, responseText, xhr.status, snapshot)
               }
             }
           } catch (error) {
@@ -234,6 +269,27 @@ class XHRInterceptor {
   }
 
   // ==================== Private Methods ====================
+
+  private hasProgressObserver(url: string): boolean {
+    return [...this.interceptors.values()].some(({ config, active }) => (
+      active && Boolean(config.onProgress) && this.matchesPattern(url, config.urlPattern)
+    ))
+  }
+
+  private notifySnapshot(
+    callback: 'onRequestSnapshot' | 'onProgress' | 'onSettled',
+    request: XHRRequestSnapshot,
+    value?: string | number,
+  ): void {
+    for (const { config, active } of this.interceptors.values()) {
+      if (!active || !this.matchesPattern(request.url, config.urlPattern)) continue
+      try {
+        if (callback === 'onRequestSnapshot') config.onRequestSnapshot?.(request)
+        else if (callback === 'onProgress' && typeof value === 'string') config.onProgress?.(value, request)
+        else if (callback === 'onSettled' && typeof value === 'number') config.onSettled?.(request, value)
+      } catch (error) { config.onError?.(error as Error) }
+    }
+  }
 
   /**
    * Notify all matching interceptors of a request

@@ -91,6 +91,7 @@ export const folderRpcParams = {
   updateChatTitle: z.object({
     chatId: z.string().regex(/^(?:c_)?[a-z0-9]+$/i),
     title: z.string().transform((value) => value.normalize('NFKC').trim()).pipe(z.string().min(1).max(500)),
+    expectedTitle: z.string().max(500).optional(),
   }),
   updateSettings: z.object({ patch: folderSettingsPatchSchema }),
   createSnapshot: z.object({}),

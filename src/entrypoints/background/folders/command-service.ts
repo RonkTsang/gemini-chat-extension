@@ -79,8 +79,8 @@ export class FolderCommandService {
         break
       }
       case 'updateChatTitle': {
-        const input = params as { chatId: string; title: string }
-        data = await folderRepository.upsertChatReference(request.accountScopeId, input.chatId, input.title)
+        const input = params as { chatId: string; title: string; expectedTitle?: string }
+        data = await folderRepository.upsertChatReference(request.accountScopeId, input.chatId, input.title, input.expectedTitle)
         break
       }
       case 'updateSettings':

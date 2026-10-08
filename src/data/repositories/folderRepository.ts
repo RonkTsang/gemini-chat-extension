@@ -138,7 +138,7 @@ export interface FolderRepository {
   moveMembership(accountScopeId: string, folderId: string, chatId: string, targetFolderId: string, position?: FolderPosition): Promise<FolderMembershipRow>
   setMembershipPinned(accountScopeId: string, folderId: string, chatId: string, pinned: boolean): Promise<FolderMembershipRow>
   removeMembership(accountScopeId: string, folderId: string, chatId: string): Promise<void>
-  upsertChatReference(accountScopeId: string, chatId: string, cachedTitle: string): Promise<ChatReferenceRow>
+  upsertChatReference(accountScopeId: string, chatId: string, cachedTitle: string, expectedTitle?: string): Promise<ChatReferenceRow>
   removeChatReference(accountScopeId: string, chatId: string): Promise<void>
   removeChatAfterGeminiDelete(accountScopeId: string, chatId: string, protectionSnapshotId?: string): Promise<void>
   createSnapshot(accountScopeId: string, reason: FolderSnapshotRow['reason'], hold?: boolean): Promise<FolderSnapshotRow>
@@ -1001,13 +1001,18 @@ export class FolderRepositoryImpl implements FolderRepository {
     if (changed) await this.createAutomaticSnapshot(accountScopeId)
   }
 
-  async upsertChatReference(accountScopeId: string, chatId: string, cachedTitle: string): Promise<ChatReferenceRow> {
+  async upsertChatReference(accountScopeId: string, chatId: string, cachedTitle: string, expectedTitle?: string): Promise<ChatReferenceRow> {
     requireScope(accountScopeId)
     const deviceId = await this.preheatDevice()
     if (!chatId.trim()) throw new Error('A chat id is required')
     let result!: ChatReferenceRow
     await db.transaction('rw', db.folder_chat_references, db.folder_operations, db.folder_sync_states, async () => {
       const prior = await db.folder_chat_references.get([accountScopeId, chatId])
+      // One-shot generated titles must not overwrite a rename made meanwhile.
+      if (expectedTitle !== undefined) {
+        if (!prior) throw new Error('Chat reference is unavailable')
+        if (prior.cachedTitle !== expectedTitle) { result = prior; return }
+      }
       const versionStamp = this.stamp()
       const timestamp = now()
       result = {

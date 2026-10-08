@@ -463,6 +463,19 @@ export class FolderRuntime {
     await this.refresh()
   }
 
+  async completeNewChatTitle(chatId: string, title: string, expectedTitle: string): Promise<void> {
+    const accountScopeId = this.scope()
+    const { data: reference } = await folderBackgroundClient.request<ChatReferenceRow>(
+      accountScopeId, this.identitySource(), 'updateChatTitle', { chatId, title, expectedTitle },
+    )
+    if (this.state.identity.status !== 'available' || this.state.identity.identity.accountScopeId !== accountScopeId) return
+    const projection = this.projection()
+    this.publish({ projection: {
+      ...projection,
+      chatReferences: [...projection.chatReferences.filter((row) => row.chatId !== chatId), reference],
+    } })
+  }
+
   async setMembershipPinned(folderId: string, chatId: string, pinned: boolean): Promise<void> {
     const accountScopeId = this.scope()
     const identitySource = this.identitySource()

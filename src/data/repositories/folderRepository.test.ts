@@ -55,6 +55,18 @@ describe('FolderRepository', () => {
     await clearFolderTables()
   })
 
+  it('backfills a generated title only if the expected title still matches', async () => {
+    const repository = new FolderRepositoryImpl()
+    await repository.upsertChatReference(scopeA, 'abc123', '')
+    await repository.upsertChatReference(scopeA, 'abc123', 'Generated title', '')
+    expect((await repository.listChatReferences(scopeA))[0].cachedTitle).toBe('Generated title')
+    await repository.upsertChatReference(scopeA, 'abc123', 'User title')
+    const operationCount = await db.folder_operations.count()
+    const result = await repository.upsertChatReference(scopeA, 'abc123', 'Late generated title', '')
+    expect(result.cachedTitle).toBe('User title')
+    expect(await db.folder_operations.count()).toBe(operationCount)
+  })
+
   it('reports full account counts and keeps restore point counts tied to their saved payload', async () => {
     const repository = new FolderRepositoryImpl()
     const first = await repository.createFolder(scopeA, { name: 'First' })

@@ -6,6 +6,9 @@ import { queryFirstMatchingElement, geminiDomSelectors } from '@/services/gemini
 import { folderRuntime } from './runtime'
 import { FolderNativeMenuBridge } from './native-menu'
 import { FolderRecentsVisibilityController } from './recents-visibility'
+import { folderNewChat } from './new-chat'
+import { resolveFolderLabelAnchor } from './new-chat.dom'
+import { FolderNewChatLabel } from '@/components/folders/FolderNewChatLabel'
 
 const SIDE_NAV_HOST_ATTRIBUTE = 'data-gpk-folders-side-nav-host'
 
@@ -24,6 +27,9 @@ export function createFoldersController(): FoldersController {
   let reactRoot: Root | undefined
   let host: HTMLElement | undefined
   let reconcileQueued = false
+  let labelRoot: Root | undefined
+  let labelHost: HTMLElement | undefined
+  let unsubscribeNewChat: (() => void) | undefined
   const nativeMenuBridge = new FolderNativeMenuBridge()
   const recentsVisibility = new FolderRecentsVisibilityController()
 
@@ -34,9 +40,31 @@ export function createFoldersController(): FoldersController {
     host = undefined
   }
 
+  const unmountLabel = () => {
+    labelRoot?.unmount()
+    labelRoot = undefined
+    labelHost?.remove()
+    labelHost = undefined
+  }
+
+  const reconcileLabel = () => {
+    const intent = folderNewChat.getSnapshot()
+    const anchor = intent && intent.phase !== 'opening' && (intent.phase !== 'saved' || intent.error)
+      ? resolveFolderLabelAnchor() : null
+    if (!anchor?.parentElement) { unmountLabel(); return }
+    if (labelHost?.isConnected && labelHost.nextSibling === anchor) return
+    unmountLabel()
+    labelHost = document.createElement('div')
+    labelHost.setAttribute('data-gpk-folder-new-chat-host', '')
+    anchor.parentElement.insertBefore(labelHost, anchor)
+    labelRoot = createRoot(labelHost)
+    labelRoot.render(<Provider host={{ style: { background: 'transparent' } }}><FolderNewChatLabel /></Provider>)
+  }
+
   const reconcile = () => {
     reconcileQueued = false
     if (!started) return
+    reconcileLabel()
     const sideNav = queryFirstMatchingElement([document], geminiDomSelectors.sideNav.root)
     const chatsSection = sideNav && queryFirstMatchingElement([sideNav], geminiDomSelectors.sideNav.chatsSection)
     if (!sideNav || !chatsSection || !chatsSection.parentElement) {
@@ -68,6 +96,8 @@ export function createFoldersController(): FoldersController {
       started = true
       try {
         await folderRuntime.start()
+        folderNewChat.start()
+        unsubscribeNewChat = folderNewChat.subscribe(queueReconcile)
         nativeMenuBridge.start()
         recentsVisibility.start()
         observer = new MutationObserver(queueReconcile)
@@ -88,6 +118,10 @@ export function createFoldersController(): FoldersController {
       observer = undefined
       nativeMenuBridge.stop()
       recentsVisibility.stop()
+      unsubscribeNewChat?.()
+      unsubscribeNewChat = undefined
+      folderNewChat.stop()
+      unmountLabel()
       unmount()
       folderRuntime.stop()
     },
