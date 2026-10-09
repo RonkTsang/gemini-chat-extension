@@ -1,7 +1,7 @@
 import { Separator, VStack } from '@chakra-ui/react'
 import { useSyncExternalStore } from 'react'
-import { HiOutlinePencilAlt, HiOutlineTrash, HiOutlineX } from 'react-icons/hi'
-import { LuFolderOutput, LuPencil, LuPin, LuPinOff } from 'react-icons/lu'
+import { HiOutlineTrash, HiOutlineX } from 'react-icons/hi'
+import { LuFolderOutput, LuFolderPen, LuPencil, LuPin, LuPinOff } from 'react-icons/lu'
 
 import { folderRuntime } from '@/entrypoints/content/folders/runtime'
 import { tt } from '@/utils/i18n'
@@ -24,7 +24,7 @@ export function FolderActionMenu() {
       >
         <VStack align="stretch" gap={0}>
           <AnchoredGeminiMenuItem
-            icon={<HiOutlinePencilAlt />}
+            icon={<LuFolderPen />}
             onClick={() => folderRuntime.openEditDialog(menu.folderId)}
           >
             {tt('folders_edit_folder', 'Edit folder')}
