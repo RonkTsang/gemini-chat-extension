@@ -1,5 +1,7 @@
 **产品需求文档：Gemini Prompt管理器 - 基础框架搭建**
 
+稳定设置入口的产品与技术方案见 [Popup 设置入口](./popup-entry-prd-tech.md)。
+
 #### **1. 目标 (Objective)**
 
 构建一个可扩展、体验一致的基础应用框架。该框架将作为所有后续功能（如Chain Prompt, Quick Follow-up等）的容器，提供清晰的主导航和流畅的多级页面浏览体验。
