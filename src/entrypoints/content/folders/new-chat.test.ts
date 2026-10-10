@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { GEM_EXT_EVENTS } from '@/common/event'
 import { eventBus } from '@/utils/eventbus'
+import { StreamGenerateDecoder } from '@/utils/streamGenerate'
+import titleStream from '@/utils/__fixtures__/stream-generate-new-chat-title.txt?raw'
 import type { FolderRuntime } from './runtime'
 
 const state = vi.hoisted(() => ({
@@ -9,7 +11,7 @@ const state = vi.hoisted(() => ({
     projection: { settings: { enabled: true }, folders: [{ id: 'folder-a' }, { id: 'folder-b' }] },
   },
   addMembership: vi.fn(async () => undefined),
-  completeNewChatTitle: vi.fn(async () => undefined),
+  completeNewChatTitle: vi.fn(async (): Promise<void> => undefined),
   setFolderCollapsed: vi.fn(async () => undefined),
 }))
 vi.mock('./runtime', () => ({ folderRuntime: {
@@ -47,6 +49,45 @@ afterEach(() => {
 })
 
 describe('Folder new chat association', () => {
+  it('shows the first request prompt as a placeholder and replaces it with the captured stream title', async () => {
+    await controller.open('folder-a')
+    const token = controller.getSnapshot()!.token
+    emit({ token, phase: 'started', requestId: 'request-1', prompt: 'TME 护城河分析' })
+    window.history.replaceState({}, '', '/app/88474e0fe3b9a20d')
+    document.body.insertAdjacentHTML('beforeend', '<bard-sidenav><gem-nav-list-item data-test-id="conversation"><a href="/app/88474e0fe3b9a20d" aria-label="TME 护城河分析"></a></gem-nav-list-item></bard-sidenav>')
+    const decoder = new StreamGenerateDecoder()
+    let generatedTitleObserved = false
+    for (const line of titleStream.split('\n')) {
+      for (const metadata of decoder.push(`${line}\n`)) {
+        emit({ token, phase: 'metadata', requestId: 'request-1', ...metadata })
+        generatedTitleObserved ||= Boolean(metadata.title)
+        await flush()
+        if (!generatedTitleObserved) {
+          expect(state.addMembership).toHaveBeenCalledExactlyOnceWith('folder-a', '88474e0fe3b9a20d')
+          expect(state.completeNewChatTitle).toHaveBeenCalledExactlyOnceWith('88474e0fe3b9a20d', 'TME 护城河分析', '')
+          expect(controller.getSnapshot()?.phase).toBe('saved')
+        }
+      }
+    }
+    expect(state.completeNewChatTitle).toHaveBeenCalledTimes(2)
+    expect(state.completeNewChatTitle).toHaveBeenNthCalledWith(2, '88474e0fe3b9a20d', '腾讯音乐（TME）护城河深度分析', 'TME 护城河分析')
+    expect(controller.getSnapshot()).toBeUndefined()
+  })
+
+  it('keeps the prompt placeholder when the stream finishes without a generated title', async () => {
+    await controller.open('folder-a')
+    const token = controller.getSnapshot()!.token
+    emit({ token, phase: 'started', requestId: 'request-1', prompt: 'First prompt' })
+    emit({ token, phase: 'metadata', requestId: 'request-1', conversationId: 'c_abc' })
+    await flush()
+    document.body.insertAdjacentHTML('beforeend', '<bard-sidenav><gem-nav-list-item data-test-id="conversation"><a href="/app/abc" aria-label="First prompt"></a></gem-nav-list-item></bard-sidenav>')
+    emit({ token, phase: 'finished', requestId: 'request-1' })
+    await flush()
+    expect(state.addMembership).toHaveBeenCalledExactlyOnceWith('folder-a', 'abc')
+    expect(state.completeNewChatTitle).toHaveBeenCalledExactlyOnceWith('abc', 'First prompt', '')
+    expect(controller.getSnapshot()?.phase).toBe('saved')
+  })
+
   it('binds one request and saves its chat before the late title appears', async () => {
     await controller.open('folder-a')
     const token = controller.getSnapshot()!.token
@@ -60,6 +101,37 @@ describe('Folder new chat association', () => {
     emit({ token, phase: 'metadata', requestId: 'request-1', conversationId: 'c_abc', title: 'Generated title' })
     await flush()
     expect(state.completeNewChatTitle).toHaveBeenCalledExactlyOnceWith('abc', 'Generated title', '')
+    expect(controller.getSnapshot()).toBeUndefined()
+  })
+  it('applies a generated title arriving while the placeholder write is still pending', async () => {
+    let releasePlaceholder!: () => void
+    state.completeNewChatTitle.mockImplementationOnce(() => new Promise<void>((resolve) => { releasePlaceholder = resolve }))
+    await controller.open('folder-a')
+    const token = controller.getSnapshot()!.token
+    emit({ token, phase: 'started', requestId: 'request-1', prompt: 'First prompt' })
+    emit({ token, phase: 'metadata', requestId: 'request-1', conversationId: 'c_abc' })
+    await flush()
+    emit({ token, phase: 'metadata', requestId: 'request-1', conversationId: 'c_abc', title: 'Generated title' })
+    expect(state.completeNewChatTitle).toHaveBeenCalledExactlyOnceWith('abc', 'First prompt', '')
+    releasePlaceholder()
+    await flush()
+    expect(state.completeNewChatTitle).toHaveBeenNthCalledWith(2, 'abc', 'Generated title', 'First prompt')
+    expect(controller.getSnapshot()).toBeUndefined()
+  })
+  it('retries a failed placeholder write before completing the generated title', async () => {
+    state.completeNewChatTitle.mockRejectedValueOnce(new Error('Placeholder write failed'))
+    await controller.open('folder-a')
+    const token = controller.getSnapshot()!.token
+    emit({ token, phase: 'started', requestId: 'request-1', prompt: 'First prompt' })
+    emit({ token, phase: 'metadata', requestId: 'request-1', conversationId: 'c_abc' })
+    await flush()
+    expect(controller.getSnapshot()?.phase).toBe('failed')
+    emit({ token, phase: 'metadata', requestId: 'request-1', conversationId: 'c_abc', title: 'Generated title' })
+    controller.retry()
+    await flush()
+    expect(state.addMembership).toHaveBeenNthCalledWith(2, 'folder-a', 'abc')
+    expect(state.completeNewChatTitle).toHaveBeenNthCalledWith(2, 'abc', 'First prompt', '')
+    expect(state.completeNewChatTitle).toHaveBeenNthCalledWith(3, 'abc', 'Generated title', 'First prompt')
     expect(controller.getSnapshot()).toBeUndefined()
   })
   it('closing the label before or after submission prevents late response writes', async () => {

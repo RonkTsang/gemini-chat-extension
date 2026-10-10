@@ -33,12 +33,3 @@ export function isBlankComposerReady(): boolean {
   return isOrdinaryNewChat() && Boolean(editors?.length === 1)
     && document.querySelectorAll('chat-window user-query').length === 0
 }
-
-export function resolveCreatedChatTitle(chatId: string): string | undefined {
-  const path = `${getAccountPath()}/app/${chatId}`
-  const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('bard-sidenav gem-nav-list-item[data-test-id="conversation"] > a[href]'))
-    .filter((link) => new URL(link.href, location.origin).pathname === path)
-  if (links.length !== 1) return undefined
-  const title = links[0].getAttribute('aria-label')?.trim()
-  return title && title.length <= 500 ? title : undefined
-}

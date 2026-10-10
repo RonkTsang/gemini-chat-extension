@@ -44,7 +44,7 @@ describe('StreamGenerate intent observation', () => {
     mock.config!.onSettled!(first, 200)
     expect(observations).toEqual([
       { token: 'intent-a', phase: 'armed' },
-      { token: 'intent-a', phase: 'started', requestId: 'first' },
+      { token: 'intent-a', phase: 'started', requestId: 'first', prompt: 'prompt' },
       { token: 'intent-a', phase: 'metadata', requestId: 'first', conversationId: 'c_abc123' },
       { token: 'intent-a', phase: 'metadata', requestId: 'first', conversationId: 'c_abc123', title: 'Title' },
       { token: 'intent-a', phase: 'finished', requestId: 'first' },
@@ -58,7 +58,7 @@ describe('StreamGenerate intent observation', () => {
     window.dispatchEvent(new CustomEvent(GEM_EXT_EVENTS.STREAM_GENERATE_CONTROL, { detail: { action: 'cancel', token: 'intent-a' } }))
     mock.config!.onProgress!(frame(), first)
     mock.config!.onRequestSnapshot!(request('second'))
-    expect(observations.at(-1)).toEqual({ token: 'intent-b', phase: 'started', requestId: 'second' })
+    expect(observations.at(-1)).toEqual({ token: 'intent-b', phase: 'started', requestId: 'second', prompt: 'prompt' })
     expect(observations.some((entry) => entry.phase === 'metadata')).toBe(false)
   })
   it('does not claim temporary, other-origin, malformed, or unarmed requests', () => {

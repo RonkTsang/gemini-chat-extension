@@ -7,5 +7,6 @@ export interface StreamGenerateObservation {
   phase: 'armed' | 'started' | 'metadata' | 'finished'
   requestId?: string
   conversationId?: string
+  prompt?: string
   title?: string
 }

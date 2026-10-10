@@ -67,6 +67,21 @@ describe('FolderRepository', () => {
     expect(await db.folder_operations.count()).toBe(operationCount)
   })
 
+  it('replaces a prompt placeholder with a generated title while preserving intervening user renames', async () => {
+    const repository = new FolderRepositoryImpl()
+    await repository.upsertChatReference(scopeA, 'abc123', '')
+    await repository.upsertChatReference(scopeA, 'abc123', 'First prompt', '')
+    const generated = await repository.upsertChatReference(scopeA, 'abc123', 'Generated title', 'First prompt')
+    expect(generated.cachedTitle).toBe('Generated title')
+    await repository.upsertChatReference(scopeA, 'def456', 'First prompt')
+    await repository.upsertChatReference(scopeA, 'def456', 'User title')
+    const operationCount = await db.folder_operations.count()
+    await repository.upsertChatReference(scopeA, 'def456', 'First prompt', '')
+    const renamed = await repository.upsertChatReference(scopeA, 'def456', 'Generated title', 'First prompt')
+    expect(renamed.cachedTitle).toBe('User title')
+    expect(await db.folder_operations.count()).toBe(operationCount)
+  })
+
   it('reports full account counts and keeps restore point counts tied to their saved payload', async () => {
     const repository = new FolderRepositoryImpl()
     const first = await repository.createFolder(scopeA, { name: 'First' })

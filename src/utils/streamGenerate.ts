@@ -2,6 +2,7 @@
 export interface StreamGenerateRequest {
   conversationId: string | null
   isNewConversation: boolean
+  prompt?: string
 }
 
 export interface StreamGenerateMetadata {
@@ -30,10 +31,14 @@ export function parseStreamGenerateRequest(body: unknown): StreamGenerateRequest
     if (!Array.isArray(envelope) || typeof envelope[1] !== 'string') return null
     const payload: unknown = JSON.parse(envelope[1])
     if (!Array.isArray(payload) || payload.length < 3 || !Array.isArray(payload[0])) return null
+    const promptValue: unknown = payload[0][0]
+    // Match Folder title normalization before applying the storage limit.
+    const prompt = typeof promptValue === 'string' ? promptValue.normalize('NFKC').trim().slice(0, 500) : ''
+    const promptMetadata = prompt ? { prompt } : {}
     const conversation = payload[2]
-    if (conversation === null) return { conversationId: null, isNewConversation: true }
+    if (conversation === null) return { conversationId: null, isNewConversation: true, ...promptMetadata }
     if (Array.isArray(conversation) && typeof conversation[0] === 'string' && CONVERSATION_ID.test(conversation[0])) {
-      return { conversationId: conversation[0], isNewConversation: false }
+      return { conversationId: conversation[0], isNewConversation: false, ...promptMetadata }
     }
     return null
   } catch { return null }

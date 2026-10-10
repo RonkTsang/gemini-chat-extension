@@ -58,7 +58,8 @@ export function startStreamGenerateMonitor(): () => void {
         || document.querySelector('chat-window')?.classList.contains('is-temporary-chat')) return
       if (request.method.toUpperCase() !== 'POST' || !isStreamGenerateUrl(request.url)) return
       const requestPath = new URL(request.url, location.origin).pathname.match(/^\/u\/\d+(?=\/)/u)?.[0] ?? ''
-      if (requestPath !== armed.accountPath || !parseStreamGenerateRequest(request.body)?.isNewConversation) return
+      const parsedRequest = parseStreamGenerateRequest(request.body)
+      if (requestPath !== armed.accountPath || !parsedRequest?.isNewConversation) return
       const token = armed.token
       armed = undefined
       const timer = setTimeout(() => {
@@ -66,7 +67,7 @@ export function startStreamGenerateMonitor(): () => void {
         release(request.requestId)
       }, REQUEST_TIMEOUT_MS)
       requests.set(request.requestId, { token, decoder: new StreamGenerateDecoder(), timer })
-      emit({ token, requestId: request.requestId, phase: 'started' })
+      emit({ token, requestId: request.requestId, phase: 'started', ...(parsedRequest.prompt ? { prompt: parsedRequest.prompt } : {}) })
     },
     onProgress: (chunk, request) => capture(request.requestId, chunk),
     onSettled: (request) => {

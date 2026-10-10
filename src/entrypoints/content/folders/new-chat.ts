@@ -5,13 +5,14 @@ import { openNewChat } from '@/utils/chatActions'
 import { tt } from '@/utils/i18n'
 import type { StreamGenerateControl } from '@/utils/streamGenerateProtocol'
 import { folderRuntime, type FolderRuntime } from './runtime'
-import { getAccountPath, getRouteChatId, isBlankComposerReady, isOrdinaryNewChat, resolveCreatedChatTitle } from './new-chat.dom'
+import { getAccountPath, getRouteChatId, isBlankComposerReady, isOrdinaryNewChat } from './new-chat.dom'
 
 const observationSchema = z.object({
   token: z.string().min(1).max(100),
   phase: z.enum(['armed', 'started', 'metadata', 'finished']),
   requestId: z.string().min(1).max(100).optional(),
   conversationId: z.string().regex(/^c_[a-f0-9]+$/u).optional(),
+  prompt: z.string().trim().min(1).max(500).optional(),
   title: z.string().trim().min(1).max(500).optional(),
 })
 
@@ -140,10 +141,6 @@ export class FolderNewChatController {
     // Metadata can arrive shortly after Gemini changes its own route. Wait for
     // that matching request, but never derive a conversation ID from the URL.
     if (intent.chatId && routeId && routeId !== intent.chatId) { this.cancel(); return }
-    if (intent.phase === 'saved' && !intent.titleSaved && !intent.title) {
-      const title = intent.chatId && resolveCreatedChatTitle(intent.chatId)
-      if (title) { intent.title = title; void this.saveTitle(intent) }
-    }
   }
   private handleObservation = (event: Event): void => {
     const parsed = observationSchema.safeParse((event as CustomEvent<unknown>).detail)
@@ -153,6 +150,7 @@ export class FolderNewChatController {
     if (data.phase === 'armed') { this.armAcknowledgement?.(); this.armAcknowledgement = undefined; return }
     if (data.phase === 'started' && intent.phase === 'armed' && data.requestId) {
       intent.requestId = data.requestId
+      intent.initialTitle = data.prompt ?? ''
       intent.phase = 'submitted'
       clearTimeout(this.timer)
       this.timer = setTimeout(this.cancel, 120_000)
@@ -164,6 +162,8 @@ export class FolderNewChatController {
       const chatId = data.conversationId.slice(2)
       if (intent.chatId && intent.chatId !== chatId) return
       intent.chatId = chatId
+      // The sidebar can initially label this chat with the first prompt.
+      // Only the claimed stream's generated title completes this one-shot write.
       if (data.title && !intent.titleSaved) intent.title = data.title
       const routeId = getRouteChatId()
       if (routeId && routeId !== chatId) { this.cancel(); return }
@@ -189,13 +189,15 @@ export class FolderNewChatController {
     intent.phase = 'saving'
     intent.writeInFlight = true
     intent.error = undefined
-    intent.initialTitle = ''
     this.publish()
     try {
-      // Omit the title on membership retries so an existing user rename stays
-      // intact. Generated titles use the conditional one-shot write below.
+      // Conditional title writes protect user renames, including on retries.
       await this.runtime.addMembership(intent.folderId, intent.chatId)
       if (!this.valid(intent)) return
+      if (intent.initialTitle) {
+        await this.runtime.completeNewChatTitle(intent.chatId, intent.initialTitle, '')
+        if (!this.valid(intent)) return
+      }
       intent.phase = 'saved'
       intent.writeInFlight = false
       await this.runtime.setFolderCollapsed(intent.folderId, false)
