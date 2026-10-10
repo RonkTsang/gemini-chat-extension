@@ -15,7 +15,7 @@ export function FolderNewChatLabel() {
   return (
     <HStack data-gpk-folder-new-chat-label gap={2} width="fit-content" maxW="calc(100% - 12px)"
       margin="6px" padding="6px 10px" borderRadius="12px"
-      bg="var(--theme-200, var(--gem-sys-color--surface-container, #f0f4f9))"
+      bg="var(--lumi-sys-color-states--hover-on-surface)"
       color="var(--lumi-sys-color--on-surface, #1f1f1f)" fontSize="13px"
       fontFamily="Google Sans Flex, Google Sans, sans-serif"
       title={t('folders_new_chat_target', [folder.name])}>

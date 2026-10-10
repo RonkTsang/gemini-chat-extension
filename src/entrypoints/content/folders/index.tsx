@@ -56,6 +56,9 @@ export function createFoldersController(): FoldersController {
     unmountLabel()
     labelHost = document.createElement('div')
     labelHost.setAttribute('data-gpk-folder-new-chat-host', '')
+    // Match the composer width so its centered parent keeps the label at the left edge.
+    labelHost.style.width = 'min(var(--gpk-input-width, 100%), 100%)'
+    labelHost.style.boxSizing = 'border-box'
     anchor.parentElement.insertBefore(labelHost, anchor)
     labelRoot = createRoot(labelHost)
     labelRoot.render(<Provider host={{ style: { background: 'transparent' } }}><FolderNewChatLabel /></Provider>)
