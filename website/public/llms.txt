@@ -16,6 +16,11 @@ This website documents the public product, installation flow, feature behavior, 
 - [Quick Start](https://gpk.ronktsang.com/guide/quick-start/): First steps after installation.
 - [Features Overview](https://gpk.ronktsang.com/features/): Index of the main feature pages.
 
+## Tips And Tutorials
+
+- [Tips & Tutorials](https://gpk.ronktsang.com/tips/): Task-focused guides with examples and practical Gemini Power Kit usage tips.
+- [Change Gemini Background](https://gpk.ronktsang.com/tips/change-gemini-background/): Start with a Theme Bloom image drop to change the Gemini chat background and color preset, then adjust readability or troubleshoot common issues.
+
 ## Features
 
 - [Chat Outline](https://gpk.ronktsang.com/features/chat-outline/): Navigate long Gemini conversations and jump between key sections.
@@ -45,6 +50,9 @@ This website documents the public product, installation flow, feature behavior, 
 - [Chinese Quick Start](https://gpk.ronktsang.com/zh-cn/guide/quick-start/): Chinese quick-start guide.
 - [Chinese Features Overview](https://gpk.ronktsang.com/zh-cn/features/): Chinese feature index.
 - [Chinese Privacy Policy](https://gpk.ronktsang.com/zh-cn/privacy-policy/): Chinese privacy policy.
+
+- [Chinese Tips & Tutorials](https://gpk.ronktsang.com/zh-cn/tips/): Chinese usage tutorials.
+- [Chinese Background Tutorial](https://gpk.ronktsang.com/zh-cn/tips/change-gemini-background/): Chinese guide to changing the Gemini chat background.
 
 ## Optional
 

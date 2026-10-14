@@ -1,0 +1,194 @@
+---
+import { Icon } from '@astrojs/starlight/components';
+import LanguageSelect from 'virtual:starlight/components/LanguageSelect';
+import SocialIcons from 'virtual:starlight/components/SocialIcons';
+import WebsiteThemeSelect from './WebsiteThemeSelect.astro';
+
+const isChinese = Astro.url.pathname.startsWith('/zh-cn');
+const prefix = isChinese ? '/zh-cn' : '';
+---
+
+<details class="mobile-site-menu print:hidden" data-site-menu>
+  <summary aria-label={isChinese ? '网站导航菜单' : 'Site navigation menu'} aria-controls="mobile-site-navigation">
+    <Icon name="bars" class="menu-open-icon" />
+    <Icon name="close" class="menu-close-icon" />
+  </summary>
+  <div id="mobile-site-navigation" class="mobile-menu-panel">
+    <nav aria-label={isChinese ? '主导航' : 'Main navigation'}>
+      <a href={`${prefix}/guide/quick-start/`}>{isChinese ? '快速开始' : 'Quick Start'}</a>
+      <a href={`${prefix}/tips/`}>{isChinese ? '技巧与教程' : 'Tips & Tutorials'}</a>
+      <a href={`${prefix}/features/`}>{isChinese ? '功能指南' : 'Features'}</a>
+      <a href={`${prefix}/support/`}>{isChinese ? '获取帮助' : 'Support'}</a>
+    </nav>
+    <div class="mobile-settings" role="group" aria-label={isChinese ? '显示与语言' : 'Appearance and language'}>
+      <div class="mobile-preference">
+        <span>{isChinese ? '外观' : 'Appearance'}</span>
+        <div class="mobile-appearance"><WebsiteThemeSelect /></div>
+      </div>
+      <div class="mobile-preference">
+        <span>{isChinese ? '语言' : 'Language'}</span>
+        <LanguageSelect />
+      </div>
+    </div>
+    <div class="mobile-external" role="group" aria-label={isChinese ? '社区与源码' : 'Community and source'}>
+      <SocialIcons />
+    </div>
+  </div>
+</details>
+
+<script>
+  const menu = document.querySelector('details[data-site-menu]');
+  if (menu instanceof HTMLDetailsElement) {
+    const summary = menu.querySelector('summary');
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && menu.open) {
+        menu.open = false;
+        summary?.focus();
+      }
+    });
+    document.addEventListener('click', (event) => {
+      if (event.target instanceof Node && !menu.contains(event.target)) menu.open = false;
+    });
+    matchMedia('(min-width: 50rem)').addEventListener('change', (event) => {
+      if (event.matches) menu.open = false;
+    });
+  }
+</script>
+
+<style>
+  .mobile-site-menu {
+    flex-shrink: 0;
+  }
+
+  summary {
+    display: grid;
+    place-items: center;
+    list-style: none;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.5rem;
+    color: var(--sl-color-text);
+    cursor: pointer;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  summary:hover,
+  details[open] summary {
+    background-color: var(--sl-color-gray-6);
+  }
+
+  summary:focus-visible {
+    outline: 2px solid var(--sl-color-text-accent);
+    outline-offset: 2px;
+  }
+
+  summary :global(svg) {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  details:not([open]) summary :global(.menu-close-icon),
+  details[open] summary :global(.menu-open-icon) {
+    display: none;
+  }
+
+  .mobile-menu-panel {
+    position: fixed;
+    inset-inline: 0;
+    top: var(--sl-nav-height);
+    max-height: calc(100vh - var(--sl-nav-height));
+    max-height: calc(100dvh - var(--sl-nav-height));
+    overflow-y: auto;
+    padding: 1rem var(--sl-nav-pad-x);
+    background-color: var(--sl-color-bg-sidebar);
+    border-bottom: 1px solid var(--sl-color-hairline);
+    box-shadow: 0 12px 24px -16px rgb(0 0 0 / 0.3);
+  }
+
+  details:not([open]) .mobile-menu-panel {
+    display: none;
+  }
+
+  nav {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  nav a {
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    color: var(--sl-color-text);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  nav a:hover {
+    color: var(--sl-color-text-accent);
+    background-color: var(--sl-color-gray-6);
+  }
+
+  .mobile-settings {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+    margin-top: 0.75rem;
+    padding: 1rem 0.75rem 0;
+    border-top: 1px solid var(--sl-color-hairline);
+  }
+
+  .mobile-preference {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    color: var(--sl-color-gray-2);
+    font-size: 0.8125rem;
+  }
+
+  .mobile-settings :global(select) {
+    font-size: 0.875rem;
+  }
+
+  .mobile-appearance :global(label) {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+
+  .mobile-appearance :global(select) {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    color: transparent;
+  }
+
+  .mobile-appearance :global(option) {
+    color: var(--sl-color-text);
+  }
+
+  .mobile-appearance :global(.caret) {
+    display: none;
+  }
+
+  .mobile-external {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.75rem 0.25rem 0;
+  }
+
+  .mobile-external :global(a) {
+    padding: 0.5rem;
+    margin: 0;
+    color: var(--sl-color-gray-2);
+  }
+
+  @media (min-width: 50rem) {
+    .mobile-site-menu {
+      display: none;
+    }
+  }
+</style>

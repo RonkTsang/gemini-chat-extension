@@ -5,30 +5,45 @@ import LanguageSelect from 'virtual:starlight/components/LanguageSelect';
 import Search from 'virtual:starlight/components/Search';
 import SiteTitle from 'virtual:starlight/components/SiteTitle';
 import SocialIcons from 'virtual:starlight/components/SocialIcons';
-import ThemeSelect from 'virtual:starlight/components/ThemeSelect';
+import WebsiteThemeSelect from './WebsiteThemeSelect.astro';
+import MobileSiteNavigation from './MobileSiteNavigation.astro';
 
 const shouldRenderSearch =
   config.pagefind || config.components.Search !== '@astrojs/starlight/components/Search.astro';
 const isChinese = Astro.url.pathname.startsWith('/zh-cn');
 const quickStartHref = isChinese ? '/zh-cn/guide/quick-start/' : '/guide/quick-start/';
 const quickStartLabel = isChinese ? '快速开始' : 'Quick Start';
+const tipsHref = isChinese ? '/zh-cn/tips/' : '/tips/';
+const tipsLabel = isChinese ? '技巧与教程' : 'Tips & Tutorials';
+const isTipsPage = Astro.url.pathname.startsWith(tipsHref);
+const { hasSidebar } = Astro.locals.starlightRoute;
 ---
 
 <div class="header">
   <div class="title-wrapper sl-flex">
     <SiteTitle />
   </div>
-  <div class="sl-flex print:hidden">
+  <div class="sl-flex print:hidden search-wrapper">
     {shouldRenderSearch && <Search />}
   </div>
+  {!hasSidebar && <MobileSiteNavigation />}
   <div class="sl-hidden md:sl-flex print:hidden right-group">
-    <a class="quick-start-link" href={isChinese ? '/zh-cn/support/' : '/support/'}>{isChinese ? '获取帮助' : 'Support'}</a>
-    <a class="quick-start-link" href={quickStartHref}>{quickStartLabel}</a>
-    <div class="sl-flex social-icons">
+    <nav class="header-nav sl-flex" aria-label={isChinese ? '主导航' : 'Main navigation'}>
+      <a class="quick-start-link" href={quickStartHref}>{quickStartLabel}</a>
+      <a class="quick-start-link tips-link" href={tipsHref} aria-current={isTipsPage ? 'true' : undefined}>{tipsLabel}</a>
+      <a class="quick-start-link" href={isChinese ? '/zh-cn/support/' : '/support/'}>{isChinese ? '获取帮助' : 'Support'}</a>
+    </nav>
+    <div class="sl-flex social-icons" role="group" aria-label={isChinese ? '社区与源码' : 'Community and source'}>
       <SocialIcons />
     </div>
-    <ThemeSelect />
-    <LanguageSelect />
+    <div class="utility-controls sl-flex" role="group" aria-label={isChinese ? '显示与语言' : 'Appearance and language'}>
+      <div class="appearance-control" title={isChinese ? '外观：浅色、深色或跟随系统' : 'Appearance: Light, Dark, or System'}>
+        <WebsiteThemeSelect />
+      </div>
+      <div class="language-control">
+        <LanguageSelect />
+      </div>
+    </div>
   </div>
 </div>
 
@@ -49,27 +64,163 @@ const quickStartLabel = isChinese ? '快速开始' : 'Quick Start';
       min-width: 0;
     }
 
-    .right-group,
-    .social-icons {
-      gap: 1rem;
+    .right-group {
+      gap: 1.25rem;
       align-items: center;
     }
 
+    .header-nav {
+      gap: 1.25rem;
+      align-items: center;
+    }
+
+    .social-icons {
+      gap: 0.25rem;
+      align-items: center;
+      border-inline-start: 1px solid var(--sl-color-hairline);
+      padding-inline-start: 0.75rem;
+    }
+
     .quick-start-link {
-      color: var(--sl-color-text);
+      color: var(--sl-color-gray-2);
       font-size: var(--sl-text-sm);
-      font-weight: 600;
+      font-weight: 500;
       text-decoration: none;
+      white-space: nowrap;
+      padding-block: 0.375rem;
+      text-underline-offset: 0.375rem;
     }
 
     .quick-start-link:hover {
       color: var(--sl-color-text-accent);
     }
 
-    .social-icons::after {
-      content: '';
+    .tips-link[aria-current] {
+      color: var(--sl-color-text-accent);
+      font-weight: 600;
+      text-decoration: underline;
+      text-decoration-thickness: 2px;
+    }
+
+    .search-wrapper {
+      min-width: 0;
+    }
+
+    .social-icons :global(a) {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
       height: 2rem;
-      border-inline-end: 1px solid var(--sl-color-gray-5);
+      margin: 0;
+      padding: 0;
+      border-radius: 0.5rem;
+      color: var(--sl-color-gray-2);
+      transition: color 150ms, background-color 150ms;
+    }
+
+    .social-icons :global(a:hover) {
+      color: var(--sl-color-text-accent);
+      background-color: var(--sl-color-gray-6);
+      opacity: 1;
+    }
+
+    .social-icons :global(svg) {
+      width: 1.125rem;
+      height: 1.125rem;
+    }
+
+    .utility-controls {
+      gap: 0.375rem;
+      align-items: center;
+      border: 1px solid var(--sl-color-hairline);
+      border-radius: 0.75rem;
+      padding: 0.125rem;
+      background-color: color-mix(in srgb, var(--sl-color-gray-6) 65%, transparent);
+    }
+
+    .utility-controls :global(label) {
+      height: 2.25rem;
+      color: var(--sl-color-gray-2);
+      border: 1px solid transparent;
+      border-radius: 0.5rem;
+      transition: border-color 150ms, background-color 150ms;
+    }
+
+    .utility-controls :global(label:hover) {
+      border-color: var(--sl-color-hairline);
+      background-color: var(--sl-color-gray-6);
+    }
+
+    .utility-controls :global(label:focus-within) {
+      outline: 2px solid var(--sl-color-text-accent);
+      outline-offset: 2px;
+    }
+
+    .utility-controls :global(select) {
+      height: 100%;
+      margin: 0;
+      padding-block: 0;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      outline: none;
+    }
+
+    .utility-controls :global(option) {
+      font-size: 0.875rem;
+      color: var(--sl-color-text);
+    }
+
+    .appearance-control :global(label) {
+      width: 2.25rem;
+    }
+
+    .appearance-control :global(select) {
+      width: 100%;
+      padding-inline: 0;
+      font-size: 0;
+      color: transparent;
+    }
+
+    .appearance-control :global(.label-icon) {
+      inset-inline-start: calc(50% - 0.4375rem);
+    }
+
+    .appearance-control :global(.caret) {
+      display: none;
+    }
+
+    .language-control :global(label) {
+      width: 6.25rem;
+    }
+
+    .language-control :global(select) {
+      width: 100%;
+      padding-inline: 1.75rem 1.375rem;
+    }
+
+    .language-control :global(.label-icon) {
+      inset-inline-start: 0.5rem;
+    }
+
+    .language-control :global(.caret) {
+      inset-inline-end: 0.375rem;
+      font-size: 0.875rem;
+    }
+
+    @media (max-width: 49.999rem) {
+      .header {
+        gap: 0.75rem;
+      }
+
+      .title-wrapper {
+        flex: 1;
+      }
+
+      .search-wrapper {
+        flex-shrink: 0;
+        margin-inline-start: auto;
+      }
     }
 
     @media (min-width: 50rem) {
@@ -99,6 +250,18 @@ const quickStartLabel = isChinese ? '快速开始' : 'Quick Start';
           1fr
           auto;
         align-content: center;
+      }
+    }
+
+    @media (min-width: 50rem) and (max-width: 67.999rem) {
+      .right-group,
+      .header-nav {
+        gap: 0.875rem;
+      }
+
+      .search-wrapper :global(button[data-open-modal] > span),
+      .search-wrapper :global(button[data-open-modal] > kbd) {
+        display: none !important;
       }
     }
   }

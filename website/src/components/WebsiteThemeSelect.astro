@@ -1,0 +1,50 @@
+---
+import ThemeSelect from '@astrojs/starlight/components/ThemeSelect.astro';
+import { Icon } from '@astrojs/starlight/components';
+---
+
+<div class="theme-switcher">
+  <ThemeSelect />
+  <span class="resolved-theme-icon" aria-hidden="true">
+    <Icon name="sun" class="theme-light-icon" />
+    <Icon name="moon" class="theme-dark-icon" />
+  </span>
+</div>
+
+<style>
+  .theme-switcher {
+    position: relative;
+    display: inline-flex;
+    vertical-align: middle;
+  }
+
+  .theme-switcher :global(.label-icon) {
+    visibility: hidden;
+  }
+
+  .resolved-theme-icon {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+    color: var(--sl-color-text);
+  }
+
+  .resolved-theme-icon :global(svg) {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .resolved-theme-icon :global(.theme-light-icon) {
+    display: none;
+  }
+
+  :global(:root[data-theme='light']) .resolved-theme-icon :global(.theme-light-icon) {
+    display: block;
+  }
+
+  :global(:root[data-theme='light']) .resolved-theme-icon :global(.theme-dark-icon) {
+    display: none;
+  }
+</style>

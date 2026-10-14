@@ -1,0 +1,151 @@
+---
+title: 如何更换 Gemini 背景图片
+description: "使用免费的 Gemini Power Kit 扩展为 Google Gemini 设置自己的背景图片，学习上传壁纸、拖图换肤及保持聊天内容清晰的实用技巧。"
+head:
+  - tag: meta
+    attrs:
+      property: og:image
+      content: https://gpk.ronktsang.com/og/gemini-background.jpg
+  - tag: meta
+    attrs:
+      property: og:image:alt
+      content: Gemini chat interfaces with custom snow, plant, and sports wallpapers
+  - tag: meta
+    attrs:
+      name: twitter:image
+      content: https://gpk.ronktsang.com/og/gemini-background.jpg
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: |
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "如何更换 Gemini 背景图片",
+        "description": "使用免费的 Gemini Power Kit 扩展为 Google Gemini 设置自己的背景图片，学习上传壁纸、拖图换肤及保持聊天内容清晰的实用技巧。",
+        "url": "https://gpk.ronktsang.com/zh-cn/tips/change-gemini-background/",
+        "image": "https://gpk.ronktsang.com/og/gemini-background.jpg",
+        "inLanguage": "zh-CN",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Gemini Power Kit",
+          "url": "https://gpk.ronktsang.com/"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "Gemini Power Kit",
+          "applicationCategory": "BrowserApplication",
+          "operatingSystem": "Chrome, Firefox, Chromium-based browsers"
+        }
+      }
+---
+
+import { Image } from 'astro:assets';
+import { LinkButton, Steps } from '@astrojs/starlight/components';
+import wallpaperExamples from '../../../../assets/features/theme-wallpaper.jpg';
+
+想给 <strong>Google Gemini 聊天界面</strong>换个样子？先选一张喜欢的图片。把图片拖到 Gemini 页面上，就能一起换好背景和配色；之后只需按自己的阅读习惯微调。
+
+先安装免费的 Gemini Power Kit 扩展，再打开 [Gemini](https://gemini.google.com)。如果安装时 Gemini 已经打开，请先刷新该标签页，再开始尝试。
+
+<div class="sl-flex" style="flex-wrap: wrap; gap: 0.75rem; margin-block: 1.25rem;">
+  <LinkButton href="https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn" icon="external">免费安装到 Chrome</LinkButton>
+  <LinkButton href="https://addons.mozilla.org/en-US/firefox/addon/gemini-power-kit/" variant="secondary" icon="external">安装到 Firefox</LinkButton>
+</div>
+
+## 最快换肤的方式：一个动作换肤
+
+不用先选壁纸，再挑配色。<strong>Theme Bloom</strong> 可以在一次拖放中帮你完成这两件事。
+
+<Steps>
+1. <strong>在电脑上选一张图片。</strong>可以先用一张喜欢的风景照。
+2. <strong>把图片拖到 Gemini 输入框以外的区域。</strong>避开输入框和附件区域，避免图片被当作提示词附件。
+3. <strong>看到 Theme Bloom 拖放提示后松手。</strong>图片会成为壁纸，扩展会选出最接近的颜色预设，并从松手的位置展开新主题。
+</Steps>
+
+<video src="/theme-bloom.mp4" controls playsInline preload="metadata" class="release-video" aria-label="Theme Bloom 演示：将图片拖到 Gemini 输入框外，应用背景与匹配的主题颜色"></video>
+
+*一次图片拖放 —— Theme Bloom 同时应用壁纸和匹配的颜色预设。*
+
+Theme Bloom 默认开启。如果之前关闭过，请进入 <strong>Gemini Power Kit → Theme → Interactions → Theme Bloom</strong> 重新开启。找不到扩展设置入口？[快速开始指南](/zh-cn/guide/quick-start/)中有位置说明。
+
+支持单张 PNG、JPG、WebP 或 AVIF 图片，大小不超过 <strong>10 MB</strong>，像素总数不超过 <strong>4000 万</strong>。拖放后没有变化时，可以按[下方的排查步骤](#为什么拖放图片后背景没有变化)检查。
+
+## 不想拖放，能直接选择图片吗？
+
+可以。如果更习惯从文件窗口中选图，使用壁纸设置即可：
+
+<Steps>
+1. <strong>在 Gemini 中打开 Gemini Power Kit 设置。</strong>点击左侧栏底部、Gemini 设置旁的拼图入口。
+2. <strong>进入 Theme → Wallpaper，点击 Select File。</strong>选择自己的图片，也可以拖入这里的壁纸上传区域。
+3. <strong>打开一段对话，看看效果。</strong>上传后壁纸会自动开启，设置会自动保存。如果图片位置或文字清晰度不合适，再按下方建议调整。
+</Steps>
+
+这种方式只更换壁纸，不会像 Theme Bloom 那样自动匹配配色。想自己选强调色时，可以在 <strong>Theme → Colors</strong> 中选择颜色预设。
+
+## 背景喜欢，但文字看不清怎么办？
+
+先打开一段真实对话，再开始调整。Gemini 空白首页上好看的图片，放在多条消息背后可能会显得杂乱。
+
+- <strong>图片细节抢走了注意力？</strong>逐渐提高 <strong>Blur</strong>，也可以尝试开启 <strong>Message Glass Effect</strong>，让消息与壁纸之间的层次更清楚。
+- <strong>左侧的对话标题融进了背景？</strong>开启 <strong>Sidebar readability scrim</strong>，再调整强度，直到标题清晰。
+- <strong>人脸或其他主体被裁掉了？</strong>用 <strong>Background Position</strong> 调整位置，让想保留的部分露出来。
+- <strong>整个页面太亮或太暗？</strong>在 <strong>Appearance</strong> 中切换 <strong>Light</strong> 或 <strong>Dark</strong>，再检查同一段对话。
+
+<Image src={wallpaperExamples} alt="Google Gemini 中的雪林壁纸、植物背景和运动主题背景" class="feature-image feature-image-full" />
+
+*背景效果示例 —— 雪景、植物和运动主题。选图时，可以比较聊天内容背后的图片细节有多复杂。*
+
+不知道先选什么图片？可以从细节柔和的风景照开始。例如雪林图片，可以先试浅色模式、居中或靠右的位置、少量模糊和侧栏可读性层，再根据实际效果微调，不必一次调整所有选项。
+
+需要查找全部控件、范围和默认值时，再查看 [Theme 设置说明](/zh-cn/features/theme/)。
+
+## 想暂时恢复纯色背景？
+
+不用删除图片。进入 <strong>Theme → Wallpaper</strong>，关闭 <strong>Enable wallpaper</strong>，即可隐藏壁纸并保留它。重新上传图片或使用 Theme Bloom 时，壁纸会再次开启。
+
+如果想彻底移除已保存的图片，使用壁纸旁的删除按钮。删除后壁纸也会关闭；以后想再用这张图片，需要重新上传。
+
+Theme Bloom 还会改变颜色预设。关闭壁纸不会撤销这次配色变化；如果也想调整颜色，请在 <strong>Theme → Colors</strong> 中重新选择预设。
+
+## 操作没有成功？先看这里
+
+### 为什么图片变成了提示词附件？
+
+图片被拖进了 Gemini 输入框或附件区域。使用 Theme Bloom 时，请避开这些区域，看到 Theme Bloom 拖放提示后再松手。如果原本就是想把图片发给 Gemini，继续拖到输入框中即可。
+
+### 为什么拖放图片后，背景没有变化？
+
+可以按顺序检查：
+
+1. 如果刚安装扩展，先刷新 Gemini，并等待页面加载完成。
+2. 确认 <strong>Theme → Interactions → Theme Bloom</strong> 已开启。
+3. 从电脑中拖入一张支持的图片文件，确认它在 <strong>10 MB / 4000 万像素</strong>限制内，并避开输入框和附件区域。
+
+如果拖放仍然没有成功，可以使用 <strong>Theme → Wallpaper → Select File</strong> 选择图片，用另一种方式应用背景。
+
+### 可以把 GIF 或视频设为壁纸吗？
+
+壁纸支持 PNG、JPG、WebP 和 AVIF 图片，不支持 GIF 或视频文件。可以改用这些格式的静态图片。
+
+### 更换 Gemini 背景需要付费吗？
+
+不需要。Gemini Power Kit 的壁纸和主题设置免费使用。
+
+### 壁纸会上传到开发者服务器吗？
+
+不会。壁纸保存在你的浏览器中，Gemini Power Kit 不会将它发送到开发者服务器。详情请查看[隐私政策](/zh-cn/privacy-policy/)。
+
+### 这会修改 Gemini 生成的照片背景吗？
+
+这里更换的是 Gemini 聊天界面背后的背景。想修改生成照片中的背景，需要使用 Gemini 的图片编辑流程。
+
+<div class="sl-flex" style="flex-wrap: wrap; gap: 0.75rem; margin-block: 1.25rem;">
+  <LinkButton href="https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn" icon="external">试试拖一张图片换肤</LinkButton>
+  <LinkButton href="/zh-cn/features/theme/" variant="secondary">查看全部 Theme 设置</LinkButton>
+</div>
+
+## 继续探索
+
+- [浏览技巧与教程](/zh-cn/tips/)
+- [调整聊天和输入框宽度](/zh-cn/features/chat-layout/)
