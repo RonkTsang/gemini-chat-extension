@@ -74,6 +74,14 @@ export default defineConfig({
 					],
 				},
 				{
+					label: 'Tips & Tutorials',
+					translations: { 'zh-CN': '技巧与教程' },
+					items: [
+						{ label: 'Browse Tutorials', translations: { 'zh-CN': '浏览教程' }, slug: 'tips' },
+						{ label: 'Change Gemini Background', translations: { 'zh-CN': '更换 Gemini 背景' }, slug: 'tips/change-gemini-background' },
+					],
+				},
+				{
 					label: 'Support',
 					translations: { 'zh-CN': '支持' },
 					items: [

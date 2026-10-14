@@ -1,0 +1,151 @@
+---
+title: How to Change Your Gemini Background
+description: "Learn how to change your Google Gemini background with a custom wallpaper using the free Gemini Power Kit extension, plus practical tips for readable chats."
+head:
+  - tag: meta
+    attrs:
+      property: og:image
+      content: https://gpk.ronktsang.com/og/gemini-background.jpg
+  - tag: meta
+    attrs:
+      property: og:image:alt
+      content: Gemini chat interfaces with custom snow, plant, and sports wallpapers
+  - tag: meta
+    attrs:
+      name: twitter:image
+      content: https://gpk.ronktsang.com/og/gemini-background.jpg
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: |
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "How to Change Your Gemini Background",
+        "description": "Learn how to change your Google Gemini background with a custom wallpaper using the free Gemini Power Kit extension, plus practical tips for readable chats.",
+        "url": "https://gpk.ronktsang.com/tips/change-gemini-background/",
+        "image": "https://gpk.ronktsang.com/og/gemini-background.jpg",
+        "inLanguage": "en",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Gemini Power Kit",
+          "url": "https://gpk.ronktsang.com/"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "Gemini Power Kit",
+          "applicationCategory": "BrowserApplication",
+          "operatingSystem": "Chrome, Firefox, Chromium-based browsers"
+        }
+      }
+---
+
+import { Image } from 'astro:assets';
+import { LinkButton, Steps } from '@astrojs/starlight/components';
+import wallpaperExamples from '../../../assets/features/theme-wallpaper.jpg';
+
+Want to give **Google Gemini's chat interface** a different look? Start with an image you like. Drop it onto Gemini to change both the wallpaper and the color preset, then adjust only what needs attention.
+
+Install the free Gemini Power Kit extension first, then open [Gemini](https://gemini.google.com). If Gemini was already open when you installed it, refresh that tab before you try.
+
+<div class="sl-flex" style="flex-wrap: wrap; gap: 0.75rem; margin-block: 1.25rem;">
+  <LinkButton href="https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn" icon="external">Add to Chrome — Free</LinkButton>
+  <LinkButton href="https://addons.mozilla.org/en-US/firefox/addon/gemini-power-kit/" variant="secondary" icon="external">Get for Firefox</LinkButton>
+</div>
+
+## The Fastest Way to Change Your Theme: One Image Drop
+
+You do not need to pick a wallpaper and a matching color preset separately. **Theme Bloom** does both in one drop.
+
+<Steps>
+1. **Pick one image on your computer.** A landscape photo is a good place to start.
+2. **Drag it onto Gemini, outside the prompt box.** Avoid the prompt box and its attachment area, so Gemini does not treat the image as a prompt attachment.
+3. **Release when the Theme Bloom drop cue appears.** The image becomes your wallpaper, the closest color preset is selected, and the new look spreads from the drop point.
+</Steps>
+
+<video src="/theme-bloom.mp4" controls playsInline preload="metadata" class="release-video" aria-label="Theme Bloom demonstration: dropping an image outside Gemini's prompt box to apply a wallpaper and matching colors"></video>
+
+*One image drop — Theme Bloom applies the wallpaper and a matching color preset together.*
+
+Theme Bloom is on by default. If you have turned it off, enable it in **Gemini Power Kit → Theme → Interactions → Theme Bloom**. The [Quick Start guide](/guide/quick-start/#2-open-gemini-power-kit-settings) shows where to find the extension settings.
+
+Use one PNG, JPG, WebP, or AVIF image up to **10 MB** and **40 megapixels**. If nothing happens, follow the [checks below](#why-does-dragging-an-image-not-change-the-background).
+
+## Prefer to Choose a File Instead of Dragging?
+
+Use the wallpaper settings when you prefer a file picker:
+
+<Steps>
+1. **Open Gemini Power Kit's settings in Gemini.** Select the puzzle-piece entry beside Gemini's settings at the bottom of the sidebar.
+2. **Go to Theme → Wallpaper and choose Select File.** Pick your image, or drop it into the wallpaper upload area.
+3. **Check the result in a conversation.** Wallpaper turns on automatically, and your settings are saved. If the picture or text needs adjustment, use the tips below.
+</Steps>
+
+This route changes the wallpaper without Theme Bloom's automatic color matching. Choose a preset under **Theme → Colors** if you want to pick the accent color yourself.
+
+## Like the Background, but Find the Text Hard to Read?
+
+Open a real conversation before adjusting anything. A picture that looks good on the empty home screen may feel busier behind several messages.
+
+- **The picture competes with messages?** Increase **Blur** gradually. Try **Message Glass Effect** to give messages more separation from the wallpaper.
+- **Sidebar titles blend into the background?** Enable **Sidebar readability scrim**, then adjust its intensity until the titles are clear.
+- **A face or another subject is cut off?** Change **Background Position** to keep the part you care about visible.
+- **The page feels too bright or too dark?** Try **Light** or **Dark** under **Appearance**, then check the same conversation again.
+
+<Image src={wallpaperExamples} alt="Google Gemini with a snowy forest wallpaper, a plant background, and a sports-themed background" class="feature-image feature-image-full" />
+
+*Background examples — snow, plants, and a sports theme. Compare how much detail sits behind the chat when choosing your own image.*
+
+Not sure which image to start with? Try a softly detailed landscape. For a snowy forest photo, start with Light mode, a center or right anchor, a little blur, and the sidebar readability layer. Adjust from there rather than changing every control at once.
+
+See the [Theme settings reference](/features/theme/) when you need all controls, ranges, and defaults.
+
+## Want to Go Back to a Plain Background?
+
+You can hide the wallpaper without deleting it. Open **Theme → Wallpaper** and switch **Enable wallpaper** off. Uploading another image or using Theme Bloom will enable it again.
+
+To remove the saved image entirely, use the delete control beside the wallpaper. Deletion also turns wallpaper off; you will need to upload the file again to use it later.
+
+Theme Bloom changes the color preset too. Turning wallpaper off does not undo that color choice. Choose a preset under **Theme → Colors** if you also want to change the colors.
+
+## Something Did Not Work? Start Here
+
+### Why did my image become a prompt attachment?
+
+You dropped it inside Gemini's prompt box or attachment area. For Theme Bloom, avoid those areas and release when the Theme Bloom cue appears. To send an image to Gemini as part of a prompt, keep using the prompt box as usual.
+
+### Why does dragging an image not change the background?
+
+Check these in order:
+
+1. If you just installed the extension, refresh Gemini and wait for the page to finish loading.
+2. Make sure **Theme → Interactions → Theme Bloom** is on.
+3. Drag one supported image file from your computer, within the **10 MB / 40 megapixel** limits, and drop it outside the prompt box and attachment area.
+
+If dragging still does not work, use **Theme → Wallpaper → Select File** to apply the background another way.
+
+### Can I use a GIF or video as my wallpaper?
+
+The wallpaper upload supports PNG, JPG, WebP, and AVIF images. GIF and video files are not supported. Try a still image in one of the supported formats.
+
+### Is changing the Gemini background free?
+
+Yes. Gemini Power Kit's wallpaper and theme controls are free.
+
+### Is my wallpaper uploaded to the developer?
+
+No. It is stored in your browser. Gemini Power Kit does not send it to developer-controlled servers. Read the [privacy policy](/privacy-policy/) for details.
+
+### Will this change the background of a photo generated by Gemini?
+
+These steps change the background behind Gemini's chat interface. To edit a generated photo, use Gemini's image-editing workflow instead.
+
+<div class="sl-flex" style="flex-wrap: wrap; gap: 0.75rem; margin-block: 1.25rem;">
+  <LinkButton href="https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn" icon="external">Try your first image drop</LinkButton>
+  <LinkButton href="/features/theme/" variant="secondary">Explore all Theme settings</LinkButton>
+</div>
+
+## Keep Exploring
+
+- [Browse Tips & Tutorials](/tips/)
+- [Adjust chat and input widths](/features/chat-layout/)
