@@ -40,7 +40,8 @@ export default defineConfig({
       version: version,
       default_locale: "en",
       permissions: [
-        "storage"
+        "storage",
+        "activeTab"
       ],
       optional_permissions: [
         "notifications",
