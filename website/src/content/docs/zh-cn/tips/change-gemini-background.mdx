@@ -1,6 +1,6 @@
 ---
-title: 如何更换 Gemini 背景图片
-description: "使用免费的 Gemini Power Kit 扩展为 Google Gemini 设置自己的背景图片，学习上传壁纸、拖图换肤及保持聊天内容清晰的实用技巧。"
+title: 如何更换 Gemini 聊天背景与主题
+description: "为 Google Gemini 聊天更换背景壁纸与主题颜色：用 Theme Bloom 拖放图片一次应用背景和配色，或从文件设置壁纸并调整可读性。"
 head:
   - tag: meta
     attrs:
@@ -14,6 +14,10 @@ head:
     attrs:
       name: twitter:image
       content: https://gpk.ronktsang.com/og/gemini-background.jpg
+  - tag: meta
+    attrs:
+      name: twitter:image:alt
+      content: Gemini chat interfaces with custom snow, plant, and sports wallpapers
   - tag: script
     attrs:
       type: application/ld+json
@@ -21,8 +25,8 @@ head:
       {
         "@context": "https://schema.org",
         "@type": "TechArticle",
-        "headline": "如何更换 Gemini 背景图片",
-        "description": "使用免费的 Gemini Power Kit 扩展为 Google Gemini 设置自己的背景图片，学习上传壁纸、拖图换肤及保持聊天内容清晰的实用技巧。",
+        "headline": "如何更换 Gemini 聊天背景与主题",
+        "description": "为 Google Gemini 聊天更换背景壁纸与主题颜色：用 Theme Bloom 拖放图片一次应用背景和配色，或从文件设置壁纸并调整可读性。",
         "url": "https://gpk.ronktsang.com/zh-cn/tips/change-gemini-background/",
         "image": "https://gpk.ronktsang.com/og/gemini-background.jpg",
         "inLanguage": "zh-CN",
@@ -44,7 +48,7 @@ import { Image } from 'astro:assets';
 import { LinkButton, Steps } from '@astrojs/starlight/components';
 import wallpaperExamples from '../../../../assets/features/theme-wallpaper.jpg';
 
-想给 <strong>Google Gemini 聊天界面</strong>换个样子？先选一张喜欢的图片。把图片拖到 Gemini 页面上，就能一起换好背景和配色；之后只需按自己的阅读习惯微调。
+想给 Google Gemini 聊天设置自定义壁纸？用 Theme Bloom 将图片拖到页面即可同时应用背景与匹配配色，再按阅读需要微调主题；也可以从文件选择壁纸。
 
 先安装免费的 Gemini Power Kit 扩展，再打开 [Gemini](https://gemini.google.com)。如果安装时 Gemini 已经打开，请先刷新该标签页，再开始尝试。
 
@@ -53,7 +57,7 @@ import wallpaperExamples from '../../../../assets/features/theme-wallpaper.jpg';
   <LinkButton href="https://addons.mozilla.org/en-US/firefox/addon/gemini-power-kit/" variant="secondary" icon="external">安装到 Firefox</LinkButton>
 </div>
 
-## 最快换肤的方式：一个动作换肤
+## 拖放一张图片，更换 Gemini 背景与主题
 
 不用先选壁纸，再挑配色。<strong>Theme Bloom</strong> 可以在一次拖放中帮你完成这两件事。
 
@@ -71,9 +75,9 @@ Theme Bloom 默认开启。如果之前关闭过，请进入 <strong>Gemini Powe
 
 支持单张 PNG、JPG、WebP 或 AVIF 图片，大小不超过 <strong>10 MB</strong>，像素总数不超过 <strong>4000 万</strong>。拖放后没有变化时，可以按[下方的排查步骤](#为什么拖放图片后背景没有变化)检查。
 
-## 不想拖放，能直接选择图片吗？
+## 从文件设置 Gemini 聊天壁纸
 
-可以。如果更习惯从文件窗口中选图，使用壁纸设置即可：
+如果更习惯从文件窗口中选图，使用壁纸设置即可：
 
 <Steps>
 1. <strong>在 Gemini 中打开 Gemini Power Kit 设置。</strong>点击左侧栏底部、Gemini 设置旁的拼图入口。

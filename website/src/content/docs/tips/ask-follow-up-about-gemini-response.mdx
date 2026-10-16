@@ -1,0 +1,101 @@
+---
+title: How to Quote a Gemini Response and Ask a Follow-up
+description: "Quote selected text in a Gemini response, choose Ask Gemini, and write a focused follow-up. Reuse saved prompts with Gemini Power Kit's Quick Follow-up."
+head:
+  - tag: meta
+    attrs:
+      property: og:image
+      content: https://gpk.ronktsang.com/og/quick-follow-up.png
+  - tag: meta
+    attrs:
+      property: og:image:alt
+      content: Quick Follow-up menu beside selected text in a Gemini response
+  - tag: meta
+    attrs:
+      name: twitter:image
+      content: https://gpk.ronktsang.com/og/quick-follow-up.png
+  - tag: meta
+    attrs:
+      name: twitter:image:alt
+      content: Quick Follow-up menu beside selected text in a Gemini response
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: |
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "How to Quote a Gemini Response and Ask a Follow-up",
+        "description": "Quote selected text in a Gemini response, choose Ask Gemini, and write a focused follow-up. Reuse saved prompts with Gemini Power Kit's Quick Follow-up.",
+        "url": "https://gpk.ronktsang.com/tips/ask-follow-up-about-gemini-response/",
+        "image": "https://gpk.ronktsang.com/og/quick-follow-up.png",
+        "inLanguage": "en",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Gemini Power Kit",
+          "url": "https://gpk.ronktsang.com/"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "Gemini Power Kit",
+          "applicationCategory": "BrowserApplication",
+          "operatingSystem": "Chrome, Firefox, Chromium-based browsers"
+        }
+      }
+---
+
+import { Image } from 'astro:assets';
+import { LinkButton, Steps } from '@astrojs/starlight/components';
+import quickFollowDemo from '../../../assets/features/quick-follow-up/quick-follow-up.gif';
+import quotedInput from '../../../assets/features/quick-follow-up/input-ui.png';
+
+Want to ask a follow-up about one sentence in a long Gemini answer? **Quick Follow-up** in Gemini Power Kit lets you quote selected text and reply to that passage without copying and pasting. Highlight the words, choose **Ask Gemini**, and write your question with the quote visible above the prompt box.
+
+Install the free Gemini Power Kit extension first, then open [Gemini](https://gemini.google.com). If Gemini was already open when you installed it, refresh that tab before you try.
+
+<div class="sl-flex" style="flex-wrap: wrap; gap: 0.75rem; margin-block: 1.25rem;">
+  <LinkButton href="https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn" icon="external">Add to Chrome — Free</LinkButton>
+  <LinkButton href="https://addons.mozilla.org/en-US/firefox/addon/gemini-power-kit/" variant="secondary" icon="external">Get for Firefox</LinkButton>
+</div>
+
+## Select text and choose Ask Gemini
+
+<Steps>
+1. **Select the words you mean in a Gemini response.** Highlight a sentence or paragraph in the answer. The Quick Follow-up capsule appears beside the selection.
+2. **Choose Ask Gemini.** Gemini Power Kit places your selection in a quote chip above the prompt box and focuses the box for your question.
+3. **Check the quote and type your question.** For example, after selecting a sentence about a project's timeline, ask: “What assumption makes this timeline realistic?” You can also ask how the selected point compares with another option in the answer.
+4. **Send your question.** Ask Gemini prepares the quoted context, but you decide what to write and when to send it.
+</Steps>
+
+<img src={quickFollowDemo.src} width={quickFollowDemo.width} height={quickFollowDemo.height} loading="lazy" decoding="async" alt="Text highlighted in a Gemini response and the Quick Follow-up capsule appearing beside it with Ask Gemini and saved prompt icons" class="feature-image feature-image-full" />
+
+*Entry: select text in Gemini's reply, then choose Ask Gemini from the capsule beside your selection.*
+
+<Image src={quotedInput} alt="Selected words shown in a quote chip above the Gemini prompt box, with a close button at the right" class="feature-image feature-image-full" />
+
+*Result: the quote chip shows which part of the answer your next question refers to.*
+
+If you selected the wrong passage, click the quote chip's **×** before sending, then select the text you want to discuss.
+
+## Reuse follow-up prompts with saved skills
+
+When you often ask for the same treatment of selected text, add a reusable action. Open Gemini Power Kit’s puzzle-piece entry at the bottom of Gemini’s sidebar, go to **Quick Follow-up**, and make sure **Enable Quick Follow-up** is on. Under **Skill Management**, choose **Add Skill**. Give it an icon and name. In **Prompt Content**, keep the **Selected Text** chip in place, write “Explain” before it and “step by step” after it, then save the skill.
+
+Now select text in a Gemini response and choose that skill's icon in the capsule. The selected words fill the placeholder, and the completed prompt **sends automatically**. Use **Ask Gemini** when you want to write or revise the question before sending; choose a saved skill when its wording is already right for the task. The capsule can scroll horizontally to reveal more saved icons.
+
+If the capsule does not appear after you select response text, check **Quick Follow-up → Enable Quick Follow-up** in Gemini Power Kit settings. For more on editing and ordering skills, see the [Quick Follow-up feature guide](/features/quick-follow-up/).
+
+## Questions about quoting Gemini responses
+
+### How do I quote only part of a Gemini response?
+
+Highlight just the sentence or paragraph you want to discuss, then choose **Ask Gemini**. Select a focused passage: long quote previews are shortened, and very long selections may also be shortened in the context sent to Gemini. This workflow quotes text in Gemini's responses; it does not select content inside an image or PDF attachment.
+
+### Does Ask Gemini send my follow-up automatically?
+
+**Ask Gemini** attaches the quote and leaves the question for you to write and send. A saved skill runs its preset prompt and sends it automatically when you click its icon. Choose the action that matches whether you want to compose a question or reuse a finished prompt.
+
+## Keep exploring
+
+- [Browse Tips & Tutorials](/tips/)
+- [Navigate a long Gemini chat with Chat Outline](/tips/find-earlier-gemini-prompts/)

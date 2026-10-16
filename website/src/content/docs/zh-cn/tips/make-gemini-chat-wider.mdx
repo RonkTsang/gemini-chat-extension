@@ -1,0 +1,96 @@
+---
+title: 如何加宽 Gemini 聊天窗口，方便查看代码和表格
+description: "加宽 Google Gemini 聊天窗口或使用页面全部可用宽度，方便查看代码和表格；还可用 Gemini Power Kit 分别调整聊天区和输入框。"
+head:
+  - tag: meta
+    attrs:
+      property: og:image
+      content: https://gpk.ronktsang.com/og/chat-layout.png
+  - tag: meta
+    attrs:
+      property: og:image:alt
+      content: Gemini Power Kit Chat layout 面板，可调整聊天区与输入框宽度
+  - tag: meta
+    attrs:
+      name: twitter:image
+      content: https://gpk.ronktsang.com/og/chat-layout.png
+  - tag: meta
+    attrs:
+      name: twitter:image:alt
+      content: Gemini Power Kit Chat layout 面板，可调整聊天区与输入框宽度
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: |
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "如何加宽 Gemini 聊天窗口，方便查看代码和表格",
+        "description": "加宽 Google Gemini 聊天窗口或使用页面全部可用宽度，方便查看代码和表格；还可用 Gemini Power Kit 分别调整聊天区和输入框。",
+        "url": "https://gpk.ronktsang.com/zh-cn/tips/make-gemini-chat-wider/",
+        "image": "https://gpk.ronktsang.com/og/chat-layout.png",
+        "inLanguage": "zh-CN",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Gemini Power Kit",
+          "url": "https://gpk.ronktsang.com/"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "Gemini Power Kit",
+          "applicationCategory": "BrowserApplication",
+          "operatingSystem": "Chrome, Firefox, Chromium-based browsers"
+        }
+      }
+---
+
+import { Image } from 'astro:assets';
+import { LinkButton, Steps } from '@astrojs/starlight/components';
+import chatLayoutPanel from '../../../../assets/features/chat-layout.png';
+
+阅读代码、对照表格或查看长回复时，Gemini 对话区可能显得太窄。<strong>Chat layout（聊天布局）</strong>可以加宽对话区域，也可以让输入框跟随聊天区，输入长问题时更自在。
+
+先安装免费的 Gemini Power Kit 扩展，再打开 [Gemini](https://gemini.google.com)。如果安装时 Gemini 已经打开，请先刷新该标签页，再开始尝试。
+
+<div class="sl-flex" style="flex-wrap: wrap; gap: 0.75rem; margin-block: 1.25rem;">
+  <LinkButton href="https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn" icon="external">免费安装到 Chrome</LinkButton>
+  <LinkButton href="https://addons.mozilla.org/en-US/firefox/addon/gemini-power-kit/" variant="secondary" icon="external">安装到 Firefox</LinkButton>
+</div>
+
+## 四步加宽 Gemini 聊天窗口
+
+<Steps>
+1. <strong>打开一段 Gemini 对话。</strong> 在顶栏右上方点击<strong>聊天布局（Chat layout）</strong>图标，它就在<strong>主题（Theme）</strong>图标左侧。面板会在快捷入口下方打开。
+2. **调整聊天宽度（Chat Width）。** 选择 **%**，拖动滑块并观察对话区。可以先从 `80%` 试起，再按屏幕大小和阅读习惯微调。更改会即时应用在当前页面。
+3. <strong>检查输入框宽度。</strong> <strong>同步聊天宽度和输入框宽度（Sync Chat Width and Input Width）</strong>默认开启，因此输入框会跟随聊天区。想让两者对齐时保持开启即可。
+4. <strong>需要时恢复默认。</strong> 将某项宽度切换为<strong>默认（Default）</strong>，即可恢复 Gemini 原有的最大宽度。
+</Steps>
+
+<Image src={chatLayoutPanel} alt="Chat layout 快捷面板显示 Chat Width、Input Width、同步控制与用户消息选项" class="feature-image feature-image-full" />
+
+*在面板中选择聊天区和输入框的宽度模式，并观察滑块更改后的页面效果。*
+
+## Gemini 聊天区域可以占满宽度吗？
+
+可以。将<strong>聊天宽度（Chat Width）</strong>设为 **%** 并调整到 `100%`，即可使用 Gemini 页面当前可用的最大宽度。开启<strong>同步聊天宽度和输入框宽度（Sync Chat Width and Input Width）</strong>时，输入框也会跟随加宽。Gemini 侧栏和页面控件仍会占用空间，因此这里的“占满宽度”指页面可用宽度，不是整个浏览器窗口。
+
+<strong>%</strong>按页面比例设置最大宽度，<strong>px</strong>则设置固定的最大宽度。可设置范围为 `35%`–`100%` 或 `700px`–`2000px`。像素宽度仍受浏览器窗口可用空间限制；窗口较窄时，设置为 1600px 也不会超出视口。建议在实际使用的屏幕上调整，不必一味选最大值。
+
+加宽后，代码和表格会有更多横向空间；特别宽的内容仍可能需要单独横向滚动。此设置不会改变字号或行距。
+
+## 让输入框比聊天区窄一些
+
+如果喜欢宽一点的回答区域，但希望输入框更集中，可以关闭<strong>同步聊天宽度和输入框宽度</strong>，分别调整<strong>聊天宽度</strong>和<strong>输入框宽度</strong>。例如聊天区先试 `80%`，再将输入框设得窄一些。设置会保存下来，之后打开 Gemini 仍会继续应用。
+
+在 <strong>用户消息</strong>中，<strong>对齐（Alignment）</strong>可以将自己的消息靠左或靠右显示。开启 <strong>允许消息占满宽度（Allow full-width messages）</strong>后，较长的提示词可以使用更多聊天宽度，短消息仍保持自然尺寸。<strong>聊天宽度</strong>控制的是对话区最大宽度；更多选项见[Chat layout 功能指南](/zh-cn/features/chat-layout/)。
+
+## 隐藏快捷入口后在哪里调整？
+
+点击 Gemini 侧栏底部的 Gemini Power Kit 拼图入口，再进入<strong>主题 → 聊天布局</strong>。即使顶栏快捷入口被隐藏，这里的设置仍然可用。若要恢复快捷入口，进入<strong>设置 → 增强功能 → 顶栏自定义</strong>，开启<strong>显示聊天布局快捷方式</strong>。
+
+如果想恢复原始宽度，可将<strong>聊天宽度</strong>和<strong>输入框宽度</strong>都设为<strong>默认</strong>。两项同步时，将其中一项设为默认会同时恢复两项。之后也可以再次加宽对话区，不会影响主题或壁纸。
+
+## 继续探索
+
+- [浏览技巧与教程](/zh-cn/tips/)
+- [更换 Gemini 聊天背景与主题](/zh-cn/tips/change-gemini-background/)

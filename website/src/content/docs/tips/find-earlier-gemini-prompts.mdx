@@ -1,0 +1,120 @@
+---
+title: How to Navigate Long Gemini Chats with Chat Outline
+description: "Navigate long Gemini chats with Chat Outline, a clickable table of contents for the current conversation's prompts, images, videos, and uploaded files."
+head:
+  - tag: meta
+    attrs:
+      property: og:image
+      content: https://gpk.ronktsang.com/og/find-earlier-gemini-prompts.png
+  - tag: meta
+    attrs:
+      property: og:image:alt
+      content: Gemini conversation with Chat Outline prompt list and an attachment preview
+  - tag: meta
+    attrs:
+      name: twitter:image
+      content: https://gpk.ronktsang.com/og/find-earlier-gemini-prompts.png
+  - tag: meta
+    attrs:
+      name: twitter:image:alt
+      content: Gemini conversation with Chat Outline prompt list and an attachment preview
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: |
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "How to Navigate Long Gemini Chats with Chat Outline",
+        "description": "Navigate long Gemini chats with Chat Outline, a clickable table of contents for the current conversation's prompts, images, videos, and uploaded files.",
+        "url": "https://gpk.ronktsang.com/tips/find-earlier-gemini-prompts/",
+        "image": "https://gpk.ronktsang.com/og/find-earlier-gemini-prompts.png",
+        "inLanguage": "en",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Gemini Power Kit",
+          "url": "https://gpk.ronktsang.com/"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "Gemini Power Kit",
+          "applicationCategory": "BrowserApplication",
+          "operatingSystem": "Chrome, Firefox, Chromium-based browsers"
+        }
+      }
+---
+
+import { Image } from 'astro:assets';
+import { LinkButton, Steps } from '@astrojs/starlight/components';
+import chatOutlineInterfaceImg from '../../../assets/features/chat-outline/interface.png';
+
+See the structure of a long Gemini chat without scrolling through it message by message. **Chat Outline lists the current conversation's prompts and attachments in a clickable table of contents.** Browse questions, image thumbnails, video covers, and file details, then select an entry to jump to its message and answer.
+
+Install the free Gemini Power Kit extension first, then open [Gemini](https://gemini.google.com). If Gemini was already open when you installed it, refresh that tab before you try.
+
+<div class="sl-flex" style="flex-wrap: wrap; gap: 0.75rem; margin-block: 1.25rem;">
+  <LinkButton href="https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn" icon="external">Add to Chrome — Free</LinkButton>
+  <LinkButton href="https://addons.mozilla.org/en-US/firefox/addon/gemini-power-kit/" variant="secondary" icon="external">Get for Firefox</LinkButton>
+</div>
+
+## Use Chat Outline as a Gemini table of contents
+
+<Steps>
+1. **Open a Gemini conversation with several prompts.** Chat Outline works within the conversation you have open.
+2. **Move your pointer over the outline icon (stacked horizontal lines) in the upper-left corner of the conversation area.** The prompt list appears.
+3. **Browse the outline and select a prompt or attachment entry.** Gemini scrolls back to the original message; read its response just below it.
+</Steps>
+
+<Image src={chatOutlineInterfaceImg} alt="Chat Outline's list of Gemini prompts beside an attachment icon and an image preview" class="feature-image feature-image-full" />
+
+*The stacked-lines icon in the upper-left corner opens Chat Outline. The prompt and attachment list appears below it, while the panel on the right previews an image from the hovered entry.*
+
+Suppose you asked Gemini to compare two options, then asked several follow-up questions. To review the original comparison, find your **“Compare these two options”** prompt in Chat Outline and click it. Read the answer below it and continue comparing without asking Gemini to repeat the earlier answer.
+
+## Remember the picture or file, but not the question?
+
+You do not have to remember the exact words you used. Use the attachment details to recognize the message:
+
+- **Images:** spot the thumbnail beside a prompt, then hover over the entry for a larger preview. This helps you tell similar screenshots apart.
+- **Videos:** use the cover image and video marker to recognize an upload. Hover over the entry to see a larger cover preview.
+- **PDFs and other files:** identify the file icon, then hover over the entry to check the file name and full prompt.
+
+Even a message with attachments and no written question has an outline entry, identified by its file name, attachment labels, or count. Click the entry to return to the original message and review the attachment and Gemini's answer there.
+
+For example, if you uploaded several screenshots and repeatedly asked Gemini “Explain this,” use the thumbnails and previews to find the right screenshot without remembering which question accompanied it.
+
+## Keep the outline open while you work
+
+The outline normally appears while you point to its icon and hides when you move away. To keep it visible as you read and scroll, click the outline icon once to pin it. Click the same icon again to unpin it and return to hover behavior.
+
+## Troubleshooting
+
+### Where is Chat Outline, and how do I open it?
+
+Open a Gemini conversation. In the upper-left corner of the area showing your messages and Gemini's replies, find the outline icon made of horizontal lines. Hover over it to show the prompt and attachment list. Click the icon to pin the panel while you read and look things up.
+
+### The outline icon is not there. How do I turn it on?
+
+Open the Gemini Power Kit puzzle-piece entry at the bottom of Gemini's sidebar, choose **Enhancements**, and turn on **Chat Outline**.
+
+### Can I search across all my Gemini conversations?
+
+Chat Outline lists prompts in the conversation currently open. It is not a search across your other chats.
+
+### Why can't I find an older prompt?
+
+The outline is built from messages currently present in the conversation page. If Gemini has not loaded older messages yet, scroll up in the conversation to load them, then check the outline again.
+
+### Does clicking a prompt send it again?
+
+No. It takes you to the existing message in the conversation; it does not resend or change it.
+
+<div class="sl-flex" style="flex-wrap: wrap; gap: 0.75rem; margin-block: 1.25rem;">
+  <LinkButton href="/features/chat-outline/">Explore Chat Outline</LinkButton>
+  <LinkButton href="https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn" variant="secondary" icon="external">Add to Chrome — Free</LinkButton>
+</div>
+
+## Keep exploring
+
+- [Browse Tips & Tutorials](/tips/)
+- [Read the installation guide](/guide/install/)

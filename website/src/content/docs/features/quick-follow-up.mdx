@@ -10,14 +10,16 @@ import customPromptImg from '../../../assets/features/quick-follow-up/custom-pro
 
 <img src={quickFollowUpDemoGif.src} alt="Quick Follow-up capsule appears after text selection in Gemini" class="feature-image feature-image-narrow" />
 
+For a short walkthrough with an example question, see [How to Quote a Gemini Response and Ask a Follow-up](/tips/ask-follow-up-about-gemini-response/).
+
 ## Overview
 
-Quick Follow-up is a selection-based interaction layer inside the Gemini Power Kit Chrome extension for Google Gemini. Use this if you want to ask follow-up questions from selected Gemini text, avoid copy-paste, or run saved prompt actions in one click.
+Quick Follow-up is a selection-based interaction layer inside the Gemini Power Kit browser extension for Google Gemini. Use this if you want to ask follow-up questions from selected Gemini text, avoid copy-paste, or run saved prompt actions in one click.
 
 It has two modes:
 
 - **Ask Gemini**: attach the selected text as reference context, then you continue writing and send manually.
-- **Custom Prompt**: insert **Selected Text** into your saved template and auto-send in one click.
+- **Saved skills**: write a prompt around the **Selected Text** chip and auto-send it with your current selection in one click.
 
 ## Key Capabilities
 
@@ -39,7 +41,7 @@ It has two modes:
 <Image
   src={inputUiImg}
   alt="Quoted text displayed above the Gemini input box after clicking Ask Gemini"
-  class="feature-image feature-image-narrow"
+  class="feature-image feature-image-full"
 />
 
 Ask Gemini examples:
@@ -48,13 +50,13 @@ Ask Gemini examples:
 - `Summarize the quoted paragraph in 3 bullets.`
 - `Rewrite the quoted text in simpler English.`
 
-### Custom Prompt
+### Saved Skills
 
-Use Custom Prompt when your follow-up pattern is repetitive and should run in one click.
+Use a saved skill when your follow-up pattern is repetitive and should run in one click.
 
 <Image
   src={customPromptImg}
-  alt="Custom Prompt creation modal with Icon and Name plus Prompt Content fields"
+  alt="Create Skill modal with Icon and Name plus Prompt Content fields"
   class="feature-image feature-image-narrow"
 />
 
@@ -65,39 +67,39 @@ Common scenarios:
 - Code explanation using a specific style (for example, ELI5).
 - Fact-checking with a defined output structure.
 
-#### Add A Custom Prompt
+#### Add a Skill
 
 1. Open Gemini Power Kit sidebar.
-2. Go to **Settings** -> **Quick Follow-up**.
+2. Go to **Quick Follow-up**.
 3. Turn on **Enable Quick Follow-up**.
-4. In **Custom Prompt**, click the add button (`+`).
-5. Fill icon, name, and template, then click **Save**.
+4. In **Skill Management**, click **Add Skill**.
+5. Fill the icon and name. Keep the **Selected Text** chip in **Prompt Content**, write your instruction around it, then click **Save**.
 6. Back in chat, select text and click the new icon to run it.
 
 #### Complete Field Guide
 
 - **Icon**: visual identifier for fast recognition in capsule bar.
 - **Name**: required, up to 30 characters, used as tooltip label.
-- **Prompt Content**: required and should include **Selected Text**.
-- **Placeholder rule**: **Selected Text** is replaced by your current highlighted text at runtime.
+- **Prompt Content**: required. Keep the **Selected Text** chip where the highlighted passage should go. The examples below use `{{SELECT_TEXT}}` to represent this chip.
+- **Placeholder rule**: the **Selected Text** chip represents `{{SELECT_TEXT}}` in the saved template and is replaced by your highlighted text when you run the skill.
 - **Execution behavior**: custom prompt runs and sends automatically after replacement.
 
 Image notes:
 
 - The modal label is **Icon and Name** with an input placeholder like **Enter skill name**.
-- The template field is **Prompt Content**, for example: `e.g. Explain [Selected Text] in simple terms`.
+- The template field is **Prompt Content**. For example, place “Explain” before the **Selected Text** chip and “in simple terms” after it.
 
-Custom Prompt examples:
+Saved-skill examples:
 
-- `Translate to Japanese and keep tone formal: [Selected Text]`
-- `Explain this code step by step and include time complexity: [Selected Text]`
-- `Extract 5 key points and 3 risks from this text: [Selected Text]`
+- `Translate to Japanese and keep tone formal: {{SELECT_TEXT}}`
+- `Explain this code step by step and include time complexity: {{SELECT_TEXT}}`
+- `Extract 5 key points and 3 risks from this text: {{SELECT_TEXT}}`
 
 Built-in starter templates:
 
-- **Tell me more**: `Explain [Selected Text] in detail`
-- **Search**: `Search web for latest info on: [Selected Text]`
-- **ELI5**: `Explain [Selected Text] like I'm 5 years old`
+- **Tell me more**: `Explain {{SELECT_TEXT}} in detail`
+- **Search**: `Search web for latest info on: {{SELECT_TEXT}}`
+- **ELI5**: `Explain {{SELECT_TEXT}} like I'm 5 years old`
 
 ## Related Features
 

@@ -1,0 +1,87 @@
+---
+title: Install Gemini Power Kit for Chrome and Firefox
+description: "Install the free Gemini Power Kit extension for Chrome or Firefox, find its settings in Google Gemini, and troubleshoot setup."
+sidebar:
+  label: Install
+head:
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: |
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "Install Gemini Power Kit for Chrome and Firefox",
+        "description": "Install Gemini Power Kit from an official browser store, find its settings in Gemini, and troubleshoot setup.",
+        "url": "https://gpk.ronktsang.com/guide/install/",
+        "inLanguage": "en",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Gemini Power Kit",
+          "url": "https://gpk.ronktsang.com/"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "Gemini Power Kit",
+          "applicationCategory": "BrowserApplication",
+          "operatingSystem": "Chrome, Firefox"
+        }
+      }
+---
+
+import { Image } from 'astro:assets';
+import { LinkButton } from '@astrojs/starlight/components';
+import entranceImg from '../../../assets/guide/quick-start/entrance.png';
+
+Gemini Power Kit is a free, open-source browser extension for [Google Gemini](https://gemini.google.com). It adds tools such as Chat Outline, Quick Follow-up, themes, and chat width controls to the Gemini website.
+
+For everyday use, install it from your browser's official store.
+
+<LinkButton href="https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn" icon="external">Add to Chrome — Free</LinkButton>
+<LinkButton href="https://addons.mozilla.org/en-US/firefox/addon/gemini-power-kit/" variant="secondary" icon="external">Get for Firefox</LinkButton>
+
+## Install in Google Chrome
+
+1. Open the [Gemini Power Kit listing in the Chrome Web Store](https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn).
+2. Select **Add to Chrome**, review the permissions, and confirm with **Add extension**.
+3. Open [gemini.google.com](https://gemini.google.com). If Gemini was already open, reload that tab.
+
+You do not need Developer mode for the store version.
+
+## Install in Mozilla Firefox
+
+Use Firefox 140 or later, as required by the extension's Firefox build.
+
+1. Open the [Gemini Power Kit listing on Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/gemini-power-kit/).
+2. Select **Add to Firefox**, review the permissions, and confirm the installation.
+3. Open [gemini.google.com](https://gemini.google.com), or reload an existing Gemini tab.
+
+## Open Settings and Confirm Installation
+
+At the bottom of Gemini's sidebar, select the **Gemini Power Kit** puzzle-piece icon beside Gemini's Settings control. This opens the extension's settings inside Gemini.
+
+<Image
+  src={entranceImg}
+  alt="Gemini Power Kit puzzle-piece settings entry at the bottom of Google Gemini's sidebar, beside the native Settings control"
+  class="feature-image feature-image-full feature-image-no-border"
+/>
+
+*Settings entry — select the Gemini Power Kit puzzle-piece icon at the bottom of Gemini's sidebar.*
+
+Opening the settings panel confirms that the extension is running on that Gemini page. Choose the features you want to use; some enhancements need to be enabled in settings. See the [Quick Start guide](/guide/quick-start/) for the settings panel and your first actions.
+
+For a specific task, continue with [changing Gemini's background](/tips/change-gemini-background/) or [adjusting chat and input widths](/features/chat-layout/).
+
+## If the Extension Does Not Appear
+
+- **Gemini was open before installation:** reload the Gemini tab after installing or updating the extension.
+- **The settings entry is missing:** check that Gemini Power Kit is enabled in `chrome://extensions` or Firefox's `about:addons`, and that it is installed in the browser profile where Gemini is open. If you restricted its site access, allow it to run on `gemini.google.com`.
+- **Settings open, but a feature is missing:** check that feature's settings and [feature guide](/features/). An optional feature being off does not mean installation failed.
+- **Still having trouble:** use the [support page](/support/) and include your browser, extension version, and the steps that failed.
+
+## Related Guides
+
+- [Quick Start](/guide/quick-start/): find the settings panel and choose your first features.
+- [What's New](/support/whats-new/): read release notes and feature updates.
+- [Privacy Policy](/privacy-policy/): understand data handling and browser permissions.
+- [GitHub](https://github.com/RonkTsang/gemini-chat-extension#from-source): source code and developer installation instructions.

@@ -78,7 +78,18 @@ export default defineConfig({
 					translations: { 'zh-CN': '技巧与教程' },
 					items: [
 						{ label: 'Browse Tutorials', translations: { 'zh-CN': '浏览教程' }, slug: 'tips' },
-						{ label: 'Change Gemini Background', translations: { 'zh-CN': '更换 Gemini 背景' }, slug: 'tips/change-gemini-background' },
+						{ label: 'Chat Outline', translations: { 'zh-CN': '对话大纲' }, slug: 'tips/find-earlier-gemini-prompts' },
+						{ label: 'Quote & Reply in Gemini', translations: { 'zh-CN': '引用回答并追问' }, slug: 'tips/ask-follow-up-about-gemini-response' },
+						{ label: 'Get Completion Alerts', translations: { 'zh-CN': '接收回复完成通知' }, slug: 'tips/get-notified-when-gemini-finishes' },
+						{ label: 'Delete Multiple Chats', translations: { 'zh-CN': '批量清理对话' }, slug: 'tips/delete-multiple-gemini-chats' },
+						{
+							label: 'Theme & Background',
+							translations: { 'zh-CN': '主题与背景' },
+							items: [
+								{ label: 'Change Gemini Background', translations: { 'zh-CN': '更换 Gemini 背景' }, slug: 'tips/change-gemini-background' },
+								{ label: 'Make Gemini Chat Wider', translations: { 'zh-CN': '加宽 Gemini 对话' }, slug: 'tips/make-gemini-chat-wider' },
+							],
+						},
 					],
 				},
 				{

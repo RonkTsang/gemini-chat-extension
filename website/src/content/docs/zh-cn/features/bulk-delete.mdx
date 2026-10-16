@@ -39,14 +39,15 @@ head:
           "@type": "SoftwareApplication",
           "name": "Gemini Power Kit",
           "applicationCategory": "BrowserApplication",
-          "operatingSystem": "Chrome, Chromium-based browsers"
+          "operatingSystem": "Chrome, Firefox, Chromium-based browsers"
         }
       }
 ---
 
 import { Image } from 'astro:assets';
-import bulkDeleteEntryImg from '../../../../assets/features/bulk-delete/entry.jpeg';
 import bulkDeleteSelectionImg from '../../../../assets/features/bulk-delete/selection-panel.jpeg';
+
+想快速上手并按步骤清理聊天？请先看[如何批量删除 Gemini 聊天记录](/zh-cn/tips/delete-multiple-gemini-chats/)。
 
 ## 不必逐条删除，更高效地整理 Gemini 聊天记录
 
@@ -56,15 +57,7 @@ import bulkDeleteSelectionImg from '../../../../assets/features/bulk-delete/sele
 
 ## 入口在哪里
 
-在 Gemini 侧栏中找到 **Recents（最近记录）**，点击标题旁的小垃圾桶图标即可进入批量删除模式。Gemini Power Kit 会直接在侧栏中显示操作面板，并为当前可用的聊天记录添加复选框。
-
-<Image
-  src={bulkDeleteEntryImg}
-  alt="批量删除入口：Google Gemini 聊天侧栏的 Recents 标题旁的小垃圾桶图标"
-  class="feature-image feature-image-full"
-/>
-
-*批量删除入口 —— 点击 **Recents（最近记录）** 标题旁的垃圾桶图标。*
+在 Gemini 侧栏中找到 **Recents（最近记录）**，点击标题旁的多选图标即可进入批量删除模式。开启后入口会显示为关闭（×）图标；侧栏中的可用聊天记录旁会出现复选框。
 
 再次点击同一图标，或按 <kbd>Esc</kbd>，即可退出批量删除模式。退出只会清除当前的选择，不会删除任何对话。
 
@@ -113,12 +106,12 @@ import bulkDeleteSelectionImg from '../../../../assets/features/bulk-delete/sele
   </article>
 </div>
 
-## 如何一次删除多条 Gemini 聊天记录
+## 如何批量删除 Gemini 聊天记录
 
 1. 打开 [gemini.google.com](https://gemini.google.com)。
-2. 在 Gemini 侧栏中按需展开 **Recents（最近记录）**，然后点击 **批量删除** 垃圾桶图标。
+2. 在 Gemini 侧栏中按需展开 **Recents（最近记录）**，然后点击标题旁的多选图标。
 3. 手动勾选对话，或点击 **选择最近聊天**。
-4. 如需批量选择，点击 **更改** 后选择 10、20、30 或 50。若要保留置顶聊天，请先开启 **排除已置顶聊天**。
+4. 如需批量选择，点击 **更改** 后选择 10、20、30 或 50。**排除已置顶聊天**只影响快捷批选；如当前手动勾选中已有置顶对话，请另用 **取消选择已固定** 将其移除。
 5. 检查 **删除** 按钮上的数量。需要调整时，可使用 **取消选择已置顶** 或 **取消全选**。
 6. 点击 **删除**，并确认这个不可撤销的操作。
 7. 等待进度提示完成。工具会保留在批量删除模式中，但不会继续选中聊天，方便你再检查下一批记录。
@@ -137,7 +130,7 @@ Bulk Delete 默认开启。要改变此设置：
 1. 打开 [gemini.google.com](https://gemini.google.com)。
 2. 在 Gemini 左侧导航中，点击 **Settings & help（设置和帮助）** 上方的 **Gemini Power Kit** 入口，打开扩展设置面板。
 3. 在 **Tools（工具）** 下打开 **Enhancements（增强功能）**。
-4. 打开 **Bulk Delete（批量删除）**，即可显示 Recents 标题旁的垃圾桶入口；关闭它则会隐藏入口和侧栏控件。
+4. 打开 **批量删除**，即可显示 Recents 标题旁的多选入口；关闭它则会隐藏入口和侧栏控件。
 
 关闭设置不会删除任何 Gemini 聊天记录，只会停用 Gemini Power Kit 的批量删除界面。需要时，可在同一位置重新开启。
 
@@ -148,6 +141,10 @@ Bulk Delete 默认开启。要改变此设置：
 - 如果希望批量保护置顶对话，请在选择前开启 **排除已置顶聊天**。
 - 如果 Gemini 未能加载全部请求的最近聊天，请重新选择，或刷新 Gemini 页面后再删除。
 - Gemini 的聊天界面可能随时调整；请保持 Gemini Power Kit 为最新版本，以获得最新兼容性修复。
+
+## 技巧教程
+
+- [如何批量删除 Gemini 聊天记录](/zh-cn/tips/delete-multiple-gemini-chats/)
 
 ## 相关功能
 

@@ -1,0 +1,94 @@
+---
+title: 如何在 Gemini 回复完成时收到通知
+description: "开启 Gemini 桌面通知，在 Gemini 回复或 Deep Research 报告完成时收到提醒；可添加提示音，并返回生成内容所在的标签页。"
+head:
+  - tag: meta
+    attrs:
+      property: og:image
+      content: https://gpk.ronktsang.com/og/notifications.png
+  - tag: meta
+    attrs:
+      property: og:image:alt
+      content: Gemini Power Kit 通知设置面板，包含回复提醒与测试通知
+  - tag: meta
+    attrs:
+      name: twitter:image
+      content: https://gpk.ronktsang.com/og/notifications.png
+  - tag: meta
+    attrs:
+      name: twitter:image:alt
+      content: Gemini Power Kit 通知设置面板，包含回复提醒与测试通知
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: |
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "如何在 Gemini 回复完成时收到通知",
+        "description": "开启 Gemini 桌面通知，在 Gemini 回复或 Deep Research 报告完成时收到提醒；可添加提示音，并返回生成内容所在的标签页。",
+        "url": "https://gpk.ronktsang.com/zh-cn/tips/get-notified-when-gemini-finishes/",
+        "image": "https://gpk.ronktsang.com/og/notifications.png",
+        "inLanguage": "zh-CN",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Gemini Power Kit",
+          "url": "https://gpk.ronktsang.com/"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "Gemini Power Kit",
+          "applicationCategory": "BrowserApplication",
+          "operatingSystem": "Chrome, Firefox, Chromium-based browsers"
+        }
+      }
+---
+
+import { Image } from 'astro:assets';
+import { LinkButton, Steps } from '@astrojs/starlight/components';
+import notificationSettingsImg from '../../../../assets/features/notification/setting-panel.png';
+
+Gemini 正在生成长回复或 Deep Research 报告时，你不必一直守着标签页。开启 Gemini Power Kit 的通知后，可以切去其他标签页或应用，完成时再收到提醒；点击通知即可聚焦生成内容所在的 Gemini 标签页。
+
+先安装免费的 Gemini Power Kit 扩展，再打开 [Gemini](https://gemini.google.com)。如果安装时 Gemini 已经打开，请先刷新该标签页，再开始尝试。
+
+<div class="sl-flex" style="flex-wrap: wrap; gap: 0.75rem; margin-block: 1.25rem;">
+  <LinkButton href="https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn" icon="external">免费安装到 Chrome</LinkButton>
+  <LinkButton href="https://addons.mozilla.org/en-US/firefox/addon/gemini-power-kit/" variant="secondary" icon="external">安装到 Firefox</LinkButton>
+</div>
+
+## 四步设置 Gemini 回复通知
+
+<Steps>
+1. <strong>打开通知设置。</strong> 在 Gemini 侧栏底部点击 Gemini Power Kit 拼图入口，再选择<strong>通知</strong>。
+2. <strong>开启“回复就绪时通知我”（Notify me when replies are ready）。</strong> Chrome 或其他 Chromium 浏览器若弹出扩展权限步骤，请点击<strong>允许通知（Allow notifications）</strong>。保留<strong>仅在未查看 Gemini 时通知（Only notify when I’m away from Gemini）</strong>，即可在切换标签页、窗口或应用后收到提醒。
+3. <strong>测试通知。</strong> 点击<strong>发送测试通知（Send test notification）</strong>。如果没有显示，请检查浏览器和系统设置，参阅[通知问题排查指南](/zh-cn/support/notification-troubleshooting/)。
+4. **试一次真实回复。** 让 Gemini 生成普通回复或 Deep Research 报告，然后切到其他标签页或应用。收到提醒后点击通知，返回生成内容所在的 Gemini 标签页。
+</Steps>
+
+<Image src={notificationSettingsImg} alt="通知面板显示回复提醒开关、声音选项、离开 Gemini 时通知和发送测试通知" class="feature-image feature-image-full" />
+
+*通知设置包含主开关、离开 Gemini 时提醒的选项和测试按钮。图中的声音选项仅适用于 Chromium 浏览器。*
+
+例如，让 Gemini 完成一项需要详细回答的问题，同时去编辑文档。通知可以显示对话标题和简短预览；如果这些信息暂不可用，也可能只显示通用的完成提醒。
+
+## 选择何时显示 Gemini 完成提醒
+
+<strong>仅在未查看 Gemini 时通知（Only notify when I’m away from Gemini）</strong>默认开启。Gemini 页面可见且处于焦点时，不会弹出通知；如果希望停留在 Gemini 页面时也收到提醒，可以在 <strong>通知（Notifications）</strong>设置中关闭此选项。普通回复和受支持的 Deep Research 完成都遵循此设置。
+
+## 设置 Gemini 通知音效
+
+在 Chromium 浏览器中，还可以开启<strong>通知时播放声音（Play a sound with notifications）</strong>。通知创建后会播放可选提示音；在<strong>通知音效（Notification sound）</strong>中可选择默认声音或上传自己的音频。Firefox 不显示这些独立的声音控制，使用浏览器和系统的通知行为。
+
+## 为什么收不到 Gemini 通知？
+
+先点击 **发送测试通知**。若测试通知没有显示，检查通知权限、浏览器设置，以及系统的专注模式或勿扰设置。测试只能确认扩展可以创建通知，浏览器或操作系统仍可能将它隐藏。更多排查步骤见[通知问题排查指南](/zh-cn/support/notification-troubleshooting/)。
+
+完成提醒支持标准 Gemini 回复和受支持的 Deep Research 报告；Canvas 等其他工作流程可能不会触发提醒。点击通知会聚焦开始生成内容的标签页。如果等待期间你在该标签页切换了对话，可能还需要自己找到原来的对话。
+
+查看控件和完整行为说明：[Gemini 回复完成通知功能指南](/zh-cn/features/notifications/)。
+
+## 继续探索
+
+- [浏览技巧与教程](/zh-cn/tips/)
+- [引用 Gemini 回答中的一段文字并继续追问](/zh-cn/tips/ask-follow-up-about-gemini-response/)

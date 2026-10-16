@@ -39,13 +39,15 @@ head:
           "@type": "SoftwareApplication",
           "name": "Gemini Power Kit",
           "applicationCategory": "BrowserApplication",
-          "operatingSystem": "Chrome, Chromium-based browsers"
+          "operatingSystem": "Chrome, Firefox, Chromium-based browsers"
         }
       }
 ---
 
 import { Image } from 'astro:assets';
 import notificationSettingsImg from '../../../../assets/features/notification/setting-panel.png';
+
+想快速开启通知并测试是否可用？请看[如何在 Gemini 回复完成时收到通知](/zh-cn/tips/get-notified-when-gemini-finishes/)。
 
 <Image
   src={notificationSettingsImg}
@@ -55,9 +57,9 @@ import notificationSettingsImg from '../../../../assets/features/notification/se
 
 ## 功能概览
 
-Notifications 让你无需一直停留在 Gemini 标签页等待回复。当标准 Gemini 回复在后台标签页中完成时，Gemini Power Kit 会发送系统通知，并显示当前对话标题和简短回复预览。
+Notifications 让你无需一直停留在 Gemini 标签页等待回复。当标准 Gemini 回复或受支持的 Deep Research 报告完成时，Gemini Power Kit 会发送系统通知，并在可用时显示当前对话标题和简短回复预览。
 
-点击通知即可返回产生该通知的对话，同时从通知中心清除这条通知。
+点击通知会聚焦产生该通知的 Gemini 标签页，并从通知中心清除这条通知。如果你等待期间在该标签页切换了对话，通知不保证自动切回原对话。
 
 ## 为什么需要它
 
@@ -72,9 +74,14 @@ Notifications 让你无需一直停留在 Gemini 标签页等待回复。当标�
 
 <div class="settings-card-grid">
   <article class="settings-card">
-    <div class="settings-label">Gemini 回复完成时通知我</div>
-    <p class="settings-detail">标准 Gemini 回复完成后，发送包含对话标题和简短回复预览的系统通知。</p>
+    <div class="settings-label">回复就绪时通知我</div>
+    <p class="settings-detail">标准 Gemini 回复或受支持的 Deep Research 报告完成后发送通知；标题和简短预览可用时会一并显示。</p>
     <p class="settings-when">当你经常让 Gemini 在后台标签页中运行时，建议开启。</p>
+  </article>
+  <article class="settings-card">
+    <div class="settings-label">仅在未查看 Gemini 时通知</div>
+    <p class="settings-detail">默认开启。Gemini 页面可见且获得焦点时不显示提醒；关闭此选项后，停留在 Gemini 页面时也会收到通知。</p>
+    <p class="settings-when">想在工作于其他标签页或应用时收到提醒，可保留默认设置。</p>
   </article>
   <article class="settings-card">
     <div class="settings-label">通知时播放声音</div>
@@ -82,9 +89,9 @@ Notifications 让你无需一直停留在 Gemini 标签页等待回复。当标�
     <p class="settings-when">当视觉通知容易被忽略，或 Gemini 被其他应用遮挡时使用。</p>
   </article>
   <article class="settings-card">
-    <div class="settings-label">通知声音</div>
+    <div class="settings-label">通知音效</div>
     <p class="settings-detail">可使用内置完成提示音，也可以上传自己的音频文件，让通知提示更容易识别。</p>
-    <p class="settings-when">自定义音频由扩展存储在本地，仅用于通知声音播放。</p>
+    <p class="settings-when">自定义音频由扩展存储在本地，仅用于通知音效播放。</p>
   </article>
   <article class="settings-card">
     <div class="settings-label">发送测试通知</div>
@@ -101,32 +108,32 @@ Notifications 让你无需一直停留在 Gemini 标签页等待回复。当标�
 ## 快速使用
 
 1. 打开 Gemini Power Kit 侧边栏。
-2. 进入 **Notifications**。
-3. 开启 **Gemini 回复完成时通知我**，并允许浏览器请求的权限。
+2. 进入 **通知**。
+3. 开启 **回复就绪时通知我**，并允许浏览器请求的权限。
 4. 按需开启 **通知时播放声音**。
-5. 按需在 **通知声音** 中上传自定义音频文件。
+5. 按需在 **通知音效** 中上传自定义音频文件。
 6. 点击 **发送测试通知**，确认设置正常。
 7. 让 Gemini 开始回复，然后切换到其他标签页或应用。
 8. 收到完成通知后，点击通知返回对应对话。
 
 ## 通知行为
 
-- 仅当 Gemini 页面不可见或未获得焦点时发送通知。
+- **仅在未查看 Gemini 时通知**默认开启：Gemini 页面不可见或未获得焦点时发送通知；关闭该设置后，即使页面可见且获得焦点也会通知。
 - 可读取到内容时，通知会显示当前对话标题和简短回复预览。
 - 无法读取回复详情时，仍会发送通用的回复完成通知。
-- 点击通知会聚焦对应 Gemini 对话，并清除该通知。
-- 开启通知声音后，自定义音频会替代内置完成提示音。
+- 点击通知会聚焦产生提醒的 Gemini 标签页，并清除该通知；若该标签页已切换到其他对话，需自行返回原对话。
+- 开启 **通知时播放声音** 后，自定义音频会替代内置完成提示音。
 - 通知内容在本地处理，扩展不会读取流式响应正文。
 
 ## 当前支持范围
 
-通知目前用于检测标准 Gemini 回复。Deep Research、Canvas，以及其他未使用标准回复流程的 Gemini 功能，可能不会触发完成通知。
+通知支持标准 Gemini 回复和受支持的 Deep Research 报告。Canvas 等其他工作流程可能不会触发完成通知。
 
 ## 问题排查
 
 如果测试通知没有出现：
 
-1. 确认通知主开关仍处于开启状态。
+1. 确认 **回复就绪时通知我** 主开关仍处于开启状态。
 2. 打开[通知问题排查](/zh-cn/support/notification-troubleshooting/)。
 3. 在操作系统设置中允许浏览器发送通知。
 4. 检查专注模式、勿扰模式或其他可能隐藏通知的系统模式。
@@ -136,3 +143,7 @@ Notifications 让你无需一直停留在 Gemini 标签页等待回复。当标�
 
 - [标签页标题同步](/zh-cn/features/tab-title-sync/)
 - [对话大纲](/zh-cn/features/chat-outline/)
+
+## 技巧教程
+
+- [如何在 Gemini 回复完成时收到通知](/zh-cn/tips/get-notified-when-gemini-finishes/)

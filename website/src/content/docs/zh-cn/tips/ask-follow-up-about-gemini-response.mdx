@@ -1,0 +1,101 @@
+---
+title: 如何引用 Gemini 回答中的一段文字并继续追问
+description: "在 Gemini 回答中选中文字，通过 Quick Follow-up 的‘询问 Gemini’引用原文并继续追问；常用提示词还能保存为技能重复使用。"
+head:
+  - tag: meta
+    attrs:
+      property: og:image
+      content: https://gpk.ronktsang.com/og/quick-follow-up.png
+  - tag: meta
+    attrs:
+      property: og:image:alt
+      content: Gemini 回复中选中文字后出现的 Quick Follow-up 菜单
+  - tag: meta
+    attrs:
+      name: twitter:image
+      content: https://gpk.ronktsang.com/og/quick-follow-up.png
+  - tag: meta
+    attrs:
+      name: twitter:image:alt
+      content: Gemini 回复中选中文字后出现的 Quick Follow-up 菜单
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: |
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "如何引用 Gemini 回答中的一段文字并继续追问",
+        "description": "在 Gemini 回答中选中文字，通过 Quick Follow-up 的‘询问 Gemini’引用原文并继续追问；常用提示词还能保存为技能重复使用。",
+        "url": "https://gpk.ronktsang.com/zh-cn/tips/ask-follow-up-about-gemini-response/",
+        "image": "https://gpk.ronktsang.com/og/quick-follow-up.png",
+        "inLanguage": "zh-CN",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Gemini Power Kit",
+          "url": "https://gpk.ronktsang.com/"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "Gemini Power Kit",
+          "applicationCategory": "BrowserApplication",
+          "operatingSystem": "Chrome, Firefox, Chromium-based browsers"
+        }
+      }
+---
+
+import { Image } from 'astro:assets';
+import { LinkButton, Steps } from '@astrojs/starlight/components';
+import quickFollowDemo from '../../../../assets/features/quick-follow-up/quick-follow-up.gif';
+import quotedInput from '../../../../assets/features/quick-follow-up/input-ui.png';
+
+想针对 Gemini 长回复中的某句话继续追问？使用 Gemini Power Kit 的 <strong>Quick Follow-up（快速追问）</strong>，选中文字后点击 <strong>询问 Gemini（Ask Gemini）</strong>，即可将原文引用到下一条问题中，并在输入框上方核对引用内容。
+
+先安装免费的 Gemini Power Kit 扩展，再打开 [Gemini](https://gemini.google.com)。如果安装时 Gemini 已经打开，请先刷新该标签页，再开始尝试。
+
+<div class="sl-flex" style="flex-wrap: wrap; gap: 0.75rem; margin-block: 1.25rem;">
+  <LinkButton href="https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn" icon="external">免费安装到 Chrome</LinkButton>
+  <LinkButton href="https://addons.mozilla.org/en-US/firefox/addon/gemini-power-kit/" variant="secondary" icon="external">安装到 Firefox</LinkButton>
+</div>
+
+## 选中文字并选择询问 Gemini
+
+<Steps>
+1. **选中回复中的文字。** 在 Gemini 的回答中划选一个句子或段落，Quick Follow-up 胶囊菜单会出现在选区旁。
+2. **选择“询问 Gemini”（Ask Gemini）。** Gemini Power Kit 会把选中的文字放到输入框上方的引用条目中，并将焦点移到输入框。
+3. **核对引用并写下问题。** 例如，选中有关项目时间表的句子后，可以问：“这个时间表基于什么假设？”也可以请 Gemini 比较回复中的另一个方案。
+4. **自己发送问题。** “询问 Gemini”会准备好引用上下文；问题由你撰写，并在准备好后手动发送。
+</Steps>
+
+<img src={quickFollowDemo.src} width={quickFollowDemo.width} height={quickFollowDemo.height} loading="lazy" decoding="async" alt="在 Gemini 回复中选中文字后，旁边出现包含 Ask Gemini 和已保存技能的 Quick Follow-up 胶囊菜单" class="feature-image feature-image-full" />
+
+*入口：选中 Gemini 回复中的文字，再从选区旁的菜单中选择 Ask Gemini。*
+
+<Image src={quotedInput} alt="Gemini 输入框上方的引用条目显示了选中的回复文字，右侧有关闭按钮" class="feature-image feature-image-full" />
+
+*引用内容会显示在输入框上方，方便确认下一条问题针对哪一段回复。*
+
+如果选错了，可以先点击引用条目上的 **×** 删除它，再重新选取文字。
+
+## 用保存的技能复用追问提示词
+
+如果经常对选中的文字执行同一种操作，可以创建可重复使用的技能。打开 Gemini 侧栏中的 Gemini Power Kit，进入<strong>快速追问</strong>并确认已开启<strong>启用 Quick Follow-up</strong>。在<strong>技能管理</strong>中选择<strong>添加技能</strong>，设置图标和名称，再填写<strong>提示词内容</strong>。创建技能时，编辑器会自带不可删除的<strong>选中的文本</strong>标签；在标签前写“请分步骤解释”，标签后补上“，并指出其中的关键假设。”，再保存技能。
+
+之后选中文字，点击胶囊菜单中对应技能的图标。技能会自动将选中文字填入<strong>选中的文本</strong>标签，并<strong>自动发送</strong>完整提示词。使用<strong>询问 Gemini（Ask Gemini）</strong>时，你可以自己撰写或修改问题后再发；使用已保存技能，则适合直接执行已经定好的操作。胶囊菜单支持横向滚动，可查看更多技能。
+
+如果选中文字后没有出现胶囊菜单，请在 Gemini Power Kit 设置的 **快速追问 → 启用 Quick Follow-up** 中检查开关。技能管理和编辑方式见[快速追问功能指南](/zh-cn/features/quick-follow-up/)。
+
+## 关于引用 Gemini 回答的问题
+
+### 可以只引用 Gemini 回答中的一部分吗？
+
+可以。选中想讨论的句子或段落，再选择<strong>询问 Gemini（Ask Gemini）</strong>。建议选取明确的一小段：较长的引用预览会缩短，特别长的选区发送给 Gemini 时也可能被截短。此功能引用的是 Gemini 回复中的文字，不能选取图片或 PDF 附件内部的内容。
+
+### 询问 Gemini 会自动发送追问吗？
+
+不会。<strong>询问 Gemini（Ask Gemini）</strong>会附上引用内容，并等待你编写和发送问题。保存的技能则会执行预设提示词；点击技能图标后会自动发送。按需要选择手动编写问题或重复执行现成提示词。
+
+## 继续探索
+
+- [浏览技巧与教程](/zh-cn/tips/)
+- [用对话大纲快速浏览 Gemini 长对话](/zh-cn/tips/find-earlier-gemini-prompts/)

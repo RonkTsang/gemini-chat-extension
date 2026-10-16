@@ -1,0 +1,87 @@
+---
+title: 在 Chrome 和 Firefox 中安装 Gemini Power Kit
+description: "从官方商店免费安装 Gemini Power Kit，了解如何在 Google Gemini 中打开设置并排查安装问题。"
+sidebar:
+  label: 安装
+head:
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: |
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "在 Chrome 和 Firefox 中安装 Gemini Power Kit",
+        "description": "从浏览器官方商店安装 Gemini Power Kit，在 Gemini 中找到设置入口并排查安装问题。",
+        "url": "https://gpk.ronktsang.com/zh-cn/guide/install/",
+        "inLanguage": "zh-CN",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Gemini Power Kit",
+          "url": "https://gpk.ronktsang.com/"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "Gemini Power Kit",
+          "applicationCategory": "BrowserApplication",
+          "operatingSystem": "Chrome, Firefox"
+        }
+      }
+---
+
+import { Image } from 'astro:assets';
+import { LinkButton } from '@astrojs/starlight/components';
+import entranceImg from '../../../../assets/guide/quick-start/entrance.png';
+
+Gemini Power Kit 是用于 [Google Gemini](https://gemini.google.com) 的免费开源浏览器扩展，为 Gemini 网页添加对话大纲、快速跟进、主题和对话宽度调节等工具。
+
+日常使用建议从浏览器官方商店安装。
+
+<LinkButton href="https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn" icon="external">免费安装到 Chrome</LinkButton>
+<LinkButton href="https://addons.mozilla.org/en-US/firefox/addon/gemini-power-kit/" variant="secondary" icon="external">安装到 Firefox</LinkButton>
+
+## 在 Google Chrome 中安装
+
+1. 打开 [Chrome 应用商店中的 Gemini Power Kit 页面](https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn)。
+2. 点击**添加至 Chrome**，查看权限提示，再点击**添加扩展程序**确认。
+3. 打开 [gemini.google.com](https://gemini.google.com)。如果 Gemini 已经打开，请刷新该标签页。
+
+商店版本不需要开启开发者模式。
+
+## 在 Mozilla Firefox 中安装
+
+请使用 Firefox 140 或更高版本，这是扩展 Firefox 构建的最低版本要求。
+
+1. 打开 [Firefox 附加组件商店中的 Gemini Power Kit 页面](https://addons.mozilla.org/en-US/firefox/addon/gemini-power-kit/)。
+2. 点击**添加到 Firefox**，查看权限提示并确认安装。
+3. 打开 [gemini.google.com](https://gemini.google.com)，或刷新已经打开的 Gemini 标签页。
+
+## 打开设置并确认安装成功
+
+在 Gemini 侧边栏底部，点击 Gemini 设置按钮旁的 **Gemini Power Kit** 拼图图标，即可在 Gemini 内打开扩展设置。
+
+<Image
+  src={entranceImg}
+  alt="Google Gemini 侧边栏底部的 Gemini Power Kit 拼图设置入口，位于 Gemini 原生设置按钮旁"
+  class="feature-image feature-image-full feature-image-no-border"
+/>
+
+*设置入口 — 点击 Gemini 侧边栏底部的 Gemini Power Kit 拼图图标。*
+
+能够打开设置面板，说明扩展已在当前 Gemini 页面运行。接着选择需要的功能；部分增强功能需要在设置中开启。[快速开始指南](/zh-cn/guide/quick-start/)展示了设置面板和首次使用步骤。
+
+你也可以直接阅读[更换 Gemini 背景](/zh-cn/tips/change-gemini-background/)或[调整对话与输入框宽度](/zh-cn/features/chat-layout/)教程。
+
+## 安装后没有显示怎么办
+
+- **安装前已打开 Gemini：** 安装或更新扩展后，刷新 Gemini 标签页。
+- **找不到设置入口：** 在 `chrome://extensions` 或 Firefox 的 `about:addons` 中确认 Gemini Power Kit 已启用，并确认扩展和 Gemini 位于同一个浏览器配置文件。如果曾限制扩展的网站访问权限，请允许它在 `gemini.google.com` 上运行。
+- **设置能打开，但某个功能没有出现：** 查看该功能的设置和[功能指南](/zh-cn/features/)。可选功能尚未开启，并不代表安装失败。
+- **仍然无法使用：** 通过[支持页面](/zh-cn/support/)反馈，并提供浏览器、扩展版本和出现问题的操作步骤。
+
+## 相关指南
+
+- [快速开始](/zh-cn/guide/quick-start/)：找到设置面板，选择首先使用的功能。
+- [最新动态](/zh-cn/support/whats-new/)：查看版本说明与功能更新。
+- [隐私政策](/zh-cn/privacy-policy/)：了解数据处理方式与浏览器权限。
+- [GitHub](https://github.com/RonkTsang/gemini-chat-extension#from-source)：查看源码和开发者安装说明。

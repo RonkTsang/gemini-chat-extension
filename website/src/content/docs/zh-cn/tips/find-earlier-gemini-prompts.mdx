@@ -1,0 +1,120 @@
+---
+title: 如何用对话大纲快速浏览 Gemini 长对话
+description: "使用对话大纲将当前 Gemini 聊天中的提问与附件整理成可点击目录，快速浏览长对话并跳转到对应消息。"
+head:
+  - tag: meta
+    attrs:
+      property: og:image
+      content: https://gpk.ronktsang.com/og/find-earlier-gemini-prompts.png
+  - tag: meta
+    attrs:
+      property: og:image:alt
+      content: Gemini 对话中的聊天大纲提问列表与附件预览
+  - tag: meta
+    attrs:
+      name: twitter:image
+      content: https://gpk.ronktsang.com/og/find-earlier-gemini-prompts.png
+  - tag: meta
+    attrs:
+      name: twitter:image:alt
+      content: Gemini 对话中的聊天大纲提问列表与附件预览
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: |
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "如何用对话大纲快速浏览 Gemini 长对话",
+        "description": "使用对话大纲将当前 Gemini 聊天中的提问与附件整理成可点击目录，快速浏览长对话并跳转到对应消息。",
+        "url": "https://gpk.ronktsang.com/zh-cn/tips/find-earlier-gemini-prompts/",
+        "image": "https://gpk.ronktsang.com/og/find-earlier-gemini-prompts.png",
+        "inLanguage": "zh-CN",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Gemini Power Kit",
+          "url": "https://gpk.ronktsang.com/"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "Gemini Power Kit",
+          "applicationCategory": "BrowserApplication",
+          "operatingSystem": "Chrome, Firefox, Chromium-based browsers"
+        }
+      }
+---
+
+import { Image } from 'astro:assets';
+import { LinkButton, Steps } from '@astrojs/starlight/components';
+import chatOutlineInterfaceImg from '../../../../assets/features/chat-outline/interface.png';
+
+Gemini 对话越长，逐条滚动就越难浏览。<strong>对话大纲（Chat Outline）会将当前聊天中的提问和附件线索整理成可点击目录。</strong>浏览提问、图片缩略图、视频封面和文件信息，点击条目即可跳到对应消息及回答。
+
+先安装免费的 Gemini Power Kit 扩展，再打开 [Gemini](https://gemini.google.com)。如果安装时 Gemini 已经打开，请先刷新该标签页，再开始尝试。
+
+<div class="sl-flex" style="flex-wrap: wrap; gap: 0.75rem; margin-block: 1.25rem;">
+  <LinkButton href="https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn" icon="external">免费安装到 Chrome</LinkButton>
+  <LinkButton href="https://addons.mozilla.org/en-US/firefox/addon/gemini-power-kit/" variant="secondary" icon="external">安装到 Firefox</LinkButton>
+</div>
+
+## 用对话大纲浏览 Gemini 长对话
+
+<Steps>
+1. **打开一段包含多个提问的 Gemini 对话。** 大纲会列出当前对话中的提问。
+2. **将鼠标移到对话窗左上角由横线组成的大纲图标上。** 提问列表就会显示出来。
+3. **浏览目录，选择提问或附件条目。** Gemini 会滚动到对应消息；回答就在下方。
+</Steps>
+
+<Image src={chatOutlineInterfaceImg} alt="Gemini 聊天大纲的提问列表旁显示附件图标和图片预览" class="feature-image feature-image-full" />
+
+*对话窗左上角的横线图标是聊天大纲入口，下方显示提问和附件列表，右侧面板预览悬停条目中的图片。*
+
+例如，你已经让 Gemini 比较两个方案，又追问了好几轮；现在想回看最初的比较，就在列表中找到自己那条 **“比较这两个方案”** 提问并点击，阅读下方的回答，再继续对照。这样不用重新向 Gemini 提问来回顾之前的回答。
+
+## 只记得图片或文件，不记得当时怎么问？
+
+不用记住提问的原话，也可以通过附件辨认目标消息：
+
+- **图片：** 在提问旁看到缩略图，悬停条目即可放大预览，方便区分相似的截图。
+- **视频：** 通过视频封面和视频标识辨认上传内容，悬停条目可查看更大的封面预览。
+- **PDF 等文件：** 通过文件图标识别，再悬停条目查看文件名和完整提问，找到当时上传的资料。
+
+即使那条消息只上传了附件、没有输入文字，大纲中也有对应条目，可以通过文件名、附件标签或数量来辨认。点击条目回到原消息，就能查看附件及当时的回答。
+
+例如，你上传了好几张截图，又反复问 Gemini“解释一下这个”，可以通过缩略图和预览区分它们。即使不记得当时配的是哪句问题，也能找回那张截图。
+
+## 需要边看边对照时固定大纲
+
+平时将鼠标移到大纲图标上会显示面板，移开后面板会隐藏。想要一边阅读和滚动、一边保留大纲时，点击一次大纲图标即可固定。再次点击同一图标即可取消固定，恢复悬停显示的方式。
+
+## 常见问题
+
+### 聊天大纲在哪里，怎么打开？
+
+打开一段 Gemini 对话，在显示你和 Gemini 消息的对话窗左上角找到由横线组成的大纲图标。悬停即可展开提问和附件列表；点击图标可固定面板，方便边读边查。
+
+### 没看到大纲图标，怎么开启？
+
+点击 Gemini 侧栏底部的 Gemini Power Kit 拼图入口，选择 **增强功能**，再开启 **聊天大纲**。
+
+### 可以搜索所有 Gemini 对话吗？
+
+聊天大纲只列出当前打开的对话中的提问，不能跨对话搜索。
+
+### 为什么找不到更早的问题？
+
+大纲根据当前已加载到对话页面中的消息生成。如果 Gemini 还没有加载更早的消息，请先在对话中向上滚动以加载，再查看大纲。
+
+### 点击提问会再次发送消息吗？
+
+不会。点击只会跳转到对话中已有的消息，不会重新发送或修改它。
+
+<div class="sl-flex" style="flex-wrap: wrap; gap: 0.75rem; margin-block: 1.25rem;">
+  <LinkButton href="/zh-cn/features/chat-outline/">了解聊天大纲</LinkButton>
+  <LinkButton href="https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn" variant="secondary" icon="external">免费安装到 Chrome</LinkButton>
+</div>
+
+## 继续探索
+
+- [浏览技巧与教程](/zh-cn/tips/)
+- [查看安装指南](/zh-cn/guide/install/)

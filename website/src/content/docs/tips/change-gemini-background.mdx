@@ -1,6 +1,6 @@
 ---
-title: How to Change Your Gemini Background
-description: "Learn how to change your Google Gemini background with a custom wallpaper using the free Gemini Power Kit extension, plus practical tips for readable chats."
+title: How to Change Your Gemini Chat Background and Theme
+description: "Change your Google Gemini chat background with a custom wallpaper. Use Theme Bloom to match colors in one drop, then adjust your theme for readable chats."
 head:
   - tag: meta
     attrs:
@@ -14,6 +14,10 @@ head:
     attrs:
       name: twitter:image
       content: https://gpk.ronktsang.com/og/gemini-background.jpg
+  - tag: meta
+    attrs:
+      name: twitter:image:alt
+      content: Gemini chat interfaces with custom snow, plant, and sports wallpapers
   - tag: script
     attrs:
       type: application/ld+json
@@ -21,8 +25,8 @@ head:
       {
         "@context": "https://schema.org",
         "@type": "TechArticle",
-        "headline": "How to Change Your Gemini Background",
-        "description": "Learn how to change your Google Gemini background with a custom wallpaper using the free Gemini Power Kit extension, plus practical tips for readable chats.",
+        "headline": "How to Change Your Gemini Chat Background and Theme",
+        "description": "Change your Google Gemini chat background with a custom wallpaper. Use Theme Bloom to match colors in one drop, then adjust your theme for readable chats.",
         "url": "https://gpk.ronktsang.com/tips/change-gemini-background/",
         "image": "https://gpk.ronktsang.com/og/gemini-background.jpg",
         "inLanguage": "en",
@@ -44,7 +48,7 @@ import { Image } from 'astro:assets';
 import { LinkButton, Steps } from '@astrojs/starlight/components';
 import wallpaperExamples from '../../../assets/features/theme-wallpaper.jpg';
 
-Want to give **Google Gemini's chat interface** a different look? Start with an image you like. Drop it onto Gemini to change both the wallpaper and the color preset, then adjust only what needs attention.
+Want a custom wallpaper behind your Google Gemini chats? With **Theme Bloom** in Gemini Power Kit, drop an image onto Gemini to change the chat background and match the color preset in one action. Then adjust your theme for comfortable reading.
 
 Install the free Gemini Power Kit extension first, then open [Gemini](https://gemini.google.com). If Gemini was already open when you installed it, refresh that tab before you try.
 
@@ -53,7 +57,7 @@ Install the free Gemini Power Kit extension first, then open [Gemini](https://ge
   <LinkButton href="https://addons.mozilla.org/en-US/firefox/addon/gemini-power-kit/" variant="secondary" icon="external">Get for Firefox</LinkButton>
 </div>
 
-## The Fastest Way to Change Your Theme: One Image Drop
+## Change your Gemini background and theme with one image drop
 
 You do not need to pick a wallpaper and a matching color preset separately. **Theme Bloom** does both in one drop.
 
@@ -71,7 +75,7 @@ Theme Bloom is on by default. If you have turned it off, enable it in **Gemini P
 
 Use one PNG, JPG, WebP, or AVIF image up to **10 MB** and **40 megapixels**. If nothing happens, follow the [checks below](#why-does-dragging-an-image-not-change-the-background).
 
-## Prefer to Choose a File Instead of Dragging?
+## Set a custom Gemini wallpaper from a file
 
 Use the wallpaper settings when you prefer a file picker:
 
