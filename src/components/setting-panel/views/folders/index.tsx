@@ -171,6 +171,8 @@ export const FoldersSettingsView: SettingViewComponent = ({ isPanelOpen, route }
                 measuring={storageRequest?.loading ?? false}
                 measurementError={storageRequest?.error}
                 onRetry={() => folderRuntime.syncNow()}
+                onRecreateReplica={(request) => folderRuntime.recreateSyncReplica(request)}
+                onResolveConflict={(choice) => folderRuntime.resolveSyncConflict(choice)}
                 onDismissCapacity={() => {
                   if (capacityNoticeUsagePercent !== undefined) {
                     void run('dismiss-capacity', () => folderRuntime.dismissCapacityNotice(capacityNoticeUsagePercent))

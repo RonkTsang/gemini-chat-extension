@@ -1,8 +1,8 @@
-import Dexie from 'dexie'
 import { nanoid } from 'nanoid'
 import { browser } from 'wxt/browser'
 
 import { db } from '../db'
+import { runFolderMutation, markRecoveryPending } from './folder-mutation'
 import {
   DEFAULT_FOLDER_COLOR_VALUE,
   DEFAULT_FOLDER_ICON_KEY,
@@ -12,30 +12,33 @@ import {
   normalizeFolderColorValue,
 } from '@/domain/folder/appearance'
 import type { FolderUpdateInput } from '@/domain/folder/commands'
-import { HybridLogicalClock } from '@/domain/folder/hlc'
 import { compareAscii, keyBetween, rebalanceOrderKeys } from '@/domain/folder/order-key'
 import { compareMembershipOrder } from '@/domain/folder/membership-order'
-import { parseFolderAccountData, parseFolderExportPayload, folderSyncSettingsSchema, folderSettingsPatchSchema, settingsVersionSchema, parseFolderSyncData } from '@/domain/folder/schemas'
+import { parseFolderAccountData, parseFolderExportPayload, folderSyncSettingsSchema, folderSettingsPatchSchema, parseFolderSyncData, parseFolderOrganizationData } from '@/domain/folder/schemas'
 import {
   BROWSER_SYNC_CAPACITY_NOTICE_THRESHOLD_PERCENT,
   ROOT_FOLDER_ID,
   type BrowserSyncUsage,
+  type BrowserSyncRecreationRequest,
   type ChatReferenceRow,
   type FolderCoordinatorLeaseRow,
+  type FolderDataSnapshot,
+  type FolderMutationResult,
   type FolderExportPayload,
   type FolderMembershipRow,
-  type FolderOperationRow,
-  type FolderOperationType,
   type FolderProjection,
   type FolderRow,
   type FolderSettingsRow,
   type FolderSnapshotRow,
-  type FolderSyncGenerationRow,
+  type FolderSyncPublicationRow,
+  type FolderSyncConflictRow,
+  type BrowserSyncManifest,
   type FolderAccountData,
   type FolderSyncSettings,
   type FolderSyncStateRow,
 } from '@/domain/folder/types'
-import { decodeLzStringBase64, encodeLzStringBase64, fromFolderSyncData, newestSyncSettings, sha256Hex, toFolderSyncData } from '@/services/folder-sync/codec'
+import { fromFolderSyncData, stableStringify, toFolderSyncData } from '@/services/folder-sync/codec'
+import { decodeLzStringBase64, encodeLzStringBase64, fromFolderOrganizationData, sha256Hex, toFolderOrganizationData } from '@/services/folder-data/codec'
 import {
   createFolderTraceId,
   logFolderTrace,
@@ -65,9 +68,13 @@ function currentUsagePatch(state: FolderSyncStateRow, usage: BrowserSyncUsage): 
       : state.browserSyncLastDismissedUsagePercent,
   }
 }
-const runtimeStampTieBreaker = nanoid()
-let sharedClock: HybridLogicalClock | undefined
 let runtimeDeviceIdReady: Promise<string> | undefined
+
+export class FolderCoordinatorLeaseBusyError extends Error {
+  constructor(readonly retryAt: string) {
+    super('Folder sync coordinator lease is held by another context')
+  }
+}
 
 export interface FolderDeviceIdProvider {
   getDeviceId(): Promise<string>
@@ -124,44 +131,46 @@ export interface FolderSettingsPatch {
 
 export interface FolderRepository {
   getSettings(accountScopeId: string): Promise<FolderSettingsRow>
-  updateSettings(accountScopeId: string, patch: FolderSettingsPatch): Promise<FolderSettingsRow>
+  updateSettings(accountScopeId: string, patch: FolderSettingsPatch): Promise<FolderMutationResult<FolderSettingsRow>>
   listFolders(accountScopeId: string): Promise<FolderRow[]>
   listMemberships(accountScopeId: string): Promise<FolderMembershipRow[]>
   listChatReferences(accountScopeId: string): Promise<ChatReferenceRow[]>
   getProjection(accountScopeId: string): Promise<FolderProjection>
-  createFolder(accountScopeId: string, input: FolderCreateInput): Promise<FolderRow>
-  createFolderAndAddChat(accountScopeId: string, input: FolderCreateInput, chatId: string, cachedTitle?: string): Promise<{ folder: FolderRow; membership: FolderMembershipRow }>
-  updateFolder(accountScopeId: string, folderId: string, patch: FolderUpdateInput): Promise<FolderRow>
-  moveFolder(accountScopeId: string, folderId: string, parentFolderId: string, position?: FolderPosition): Promise<FolderRow>
-  deleteFolder(accountScopeId: string, folderId: string): Promise<void>
-  upsertMembership(accountScopeId: string, input: FolderMembershipInput): Promise<FolderMembershipRow>
-  moveMembership(accountScopeId: string, folderId: string, chatId: string, targetFolderId: string, position?: FolderPosition): Promise<FolderMembershipRow>
-  setMembershipPinned(accountScopeId: string, folderId: string, chatId: string, pinned: boolean): Promise<FolderMembershipRow>
-  removeMembership(accountScopeId: string, folderId: string, chatId: string): Promise<void>
-  upsertChatReference(accountScopeId: string, chatId: string, cachedTitle: string, expectedTitle?: string): Promise<ChatReferenceRow>
-  removeChatReference(accountScopeId: string, chatId: string): Promise<void>
-  removeChatAfterGeminiDelete(accountScopeId: string, chatId: string, protectionSnapshotId?: string): Promise<void>
-  createSnapshot(accountScopeId: string, reason: FolderSnapshotRow['reason'], hold?: boolean): Promise<FolderSnapshotRow>
+  createFolder(accountScopeId: string, input: FolderCreateInput): Promise<FolderMutationResult<FolderRow>>
+  createFolderAndAddChat(accountScopeId: string, input: FolderCreateInput, chatId: string, cachedTitle?: string): Promise<FolderMutationResult<{ folder: FolderRow; membership: FolderMembershipRow }>>
+  updateFolder(accountScopeId: string, folderId: string, patch: FolderUpdateInput): Promise<FolderMutationResult<FolderRow>>
+  moveFolder(accountScopeId: string, folderId: string, parentFolderId: string, position?: FolderPosition): Promise<FolderMutationResult<FolderRow>>
+  deleteFolder(accountScopeId: string, folderId: string): Promise<FolderMutationResult<void>>
+  upsertMembership(accountScopeId: string, input: FolderMembershipInput): Promise<FolderMutationResult<FolderMembershipRow>>
+  moveMembership(accountScopeId: string, folderId: string, chatId: string, targetFolderId: string, position?: FolderPosition): Promise<FolderMutationResult<FolderMembershipRow>>
+  setMembershipPinned(accountScopeId: string, folderId: string, chatId: string, pinned: boolean): Promise<FolderMutationResult<FolderMembershipRow>>
+  removeMembership(accountScopeId: string, folderId: string, chatId: string): Promise<FolderMutationResult<void>>
+  upsertChatReference(accountScopeId: string, chatId: string, cachedTitle: string, expectedTitle?: string, expectedRevision?: string): Promise<FolderMutationResult<ChatReferenceRow>>
+  removeChatReference(accountScopeId: string, chatId: string): Promise<FolderMutationResult<void>>
+  removeChatAfterGeminiDelete(accountScopeId: string, chatId: string, protectionSnapshotId?: string): Promise<FolderMutationResult<void>>
+  createSnapshot(accountScopeId: string, reason: FolderSnapshotRow['reason'], hold?: boolean, captured?: FolderDataSnapshot): Promise<FolderSnapshotRow>
   releaseSnapshot(accountScopeId: string, snapshotId: string, protectionToken: string): Promise<void>
   listSnapshots(accountScopeId: string): Promise<FolderSnapshotRow[]>
-  restoreSnapshot(accountScopeId: string, snapshotId: string): Promise<void>
+  restoreSnapshot(accountScopeId: string, snapshotId: string): Promise<FolderMutationResult<void>>
   exportAccountData(accountScopeId: string): Promise<FolderExportPayload>
-  importAccountData(accountScopeId: string, payload: FolderExportPayload): Promise<void>
+  importAccountData(accountScopeId: string, payload: FolderExportPayload): Promise<FolderMutationResult<void>>
   getAccountData(accountScopeId: string): Promise<FolderAccountData>
-  applyBrowserSyncSettings(accountScopeId: string, settings: FolderSyncSettings, settingsVersion: string): Promise<boolean>
+  getAccountDataWithRevision(accountScopeId: string): Promise<FolderDataSnapshot>
   getSyncState(accountScopeId: string): Promise<FolderSyncStateRow | undefined>
   listBrowserSyncWakeScopes(): Promise<string[]>
-  hasPendingOperations(accountScopeId: string): Promise<boolean>
-  applyBrowserSyncPayload(accountScopeId: string, payload: FolderAccountData, appliedRevision: string, authorityEpoch: string, preservePending?: boolean): Promise<void>
-  recordBrowserSyncReplicaObserved(accountScopeId: string, generationId: string): Promise<boolean>
-  recordBrowserSyncFailure(accountScopeId: string, errorCode: string, warning?: FolderSyncStateRow['browserSyncWarning'], projectedUsage?: BrowserSyncUsage): Promise<string>
+  hasPendingChanges(accountScopeId: string): Promise<boolean>
+  applyBrowserSyncSnapshot(accountScopeId: string, payload: FolderAccountData, manifest: BrowserSyncManifest, expectedRevision: string, resolving?: boolean): Promise<boolean>
+  recordBrowserSyncConflict(accountScopeId: string, payload: FolderAccountData, manifest: BrowserSyncManifest, expectedRevision: string): Promise<boolean>
+  getBrowserSyncConflict(accountScopeId: string): Promise<FolderSyncConflictRow | undefined>
+  selectLocalConflictVersion(accountScopeId: string, expectedRevision: string, snapshotId: string): Promise<boolean>
+  recordBrowserSyncHealthy(accountScopeId: string, snapshotId: string, expectedRevision: string): Promise<boolean>
+  recordBrowserSyncFailure(accountScopeId: string, errorCode: string, warning?: FolderSyncStateRow['browserSyncWarning'], projectedUsage?: BrowserSyncUsage): Promise<string | undefined>
   recordBrowserSyncUsage(accountScopeId: string, usage: BrowserSyncUsage): Promise<void>
-  getOrCreateBrowserSyncGeneration(accountScopeId: string): Promise<FolderSyncGenerationRow>
-  getRecoverableBrowserSyncGeneration(accountScopeId: string, replacedGenerationId: string): Promise<FolderSyncGenerationRow | undefined>
-  listReclaimableBrowserSyncGenerationIds(accountScopeId: string): Promise<string[]>
-  markBrowserSyncGenerationWriting(accountScopeId: string, generationId: string, replacedGenerationId?: string): Promise<void>
-  markBrowserSyncSettingsAccepted(accountScopeId: string, usage: BrowserSyncUsage): Promise<void>
-  markBrowserSyncGenerationAccepted(accountScopeId: string, generationId: string, usage: BrowserSyncUsage): Promise<void>
+  getOrCreateBrowserSyncPublication(accountScopeId: string): Promise<FolderSyncPublicationRow>
+  getBrowserSyncPublication(accountScopeId: string): Promise<FolderSyncPublicationRow | undefined>
+  prepareBrowserSyncRecreation(accountScopeId: string, request: BrowserSyncRecreationRequest): Promise<boolean>
+  markBrowserSyncPublicationWriting(accountScopeId: string, snapshotId: string): Promise<void>
+  markBrowserSyncPublicationAccepted(accountScopeId: string, snapshotId: string, usage: BrowserSyncUsage): Promise<void>
   dismissBrowserSyncCapacityNotice(accountScopeId: string, displayedUsagePercent: number): Promise<boolean>
   acquireCoordinatorLease(accountScopeId: string, ownerId: string, ttlMs?: number): Promise<FolderCoordinatorLeaseRow>
   releaseCoordinatorLease(accountScopeId: string, ownerId: string): Promise<void>
@@ -178,9 +187,6 @@ function now(): string {
   return new Date().toISOString()
 }
 
-function isLive<T extends { deletedAt?: string }>(row: T): boolean {
-  return !row.deletedAt
-}
 
 function membershipId(accountScopeId: string, folderId: string, chatId: string): string {
   return `${accountScopeId}:${folderId}:${chatId}`
@@ -251,14 +257,7 @@ export class FolderRepositoryImpl implements FolderRepository {
   private async preheatDevice(): Promise<string> {
     this.deviceReady ??= this.deviceIdProvider.getDeviceId()
     const deviceId = await this.deviceReady
-    sharedClock ??= new HybridLogicalClock(`${deviceId}.${runtimeStampTieBreaker}`)
     return deviceId
-  }
-
-  private stamp(after?: string): string {
-    if (!sharedClock) throw new Error('Folder device id must be preheated before a transaction')
-    if (after) sharedClock.observe(after)
-    return sharedClock.next()
   }
 
   private defaultSettings(accountScopeId: string): FolderSettingsRow {
@@ -268,8 +267,6 @@ export class FolderRepositoryImpl implements FolderRepository {
       hideOrganizedChats: false,
       collapsedFolderIds: [],
       updatedAt: now(),
-      settingsVersion: '0000000000000:000000:default',
-      settingsPending: false,
     }
   }
 
@@ -295,62 +292,19 @@ export class FolderRepositoryImpl implements FolderRepository {
     }
   }
 
-  private async writeOperation(
-    accountScopeId: string,
-    deviceId: string,
-    operationType: FolderOperationType,
-    entityId: string,
-    versionStamp: string,
-    payload: Record<string, unknown>,
-  ): Promise<FolderSyncStateRow> {
+  private async markOrganizationChanged(accountScopeId: string, deviceId: string): Promise<void> {
     const prior = await db.folder_sync_states.get(accountScopeId)
-    const revision = `${deviceId}:${nanoid()}`
-    const state: FolderSyncStateRow = {
-      accountScopeId,
-      deviceId,
-      provider: prior?.provider ?? 'browser-sync',
-      authorityEpoch: prior?.authorityEpoch ?? `epoch-${nanoid()}`,
-      localDataRevision: revision,
-      lastObservedReplicaGenerationId: prior?.lastObservedReplicaGenerationId,
-      lastAppliedReplicaRevision: prior?.lastAppliedReplicaRevision,
-      lastWrittenReplicaGenerationId: prior?.lastWrittenReplicaGenerationId,
-      lastBrowserStorageWriteAt: prior?.lastBrowserStorageWriteAt,
-      driveFileId: prior?.driveFileId,
-      driveFileVersion: prior?.driveFileVersion,
-      driveChangePageToken: prior?.driveChangePageToken,
-      lastAttemptAt: prior?.lastAttemptAt,
-      retryAt: prior?.retryAt,
-      retryCount: prior?.retryCount,
-      lastErrorCode: prior?.lastErrorCode,
-      browserSyncWarning: prior?.browserSyncWarning,
-      browserSyncCurrentUsageBytes: prior?.browserSyncCurrentUsageBytes,
-      browserSyncCurrentTotalBytes: prior?.browserSyncCurrentTotalBytes,
-      browserSyncQuotaBytes: prior?.browserSyncQuotaBytes,
-      browserSyncProjectedUsageBytes: prior?.browserSyncProjectedUsageBytes,
-      browserSyncProjectedTotalBytes: prior?.browserSyncProjectedTotalBytes,
-      browserSyncUsageMeasuredAt: prior?.browserSyncUsageMeasuredAt,
-      browserSyncBudgetBytes: prior?.browserSyncBudgetBytes,
-      browserSyncLastDismissedUsagePercent: prior?.browserSyncLastDismissedUsagePercent,
-      incompleteReplicaSince: prior?.incompleteReplicaSince,
-      updatedAt: now(),
-    }
-    const opId = nanoid()
-    const operation: FolderOperationRow = {
-      id: opId,
-      opId,
-      accountScopeId,
-      deviceId,
-      baseRevision: prior?.lastAppliedReplicaRevision ?? prior?.localDataRevision,
-      operationType,
-      entityId,
-      versionStamp,
-      payload,
-      createdAt: now(),
-      state: 'pending',
-    }
-    await db.folder_operations.put(operation)
-    await db.folder_sync_states.put(state)
-    return state
+    await db.folder_sync_states.put({
+      ...prior, accountScopeId, deviceId, provider: prior?.provider ?? 'browser-sync',
+      localDataRevision: `${deviceId}:${nanoid()}`, dirty: true, updatedAt: now(),
+    })
+  }
+
+  private async pruneChatReferences(accountScopeId: string): Promise<void> {
+    const memberships = await db.folder_memberships.where('accountScopeId').equals(accountScopeId).toArray()
+    const chatIds = new Set(memberships.map((row) => row.chatId))
+    await db.folder_chat_references.where('accountScopeId').equals(accountScopeId)
+      .filter((row) => !chatIds.has(row.chatId)).delete()
   }
 
   private async ensureSyncState(accountScopeId: string, deviceId: string): Promise<FolderSyncStateRow> {
@@ -361,7 +315,7 @@ export class FolderRepositoryImpl implements FolderRepository {
         accountScopeId,
         deviceId,
         provider: 'browser-sync',
-        authorityEpoch: `epoch-${nanoid()}`,
+        dirty: false,
         localDataRevision: `${deviceId}:initial-${nanoid()}`,
         updatedAt: now(),
       }
@@ -383,19 +337,14 @@ export class FolderRepositoryImpl implements FolderRepository {
       if (!(error instanceof Error) || !error.message.includes('space exhausted')) throw error
       const ordered = sortByOrder([...siblings])
       const keys = rebalanceOrderKeys(ordered.map((folder) => folder.id))
-      const versionStamp = this.stamp()
+
       const updated = ordered.map((folder) => ({
         ...folder,
         orderKey: keys.get(folder.id)!,
         updatedAt: now(),
-        versionStamp,
-        fieldVersions: { ...folder.fieldVersions, position: versionStamp },
       }))
       await db.folders.bulkPut(updated)
-      await this.writeOperation(accountScopeId, deviceId, 'order.rebalance', parentFolderId, versionStamp, {
-        parentFolderId,
-        folderIds: ordered.map((folder) => folder.id),
-      })
+      await this.markOrganizationChanged(accountScopeId, deviceId)
       return resolveOrderKey(updated, position)
     }
   }
@@ -415,22 +364,16 @@ export class FolderRepositoryImpl implements FolderRepository {
       if (!(error instanceof Error) || !error.message.includes('space exhausted')) throw error
       const ordered = sortByOrder(orderedRows())
       const keys = rebalanceOrderKeys(ordered.map((membership) => membership.id))
-      const latestStamp = siblings.map((row) => pinned ? row.pinVersionStamp ?? '' : row.positionVersionStamp).sort().at(-1)
-      const versionStamp = this.stamp(latestStamp)
       const updated = siblings.map((membership) => ({
         ...membership,
         ...(pinned
-          ? { pinnedOrderKey: keys.get(membership.id)!, pinVersionStamp: versionStamp }
-          : { orderKey: keys.get(membership.id)!, positionVersionStamp: versionStamp }),
+          ? { pinnedOrderKey: keys.get(membership.id)! }
+          : { orderKey: keys.get(membership.id)! }),
         updatedAt: now(),
-        versionStamp,
+
       }))
       await db.folder_memberships.bulkPut(updated)
-      await this.writeOperation(accountScopeId, deviceId, 'order.rebalance', folderId, versionStamp, {
-        folderId,
-        membershipIds: ordered.map((membership) => membership.id),
-        pinned,
-      })
+      await this.markOrganizationChanged(accountScopeId, deviceId)
       return resolveOrderKey(updated.map((row) => ({ ...row, orderKey: pinned ? row.pinnedOrderKey! : row.orderKey })), position)
     }
   }
@@ -446,13 +389,14 @@ export class FolderRepositoryImpl implements FolderRepository {
     return settings
   }
 
-  async updateSettings(accountScopeId: string, patch: FolderSettingsPatch): Promise<FolderSettingsRow> {
+  async updateSettings(accountScopeId: string, patch: FolderSettingsPatch): Promise<FolderMutationResult<FolderSettingsRow>> {
     requireScope(accountScopeId)
     patch = folderSettingsPatchSchema.parse(patch)
     const deviceId = await this.preheatDevice()
     await this.ensureSyncState(accountScopeId, deviceId)
     let result!: FolderSettingsRow
-    await db.transaction('rw', db.folder_settings, async () => {
+    let mutationEffect: 'sync-settings' | 'local-view' | undefined
+    return runFolderMutation(accountScopeId, [db.folder_settings], async () => {
       const prior = await this.ensureSettings(accountScopeId)
       const settings = folderSyncSettingsSchema.parse({
         enabled: patch.enabled ?? prior.enabled,
@@ -463,28 +407,13 @@ export class FolderRepositoryImpl implements FolderRepository {
         ...prior, ...settings,
         collapsedFolderIds: patch.collapsedFolderIds === undefined ? prior.collapsedFolderIds : [...new Set(patch.collapsedFolderIds)],
         updatedAt: changed ? now() : prior.updatedAt,
-        settingsVersion: changed ? this.stamp(prior.settingsVersion) : prior.settingsVersion,
-        settingsPending: prior.settingsPending || changed,
-      }
-      await db.folder_settings.put(result)
-    })
-    return result
-  }
 
-  async applyBrowserSyncSettings(accountScopeId: string, settings: FolderSyncSettings, settingsVersion: string): Promise<boolean> {
-    requireScope(accountScopeId)
-    const remote = { settings: folderSyncSettingsSchema.parse(settings), settingsVersion: settingsVersionSchema.parse(settingsVersion) }
-    await this.preheatDevice()
-    return db.transaction('rw', db.folder_settings, async () => {
-      const prior = await this.ensureSettings(accountScopeId)
-      const local = { settings: { enabled: prior.enabled, hideOrganizedChats: prior.hideOrganizedChats }, settingsVersion: prior.settingsVersion }
-      const selected = newestSyncSettings(local, remote)
-      const accepted = selected === remote || (local.settingsVersion === remote.settingsVersion && local.settings.enabled === remote.settings.enabled && local.settings.hideOrganizedChats === remote.settings.hideOrganizedChats)
-      if (!accepted) return false
-      const changed = prior.settingsVersion !== remote.settingsVersion || prior.enabled !== settings.enabled || prior.hideOrganizedChats !== settings.hideOrganizedChats
-      await db.folder_settings.put({ ...prior, ...remote.settings, settingsVersion: remote.settingsVersion, settingsPending: false, updatedAt: changed ? now() : prior.updatedAt })
-      return changed
-    })
+      }
+      mutationEffect = changed ? 'sync-settings' : JSON.stringify(prior.collapsedFolderIds) !== JSON.stringify(result.collapsedFolderIds) ? 'local-view' : undefined
+      await db.folder_settings.put(result)
+      if (changed) await this.markOrganizationChanged(accountScopeId, deviceId)
+      return result
+    }, () => mutationEffect)
   }
 
   async getAccountData(accountScopeId: string): Promise<FolderAccountData> {
@@ -495,13 +424,13 @@ export class FolderRepositoryImpl implements FolderRepository {
   async listFolders(accountScopeId: string): Promise<FolderRow[]> {
     requireScope(accountScopeId)
     await this.preheatDevice()
-    return sortByOrder((await db.folders.where('accountScopeId').equals(accountScopeId).toArray()).filter(isLive))
+    return sortByOrder((await db.folders.where('accountScopeId').equals(accountScopeId).toArray()))
   }
 
   async listMemberships(accountScopeId: string): Promise<FolderMembershipRow[]> {
     requireScope(accountScopeId)
     await this.preheatDevice()
-    return (await db.folder_memberships.where('accountScopeId').equals(accountScopeId).toArray()).filter(isLive).sort(compareMembershipOrder)
+    return (await db.folder_memberships.where('accountScopeId').equals(accountScopeId).toArray()).sort(compareMembershipOrder)
   }
 
   async listChatReferences(accountScopeId: string): Promise<ChatReferenceRow[]> {
@@ -520,9 +449,9 @@ export class FolderRepositoryImpl implements FolderRepository {
       db.folder_memberships.where('accountScopeId').equals(accountScopeId).toArray(),
       db.folder_chat_references.where('accountScopeId').equals(accountScopeId).toArray(),
     ])
-    const folders = sortByOrder(allFolders.filter(isLive))
+    const folders = sortByOrder(allFolders)
     const folderIds = new Set(folders.map((folder) => folder.id))
-    const memberships = allMemberships.filter((membership) => isLive(membership) && folderIds.has(membership.folderId)).sort(compareMembershipOrder)
+    const memberships = allMemberships.filter((membership) => folderIds.has(membership.folderId)).sort(compareMembershipOrder)
     const chatIds = new Set(memberships.map((membership) => membership.chatId))
     return {
       folders,
@@ -535,18 +464,18 @@ export class FolderRepositoryImpl implements FolderRepository {
     }
   }
 
-  async createFolder(accountScopeId: string, input: FolderCreateInput): Promise<FolderRow> {
+  async createFolder(accountScopeId: string, input: FolderCreateInput): Promise<FolderMutationResult<FolderRow>> {
     requireScope(accountScopeId)
     const deviceId = await this.preheatDevice()
     const name = normalizeFolderName(input.name)
     const parentFolderId = input.parentFolderId ?? ROOT_FOLDER_ID
     let result!: FolderRow
-    await db.transaction('rw', db.folders, db.folder_operations, db.folder_sync_states, async () => {
+    return runFolderMutation(accountScopeId, [db.folders, db.folder_sync_states], async () => {
       if (parentFolderId !== ROOT_FOLDER_ID) {
         let parent = await db.folders.get(parentFolderId)
         let depth = 1
         while (parent) {
-          if (parent.accountScopeId !== accountScopeId || !isLive(parent)) throw new Error('Parent folder is unavailable')
+          if (parent.accountScopeId !== accountScopeId) throw new Error('Parent folder is unavailable')
           depth += 1
           if (depth > 32) throw new Error('Folder depth exceeds the supported limit')
           if (parent.parentFolderId === ROOT_FOLDER_ID) break
@@ -555,11 +484,11 @@ export class FolderRepositoryImpl implements FolderRepository {
         if (!parent) throw new Error('Parent folder is unavailable')
       }
       const folders = await db.folders.where('accountScopeId').equals(accountScopeId).toArray()
-      if (folders.some((folder) => isLive(folder) && folderNameKey(folder.name) === folderNameKey(name))) {
+      if (folders.some((folder) => folderNameKey(folder.name) === folderNameKey(name))) {
         throw new Error('Folder name already exists')
       }
-      const siblings = folders.filter((folder) => isLive(folder) && folder.parentFolderId === parentFolderId)
-      const versionStamp = this.stamp()
+      const siblings = folders.filter((folder) => folder.parentFolderId === parentFolderId)
+
       const timestamp = now()
       result = {
         id: nanoid(),
@@ -571,17 +500,14 @@ export class FolderRepositoryImpl implements FolderRepository {
         orderKey: await this.resolveFolderOrderKey(accountScopeId, parentFolderId, siblings, input, deviceId),
         createdAt: timestamp,
         updatedAt: timestamp,
-        versionStamp,
-        fieldVersions: { name: versionStamp, iconKey: versionStamp, colorValue: versionStamp, position: versionStamp },
       }
       await db.folders.put(result)
-      await this.writeOperation(accountScopeId, deviceId, 'folder.create', result.id, versionStamp, { row: result })
+      await this.markOrganizationChanged(accountScopeId, deviceId)
+      return result
     })
-    await this.createAutomaticSnapshot(accountScopeId)
-    return result
   }
 
-  async createFolderAndAddChat(accountScopeId: string, input: FolderCreateInput, chatId: string, cachedTitle?: string): Promise<{ folder: FolderRow; membership: FolderMembershipRow }> {
+  async createFolderAndAddChat(accountScopeId: string, input: FolderCreateInput, chatId: string, cachedTitle?: string): Promise<FolderMutationResult<{ folder: FolderRow; membership: FolderMembershipRow }>> {
     requireScope(accountScopeId)
     if (!chatId.trim()) throw new Error('A chat id is required')
     const deviceId = await this.preheatDevice()
@@ -589,85 +515,81 @@ export class FolderRepositoryImpl implements FolderRepository {
     const parentFolderId = input.parentFolderId ?? ROOT_FOLDER_ID
     let folder!: FolderRow
     let membership!: FolderMembershipRow
-    await db.transaction('rw', [db.folders, db.folder_memberships, db.folder_chat_references, db.folder_operations, db.folder_sync_states], async () => {
+    return runFolderMutation(accountScopeId, [db.folders, db.folder_memberships, db.folder_chat_references, db.folder_sync_states], async () => {
       const folders = await db.folders.where('accountScopeId').equals(accountScopeId).toArray()
       if (parentFolderId !== ROOT_FOLDER_ID) throw new Error('P0 only supports root Folders')
-      if (folders.some((row) => isLive(row) && folderNameKey(row.name) === folderNameKey(name))) throw new Error('Folder name already exists')
+      if (folders.some((row) => folderNameKey(row.name) === folderNameKey(name))) throw new Error('Folder name already exists')
       const timestamp = now()
-      const versionStamp = this.stamp()
+
       folder = {
         id: nanoid(), accountScopeId, parentFolderId, name,
         iconKey: requireFolderIconKey(input.iconKey ?? DEFAULT_FOLDER_ICON_KEY),
         colorValue: requireFolderColorValue(input.colorValue ?? DEFAULT_FOLDER_COLOR_VALUE),
-        orderKey: await this.resolveFolderOrderKey(accountScopeId, parentFolderId, folders.filter((row) => isLive(row) && row.parentFolderId === parentFolderId), input, deviceId),
-        createdAt: timestamp, updatedAt: timestamp, versionStamp,
-        fieldVersions: { name: versionStamp, iconKey: versionStamp, colorValue: versionStamp, position: versionStamp },
+        orderKey: await this.resolveFolderOrderKey(accountScopeId, parentFolderId, folders.filter((row) => row.parentFolderId === parentFolderId), input, deviceId),
+        createdAt: timestamp, updatedAt: timestamp,
+
       }
       membership = {
         id: membershipId(accountScopeId, folder.id, chatId), accountScopeId, folderId: folder.id, chatId,
         orderKey: keyBetween(undefined, undefined), createdAt: timestamp, updatedAt: timestamp,
-        versionStamp, positionVersionStamp: versionStamp, pinVersionStamp: versionStamp,
+
       }
       const existingReference = await db.folder_chat_references.get([accountScopeId, chatId])
       const reference: ChatReferenceRow = {
         accountScopeId, chatId, cachedTitle: cachedTitle === undefined ? existingReference?.cachedTitle ?? '' : normalizeTitle(cachedTitle),
-        createdAt: existingReference?.createdAt ?? timestamp, updatedAt: timestamp, titleVersionStamp: versionStamp,
+        createdAt: existingReference?.createdAt ?? timestamp, updatedAt: timestamp,
       }
       await db.folders.put(folder)
       await db.folder_memberships.put(membership)
       await db.folder_chat_references.put(reference)
-      await this.writeOperation(accountScopeId, deviceId, 'folder.create', folder.id, versionStamp, { row: folder, membership })
+      await this.markOrganizationChanged(accountScopeId, deviceId)
+      return { folder, membership }
     })
-    await this.createAutomaticSnapshot(accountScopeId)
-    return { folder, membership }
   }
 
-  async updateFolder(accountScopeId: string, folderId: string, patch: FolderUpdateInput): Promise<FolderRow> {
+  async updateFolder(accountScopeId: string, folderId: string, patch: FolderUpdateInput): Promise<FolderMutationResult<FolderRow>> {
     requireScope(accountScopeId)
     const deviceId = await this.preheatDevice()
     let result!: FolderRow
-    await db.transaction('rw', db.folders, db.folder_operations, db.folder_sync_states, async () => {
+    return runFolderMutation(accountScopeId, [db.folders, db.folder_sync_states], async () => {
+      if (patch.expectedRevision && (await db.folder_sync_states.get(accountScopeId))?.localDataRevision !== patch.expectedRevision) throw new Error('STALE_REVISION')
       const prior = await db.folders.get(folderId)
-      if (!prior || prior.accountScopeId !== accountScopeId || !isLive(prior)) throw new Error('Folder is unavailable')
+      if (!prior || prior.accountScopeId !== accountScopeId) throw new Error('Folder is unavailable')
       const name = patch.name === undefined ? prior.name : normalizeFolderName(patch.name)
       if (patch.name !== undefined) {
         const folders = await db.folders.where('accountScopeId').equals(accountScopeId).toArray()
-        if (folders.some((folder) => folder.id !== folderId && isLive(folder) && folderNameKey(folder.name) === folderNameKey(name))) {
+        if (folders.some((folder) => folder.id !== folderId && folderNameKey(folder.name) === folderNameKey(name))) {
           throw new Error('Folder name already exists')
         }
       }
-      const versionStamp = this.stamp()
+      const iconKey = patch.iconKey === undefined ? prior.iconKey : requireFolderIconKey(patch.iconKey)
+      const colorValue = patch.colorValue === undefined ? prior.colorValue : requireFolderColorValue(patch.colorValue)
+      if (name === prior.name && iconKey === prior.iconKey && colorValue === prior.colorValue) return prior
+
       result = {
         ...prior,
         name,
-        iconKey: patch.iconKey === undefined ? prior.iconKey : requireFolderIconKey(patch.iconKey),
-        colorValue: patch.colorValue === undefined ? prior.colorValue : requireFolderColorValue(patch.colorValue),
+        iconKey,
+        colorValue,
         updatedAt: now(),
-        versionStamp,
-        fieldVersions: {
-          ...prior.fieldVersions,
-          ...(patch.name === undefined ? {} : { name: versionStamp }),
-          ...(patch.iconKey === undefined ? {} : { iconKey: versionStamp }),
-          ...(patch.colorValue === undefined ? {} : { colorValue: versionStamp }),
-        },
+
       }
       await db.folders.put(result)
-      await this.writeOperation(accountScopeId, deviceId, 'folder.update', folderId, versionStamp, { row: result })
+      await this.markOrganizationChanged(accountScopeId, deviceId)
+      return result
     })
-    await this.createAutomaticSnapshot(accountScopeId)
-    return result
   }
 
-  async moveFolder(accountScopeId: string, folderId: string, parentFolderId: string, position?: FolderPosition): Promise<FolderRow> {
+  async moveFolder(accountScopeId: string, folderId: string, parentFolderId: string, position?: FolderPosition): Promise<FolderMutationResult<FolderRow>> {
     requireScope(accountScopeId)
     const deviceId = await this.preheatDevice()
     let result!: FolderRow
-    await db.transaction('rw', db.folders, db.folder_operations, db.folder_sync_states, async () => {
+    return runFolderMutation(accountScopeId, [db.folders, db.folder_sync_states], async () => {
       const folders = await db.folders.where('accountScopeId').equals(accountScopeId).toArray()
-      const moving = folders.find((folder) => folder.id === folderId && isLive(folder))
+      const moving = folders.find((folder) => folder.id === folderId)
       if (!moving) throw new Error('Folder is unavailable')
       if (parentFolderId !== ROOT_FOLDER_ID) {
-        const parent = folders.find((folder) => folder.id === parentFolderId && isLive(folder))
+        const parent = folders.find((folder) => folder.id === parentFolderId)
         if (!parent) throw new Error('Parent folder is unavailable')
         const ancestors = new Set<string>()
         let cursor: FolderRow | undefined = parent
@@ -676,7 +598,7 @@ export class FolderRepositoryImpl implements FolderRepository {
           if (cursor.parentFolderId === ROOT_FOLDER_ID) break
           if (ancestors.has(cursor.id)) throw new Error('Folder tree contains a cycle')
           ancestors.add(cursor.id)
-          cursor = folders.find((folder) => folder.id === cursor?.parentFolderId && isLive(folder))
+          cursor = folders.find((folder) => folder.id === cursor?.parentFolderId)
           if (!cursor) throw new Error('Parent folder is unavailable')
         }
       }
@@ -687,12 +609,12 @@ export class FolderRepositoryImpl implements FolderRepository {
         while (cursor) {
           depth += 1
           if (cursor.parentFolderId === ROOT_FOLDER_ID) return depth
-          cursor = folders.find((folder) => folder.id === cursor?.parentFolderId && isLive(folder))
+          cursor = folders.find((folder) => folder.id === cursor?.parentFolderId)
         }
         throw new Error('Parent folder is unavailable')
       })()
       const descendants = new Map<string, FolderRow[]>()
-      for (const folder of folders.filter(isLive)) {
+      for (const folder of folders) {
         const children = descendants.get(folder.parentFolderId) ?? []
         children.push(folder)
         descendants.set(folder.parentFolderId, children)
@@ -704,76 +626,57 @@ export class FolderRepositoryImpl implements FolderRepository {
       if (depthFromTargetRoot + maxRelativeDepth(moving.id) - 1 > 32) {
         throw new Error('Folder depth exceeds the supported limit')
       }
-      const siblings = folders.filter((folder) => isLive(folder) && folder.parentFolderId === parentFolderId && folder.id !== moving.id)
-      const versionStamp = this.stamp()
+      const siblings = folders.filter((folder) => folder.parentFolderId === parentFolderId && folder.id !== moving.id)
+
       result = {
         ...moving,
         parentFolderId,
         orderKey: await this.resolveFolderOrderKey(accountScopeId, parentFolderId, siblings, position, deviceId),
         updatedAt: now(),
-        versionStamp,
-        fieldVersions: { ...moving.fieldVersions, position: versionStamp },
       }
       await db.folders.put(result)
-      await this.writeOperation(accountScopeId, deviceId, 'folder.move', folderId, versionStamp, { row: result })
+      await this.markOrganizationChanged(accountScopeId, deviceId)
+      return result
     })
-    await this.createAutomaticSnapshot(accountScopeId)
-    return result
   }
 
-  async deleteFolder(accountScopeId: string, folderId: string): Promise<void> {
+  async deleteFolder(accountScopeId: string, folderId: string): Promise<FolderMutationResult<void>> {
     requireScope(accountScopeId)
     const deviceId = await this.preheatDevice()
     const target = await db.folders.get(folderId)
-    if (!target || target.accountScopeId !== accountScopeId || !isLive(target)) return
-    await this.withProtection(accountScopeId, 'before-delete', async () => {
-      await db.transaction('rw', [db.folders, db.folder_memberships, db.folder_settings, db.folder_operations, db.folder_sync_states], async () => {
+    if (!target || target.accountScopeId !== accountScopeId) return runFolderMutation(accountScopeId, [], async () => undefined)
+    return this.withProtection(accountScopeId, 'before-delete', async () => {
+      return runFolderMutation(accountScopeId, [db.folders, db.folder_memberships, db.folder_chat_references, db.folder_settings, db.folder_sync_states], async () => {
         const folders = await db.folders.where('accountScopeId').equals(accountScopeId).toArray()
         const descendants = new Set<string>([folderId])
         let changed = true
         while (changed) {
           changed = false
           for (const folder of folders) {
-            if (isLive(folder) && descendants.has(folder.parentFolderId) && !descendants.has(folder.id)) {
+            if (descendants.has(folder.parentFolderId) && !descendants.has(folder.id)) {
               descendants.add(folder.id)
               changed = true
             }
           }
         }
         const timestamp = now()
-        const versionStamp = this.stamp()
-        const tombstones = folders.filter((folder) => descendants.has(folder.id) && isLive(folder)).map((folder) => ({
-          ...folder,
-          deletedAt: timestamp,
-          deleteVersionStamp: versionStamp,
-          updatedAt: timestamp,
-          versionStamp,
-        }))
-        const memberships = await db.folder_memberships.where('accountScopeId').equals(accountScopeId).toArray()
-        const membershipTombstones = memberships.filter((membership) => isLive(membership) && descendants.has(membership.folderId)).map((membership) => ({
-          ...membership,
-          deletedAt: timestamp,
-          deleteVersionStamp: versionStamp,
-          updatedAt: timestamp,
-          versionStamp,
-        }))
-        await db.folders.bulkPut(tombstones)
-        await db.folder_memberships.bulkPut(membershipTombstones)
+
+        await db.folders.bulkDelete([...descendants])
+        await db.folder_memberships.where('accountScopeId').equals(accountScopeId)
+          .filter((row) => descendants.has(row.folderId)).delete()
+        await this.pruneChatReferences(accountScopeId)
         const settings = await this.ensureSettings(accountScopeId)
         await db.folder_settings.put({
           ...settings,
           collapsedFolderIds: settings.collapsedFolderIds.filter((id) => !descendants.has(id)),
           updatedAt: timestamp,
         })
-        await this.writeOperation(accountScopeId, deviceId, 'folder.delete-subtree', folderId, versionStamp, {
-          folderIds: [...descendants],
-          membershipIds: membershipTombstones.map((membership) => membership.id),
-        })
+        await this.markOrganizationChanged(accountScopeId, deviceId)
       })
     })
   }
 
-  async upsertMembership(accountScopeId: string, input: FolderMembershipInput): Promise<FolderMembershipRow> {
+  async upsertMembership(accountScopeId: string, input: FolderMembershipInput): Promise<FolderMutationResult<FolderMembershipRow>> {
     const traceId = input.traceId ?? createFolderTraceId()
     try {
       requireScope(accountScopeId)
@@ -793,14 +696,14 @@ export class FolderRepositoryImpl implements FolderRepository {
       })
       let result!: FolderMembershipRow
       let changed = false
-      await db.transaction('rw', [db.folders, db.folder_memberships, db.folder_chat_references, db.folder_operations, db.folder_sync_states], async () => {
+      const mutation = await runFolderMutation(accountScopeId, [db.folders, db.folder_memberships, db.folder_chat_references, db.folder_sync_states], async () => {
         logFolderTrace(traceId, 'repository.transaction-started', {
           accountScopeId,
           folderId: input.folderId,
           chatId: input.chatId,
         })
         const folder = await db.folders.get(input.folderId)
-        if (!folder || folder.accountScopeId !== accountScopeId || !isLive(folder)) throw new Error('Folder is unavailable')
+        if (!folder || folder.accountScopeId !== accountScopeId) throw new Error('Folder is unavailable')
         const id = membershipId(accountScopeId, input.folderId, input.chatId)
         const prior = await db.folder_memberships.get(id)
         logFolderTrace(traceId, 'repository.target-validated', {
@@ -808,12 +711,13 @@ export class FolderRepositoryImpl implements FolderRepository {
           folderId: input.folderId,
           chatId: input.chatId,
           membershipId: id,
-          existing: Boolean(prior && isLive(prior)),
+          existing: Boolean(prior),
         })
-        if (prior && isLive(prior)) {
+        if (prior) {
           if (input.cachedTitle !== undefined) {
             const existingChat = await db.folder_chat_references.get([accountScopeId, input.chatId])
-            const versionStamp = this.stamp()
+            if (existingChat?.cachedTitle === normalizeTitle(input.cachedTitle)) { result = prior; return result }
+
             const timestamp = now()
             const chatReference: ChatReferenceRow = {
               accountScopeId,
@@ -821,10 +725,10 @@ export class FolderRepositoryImpl implements FolderRepository {
               cachedTitle: normalizeTitle(input.cachedTitle),
               createdAt: existingChat?.createdAt ?? timestamp,
               updatedAt: timestamp,
-              titleVersionStamp: versionStamp,
+
             }
             await db.folder_chat_references.put(chatReference)
-            await this.writeOperation(accountScopeId, deviceId, 'chat-reference.update', input.chatId, versionStamp, { row: chatReference })
+            await this.markOrganizationChanged(accountScopeId, deviceId)
             changed = true
           }
           result = prior
@@ -834,11 +738,11 @@ export class FolderRepositoryImpl implements FolderRepository {
             chatId: input.chatId,
             membershipId: result.id,
           })
-          return
+          return result
         }
         const memberships = await db.folder_memberships.where('[accountScopeId+folderId]').equals([accountScopeId, input.folderId]).toArray()
-        const siblings = memberships.filter((membership) => isLive(membership) && membership.id !== id)
-        const versionStamp = this.stamp(prior?.pinVersionStamp)
+        const siblings = memberships.filter((membership) => membership.id !== id)
+
         const timestamp = now()
         result = {
           id,
@@ -846,11 +750,8 @@ export class FolderRepositoryImpl implements FolderRepository {
           folderId: input.folderId,
           chatId: input.chatId,
           orderKey: await this.resolveMembershipOrderKey(accountScopeId, input.folderId, siblings, input, deviceId),
-          createdAt: prior?.createdAt ?? timestamp,
+          createdAt: timestamp,
           updatedAt: timestamp,
-          versionStamp,
-          positionVersionStamp: versionStamp,
-          pinVersionStamp: versionStamp,
         }
         await db.folder_memberships.put(result)
         const existingChat = await db.folder_chat_references.get([accountScopeId, input.chatId])
@@ -862,10 +763,10 @@ export class FolderRepositoryImpl implements FolderRepository {
             : normalizeTitle(input.cachedTitle),
           createdAt: existingChat?.createdAt ?? timestamp,
           updatedAt: timestamp,
-          titleVersionStamp: versionStamp,
+
         }
         await db.folder_chat_references.put(chatReference)
-        await this.writeOperation(accountScopeId, deviceId, 'membership.add', result.id, versionStamp, { row: result })
+        await this.markOrganizationChanged(accountScopeId, deviceId)
         changed = true
         logFolderTrace(traceId, 'repository.rows-written', {
           accountScopeId,
@@ -874,8 +775,9 @@ export class FolderRepositoryImpl implements FolderRepository {
           membershipId: result.id,
           wroteMembership: true,
           wroteChatReference: true,
-          queuedOperation: 'membership.add',
+          mutation: 'membership.add',
         })
+        return result
       })
       logFolderTrace(traceId, 'repository.transaction-committed', {
         accountScopeId,
@@ -884,8 +786,7 @@ export class FolderRepositoryImpl implements FolderRepository {
         membershipId: result.id,
         changed,
       })
-      if (changed) await this.createAutomaticSnapshot(accountScopeId, traceId)
-      return result
+      return mutation
     } catch (error) {
       logFolderTraceError(traceId, 'repository.command-failed', error, {
         accountScopeId,
@@ -896,22 +797,22 @@ export class FolderRepositoryImpl implements FolderRepository {
     }
   }
 
-  async moveMembership(accountScopeId: string, folderId: string, chatId: string, targetFolderId: string, position?: FolderPosition): Promise<FolderMembershipRow> {
+  async moveMembership(accountScopeId: string, folderId: string, chatId: string, targetFolderId: string, position?: FolderPosition): Promise<FolderMutationResult<FolderMembershipRow>> {
     requireScope(accountScopeId)
     const deviceId = await this.preheatDevice()
     let result!: FolderMembershipRow
-    await db.transaction('rw', db.folders, db.folder_memberships, db.folder_operations, db.folder_sync_states, async () => {
+    return runFolderMutation(accountScopeId, [db.folders, db.folder_memberships, db.folder_sync_states], async () => {
       const sourceId = membershipId(accountScopeId, folderId, chatId)
       const prior = await db.folder_memberships.get(sourceId)
       const target = await db.folders.get(targetFolderId)
-      if (!prior || !isLive(prior) || !target || target.accountScopeId !== accountScopeId || !isLive(target)) {
+      if (!prior || !target || target.accountScopeId !== accountScopeId) {
         throw new Error('Membership or target folder is unavailable')
       }
       const targetId = membershipId(accountScopeId, targetFolderId, chatId)
       const existingTarget = await db.folder_memberships.get(targetId)
-      if (existingTarget && isLive(existingTarget) && targetId !== sourceId) throw new Error('Chat already belongs to the target folder')
+      if (existingTarget && targetId !== sourceId) throw new Error('Chat already belongs to the target folder')
       const siblings = (await db.folder_memberships.where('[accountScopeId+folderId]').equals([accountScopeId, targetFolderId]).toArray())
-        .filter((membership) => isLive(membership) && membership.id !== sourceId && membership.id !== targetId)
+        .filter((membership) => membership.id !== sourceId && membership.id !== targetId)
       const sameFolder = sourceId === targetId
       const pinned = sameFolder && Boolean(prior.pinnedOrderKey)
       for (const anchorId of [position?.beforeId, position?.afterId]) {
@@ -922,98 +823,80 @@ export class FolderRepositoryImpl implements FolderRepository {
         accountScopeId, targetFolderId, pinned ? siblings.filter((row) => row.pinnedOrderKey) : siblings,
         position, deviceId, pinned,
       )
-      const versionStamp = this.stamp(pinned || !sameFolder ? prior.pinVersionStamp : prior.positionVersionStamp)
+
       const timestamp = now()
       result = {
         ...prior,
         id: targetId,
         folderId: targetFolderId,
         ...(pinned
-          ? { pinnedOrderKey: orderKey, pinVersionStamp: versionStamp }
-          : { orderKey, positionVersionStamp: versionStamp }),
-        ...(!sameFolder ? { pinnedOrderKey: undefined, pinVersionStamp: versionStamp } : {}),
+          ? { pinnedOrderKey: orderKey }
+          : { orderKey }),
+        ...(!sameFolder ? { pinnedOrderKey: undefined } : {}),
         updatedAt: timestamp,
-        versionStamp,
-        deletedAt: undefined,
-        deleteVersionStamp: undefined,
       }
-      const sourceTombstone = sourceId === targetId
-        ? undefined
-        : {
-            ...prior,
-            deletedAt: timestamp,
-            deleteVersionStamp: versionStamp,
-            updatedAt: timestamp,
-            versionStamp,
-          }
-      if (sourceTombstone) await db.folder_memberships.put(sourceTombstone)
+      if (sourceId !== targetId) await db.folder_memberships.delete(sourceId)
       await db.folder_memberships.put(result)
-      await this.writeOperation(accountScopeId, deviceId, 'membership.move', result.id, versionStamp, { row: result, sourceTombstone })
+      await this.markOrganizationChanged(accountScopeId, deviceId)
+      return result
     })
-    await this.createAutomaticSnapshot(accountScopeId)
-    return result
   }
 
-  async setMembershipPinned(accountScopeId: string, folderId: string, chatId: string, pinned: boolean): Promise<FolderMembershipRow> {
+  async setMembershipPinned(accountScopeId: string, folderId: string, chatId: string, pinned: boolean): Promise<FolderMutationResult<FolderMembershipRow>> {
     requireScope(accountScopeId)
     const deviceId = await this.preheatDevice()
     let result!: FolderMembershipRow
-    let changed = false
-    await db.transaction('rw', db.folders, db.folder_memberships, db.folder_operations, db.folder_sync_states, async () => {
+    return runFolderMutation(accountScopeId, [db.folders, db.folder_memberships, db.folder_sync_states], async () => {
       const prior = await db.folder_memberships.get(membershipId(accountScopeId, folderId, chatId))
       const folder = await db.folders.get(folderId)
-      if (!prior || !isLive(prior) || !folder || folder.accountScopeId !== accountScopeId || !isLive(folder)) {
+      if (!prior || !folder || folder.accountScopeId !== accountScopeId) {
         throw new Error('Membership or folder is unavailable')
       }
       if (Boolean(prior.pinnedOrderKey) === pinned) {
         result = prior
-        return
+        return result
       }
       const siblings = (await db.folder_memberships.where('[accountScopeId+folderId]').equals([accountScopeId, folderId]).toArray())
-        .filter((row) => isLive(row) && row.id !== prior.id && row.pinnedOrderKey)
+        .filter((row) => row.id !== prior.id && row.pinnedOrderKey)
       const pinnedOrderKey = pinned
         ? await this.resolveMembershipOrderKey(accountScopeId, folderId, siblings, undefined, deviceId, true)
         : undefined
-      const versionStamp = this.stamp(prior.pinVersionStamp)
-      result = { ...prior, pinnedOrderKey, pinVersionStamp: versionStamp, versionStamp, updatedAt: now() }
+
+      result = { ...prior, pinnedOrderKey, updatedAt: now() }
       await db.folder_memberships.put(result)
-      await this.writeOperation(accountScopeId, deviceId, 'membership.pin', result.id, versionStamp, { row: result })
-      changed = true
+      await this.markOrganizationChanged(accountScopeId, deviceId)
+      return result
     })
-    if (changed) await this.createAutomaticSnapshot(accountScopeId)
-    return result
   }
 
-  async removeMembership(accountScopeId: string, folderId: string, chatId: string): Promise<void> {
+  async removeMembership(accountScopeId: string, folderId: string, chatId: string): Promise<FolderMutationResult<void>> {
     requireScope(accountScopeId)
     const deviceId = await this.preheatDevice()
-    let changed = false
-    await db.transaction('rw', db.folder_memberships, db.folder_operations, db.folder_sync_states, async () => {
+    return runFolderMutation(accountScopeId, [db.folder_memberships, db.folder_chat_references], async () => {
       const id = membershipId(accountScopeId, folderId, chatId)
-      const prior = await db.folder_memberships.get(id)
-      if (!prior || !isLive(prior)) return
-      const versionStamp = this.stamp()
-      const row = { ...prior, deletedAt: now(), deleteVersionStamp: versionStamp, updatedAt: now(), versionStamp }
-      await db.folder_memberships.put(row)
-      await this.writeOperation(accountScopeId, deviceId, 'membership.remove', id, versionStamp, { row })
-      changed = true
+      if (!await db.folder_memberships.get(id)) return
+      await db.folder_memberships.delete(id)
+      await this.pruneChatReferences(accountScopeId)
+      await this.markOrganizationChanged(accountScopeId, deviceId)
     })
-    if (changed) await this.createAutomaticSnapshot(accountScopeId)
   }
 
-  async upsertChatReference(accountScopeId: string, chatId: string, cachedTitle: string, expectedTitle?: string): Promise<ChatReferenceRow> {
+  async upsertChatReference(accountScopeId: string, chatId: string, cachedTitle: string, expectedTitle?: string, expectedRevision?: string): Promise<FolderMutationResult<ChatReferenceRow>> {
     requireScope(accountScopeId)
     const deviceId = await this.preheatDevice()
     if (!chatId.trim()) throw new Error('A chat id is required')
     let result!: ChatReferenceRow
-    await db.transaction('rw', db.folder_chat_references, db.folder_operations, db.folder_sync_states, async () => {
+    return runFolderMutation(accountScopeId, [db.folder_chat_references, db.folder_sync_states], async () => {
+      if (expectedRevision && (await db.folder_sync_states.get(accountScopeId))?.localDataRevision !== expectedRevision) throw new Error('STALE_REVISION')
       const prior = await db.folder_chat_references.get([accountScopeId, chatId])
+      if (!prior) throw new Error('STALE_REVISION')
       // One-shot generated titles must not overwrite a rename made meanwhile.
       if (expectedTitle !== undefined) {
         if (!prior) throw new Error('Chat reference is unavailable')
-        if (prior.cachedTitle !== expectedTitle) { result = prior; return }
+        if (prior.cachedTitle !== expectedTitle) { result = prior; return result }
       }
-      const versionStamp = this.stamp()
+      if (prior?.cachedTitle === normalizeTitle(cachedTitle)) return prior
+
       const timestamp = now()
       result = {
         accountScopeId,
@@ -1021,58 +904,46 @@ export class FolderRepositoryImpl implements FolderRepository {
         cachedTitle: normalizeTitle(cachedTitle),
         createdAt: prior?.createdAt ?? timestamp,
         updatedAt: timestamp,
-        titleVersionStamp: versionStamp,
+
       }
       await db.folder_chat_references.put(result)
-      await this.writeOperation(accountScopeId, deviceId, 'chat-reference.update', chatId, versionStamp, { row: result })
+      await this.markOrganizationChanged(accountScopeId, deviceId)
+      return result
     })
-    return result
   }
 
-  async removeChatReference(accountScopeId: string, chatId: string): Promise<void> {
+  async removeChatReference(accountScopeId: string, chatId: string): Promise<FolderMutationResult<void>> {
     requireScope(accountScopeId)
     const deviceId = await this.preheatDevice()
-    await db.transaction('rw', db.folder_memberships, db.folder_chat_references, db.folder_operations, db.folder_sync_states, async () => {
+    return runFolderMutation(accountScopeId, [db.folder_memberships, db.folder_chat_references, db.folder_sync_states], async () => {
       const memberships = await db.folder_memberships.where('[accountScopeId+chatId]').equals([accountScopeId, chatId]).toArray()
-      if (memberships.some(isLive)) throw new Error('Cannot remove a chat reference with active memberships')
+      if (memberships.length) throw new Error('Cannot remove a chat reference with active memberships')
       const existing = await db.folder_chat_references.get([accountScopeId, chatId])
       if (!existing) return
       await db.folder_chat_references.delete([accountScopeId, chatId])
-      const versionStamp = this.stamp()
-      await this.writeOperation(accountScopeId, deviceId, 'chat-reference.update', chatId, versionStamp, { deleted: true })
+
+      await this.markOrganizationChanged(accountScopeId, deviceId)
     })
   }
 
-  async removeChatAfterGeminiDelete(accountScopeId: string, chatId: string, protectionSnapshotId?: string): Promise<void> {
+  async removeChatAfterGeminiDelete(accountScopeId: string, chatId: string, protectionSnapshotId?: string): Promise<FolderMutationResult<void>> {
     requireScope(accountScopeId)
     const deviceId = await this.preheatDevice()
     const remove = async () => {
-      await db.transaction('rw', [db.folder_memberships, db.folder_chat_references, db.folder_operations, db.folder_sync_states], async () => {
+      return runFolderMutation(accountScopeId, [db.folder_memberships, db.folder_chat_references, db.folder_sync_states], async () => {
         const memberships = await db.folder_memberships.where('[accountScopeId+chatId]').equals([accountScopeId, chatId]).toArray()
-        const active = memberships.filter(isLive)
+        const active = memberships
         const reference = await db.folder_chat_references.get([accountScopeId, chatId])
         if (!active.length && !reference) return
-        const versionStamp = this.stamp()
+
         const timestamp = now()
-        const tombstones = active.map((membership) => ({
-          ...membership,
-          deletedAt: timestamp,
-          deleteVersionStamp: versionStamp,
-          updatedAt: timestamp,
-          versionStamp,
-        }))
-        if (tombstones.length) {
-          await db.folder_memberships.bulkPut(tombstones)
-          await this.writeOperation(accountScopeId, deviceId, 'membership.remove', chatId, versionStamp, {
-            source: 'gemini-delete', membershipIds: tombstones.map((membership) => membership.id),
-          })
+        if (active.length) {
+          await db.folder_memberships.bulkDelete(active.map((row) => row.id))
+          await this.markOrganizationChanged(accountScopeId, deviceId)
         }
         if (reference) {
           await db.folder_chat_references.delete([accountScopeId, chatId])
-          await this.writeOperation(accountScopeId, deviceId, 'chat-reference.update', chatId, versionStamp, {
-            deleted: true,
-            source: 'gemini-delete',
-          })
+          await this.markOrganizationChanged(accountScopeId, deviceId)
         }
       })
     }
@@ -1081,43 +952,46 @@ export class FolderRepositoryImpl implements FolderRepository {
       if (!protection || protection.accountScopeId !== accountScopeId || !(protection.reasons ?? [protection.reason]).includes('before-delete')) {
         throw new Error('Protection snapshot is unavailable')
       }
-      await remove()
-      await this.createAutomaticSnapshot(accountScopeId)
+      return remove()
     } else {
-      await this.withProtection(accountScopeId, 'before-delete', remove)
+      return this.withProtection(accountScopeId, 'before-delete', remove)
     }
   }
 
   async exportAccountData(accountScopeId: string): Promise<FolderExportPayload> {
     requireScope(accountScopeId)
     await this.preheatDevice()
-    await this.getSettings(accountScopeId)
-    return db.transaction('r', db.folders, db.folder_memberships, db.folder_chat_references, db.folder_settings, async () => {
-      const settings = (await db.folder_settings.get(accountScopeId))!
-      return {
-        schemaVersion: 1,
-        ...(await this.rawAccountData(accountScopeId)),
-        settings: { enabled: settings.enabled, hideOrganizedChats: settings.hideOrganizedChats },
-        settingsVersion: settings.settingsVersion,
-        exportedAt: now(),
-      }
+    return db.transaction('r', db.folders, db.folder_memberships, db.folder_chat_references, async () => ({
+      schemaVersion: 1,
+      accountScopeId,
+      data: toFolderOrganizationData(await this.rawAccountData(accountScopeId)),
+      exportedAt: now(),
+    }))
+  }
+
+  async getAccountDataWithRevision(accountScopeId: string): Promise<FolderDataSnapshot> {
+    requireScope(accountScopeId)
+    return db.transaction('r', [db.folders, db.folder_memberships, db.folder_chat_references, db.folder_sync_states, db.folder_recovery_states], async () => {
+      const data = await this.rawAccountData(accountScopeId)
+      const state = await db.folder_sync_states.get(accountScopeId)
+      const recovery = await db.folder_recovery_states.get(accountScopeId)
+      return { data, dataRevision: state?.localDataRevision ?? 'uninitialized', pendingRevision: recovery?.pendingRevision }
     })
   }
 
-  async createSnapshot(accountScopeId: string, reason: FolderSnapshotRow['reason'], hold = false): Promise<FolderSnapshotRow> {
+  async createSnapshot(accountScopeId: string, reason: FolderSnapshotRow['reason'], hold = false, captured?: FolderDataSnapshot): Promise<FolderSnapshotRow> {
     requireScope(accountScopeId)
     await this.preheatDevice()
-    const [payload, state] = await Promise.all([
-      this.exportAccountData(accountScopeId), db.folder_sync_states.get(accountScopeId),
-    ])
+    const capture = captured ?? await this.getAccountDataWithRevision(accountScopeId)
+    if (capture.data.accountScopeId !== accountScopeId) throw new Error('Snapshot belongs to a different account scope')
     try {
-      const snapshot = await saveFolderSnapshot(payload, state?.localDataRevision ?? 'local-unpublished', reason, this.recoveryOptions, hold)
-      clearRecoveryFailure(accountScopeId)
+      const snapshot = await saveFolderSnapshot({ accountScopeId, data: toFolderOrganizationData(capture.data) }, capture.dataRevision, reason, this.recoveryOptions, hold, capture.pendingRevision)
+      clearRecoveryFailure(accountScopeId, capture.pendingRevision)
       return snapshot
     } catch (error) {
-      try { await recordRecoveryFailure(accountScopeId, error, reason) } catch (statusError) {
-        logDevError('[Folders]', 'recovery.failure-status-write-failed', statusError)
-        if (reason === 'automatic') rememberRecoveryFailure(accountScopeId, classifyRecoveryFailure(error))
+      if (reason === 'automatic') rememberRecoveryFailure(accountScopeId, classifyRecoveryFailure(error), capture.pendingRevision)
+      try { await recordRecoveryFailure(accountScopeId, error, reason, capture.pendingRevision) } catch (statusError) {
+        logDevError('[Folders]', 'recovery.failure-status-write-failed', statusError, { accountScopeId })
       }
       throw error
     }
@@ -1135,9 +1009,9 @@ export class FolderRepositoryImpl implements FolderRepository {
     })
   }
 
-  private async withProtection(
-    accountScopeId: string, reason: FolderSnapshotRow['reason'], action: () => Promise<void>, targetId?: string,
-  ): Promise<void> {
+  private async withProtection<T>(
+    accountScopeId: string, reason: FolderSnapshotRow['reason'], action: () => Promise<T>, targetId?: string,
+  ): Promise<T> {
     const targetToken = nanoid()
     if (targetId) {
       try {
@@ -1160,8 +1034,7 @@ export class FolderRepositoryImpl implements FolderRepository {
       } catch (error) {
         throw new FolderRecoveryError('SNAPSHOT_PROTECTION_FAILED', { cause: error })
       }
-      await action()
-      await this.createAutomaticSnapshot(accountScopeId)
+      return await action()
     } finally {
       try {
         if (protection?.protectionToken) await this.releaseSnapshot(accountScopeId, protection.id, protection.protectionToken)
@@ -1169,26 +1042,6 @@ export class FolderRepositoryImpl implements FolderRepository {
       } catch (error) {
         // Persistent leases expire if cleanup cannot be written or the worker stops.
         logDevError('[Folders]', 'recovery.protection-release-failed', error)
-      }
-    }
-  }
-
-  private async createAutomaticSnapshot(accountScopeId: string, traceId?: string): Promise<void> {
-    try {
-      const snapshot = await this.createSnapshot(accountScopeId, 'automatic')
-      if (traceId) {
-        logFolderTrace(traceId, 'repository.snapshot-created', {
-          accountScopeId,
-          snapshotId: snapshot.id,
-        })
-      }
-    } catch (error) {
-      // The completed user mutation remains durable and queued for sync even if
-      // an independent recovery point cannot be written on this device.
-      if (traceId) {
-        logFolderTraceError(traceId, 'repository.snapshot-failed', error, { accountScopeId })
-      } else {
-        logDevError('[Folders]', 'repository.snapshot-failed', error, { accountScopeId })
       }
     }
   }
@@ -1204,37 +1057,38 @@ export class FolderRepositoryImpl implements FolderRepository {
     payload: FolderExportPayload,
     operationType: 'snapshot.restore',
     deviceId: string,
-    preserveSettings: boolean,
-  ): Promise<void> {
-    await db.transaction('rw', [db.folders, db.folder_memberships, db.folder_chat_references, db.folder_settings, db.folder_operations, db.folder_sync_states], async () => {
+  ): Promise<FolderMutationResult<void>> {
+    const data = fromFolderOrganizationData(accountScopeId, payload.data)
+    return runFolderMutation(accountScopeId, [db.folders, db.folder_memberships, db.folder_chat_references, db.folder_settings, db.folder_sync_states], async () => {
+      const existingFolders = await db.folders.bulkGet(data.folders.map((folder) => folder.id))
+      const existingMemberships = await db.folder_memberships.bulkGet(data.memberships.map((membership) => membership.id))
+      if ([...existingFolders, ...existingMemberships].some((row) => row && row.accountScopeId !== accountScopeId)) {
+        throw new Error('Backup record belongs to a different account scope')
+      }
       const currentSettings = await this.ensureSettings(accountScopeId)
-      const versionStamp = this.stamp()
+
       await db.folders.where('accountScopeId').equals(accountScopeId).delete()
       await db.folder_memberships.where('accountScopeId').equals(accountScopeId).delete()
       await db.folder_chat_references.where('accountScopeId').equals(accountScopeId).delete()
-      await db.folders.bulkPut(payload.folders)
-      await db.folder_memberships.bulkPut(payload.memberships)
-      await db.folder_chat_references.bulkPut(payload.chatReferences)
-      const incomingSettings: FolderSettingsRow = preserveSettings ? currentSettings : {
-        ...currentSettings, ...payload.settings,
-        settingsVersion: this.stamp(currentSettings.settingsVersion > payload.settingsVersion ? currentSettings.settingsVersion : payload.settingsVersion), settingsPending: true, updatedAt: now(),
-      }
-      const liveIds = new Set(payload.folders.filter(isLive).map((folder) => folder.id))
-      await db.folder_settings.put({ ...incomingSettings, collapsedFolderIds: currentSettings.collapsedFolderIds.filter((id) => liveIds.has(id)) })
-      await this.writeOperation(accountScopeId, deviceId, operationType, accountScopeId, versionStamp, { exportedAt: payload.exportedAt })
+      await db.folders.bulkPut(data.folders)
+      await db.folder_memberships.bulkPut(data.memberships)
+      await db.folder_chat_references.bulkPut(data.chatReferences)
+      const liveIds = new Set(data.folders.map((folder) => folder.id))
+      await db.folder_settings.put({ ...currentSettings, collapsedFolderIds: currentSettings.collapsedFolderIds.filter((id) => liveIds.has(id)) })
+      await this.markOrganizationChanged(accountScopeId, deviceId)
     })
   }
 
-  async importAccountData(accountScopeId: string, payload: FolderExportPayload): Promise<void> {
+  async importAccountData(accountScopeId: string, payload: FolderExportPayload): Promise<FolderMutationResult<void>> {
     requireScope(accountScopeId)
     const deviceId = await this.preheatDevice()
     const parsed = parseFolderExportPayload(payload)
     if (parsed.accountScopeId !== accountScopeId) throw new Error('Backup belongs to a different account scope')
-    await this.withProtection(accountScopeId, 'before-import', () =>
-      this.replaceAccountData(accountScopeId, parsed, 'snapshot.restore', deviceId, true))
+    return this.withProtection(accountScopeId, 'before-import', () =>
+      this.replaceAccountData(accountScopeId, parsed, 'snapshot.restore', deviceId))
   }
 
-  async restoreSnapshot(accountScopeId: string, snapshotId: string): Promise<void> {
+  async restoreSnapshot(accountScopeId: string, snapshotId: string): Promise<FolderMutationResult<void>> {
     requireScope(accountScopeId)
     const deviceId = await this.preheatDevice()
     const snapshot = await db.folder_snapshots.get(snapshotId)
@@ -1242,9 +1096,14 @@ export class FolderRepositoryImpl implements FolderRepository {
     if (await sha256Hex(snapshot.compressedPayload) !== snapshot.contentHash) {
       throw new Error('Snapshot integrity check failed')
     }
-    const payload = parseFolderExportPayload(decodeLzStringBase64<unknown>(snapshot.compressedPayload))
-    await this.withProtection(accountScopeId, 'before-restore', () =>
-      this.replaceAccountData(accountScopeId, payload, 'snapshot.restore', deviceId, true), snapshotId)
+    const payload: FolderExportPayload = {
+      schemaVersion: 1,
+      accountScopeId,
+      exportedAt: snapshot.updatedAt ?? snapshot.createdAt,
+      data: parseFolderOrganizationData(decodeLzStringBase64<unknown>(snapshot.compressedPayload)),
+    }
+    return this.withProtection(accountScopeId, 'before-restore', () =>
+      this.replaceAccountData(accountScopeId, payload, 'snapshot.restore', deviceId), snapshotId)
   }
 
   async getSyncState(accountScopeId: string): Promise<FolderSyncStateRow | undefined> {
@@ -1254,125 +1113,116 @@ export class FolderRepositoryImpl implements FolderRepository {
   }
 
   async listBrowserSyncWakeScopes(): Promise<string[]> {
-    const [states, operations, generations, settings] = await Promise.all([
-      db.folder_sync_states.toArray(),
-      db.folder_operations.toArray(),
-      db.folder_sync_generations.toArray(),
-      db.folder_settings.toArray(),
-    ])
-    const pendingScopes = new Set(operations.filter((operation) => operation.state === 'pending').map((operation) => operation.accountScopeId))
-    const preparedScopes = new Set(generations
-      .filter((generation) => generation.state === 'prepared' || generation.state === 'writing')
-      .map((generation) => generation.accountScopeId))
-    const settingsScopes = new Set(settings.filter((row) => row.settingsPending).map((row) => row.accountScopeId))
-    return states
-      .filter((state) => state.provider === 'browser-sync'
-        && (pendingScopes.has(state.accountScopeId) || settingsScopes.has(state.accountScopeId) || preparedScopes.has(state.accountScopeId) || Boolean(state.retryAt)))
+    const [states, publications] = await Promise.all([db.folder_sync_states.toArray(), db.folder_sync_publications.toArray()])
+    const pendingScopes = new Set(publications.map((row) => row.accountScopeId))
+    return states.filter((state) => state.provider === 'browser-sync'
+      && (state.dirty || !state.baseSnapshotId || pendingScopes.has(state.accountScopeId) || !!state.retryAt))
       .map((state) => state.accountScopeId)
   }
 
-  async hasPendingOperations(accountScopeId: string): Promise<boolean> {
+  async hasPendingChanges(accountScopeId: string): Promise<boolean> {
     requireScope(accountScopeId)
-    await this.preheatDevice()
-    const operations = await db.folder_operations.where('accountScopeId').equals(accountScopeId).toArray()
-    return operations.some((operation) => operation.state === 'pending')
+    return !!(await db.folder_sync_states.get(accountScopeId))?.dirty
   }
 
-  async applyBrowserSyncPayload(
-    accountScopeId: string,
-    payload: FolderAccountData,
-    appliedRevision: string,
-    authorityEpoch: string,
-    preservePending = false,
-  ): Promise<void> {
+  async getBrowserSyncConflict(accountScopeId: string): Promise<FolderSyncConflictRow | undefined> {
+    requireScope(accountScopeId)
+    return db.folder_sync_conflicts.get(accountScopeId)
+  }
+
+  async recordBrowserSyncConflict(accountScopeId: string, payload: FolderAccountData, manifest: BrowserSyncManifest, expectedRevision: string): Promise<boolean> {
+    requireScope(accountScopeId)
+    const data = parseFolderAccountData(payload)
+    if (data.accountScopeId !== accountScopeId || manifest.accountScopeId !== accountScopeId) throw new Error('Conflict account scope does not match')
+    return db.transaction('rw', [db.folder_sync_states, db.folder_sync_conflicts, db.folder_sync_publications], async () => {
+      const state = await db.folder_sync_states.get(accountScopeId)
+      if (!state || state.localDataRevision !== expectedRevision) return false
+      const previous = await db.folder_sync_conflicts.get(accountScopeId)
+      if (stableStringify(previous?.manifest) !== stableStringify(manifest) || previous?.localRevision !== expectedRevision) {
+        await db.folder_sync_conflicts.put({ accountScopeId, manifest, data: toFolderSyncData(data), localRevision: expectedRevision, createdAt: now() })
+      }
+      await db.folder_sync_publications.delete(accountScopeId)
+      await db.folder_sync_states.update(accountScopeId, { retryAt: undefined, lastErrorCode: undefined, browserSyncWarning: undefined })
+      return true
+    })
+  }
+
+  async selectLocalConflictVersion(accountScopeId: string, expectedRevision: string, snapshotId: string): Promise<boolean> {
+    requireScope(accountScopeId)
+    return db.transaction('rw', [db.folder_sync_states, db.folder_sync_conflicts, db.folder_sync_publications], async () => {
+      const state = await db.folder_sync_states.get(accountScopeId)
+      const candidate = await db.folder_sync_conflicts.get(accountScopeId)
+      if (!state || state.localDataRevision !== expectedRevision || candidate?.manifest.snapshotId !== snapshotId
+        || candidate.localRevision !== expectedRevision) return false
+      await db.folder_sync_states.update(accountScopeId, { baseSnapshotId: snapshotId, dirty: true, updatedAt: now() })
+      await db.folder_sync_publications.delete(accountScopeId)
+      await db.folder_sync_conflicts.delete(accountScopeId)
+      return true
+    })
+  }
+
+  async applyBrowserSyncSnapshot(accountScopeId: string, payload: FolderAccountData, manifest: BrowserSyncManifest, expectedRevision: string, resolving = false): Promise<boolean> {
     requireScope(accountScopeId)
     const deviceId = await this.preheatDevice()
     const parsed = parseFolderAccountData(payload)
-    if (parsed.accountScopeId !== accountScopeId) throw new Error('Browser Sync payload belongs to a different account scope')
-    if (!appliedRevision || !authorityEpoch) throw new Error('Browser Sync revision and authority epoch are required')
-    await db.transaction('rw', [db.folders, db.folder_memberships, db.folder_chat_references, db.folder_settings, db.folder_operations, db.folder_sync_states], async () => {
-      const prior = await db.folder_sync_states.get(accountScopeId)
-      if (prior?.provider && prior.provider !== 'browser-sync') {
-        throw new Error('Browser Sync is not the active Folder authority')
+    if (parsed.accountScopeId !== accountScopeId || manifest.accountScopeId !== accountScopeId) throw new Error('Browser Sync account scope does not match')
+    const captured = await this.getAccountDataWithRevision(accountScopeId)
+    if (captured.dataRevision !== expectedRevision) return false
+    const organizationChanged = stableStringify(toFolderOrganizationData(captured.data)) !== stableStringify(toFolderOrganizationData(parsed))
+    let protection: FolderSnapshotRow | undefined
+    try {
+      if (organizationChanged) {
+        try { protection = await this.createSnapshot(accountScopeId, 'before-sync', true, captured) }
+        catch (error) { throw new FolderRecoveryError('SNAPSHOT_PROTECTION_FAILED', { cause: error }) }
       }
-      await db.folders.where('accountScopeId').equals(accountScopeId).delete()
-      await db.folder_memberships.where('accountScopeId').equals(accountScopeId).delete()
-      await db.folder_chat_references.where('accountScopeId').equals(accountScopeId).delete()
-      await db.folders.bulkPut(parsed.folders)
-      await db.folder_memberships.bulkPut(parsed.memberships)
-      await db.folder_chat_references.bulkPut(parsed.chatReferences)
-      const settings = await this.ensureSettings(accountScopeId)
-      const liveIds = new Set(parsed.folders.filter(isLive).map((folder) => folder.id))
-      await db.folder_settings.put({ ...settings, collapsedFolderIds: settings.collapsedFolderIds.filter((id) => liveIds.has(id)) })
-      const mergedRevision = preservePending ? `${deviceId}:${nanoid()}` : appliedRevision
-      const nextState: FolderSyncStateRow = {
-        accountScopeId,
-        deviceId: prior?.deviceId ?? deviceId,
-        provider: 'browser-sync',
-        authorityEpoch,
-        localDataRevision: mergedRevision,
-        lastObservedReplicaGenerationId: prior?.lastObservedReplicaGenerationId,
-        lastAppliedReplicaRevision: appliedRevision,
-        lastWrittenReplicaGenerationId: prior?.lastWrittenReplicaGenerationId,
-        lastBrowserStorageWriteAt: prior?.lastBrowserStorageWriteAt,
-        lastAttemptAt: now(),
-        retryCount: 0,
-        retryAt: undefined,
-        lastErrorCode: undefined,
-        browserSyncWarning: prior?.browserSyncWarning,
-        browserSyncCurrentUsageBytes: prior?.browserSyncCurrentUsageBytes,
-        browserSyncCurrentTotalBytes: prior?.browserSyncCurrentTotalBytes,
-        browserSyncQuotaBytes: prior?.browserSyncQuotaBytes,
-        browserSyncProjectedUsageBytes: prior?.browserSyncProjectedUsageBytes,
-        browserSyncProjectedTotalBytes: prior?.browserSyncProjectedTotalBytes,
-        browserSyncUsageMeasuredAt: prior?.browserSyncUsageMeasuredAt,
-        browserSyncBudgetBytes: prior?.browserSyncBudgetBytes,
-        browserSyncLastDismissedUsagePercent: prior?.browserSyncLastDismissedUsagePercent,
-        incompleteReplicaSince: undefined,
-        updatedAt: now(),
+      return await db.transaction('rw', [db.folders, db.folder_memberships, db.folder_chat_references, db.folder_settings,
+        db.folder_sync_states, db.folder_recovery_states, db.folder_sync_conflicts, db.folder_sync_publications], async () => {
+        const prior = await db.folder_sync_states.get(accountScopeId)
+        if ((prior?.localDataRevision ?? 'uninitialized') !== expectedRevision || (prior?.dirty && !resolving)) return false
+        if (resolving) {
+          const candidate = await db.folder_sync_conflicts.get(accountScopeId)
+          if (candidate?.manifest.snapshotId !== manifest.snapshotId || candidate.localRevision !== expectedRevision) return false
+        }
+        const existingFolders = await db.folders.bulkGet(parsed.folders.map((row) => row.id))
+        const existingMemberships = await db.folder_memberships.bulkGet(parsed.memberships.map((row) => row.id))
+        if ([...existingFolders, ...existingMemberships].some((row) => row && row.accountScopeId !== accountScopeId)) throw new Error('Browser Sync folder belongs to a different account')
+        await db.folders.where('accountScopeId').equals(accountScopeId).delete()
+        await db.folder_memberships.where('accountScopeId').equals(accountScopeId).delete()
+        await db.folder_chat_references.where('accountScopeId').equals(accountScopeId).delete()
+        await db.folders.bulkPut(parsed.folders)
+        await db.folder_memberships.bulkPut(parsed.memberships)
+        await db.folder_chat_references.bulkPut(parsed.chatReferences)
+        const settings = await this.ensureSettings(accountScopeId)
+        const folderIds = new Set(parsed.folders.map((row) => row.id))
+        await db.folder_settings.put({ ...settings, ...folderSyncSettingsSchema.parse(manifest.settings),
+          collapsedFolderIds: settings.collapsedFolderIds.filter((id) => folderIds.has(id)), updatedAt: now() })
+        const revision = `${deviceId}:${nanoid()}`
+        await db.folder_sync_states.put({ ...prior, accountScopeId, deviceId, provider: 'browser-sync',
+          localDataRevision: revision, baseSnapshotId: manifest.snapshotId, dirty: false, retryAt: undefined,
+          retryCount: 0, lastErrorCode: undefined, browserSyncWarning: undefined, incompleteReplicaSince: undefined, updatedAt: now() })
+        await db.folder_sync_publications.delete(accountScopeId)
+        await db.folder_sync_conflicts.delete(accountScopeId)
+        if (organizationChanged) await markRecoveryPending(accountScopeId, revision)
+        return true
+      })
+    } finally {
+      if (protection?.protectionToken) {
+        try { await this.releaseSnapshot(accountScopeId, protection.id, protection.protectionToken) }
+        catch (error) { logDevError('[Folders]', 'recovery.protection-release-failed', error) }
       }
-      await db.folder_sync_states.put(nextState)
-      if (preservePending) {
-        const versionStamp = this.stamp()
-        const opId = nanoid()
-        await db.folder_operations.put({
-          id: opId,
-          opId,
-          accountScopeId,
-          deviceId,
-          baseRevision: appliedRevision,
-          operationType: 'snapshot.restore',
-          entityId: accountScopeId,
-          versionStamp,
-          payload: { source: 'browser-sync-merge', remoteRevision: appliedRevision },
-          createdAt: now(),
-          state: 'pending',
-        })
-      }
-    })
+    }
   }
 
-  async recordBrowserSyncReplicaObserved(accountScopeId: string, generationId: string): Promise<boolean> {
+  async recordBrowserSyncHealthy(accountScopeId: string, snapshotId: string, expectedRevision: string): Promise<boolean> {
     requireScope(accountScopeId)
-    const deviceId = await this.preheatDevice()
-    const state = await this.ensureSyncState(accountScopeId, deviceId)
-    const statusChanged = state.lastObservedReplicaGenerationId !== generationId
-      || state.retryAt !== undefined
-      || state.retryCount !== undefined
-      || state.lastErrorCode !== undefined
-      || state.browserSyncWarning !== undefined
-      || state.incompleteReplicaSince !== undefined
-    if (!statusChanged) return false
-    await db.folder_sync_states.update(accountScopeId, {
-      lastObservedReplicaGenerationId: generationId,
-      retryAt: undefined,
-      retryCount: undefined,
-      lastErrorCode: undefined,
-      browserSyncWarning: undefined,
-      incompleteReplicaSince: undefined,
-      updatedAt: now(),
+    return db.transaction('rw', db.folder_sync_states, async () => {
+      const state = await db.folder_sync_states.get(accountScopeId)
+      if (!state || state.localDataRevision !== expectedRevision || state.baseSnapshotId !== snapshotId) return false
+      if (!state.lastErrorCode && !state.retryAt && !state.browserSyncWarning && !state.incompleteReplicaSince) return false
+      await db.folder_sync_states.update(accountScopeId, { retryAt: undefined, retryCount: 0, lastErrorCode: undefined,
+        browserSyncWarning: undefined, incompleteReplicaSince: undefined })
+      return true
     })
-    return true
   }
 
   async recordBrowserSyncFailure(
@@ -1380,13 +1230,14 @@ export class FolderRepositoryImpl implements FolderRepository {
     errorCode: string,
     warning: FolderSyncStateRow['browserSyncWarning'] = 'write-failed',
     projectedUsage?: BrowserSyncUsage,
-  ): Promise<string> {
+  ): Promise<string | undefined> {
     requireScope(accountScopeId)
     const deviceId = await this.preheatDevice()
     const state = await this.ensureSyncState(accountScopeId, deviceId)
     const attemptedAt = now()
-    const retryCount = Math.min((state.retryCount ?? 0) + 1, 6)
-    const retryAt = new Date(Date.now() + Math.min(30, 2 ** (retryCount - 1)) * 60_000).toISOString()
+    const retryCount = warning === 'unsupported-schema-version' ? 0 : Math.min((state.retryCount ?? 0) + 1, 6)
+    const retryAt = warning === 'unsupported-schema-version' ? undefined
+      : new Date(Date.now() + Math.min(30, 2 ** (retryCount - 1)) * 60_000).toISOString()
     const incompleteReplicaSince = warning === 'incomplete-replica'
       ? state.incompleteReplicaSince ?? attemptedAt
       : undefined
@@ -1422,126 +1273,88 @@ export class FolderRepositoryImpl implements FolderRepository {
     })
   }
 
-  async getOrCreateBrowserSyncGeneration(accountScopeId: string): Promise<FolderSyncGenerationRow> {
+  async getBrowserSyncPublication(accountScopeId: string): Promise<FolderSyncPublicationRow | undefined> {
+    requireScope(accountScopeId)
+    return db.folder_sync_publications.get(accountScopeId)
+  }
+
+  async prepareBrowserSyncRecreation(accountScopeId: string, request: BrowserSyncRecreationRequest): Promise<boolean> {
+    requireScope(accountScopeId)
+    return db.transaction('rw', [db.folder_sync_states, db.folder_sync_publications, db.folder_sync_conflicts], async () => {
+      const state = await db.folder_sync_states.get(accountScopeId)
+      const pending = await db.folder_sync_publications.get(accountScopeId)
+      if (!state || state.provider !== 'browser-sync' || state.localDataRevision !== request.expectedRevision
+        || state.baseSnapshotId !== request.baseSnapshotId || pending?.state === 'writing'
+        || await db.folder_sync_conflicts.get(accountScopeId)) return false
+      // Only explicit user intent may abandon a missing base. Keep all business
+      // data and mark durable pending work, so a failed publication can resume.
+      await db.folder_sync_states.update(accountScopeId, { baseSnapshotId: undefined, dirty: true,
+        retryAt: undefined, retryCount: 0, lastErrorCode: undefined, browserSyncWarning: undefined })
+      await db.folder_sync_publications.delete(accountScopeId)
+      return true
+    })
+  }
+
+  async getOrCreateBrowserSyncPublication(accountScopeId: string): Promise<FolderSyncPublicationRow> {
     requireScope(accountScopeId)
     const deviceId = await this.preheatDevice()
+    await this.getSettings(accountScopeId)
     await this.ensureSyncState(accountScopeId, deviceId)
-    return db.transaction('rw', [db.folders, db.folder_memberships, db.folder_chat_references, db.folder_operations, db.folder_sync_states, db.folder_sync_generations], async () => {
-      const state = await db.folder_sync_states.get(accountScopeId)
-      if (!state) throw new Error('Folder sync state is unavailable')
-      const existing = await db.folder_sync_generations
-        .where('[accountScopeId+dataRevision]').equals([accountScopeId, state.localDataRevision]).toArray()
-      const reusable = existing.find((row) => row.state === 'prepared' || row.state === 'writing')
-      if (reusable) {
-        try {
-          if (await Dexie.waitFor(sha256Hex(reusable.payload)) !== reusable.payloadHash) throw new Error('Invalid prepared payload hash')
-          fromFolderSyncData(accountScopeId, parseFolderSyncData(decodeLzStringBase64(reusable.payload)))
-          return reusable
-        } catch {
-          await db.folder_sync_generations.update(reusable.id, { state: 'superseded' })
-        }
-      }
-      const payload = encodeLzStringBase64(toFolderSyncData(await this.rawAccountData(accountScopeId)))
-      const operations = await db.folder_operations.where('accountScopeId').equals(accountScopeId).toArray()
-      // Keep data, revision and included operations in one transaction while WebCrypto completes.
-      const payloadHash = await Dexie.waitFor(sha256Hex(payload))
-      const generation: FolderSyncGenerationRow = {
-        id: nanoid(), accountScopeId, syncMode: 'browser-sync', syncEpoch: state.authorityEpoch,
-        dataRevision: state.localDataRevision,
-        includedOperationIds: operations.filter((operation) => operation.state === 'pending').map((operation) => operation.id),
-        payloadHash, payload, createdAt: now(), state: 'prepared',
-      }
-      await db.folder_sync_generations.put(generation)
-      return generation
-    })
-  }
-
-  async listReclaimableBrowserSyncGenerationIds(accountScopeId: string): Promise<string[]> {
-    requireScope(accountScopeId)
-    const [state, generations] = await Promise.all([
-      db.folder_sync_states.get(accountScopeId),
-      db.folder_sync_generations.where('accountScopeId').equals(accountScopeId).toArray(),
-    ])
-    return generations
-      .filter((generation) => generation.id !== state?.lastWrittenReplicaGenerationId
-        && (generation.state === 'accepted-by-browser-storage' || generation.state === 'superseded'))
-      .map((generation) => generation.id)
-  }
-
-  async getRecoverableBrowserSyncGeneration(
-    accountScopeId: string,
-    replacedGenerationId: string,
-  ): Promise<FolderSyncGenerationRow | undefined> {
-    requireScope(accountScopeId)
-    const candidates = await db.folder_sync_generations.where('accountScopeId').equals(accountScopeId).toArray()
-    return candidates.find((generation) => generation.state === 'writing'
-      && generation.replacedGenerationId === replacedGenerationId)
-  }
-
-  async markBrowserSyncGenerationWriting(
-    accountScopeId: string,
-    generationId: string,
-    replacedGenerationId?: string,
-  ): Promise<void> {
-    requireScope(accountScopeId)
-    await this.preheatDevice()
-    const generation = await db.folder_sync_generations.get(generationId)
-    if (!generation || generation.accountScopeId !== accountScopeId || generation.state === 'accepted-by-browser-storage') {
-      throw new Error('Browser Sync generation is unavailable')
-    }
-    if (generation.replacedGenerationId && replacedGenerationId && generation.replacedGenerationId !== replacedGenerationId) {
-      throw new Error('Browser Sync generation replacement target changed')
-    }
-    await db.folder_sync_generations.update(generationId, {
-      state: 'writing',
-      replacedGenerationId: generation.replacedGenerationId ?? replacedGenerationId,
-    })
-  }
-
-  async markBrowserSyncSettingsAccepted(accountScopeId: string, usage: BrowserSyncUsage): Promise<void> {
-    requireScope(accountScopeId)
-    await db.transaction('rw', db.folder_sync_states, async () => {
-      const state = await db.folder_sync_states.get(accountScopeId)
-      if (!state) throw new Error('Folder sync state is unavailable')
-      await db.folder_sync_states.put({
-        ...state, ...currentUsagePatch(state, usage),
-        lastBrowserStorageWriteAt: now(), lastAttemptAt: now(),
-        updatedAt: now(),
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const captured = await db.transaction('r', [db.folders, db.folder_memberships, db.folder_chat_references,
+        db.folder_settings, db.folder_sync_states, db.folder_sync_publications, db.folder_sync_conflicts], async () => {
+        if (await db.folder_sync_conflicts.get(accountScopeId)) throw new Error('Browser Sync conflict requires resolution')
+        const state = (await db.folder_sync_states.get(accountScopeId))!
+        const pending = await db.folder_sync_publications.get(accountScopeId)
+        const settings = (await db.folder_settings.get(accountScopeId))!
+        return { state, pending, settings, data: await this.rawAccountData(accountScopeId) }
       })
+      // An interrupted write must finish its exact snapshot before newer edits are captured.
+      if (captured.pending && (captured.pending.state === 'writing' || captured.pending.dataRevision === captured.state.localDataRevision)) {
+        if (await sha256Hex(captured.pending.payload) !== captured.pending.payloadHash) throw new Error('Invalid pending publication hash')
+        fromFolderSyncData(accountScopeId, parseFolderSyncData(decodeLzStringBase64(captured.pending.payload)))
+        return captured.pending
+      }
+      // Compression and hashing stay outside the IndexedDB write transaction.
+      const payload = encodeLzStringBase64(toFolderSyncData(captured.data))
+      const publication: FolderSyncPublicationRow = {
+        accountScopeId, id: nanoid(), baseSnapshotId: captured.state.baseSnapshotId,
+        dataRevision: captured.state.localDataRevision, payload, payloadHash: await sha256Hex(payload),
+        settings: { enabled: captured.settings.enabled, hideOrganizedChats: captured.settings.hideOrganizedChats },
+        createdAt: now(), state: 'prepared',
+      }
+      const saved = await db.transaction('rw', [db.folder_sync_states, db.folder_sync_publications, db.folder_sync_conflicts], async () => {
+        const state = await db.folder_sync_states.get(accountScopeId)
+        if (state?.localDataRevision !== captured.state.localDataRevision || await db.folder_sync_conflicts.get(accountScopeId)) return false
+        await db.folder_sync_publications.put(publication)
+        return true
+      })
+      if (saved) return publication
+    }
+    throw new Error('STALE_REVISION')
+  }
+
+  async markBrowserSyncPublicationWriting(accountScopeId: string, snapshotId: string): Promise<void> {
+    requireScope(accountScopeId)
+    await db.transaction('rw', db.folder_sync_publications, async () => {
+      const pending = await db.folder_sync_publications.get(accountScopeId)
+      if (pending?.id !== snapshotId) throw new Error('Pending Browser Sync publication changed')
+      await db.folder_sync_publications.update(accountScopeId, { state: 'writing' })
     })
   }
 
-  async markBrowserSyncGenerationAccepted(
-    accountScopeId: string,
-    generationId: string,
-    usage: BrowserSyncUsage,
-  ): Promise<void> {
+  async markBrowserSyncPublicationAccepted(accountScopeId: string, snapshotId: string, usage: BrowserSyncUsage): Promise<void> {
     requireScope(accountScopeId)
-    await this.preheatDevice()
-    await db.transaction('rw', [db.folder_operations, db.folder_sync_states, db.folder_sync_generations], async () => {
-      const generation = await db.folder_sync_generations.get(generationId)
+    await db.transaction('rw', [db.folder_sync_states, db.folder_sync_publications], async () => {
+      const pending = await db.folder_sync_publications.get(accountScopeId)
       const state = await db.folder_sync_states.get(accountScopeId)
-      if (!generation || generation.accountScopeId !== accountScopeId || !state) throw new Error('Browser Sync generation is unavailable')
-      for (const id of generation.includedOperationIds) {
-        const operation = await db.folder_operations.get(id)
-        if (operation?.state === 'pending') await db.folder_operations.update(id, { state: 'accepted-by-browser-storage' })
-      }
-      await db.folder_sync_generations.update(generationId, { state: 'accepted-by-browser-storage' })
-      await db.folder_sync_states.put({
-        ...state,
-        lastWrittenReplicaGenerationId: generation.id,
-        lastBrowserStorageWriteAt: now(),
-        lastAttemptAt: now(),
-        lastErrorCode: undefined,
-        retryAt: undefined,
-        retryCount: 0,
-        browserSyncWarning: undefined,
-        ...currentUsagePatch(state, usage),
-        browserSyncProjectedUsageBytes: undefined,
-        browserSyncProjectedTotalBytes: undefined,
-        incompleteReplicaSince: undefined,
-        updatedAt: now(),
-      })
+      if (pending?.id !== snapshotId || !state) throw new Error('Pending Browser Sync publication changed')
+      await db.folder_sync_states.put({ ...state, ...currentUsagePatch(state, usage), baseSnapshotId: snapshotId,
+        dirty: pending.dataRevision !== state.localDataRevision, lastBrowserStorageWriteAt: now(), lastAttemptAt: now(),
+        retryAt: undefined, retryCount: 0, lastErrorCode: undefined, browserSyncWarning: undefined,
+        browserSyncProjectedUsageBytes: undefined, browserSyncProjectedTotalBytes: undefined,
+        incompleteReplicaSince: undefined, updatedAt: now() })
+      await db.folder_sync_publications.delete(accountScopeId)
     })
   }
 
@@ -1575,7 +1388,7 @@ export class FolderRepositoryImpl implements FolderRepository {
     await db.transaction('rw', db.folder_coordinator_leases, async () => {
       const existing = await db.folder_coordinator_leases.get(accountScopeId)
       if (existing && existing.ownerId !== ownerId && Date.parse(existing.expiresAt) > Date.now()) {
-        throw new Error('Folder sync coordinator lease is held by another context')
+        throw new FolderCoordinatorLeaseBusyError(existing.expiresAt)
       }
       lease = { accountScopeId, ownerId, expiresAt: new Date(Date.now() + ttlMs).toISOString() }
       await db.folder_coordinator_leases.put(lease)

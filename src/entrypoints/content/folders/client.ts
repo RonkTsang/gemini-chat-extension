@@ -7,18 +7,22 @@ import { tt } from '@/utils/i18n'
 import type { FolderChatSummaryPage, FolderSidebarState } from '@/domain/folder/sidebar'
 
 export interface FolderChatPage {
+  dataRevision?: string
   memberships: FolderProjection['memberships']
   chatReferences: FolderProjection['chatReferences']
   nextCursor?: string
 }
 
 export interface BrowserSyncStatusProjection {
+  localRevision?: string
+  baseSnapshotId?: string
   mode: 'browser-sync'
-  state: 'local-changes-pending' | 'accepted-by-browser-storage' | 'needs-attention'
+  state: 'idle' | 'local-changes-pending' | 'accepted-by-browser-storage' | 'needs-attention' | 'conflict'
   lastLocalSaveAt?: string
   lastBrowserStorageWriteAt?: string
+  conflict?: { snapshotId: string; localRevision: string }
   retryAt?: string
-  warning?: 'quota-exceeded' | 'write-failed' | 'incomplete-replica' | 'invalid-replica'
+  warning?: 'quota-exceeded' | 'write-failed' | 'incomplete-replica' | 'invalid-replica' | 'missing-replica' | 'recovery-protection-failed' | 'unsupported-schema-version'
   currentUsageBytes?: number
   folderCount?: number
   chatCount?: number
@@ -42,6 +46,7 @@ export class FolderRpcError extends Error {
       SNAPSHOT_TOO_LARGE: 'folders_snapshot_too_large_error',
       SNAPSHOT_PROTECTION_FAILED: 'folders_recovery_protection_failed',
       FOLDER_SAVE_FAILED: 'folders_current_change_unsaved',
+      STALE_REVISION: 'folders_draft_stale',
       MANUAL_SNAPSHOT_FAILED: 'folders_recovery_manual_failed',
     }
     const code = response.error.code
@@ -84,14 +89,23 @@ export class FolderBackgroundClient {
 
   /** Loads all Folder summaries so SideNav can reveal rows beyond its preview. */
   async getProjection(accountScopeId: string, identitySource: 'observed' | 'manual-confirmed', previousProjection?: FolderProjection): Promise<FolderProjection> {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try { return await this.captureProjection(accountScopeId, identitySource, previousProjection) }
+      catch (error) { if (!(error instanceof Error) || error.message !== 'STALE_REVISION' || attempt === 1) throw error }
+    }
+    throw new Error('STALE_REVISION')
+  }
+
+  private async captureProjection(accountScopeId: string, identitySource: 'observed' | 'manual-confirmed', previousProjection?: FolderProjection): Promise<FolderProjection> {
     const first = await this.request<FolderSidebarState>(accountScopeId, identitySource, 'getSidebarState', { folderLimit: 5 })
-    const folders = first.data.folders
+    const folders = [...first.data.folders]
     let foldersCursor = first.data.nextCursor
     while (foldersCursor) {
       const next = await this.request<{
         items: typeof folders
         nextCursor?: string
       }>(accountScopeId, identitySource, 'listFolders', { cursor: foldersCursor, limit: 100 })
+      if (next.dataRevision !== first.dataRevision) throw new Error('STALE_REVISION')
       folders.push(...next.data.items)
       foldersCursor = next.data.nextCursor
     }
@@ -110,8 +124,9 @@ export class FolderBackgroundClient {
       let initialPage: FolderChatSummaryPage | undefined = first.data.chatsByFolder[folder.id]
       do {
         const chats = initialPage
-          ? this.projectChatPage(accountScopeId, folder.id, initialPage)
+          ? this.projectChatPage(accountScopeId, folder.id, initialPage, first.dataRevision)
           : await this.getChatPage(accountScopeId, identitySource, folder.id, cursor)
+        if (chats.dataRevision !== first.dataRevision) throw new Error('STALE_REVISION')
         initialPage = undefined
         memberships.push(...chats.memberships)
         loadedCount += chats.memberships.length
@@ -123,6 +138,7 @@ export class FolderBackgroundClient {
       chatCursors[folder.id] = cursor
     }
     return {
+      dataRevision: first.dataRevision,
       folders: folders as FolderProjection['folders'],
       memberships,
       chatReferences,
@@ -133,11 +149,12 @@ export class FolderBackgroundClient {
 
   async getChatPage(accountScopeId: string, identitySource: 'observed' | 'manual-confirmed', folderId: string, cursor?: string): Promise<FolderChatPage> {
     const result = await this.request<FolderChatSummaryPage>(accountScopeId, identitySource, 'listFolderChats', { folderId, cursor, limit: 10 })
-    return this.projectChatPage(accountScopeId, folderId, result.data)
+    return this.projectChatPage(accountScopeId, folderId, result.data, result.dataRevision)
   }
 
-  private projectChatPage(accountScopeId: string, folderId: string, page: FolderChatSummaryPage): FolderChatPage {
+  private projectChatPage(accountScopeId: string, folderId: string, page: FolderChatSummaryPage, dataRevision: string): FolderChatPage {
     return {
+      dataRevision,
       memberships: page.items.map((chat) => ({
         id: `${accountScopeId}:${folderId}:${chat.chatId}`, accountScopeId, folderId,
         chatId: chat.chatId, orderKey: chat.orderKey, pinnedOrderKey: chat.pinnedOrderKey,

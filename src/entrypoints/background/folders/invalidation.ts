@@ -4,7 +4,7 @@ export interface FolderDataChangedMessage {
   type: 'folders:data-changed'
   accountScopeId: string
   dataRevision: string
-  affected: { folderIds?: string[]; chatIds?: string[]; settings?: boolean; syncStatus?: boolean }
+  affected: { folderIds?: string[]; chatIds?: string[]; settings?: boolean; syncStatus?: boolean; recoveryStatus?: boolean }
 }
 
 /** Broadcast is best-effort; active content scripts re-read on focus/startup. */

@@ -96,3 +96,31 @@ describe('FolderBackgroundClient SideNav projection', () => {
     expect(projection.chatCursors?.['folder-1']).toBe('U.chat-10')
   })
 })
+
+it.each(['folder', 'chat'])('retries a mixed %s page once, then refuses a mixed projection', async (kind) => {
+  let starts = 0
+  transport.request.mockImplementation(async (request) => {
+    if (request.method === 'getSidebarState') {
+      starts += 1
+      return response({ settings, folders: [folder(1)], chatsByFolder: { 'folder-1': { items: [], nextCursor: kind === 'chat' ? 'chat-cursor' : undefined } }, nextCursor: kind === 'folder' ? 'folder-cursor' : undefined })
+    }
+    return { ok: true, dataRevision: 'revision-2', data: { items: kind === 'folder' ? [folder(2)] : [] } }
+  })
+  await expect(new FolderBackgroundClient().getProjection(accountScopeId, 'observed')).rejects.toThrow('STALE_REVISION')
+  expect(starts).toBe(2)
+})
+
+it('recovers a projection on the bounded retry after pagination changed revision', async () => {
+  let starts = 0
+  transport.request.mockImplementation(async (request) => {
+    if (request.method === 'getSidebarState') {
+      starts += 1
+      return { ok: true, dataRevision: starts === 1 ? 'revision-1' : 'revision-2', data: { settings, folders: [folder(1)], chatsByFolder: { 'folder-1': { items: [] } }, nextCursor: starts === 1 ? 'cursor' : undefined } }
+    }
+    return { ok: true, dataRevision: 'revision-2', data: { items: [folder(2)] } }
+  })
+  const projection = await new FolderBackgroundClient().getProjection(accountScopeId, 'observed')
+  expect(projection.dataRevision).toBe('revision-2')
+  expect(projection.folders).toHaveLength(1)
+  expect(starts).toBe(2)
+})

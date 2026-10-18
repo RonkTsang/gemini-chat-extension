@@ -21,7 +21,10 @@ const scenarios = [
   { id: 'sync-red', label: 'Browser Sync · 5% available (red)' },
   { id: 'sync-pending', label: 'Browser Sync · Local changes pending' },
   { id: 'sync-quota', label: 'Browser Sync · Capacity exceeded' },
+  { id: 'sync-conflict', label: 'Browser Sync · Choose a version' },
   { id: 'sync-failed', label: 'Browser Sync · Write failed' },
+  { id: 'sync-missing', label: 'Browser Sync · Synced version missing' },
+  { id: 'sync-upgrade', label: 'Browser Sync · Update required' },
   { id: 'sync-capacity', label: 'Browser Sync · Low capacity notice' },
   { id: 'sync-measurement-failed', label: 'Browser Sync · Capacity check failed' },
   { id: 'sync-checking', label: 'Browser Sync · Checking status' },
@@ -68,9 +71,13 @@ export default function FolderDebugPanel({ accountScopeId, folderCount, chatCoun
   const used = scenario === 'sync-green' ? 250 : scenario === 'sync-red' ? 950 : scenario === 'sync-quota' ? 1000 : 750
   const syncStatus: BrowserSyncStatusProjection = {
     mode: 'browser-sync',
-    state: scenario === 'sync-quota' || scenario === 'sync-failed' ? 'needs-attention'
+    conflict: scenario === 'sync-conflict' ? { snapshotId: 'preview-remote', localRevision: 'preview-local' } : undefined,
+    state: scenario === 'sync-conflict' ? 'conflict' : ['sync-quota', 'sync-failed', 'sync-missing', 'sync-upgrade'].includes(scenario) ? 'needs-attention'
       : scenario === 'sync-pending' ? 'local-changes-pending' : 'accepted-by-browser-storage',
-    warning: scenario === 'sync-quota' ? 'quota-exceeded' : scenario === 'sync-failed' ? 'write-failed' : undefined,
+    warning: scenario === 'sync-quota' ? 'quota-exceeded' : scenario === 'sync-failed' ? 'write-failed'
+      : scenario === 'sync-upgrade' ? 'unsupported-schema-version' : scenario === 'sync-missing' ? 'missing-replica' : undefined,
+    localRevision: 'preview-local',
+    baseSnapshotId: 'preview-base',
     currentUsageBytes: used,
     usageBudgetBytes: 1000,
     currentTotalBytes: used,
@@ -113,7 +120,9 @@ export default function FolderDebugPanel({ accountScopeId, folderCount, chatCoun
                 syncState={scenario === 'sync-checking' ? undefined : syncStatus}
                 measuring={scenario === 'sync-checking'}
                 measurementError={scenario === 'sync-measurement-failed' ? 'debug-preview' : undefined}
-                onRetry={async () => { previewAction('retry sync') }}
+                onRetry={async () => { previewAction('retry sync'); return { outcome: 'accepted-by-browser-storage' } }}
+                onRecreateReplica={async () => { previewAction('recreate synced version'); return { outcome: 'accepted-by-browser-storage' } }}
+                onResolveConflict={async (choice) => { previewAction(`use ${choice === 'remote' ? 'synced' : 'this device'} version`); return { outcome: 'accepted-by-browser-storage' } }}
                 onDismissCapacity={() => { setCapacityDismissed(true); previewAction('dismiss capacity notice') }}
               />
             ) : (

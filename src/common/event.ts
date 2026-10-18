@@ -77,6 +77,7 @@ export interface StuffMediaDataEvent {
 export type LibraryMediaDataEvent = LibraryMediaData
 
 export interface AppEvents {
+  'folders:recovery-changed': { accountScopeId: string };
   // common
   'urlchange': URLChangeEvent;
   'chatchange': ChatChangeEvent;

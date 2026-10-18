@@ -9,6 +9,8 @@ const runtime = vi.hoisted(() => ({
   importJson: vi.fn(),
   restore: vi.fn(),
   syncNow: vi.fn(),
+  recreateSyncReplica: vi.fn(),
+  resolveSyncConflict: vi.fn(),
   createSnapshot: vi.fn(),
   localStorage: vi.fn(),
   updateSettings: vi.fn(),
@@ -19,10 +21,12 @@ const runtime = vi.hoisted(() => ({
     identity: { status: 'available', identity: { accountScopeId: 'account-scope-0001', source: 'observed', email: 'user@example.com', avatarUrl: undefined as string | undefined, selection: undefined as 'manual' | 'history' | 'recent' | undefined } },
     projection: { settings: { enabled: true, hideOrganizedChats: false } },
     syncState: {
+      conflict: undefined as { snapshotId: string; localRevision: string } | undefined,
       state: 'needs-attention', warning: 'quota-exceeded', currentUsageBytes: 123,
       usageBudgetBytes: 1000, currentTotalBytes: 223, quotaBytes: 2000,
       projectedUsageBytes: 1200, usagePercent: 12.3, showCapacityNotice: false,
       folderCount: 2, chatCount: 12,
+      localRevision: undefined as string | undefined, baseSnapshotId: undefined as string | undefined,
     },
   },
 }))
@@ -34,6 +38,8 @@ vi.mock('@/entrypoints/content/folders/runtime', () => ({ folderRuntime: {
   importJson: runtime.importJson,
   restore: runtime.restore,
   syncNow: runtime.syncNow,
+  recreateSyncReplica: runtime.recreateSyncReplica,
+  resolveSyncConflict: runtime.resolveSyncConflict,
   createSnapshot: runtime.createSnapshot,
   getLocalStorageStatus: runtime.localStorage,
   updateSettings: runtime.updateSettings,
@@ -105,16 +111,20 @@ describe('Folders Settings storage measurements', () => {
     runtime.snapshot.identity.identity.accountScopeId = 'account-scope-0001'
     runtime.snapshot.identity.identity.source = 'observed'
     runtime.snapshot.syncState = {
+      conflict: undefined as { snapshotId: string; localRevision: string } | undefined,
       state: 'needs-attention', warning: 'quota-exceeded', currentUsageBytes: 123,
       usageBudgetBytes: 1000, currentTotalBytes: 223, quotaBytes: 2000,
       projectedUsageBytes: 1200, usagePercent: 12.3, showCapacityNotice: false,
       folderCount: 2, chatCount: 12,
+      localRevision: undefined as string | undefined, baseSnapshotId: undefined as string | undefined,
     }
     runtime.toastCreate.mockReset()
     runtime.exportJson.mockReset().mockResolvedValue('{}')
     runtime.importJson.mockReset().mockResolvedValue(undefined)
     runtime.restore.mockReset().mockResolvedValue(undefined)
-    runtime.syncNow.mockReset().mockResolvedValue(undefined)
+    runtime.syncNow.mockReset().mockResolvedValue({ outcome: 'accepted-by-browser-storage' })
+    runtime.recreateSyncReplica.mockReset().mockResolvedValue({ outcome: 'accepted-by-browser-storage' })
+    runtime.resolveSyncConflict.mockReset().mockResolvedValue({ outcome: 'accepted-by-browser-storage' })
     runtime.localStorage.mockReset().mockResolvedValue({ snapshotCount: 0, snapshotBytes: 0, snapshotBudgetBytes: 20 * 1024 * 1024, low: false, unlimited: false })
     runtime.createSnapshot.mockReset().mockResolvedValue(undefined)
     runtime.snapshot.projection.settings = { enabled: true, hideOrganizedChats: false }
@@ -332,11 +342,14 @@ describe('Folders Settings storage measurements', () => {
     expect(host.textContent).toContain('Saved on this device. Browser Sync will write it when available.')
     await choose('sync-quota')
     await act(async () => button('Retry').click())
-    expect(runtime.toastCreate).toHaveBeenCalledWith({ type: 'info', closable: true, title: 'Retry requested.' })
+    expect(runtime.toastCreate).toHaveBeenCalledWith({ type: 'info', closable: true, title: 'Sync attempt completed. Your browser accepted this version.' })
     expect(runtime.syncNow).not.toHaveBeenCalled()
     await choose('sync-failed')
     expect(host.textContent).toContain('Sync needs attention.')
-    expect(host.textContent).not.toContain('Retry requested.')
+    expect(host.textContent).not.toContain('Sync attempt completed. Your browser accepted this version.')
+    await choose('sync-upgrade')
+    expect(host.textContent).toContain('Update Gemini Power Kit to read this synced Folder version.')
+    expect(Array.from(host.querySelectorAll('button')).some((item) => item.textContent === 'Retry')).toBe(false)
     await choose('sync-capacity')
     expect(host.textContent).toContain('Browser sync space is running low.')
     await act(async () => button('Later').click())
@@ -438,8 +451,7 @@ describe('Folders Settings storage measurements', () => {
     const input = host.querySelector<HTMLInputElement>('input[type="file"]')!
     const payload = {
       schemaVersion: 1, accountScopeId: 'account-scope-0001', exportedAt: '2026-01-01T00:00:00.000Z',
-      settings: { enabled: true, hideOrganizedChats: false }, settingsVersion: '0000000000000:000000:test',
-      folders: [], memberships: [], chatReferences: [],
+      data: { folders: [], memberships: [], chatReferences: [] },
     }
     const file = new File([JSON.stringify(payload)], 'my-folders.json', { type: 'application/json' })
     Object.defineProperty(input, 'files', { configurable: true, value: [file] })
@@ -458,7 +470,7 @@ describe('Folders Settings storage measurements', () => {
 
   it.each([
     { content: '{broken', expected: 'This file is not a valid Folder backup.' },
-    { content: JSON.stringify({ schemaVersion: 1, accountScopeId: 'account-scope-0002', exportedAt: '2026-01-01T00:00:00.000Z', settings: { enabled: true, hideOrganizedChats: false }, settingsVersion: '0000000000000:000000:test', folders: [], memberships: [], chatReferences: [] }), expected: 'This backup belongs to a different Gemini account.' },
+    { content: JSON.stringify({ schemaVersion: 1, accountScopeId: 'account-scope-0002', exportedAt: '2026-01-01T00:00:00.000Z', data: { folders: [], memberships: [], chatReferences: [] } }), expected: 'This backup belongs to a different Gemini account.' },
   ])('rejects invalid or foreign backups before confirmation', async ({ content, expected }) => {
     await act(async () => root.render(<FoldersSettingsView {...props} isPanelOpen />))
     const input = host.querySelector<HTMLInputElement>('input[type="file"]')!
@@ -607,9 +619,45 @@ describe('Folders Settings storage measurements', () => {
     expect(summary.textContent).not.toContain('Browser Sync is unavailable')
   })
 
+  it('requires confirmation to recreate a missing synced version and preserves the confirmed revision', async () => {
+    Object.assign(runtime.snapshot.syncState, { warning: 'missing-replica', localRevision: 'confirmed-revision', baseSnapshotId: 'missing-base' })
+    await act(async () => root.render(<FoldersSettingsView {...props} isPanelOpen />))
+    const button = (label: string) => Array.from(host.querySelectorAll('button')).find((item) => item.textContent === label)!
+    await act(async () => button('Retry').click())
+    expect(runtime.syncNow).toHaveBeenCalledTimes(1)
+    expect(runtime.recreateSyncReplica).not.toHaveBeenCalled()
+    await act(async () => button('Recreate synced version').click())
+    expect(host.querySelector('[data-test-dialog]')?.textContent).toContain('2 folders · 12 organized chats')
+    expect(runtime.recreateSyncReplica).not.toHaveBeenCalled()
+    await act(async () => button('Cancel').click())
+    expect(host.querySelector('[data-test-dialog]')).toBeNull()
+    expect(runtime.recreateSyncReplica).not.toHaveBeenCalled()
+    await act(async () => button('Recreate synced version').click())
+    runtime.snapshot.syncState.localRevision = 'new-edit'
+    await act(async () => root.render(<FoldersSettingsView {...props} isPanelOpen />))
+    runtime.recreateSyncReplica.mockResolvedValueOnce({ outcome: 'deferred' })
+    await act(async () => button("Use this device's version").click())
+    expect(runtime.recreateSyncReplica).toHaveBeenCalledExactlyOnceWith({ expectedRevision: 'confirmed-revision', baseSnapshotId: 'missing-base' })
+    expect(host.querySelector('[data-test-dialog]')).toBeNull()
+    expect(runtime.toastCreate).toHaveBeenLastCalledWith(expect.objectContaining({ title: 'The Folder version changed. Check the latest status and try again.' }))
+  })
+
+  it.each(['account', 'panel'])('discards recreation confirmation after the %s changes', async (change) => {
+    Object.assign(runtime.snapshot.syncState, { warning: 'missing-replica', localRevision: 'revision', baseSnapshotId: 'base' })
+    await act(async () => root.render(<FoldersSettingsView {...props} isPanelOpen />))
+    await act(async () => Array.from(host.querySelectorAll('button')).find((item) => item.textContent === 'Recreate synced version')!.click())
+    expect(host.querySelector('[data-test-dialog]')).not.toBeNull()
+    if (change === 'account') runtime.snapshot.identity.identity.accountScopeId = 'account-scope-0002'
+    await act(async () => root.render(<FoldersSettingsView {...props} isPanelOpen={change !== 'panel'} />))
+    runtime.snapshot.identity.identity.accountScopeId = 'account-scope-0001'
+    await act(async () => root.render(<FoldersSettingsView {...props} isPanelOpen />))
+    expect(host.querySelector('[data-test-dialog]')).toBeNull()
+    expect(runtime.recreateSyncReplica).not.toHaveBeenCalled()
+  })
+
   it('toasts retry results without changing the summary or claiming completed cloud delivery', async () => {
     let finish!: () => void
-    runtime.syncNow.mockImplementationOnce(() => new Promise<void>((resolve) => { finish = resolve }))
+    runtime.syncNow.mockImplementationOnce(() => new Promise((resolve) => { finish = () => resolve({ outcome: 'accepted-by-browser-storage' }) }))
     await act(async () => root.render(<FoldersSettingsView {...props} isPanelOpen />))
     const summary = host.querySelector('[data-control="browser-sync-summary"]')!
     const retry = Array.from(summary.querySelectorAll('button')).find((button) => button.textContent === 'Retry')!
@@ -620,14 +668,57 @@ describe('Folders Settings storage measurements', () => {
     expect(create.disabled).toBe(false)
     expect(host.querySelector<HTMLInputElement>('input[type="checkbox"]')?.disabled).toBe(false)
     await act(async () => finish())
-    expect(runtime.toastCreate).toHaveBeenCalledWith({ type: 'info', closable: true, title: 'Retry requested.' })
-    expect(summary.textContent).not.toContain('Retry requested.')
+    expect(runtime.toastCreate).toHaveBeenCalledWith({ type: 'info', closable: true, title: 'Sync attempt completed. Your browser accepted this version.' })
+    expect(summary.textContent).not.toContain('Sync attempt completed. Your browser accepted this version.')
     expect(summary.textContent).not.toContain('Browser Sync checked.')
     expect(retry.disabled).toBe(false)
     runtime.syncNow.mockRejectedValueOnce(new Error('Request failed'))
     await act(async () => retry.click())
-    expect(runtime.toastCreate).toHaveBeenCalledWith({ type: 'error', closable: true, title: 'Could not request a retry. Try again.' })
-    expect(summary.textContent).not.toContain('Could not request a retry. Try again.')
+    expect(runtime.toastCreate).toHaveBeenCalledWith({ type: 'error', closable: true, title: 'Sync still needs attention. Your changes remain saved on this device.' })
+    expect(summary.textContent).not.toContain('Sync still needs attention. Your changes remain saved on this device.')
+  })
+
+  it.each(['remote', 'local'] as const)('offers an inline %s conflict choice with completed attempt feedback', async (choice) => {
+    runtime.snapshot.syncState.state = 'conflict'
+    runtime.snapshot.syncState.warning = ''
+    runtime.snapshot.syncState.conflict = { snapshotId: 'remote-version', localRevision: 'local-version' }
+    await act(async () => root.render(<FoldersSettingsView {...props} isPanelOpen />))
+    const conflict = host.querySelector('[data-control="browser-sync-conflict"]')!
+    expect(conflict.textContent).toContain('Choose which Folder version to keep')
+    const label = choice === 'remote' ? 'Use synced version' : "Use this device's version"
+    const button = Array.from(conflict.querySelectorAll('button')).find((button) => button.textContent === label)!
+    await act(async () => button.click())
+    expect(runtime.resolveSyncConflict).toHaveBeenCalledExactlyOnceWith(choice)
+    expect(runtime.toastCreate).toHaveBeenCalledWith(expect.objectContaining({ title: 'Sync attempt completed. Your browser accepted this version.' }))
+    expect(runtime.syncNow).not.toHaveBeenCalled()
+  })
+
+  it.each(['failed', 'conflict', 'busy', 'deferred'])('reports the completed %s retry outcome', async (outcome) => {
+    runtime.syncNow.mockResolvedValueOnce({ outcome })
+    await act(async () => root.render(<FoldersSettingsView {...props} isPanelOpen />))
+    const retry = Array.from(host.querySelectorAll('button')).find((button) => button.textContent === 'Retry')!
+    await act(async () => retry.click())
+    const title = runtime.toastCreate.mock.calls.at(-1)![0].title as string
+    expect(title).not.toContain('accepted')
+    expect(title).not.toContain('Retry requested')
+    expect(runtime.toastCreate.mock.calls.at(-1)![0].type).toBe(outcome === 'failed' ? 'error' : 'info')
+  })
+
+  it.each(['account', 'panel'])('ignores late conflict feedback after the %s changes', async (change) => {
+    runtime.snapshot.syncState.state = 'conflict'
+    runtime.snapshot.syncState.warning = ''
+    runtime.snapshot.syncState.conflict = { snapshotId: 'remote-version', localRevision: 'local-version' }
+    let finish!: () => void
+    runtime.resolveSyncConflict.mockImplementationOnce(() => new Promise((resolve) => { finish = () => resolve({ outcome: 'accepted-by-browser-storage' }) }))
+    await act(async () => root.render(<FoldersSettingsView {...props} isPanelOpen />))
+    const button = Array.from(host.querySelectorAll('button')).find((button) => button.textContent === 'Use synced version')!
+    await act(async () => button.click())
+    expect(button.disabled).toBe(true)
+    if (change === 'account') runtime.snapshot.identity.identity.accountScopeId = 'account-scope-0002'
+    await act(async () => root.render(<FoldersSettingsView {...props} isPanelOpen={change !== 'panel'} />))
+    if (change === 'panel') await act(async () => root.render(<FoldersSettingsView {...props} isPanelOpen />))
+    await act(async () => finish())
+    expect(runtime.toastCreate).not.toHaveBeenCalled()
   })
 
   it('shows and hides restore history without fetching again on collapse', async () => {

@@ -11,15 +11,14 @@ const state = vi.hoisted(() => {
   const snapshot: FolderRuntimeState = {
     identity: { status: 'available', identity: { email: 'user@example.com', accountScopeId: 'account-scope-0001', source: 'observed', resolvedAt: timestamp } },
     projection: {
-      folders: [{ id: 'folder-1', accountScopeId: 'account-scope-0001', parentFolderId: '__root__', name: 'Folder', iconKey: 'folder', colorValue: 'neutral', orderKey: '1'.padStart(32, '0'), createdAt: timestamp, updatedAt: timestamp, versionStamp: stamp, fieldVersions: { name: stamp, iconKey: stamp, colorValue: stamp, position: stamp } }],
+      folders: [{ id: 'folder-1', accountScopeId: 'account-scope-0001', parentFolderId: '__root__', name: 'Folder', iconKey: 'folder', colorValue: 'neutral', orderKey: '1'.padStart(32, '0'), createdAt: timestamp, updatedAt: timestamp}],
       memberships: ['regular', 'old-pin', 'new-pin'].map((chatId, index) => ({
         id: `membership-${index}`, accountScopeId: 'account-scope-0001', folderId: 'folder-1', chatId,
         orderKey: String(index + 1).padStart(32, '0'), createdAt: timestamp, updatedAt: timestamp,
-        versionStamp: stamp, positionVersionStamp: stamp,
         pinnedOrderKey: index ? String(3 - index).padStart(32, '0') : undefined,
       })),
-      chatReferences: ['regular', 'old-pin', 'new-pin'].map((chatId) => ({ accountScopeId: 'account-scope-0001', chatId, cachedTitle: chatId, createdAt: timestamp, updatedAt: timestamp, titleVersionStamp: stamp })),
-      settings: { accountScopeId: 'account-scope-0001', enabled: true, hideOrganizedChats: false, collapsedFolderIds: [], updatedAt: timestamp, settingsVersion: stamp, settingsPending: false },
+      chatReferences: ['regular', 'old-pin', 'new-pin'].map((chatId) => ({ accountScopeId: 'account-scope-0001', chatId, cachedTitle: chatId, createdAt: timestamp, updatedAt: timestamp})),
+      settings: { accountScopeId: 'account-scope-0001', enabled: true, hideOrganizedChats: false, collapsedFolderIds: [], updatedAt: timestamp},
     },
   }
   return { snapshot, openChatMenu: vi.fn(), closeMenu: vi.fn(), navigate: vi.fn(), moveMembership: vi.fn() }

@@ -1,5 +1,7 @@
 import { createExtensionRpcRouter, type ExtensionRpcMessageListener } from '@/integrations/extension-rpc/router'
 import { folderRpcEnvelopeSchema, folderRpcParams, folderRpcResponseSchema, type FolderRpcEnvelope, type FolderRpcErrorCode } from '@/domain/folder/rpc'
+import type { FolderMutationEffect } from '@/domain/folder/types'
+import type { FolderRecoveryRunner } from '@/services/folder-recovery/runner'
 import { folderRepository } from '@/data/repositories/folderRepository'
 import { measureBrowserSyncUsage } from '@/services/folder-sync/providers/browser-sync'
 import { FolderRecoveryError, getLocalStorageStatus, isQuotaError } from '@/services/folder-recovery/storage'
@@ -29,12 +31,7 @@ function mapError(error: unknown): { code: FolderRpcErrorCode; message: string; 
 }
 
 function summarizeRpcParams(method: FolderRpcEnvelope['method'], params: unknown): unknown {
-  // Backups can contain every Folder name and cached chat title. Keep console
-  // diagnostics useful without dumping a potentially large user-data payload.
-  if (method === 'importBackup') {
-    return { payload: '[redacted]', payloadBytes: JSON.stringify(params).length }
-  }
-  return params
+  return { method, fields: params && typeof params === 'object' ? Object.keys(params) : [] }
 }
 
 function rpcLogContext(request: FolderRpcEnvelope, params?: unknown): Record<string, unknown> {
@@ -53,9 +50,9 @@ function isGeminiContentSender(sender: Browser.runtime.MessageSender): boolean {
   return typeof url === 'string' && /^https:\/\/gemini\.google\.com\//u.test(url)
 }
 
-export function createFolderRpcHandler(scheduler: FolderSyncScheduler): ExtensionRpcMessageListener {
+export function createFolderRpcHandler(scheduler: FolderSyncScheduler, recovery?: FolderRecoveryRunner): ExtensionRpcMessageListener {
   const queries = new FolderQueryService()
-  const commands = new FolderCommandService(scheduler, queries)
+  const commands = new FolderCommandService(scheduler, queries, recovery)
   return createExtensionRpcRouter([{
     namespace: 'folders',
     method: '*',
@@ -76,14 +73,21 @@ export function createFolderRpcHandler(scheduler: FolderSyncScheduler): Extensio
       try {
         console.info('[Folders][rpc] handling request', rpcLogContext(request, params))
         let data: unknown
+        let committedRevision: string | undefined
+        const readProjection = async <T>(read: () => Promise<T>): Promise<T> => {
+          const result = await queries.readProjection(request.accountScopeId, read)
+          committedRevision = result.dataRevision
+          return result.data
+        }
+        let committedEffect: FolderMutationEffect | undefined
         switch (request.method) {
-          case 'getSidebarState': data = await queries.getSidebarState(request.accountScopeId, (params as { folderLimit: number }).folderLimit); break
-          case 'listFolders': { const input = params as { cursor?: string; limit: number }; data = await queries.listFolders(request.accountScopeId, input.cursor, input.limit); break }
-          case 'listFolderChats': { const input = params as { folderId: string; cursor?: string; limit: number }; data = await queries.listFolderChats(request.accountScopeId, input.folderId, input.cursor, input.limit); break }
-          case 'getPickerOptions': { const input = params as { chatId: string; cursor?: string; limit: number }; data = await queries.getPickerOptions(request.accountScopeId, input.chatId, input.cursor, input.limit); break }
-          case 'resolveChatMemberships': data = await queries.resolveChatMemberships(request.accountScopeId, (params as { chatIds: string[] }).chatIds); break
-          case 'getFolderDeleteImpact': data = await queries.getFolderDeleteImpact(request.accountScopeId, (params as { folderId: string }).folderId); break
-          case 'getSettings': data = await queries.getSettings(request.accountScopeId); break
+          case 'getSidebarState': data = await readProjection(() => queries.getSidebarState(request.accountScopeId, (params as { folderLimit: number }).folderLimit)); break
+          case 'listFolders': { const input = params as { cursor?: string; limit: number }; data = await readProjection(() => queries.listFolders(request.accountScopeId, input.cursor, input.limit)); break }
+          case 'listFolderChats': { const input = params as { folderId: string; cursor?: string; limit: number }; data = await readProjection(() => queries.listFolderChats(request.accountScopeId, input.folderId, input.cursor, input.limit)); break }
+          case 'getPickerOptions': { const input = params as { chatId: string; cursor?: string; limit: number }; data = await readProjection(() => queries.getPickerOptions(request.accountScopeId, input.chatId, input.cursor, input.limit)); break }
+          case 'resolveChatMemberships': data = await readProjection(() => queries.resolveChatMemberships(request.accountScopeId, (params as { chatIds: string[] }).chatIds)); break
+          case 'getFolderDeleteImpact': data = await readProjection(() => queries.getFolderDeleteImpact(request.accountScopeId, (params as { folderId: string }).folderId)); break
+          case 'getSettings': data = await readProjection(() => queries.getSettings(request.accountScopeId)); break
           case 'getSyncStatus': data = await queries.getSyncStatus(request.accountScopeId); break
           case 'getLocalStorageStatus': data = await getLocalStorageStatus(request.accountScopeId); break
           case 'measureBrowserSyncUsage': {
@@ -99,25 +103,29 @@ export function createFolderRpcHandler(scheduler: FolderSyncScheduler): Extensio
           case 'listSnapshots': { const input = params as { cursor?: string; limit: number }; data = await queries.listSnapshots(request.accountScopeId, input.cursor, input.limit); break }
           case 'getRestoreImpact': data = { available: true }; break
           case 'exportBackup': data = await folderRepository.exportAccountData(request.accountScopeId); break
-          default:
-            data = await commands.execute(request)
+          default: {
+            const result = await commands.execute(request)
+            data = result.data
+            committedRevision = result.commit.dataRevision
+            committedEffect = result.commit.effect
             commandCompleted = true
             break
+          }
         }
-        const dataRevision = await queries.revision(request.accountScopeId)
-        if (mutatingMethods.has(request.method)) {
+        const dataRevision = committedRevision ?? await queries.revision(request.accountScopeId)
+        if (mutatingMethods.has(request.method) && (committedEffect !== undefined || request.method === 'createSnapshot')) {
           // activityHint and retrySync only schedule work; they do not mutate
           // Folder data before their RPC response. Broadcasting them as data
           // changes made every foreground tab reload its Sidebar needlessly.
           void publishFolderInvalidation(
-            { accountScopeId: request.accountScopeId, dataRevision, type: 'folders:data-changed', affected: {} },
+            { accountScopeId: request.accountScopeId, dataRevision, type: 'folders:data-changed', affected: request.method === 'createSnapshot' ? { syncStatus: true, recoveryStatus: true } : {} },
             { excludeTabId: sender.tab?.id },
-          )
+          ).catch((error) => console.error('[Folders][rpc] notification failed', { accountScopeId: request.accountScopeId, error }))
         } else if ((request.method === 'dismissCapacityNotice' && data === true) || request.method === 'measureBrowserSyncUsage') {
           void publishFolderInvalidation(
             { accountScopeId: request.accountScopeId, dataRevision, type: 'folders:data-changed', affected: { syncStatus: true } },
             { excludeTabId: sender.tab?.id },
-          )
+          ).catch((error) => console.error('[Folders][rpc] notification failed', { accountScopeId: request.accountScopeId, error }))
         }
         console.info('[Folders][rpc] completed request', { ...rpcLogContext(request, params), dataRevision })
         return { ok: true as const, requestId: request.requestId, dataRevision, data }

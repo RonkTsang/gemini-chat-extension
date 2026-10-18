@@ -5,7 +5,7 @@ export interface FolderTreeNode extends FolderRow { children: FolderTreeNode[] }
 export type FolderTreeProjectionResult = { ok: true; roots: FolderTreeNode[] } | { ok: false; reason: 'duplicate-id' | 'cross-account' | 'orphan' | 'cycle' | 'depth-exceeded'; folderId?: string }
 
 export function validateAndProjectFolderTree(rows: FolderRow[]): FolderTreeProjectionResult {
-  const active = rows.filter(row => !row.deletedAt)
+  const active = rows
   if (new Set(active.map(row => row.id)).size !== active.length) return { ok: false, reason: 'duplicate-id' }
   const account = active[0]?.accountScopeId
   if (account && active.some(row => row.accountScopeId !== account)) return { ok: false, reason: 'cross-account' }

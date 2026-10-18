@@ -1,8 +1,11 @@
 import { folderRepository, type FolderCreateInput, type FolderSettingsPatch, type FolderUpdateInput } from '@/data/repositories/folderRepository'
 import type { FolderRpcEnvelope } from '@/domain/folder/rpc'
-import { ROOT_FOLDER_ID } from '@/domain/folder/types'
+import { ROOT_FOLDER_ID, type BrowserSyncRecreationRequest, type FolderMutationResult } from '@/domain/folder/types'
 import { FolderSyncScheduler } from '@/services/folder-sync/scheduler'
 import { FolderRecoveryError } from '@/services/folder-recovery/storage'
+
+import { FolderRecoveryRunner } from '@/services/folder-recovery/runner'
+import { dispatchFolderAfterCommit } from '@/services/folder-tasks/after-commit'
 
 import { FolderQueryService } from './query-service'
 
@@ -10,11 +13,8 @@ export class FolderCommandService {
   constructor(
     private readonly scheduler: FolderSyncScheduler,
     private readonly queries = new FolderQueryService(),
+    private readonly recovery = new FolderRecoveryRunner(),
   ) {}
-
-  private schedule(request: FolderRpcEnvelope): void {
-    this.scheduler.requestRun(request.accountScopeId, 'outbox-created')
-  }
 
   private async assertRevision(accountScopeId: string, expectedRevision?: string): Promise<void> {
     if (expectedRevision && expectedRevision !== await this.queries.revision(accountScopeId)) {
@@ -22,105 +22,111 @@ export class FolderCommandService {
     }
   }
 
-  async execute(request: FolderRpcEnvelope): Promise<unknown> {
+  async execute(request: FolderRpcEnvelope): Promise<FolderMutationResult<unknown>> {
     const params = request.params as Record<string, unknown>
-    let data: unknown
+    let result: FolderMutationResult<unknown>
     switch (request.method) {
       case 'createFolder':
-        data = await folderRepository.createFolder(request.accountScopeId, params as unknown as FolderCreateInput)
+        result = await folderRepository.createFolder(request.accountScopeId, params as unknown as FolderCreateInput)
         break
       case 'createFolderAndAddChat': {
         const input = params as { folder: FolderCreateInput; chatId: string; cachedTitle?: string }
-        data = await folderRepository.createFolderAndAddChat(request.accountScopeId, input.folder, input.chatId, input.cachedTitle)
+        result = await folderRepository.createFolderAndAddChat(request.accountScopeId, input.folder, input.chatId, input.cachedTitle)
         break
       }
       case 'updateFolder': {
         const input = params as { folderId: string; patch: FolderUpdateInput }
-        data = await folderRepository.updateFolder(request.accountScopeId, input.folderId, input.patch)
+        result = await folderRepository.updateFolder(request.accountScopeId, input.folderId, input.patch)
         break
       }
       case 'moveFolder': {
         const input = params as { folderId: string; parentFolderId?: string; beforeId?: string; afterId?: string; expectedRevision?: string }
         await this.assertRevision(request.accountScopeId, input.expectedRevision)
-        data = await folderRepository.moveFolder(request.accountScopeId, input.folderId, input.parentFolderId ?? ROOT_FOLDER_ID, input)
+        result = await folderRepository.moveFolder(request.accountScopeId, input.folderId, input.parentFolderId ?? ROOT_FOLDER_ID, input)
         break
       }
       case 'deleteFolder': {
         const input = params as { folderId: string; expectedRevision?: string }
         await this.assertRevision(request.accountScopeId, input.expectedRevision)
-        await folderRepository.deleteFolder(request.accountScopeId, input.folderId)
-        data = undefined
+        result = await folderRepository.deleteFolder(request.accountScopeId, input.folderId)
         break
       }
       case 'addMembership':
-        data = await folderRepository.upsertMembership(request.accountScopeId, params as never)
+        result = await folderRepository.upsertMembership(request.accountScopeId, params as never)
         break
       case 'moveMembership': {
         const input = params as { folderId: string; targetFolderId: string; chatId: string; beforeId?: string; afterId?: string; expectedRevision?: string }
         await this.assertRevision(request.accountScopeId, input.expectedRevision)
-        data = await folderRepository.moveMembership(request.accountScopeId, input.folderId, input.chatId, input.targetFolderId, input)
+        result = await folderRepository.moveMembership(request.accountScopeId, input.folderId, input.chatId, input.targetFolderId, input)
         break
       }
       case 'setMembershipPinned': {
         const input = params as { folderId: string; chatId: string; pinned: boolean }
-        data = await folderRepository.setMembershipPinned(request.accountScopeId, input.folderId, input.chatId, input.pinned)
+        result = await folderRepository.setMembershipPinned(request.accountScopeId, input.folderId, input.chatId, input.pinned)
         break
       }
       case 'removeMembership': {
         const input = params as { folderId: string; chatId: string }
-        await folderRepository.removeMembership(request.accountScopeId, input.folderId, input.chatId)
-        data = undefined
+        result = await folderRepository.removeMembership(request.accountScopeId, input.folderId, input.chatId)
         break
       }
       case 'removeChatAfterGeminiDelete': {
         const input = params as { chatId: string; protectionSnapshotId?: string }
-        await folderRepository.removeChatAfterGeminiDelete(request.accountScopeId, input.chatId, input.protectionSnapshotId)
-        data = undefined
+        result = await folderRepository.removeChatAfterGeminiDelete(request.accountScopeId, input.chatId, input.protectionSnapshotId)
         break
       }
       case 'updateChatTitle': {
-        const input = params as { chatId: string; title: string; expectedTitle?: string }
-        data = await folderRepository.upsertChatReference(request.accountScopeId, input.chatId, input.title, input.expectedTitle)
+        const input = params as { chatId: string; title: string; expectedTitle?: string; expectedRevision?: string }
+        result = await folderRepository.upsertChatReference(request.accountScopeId, input.chatId, input.title, input.expectedTitle, input.expectedRevision)
         break
       }
       case 'updateSettings':
-        data = await folderRepository.updateSettings(request.accountScopeId, (params as { patch: FolderSettingsPatch }).patch)
+        result = await folderRepository.updateSettings(request.accountScopeId, (params as { patch: FolderSettingsPatch }).patch)
         break
-      case 'createSnapshot':
-        data = await folderRepository.createSnapshot(request.accountScopeId, 'manual')
-        break
+      case 'createSnapshot': {
+        const captured = await folderRepository.getAccountDataWithRevision(request.accountScopeId)
+        const data = await folderRepository.createSnapshot(request.accountScopeId, 'manual', false, captured)
+        return { data, commit: { accountScopeId: request.accountScopeId, dataRevision: captured.dataRevision } }
+      }
       case 'prepareChatDeletion':
         try {
-          return await folderRepository.createSnapshot(request.accountScopeId, 'before-delete', true)
+          const captured = await folderRepository.getAccountDataWithRevision(request.accountScopeId)
+          const data = await folderRepository.createSnapshot(request.accountScopeId, 'before-delete', true, captured)
+          return { data, commit: { accountScopeId: request.accountScopeId, dataRevision: captured.dataRevision } }
         } catch (error) {
           throw new FolderRecoveryError('SNAPSHOT_PROTECTION_FAILED', { cause: error })
         }
       case 'releaseSnapshot':
-        return folderRepository.releaseSnapshot(request.accountScopeId, (params as { snapshotId: string }).snapshotId, (params as { protectionToken: string }).protectionToken)
+        await folderRepository.releaseSnapshot(request.accountScopeId, (params as { snapshotId: string }).snapshotId, (params as { protectionToken: string }).protectionToken)
+        return this.readResult(request, undefined)
       case 'importBackup':
-        await folderRepository.importAccountData(request.accountScopeId, (params as { payload: never }).payload)
-        data = undefined
+        result = await folderRepository.importAccountData(request.accountScopeId, (params as { payload: never }).payload)
         break
       case 'restoreSnapshot': {
         const input = params as { snapshotId: string; expectedRevision?: string }
         await this.assertRevision(request.accountScopeId, input.expectedRevision)
-        await folderRepository.restoreSnapshot(request.accountScopeId, input.snapshotId)
-        data = undefined
+        result = await folderRepository.restoreSnapshot(request.accountScopeId, input.snapshotId)
         break
       }
       case 'retrySync':
-        this.scheduler.requestRun(request.accountScopeId, 'user-retry')
-        return { deferred: true }
+        return this.readResult(request, await this.scheduler.retry(request.accountScopeId))
+      case 'recreateSyncReplica':
+        return this.readResult(request, await this.scheduler.retry(request.accountScopeId, params as unknown as BrowserSyncRecreationRequest))
+      case 'resolveSyncConflict': {
+        const input = params as { choice: 'remote' | 'local'; expectedRevision: string; snapshotId: string }
+        return this.readResult(request, await this.scheduler.resolveConflict(request.accountScopeId, input.choice, input.expectedRevision, input.snapshotId))
+      }
       case 'activityHint':
         this.scheduler.requestRun(request.accountScopeId, 'content-activity-hint')
-        return { accepted: true }
+        return this.readResult(request, { accepted: true })
       default:
         throw new Error('INVALID_REQUEST')
     }
-    const localViewOnly = request.method === 'updateSettings'
-      && !('enabled' in (params as { patch: FolderSettingsPatch }).patch)
-      && !('hideOrganizedChats' in (params as { patch: FolderSettingsPatch }).patch)
-    if (!localViewOnly) this.schedule(request)
-    return data
+    dispatchFolderAfterCommit(result.commit, this.scheduler, this.recovery)
+    return result
+  }
+
+  private async readResult(request: FolderRpcEnvelope, data: unknown): Promise<FolderMutationResult<unknown>> {
+    return { data, commit: { accountScopeId: request.accountScopeId, dataRevision: await this.queries.revision(request.accountScopeId) } }
   }
 }

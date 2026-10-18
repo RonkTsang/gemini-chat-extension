@@ -1,214 +1,156 @@
+import { storage, scopeA, scopeB, publication, data, emptyData, resetStorage } from '../test-storage'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { browser } from 'wxt/browser'
+import { BrowserSyncFolderProvider, BrowserSyncQuotaError, BrowserSyncUnsupportedVersionError, browserSyncManifestKey, browserSyncChunkKey,
+  calculateBrowserSyncUsage, storageItemBytes, folderSyncKeyScope } from './browser-sync'
+import { sha256Hex, encodeLzStringBase64 } from '../codec'
+import type { BrowserSyncManifest } from '@/domain/folder/types'
 
-const state = vi.hoisted(() => ({
-  values: new Map<string, unknown>(),
-  failSet: false,
-  quotaBytes: 100_000,
-  perItemBytes: 8_192,
-  maxItems: 512,
-  remove: vi.fn(),
-  set: vi.fn(),
-}))
+const provider = () => new BrowserSyncFolderProvider()
+const writing = async () => undefined
+beforeEach(resetStorage)
 
-vi.mock('wxt/browser', () => ({
-  browser: {
-    storage: {
-      sync: {
-        get: vi.fn(async (keys: string | string[] | null) => {
-          if (keys === null) return Object.fromEntries(state.values)
-          const requested = Array.isArray(keys) ? keys : [keys]
-          return Object.fromEntries(requested.map((key) => [key, state.values.get(key)]))
-        }),
-        set: state.set.mockImplementation(async (values: Record<string, unknown>) => {
-          if (state.failSet) throw new Error('set failed')
-          Object.entries(values).forEach(([key, value]) => state.values.set(key, value))
-        }),
-        remove: state.remove.mockImplementation(async (keys: string[]) => keys.forEach((key) => state.values.delete(key))),
-        getBytesInUse: vi.fn(),
-        get QUOTA_BYTES() { return state.quotaBytes },
-        get QUOTA_BYTES_PER_ITEM() { return state.perItemBytes },
-        get MAX_ITEMS() { return state.maxItems },
-      },
-    },
-  },
-}))
-
-import { encodeLzStringBase64, sha256Hex, decodeLzStringBase64 } from '../codec'
-import {
-  BrowserSyncFolderProvider,
-  BrowserSyncQuotaError,
-  FOLDER_SYNC_BUDGET_BYTES,
-  browserSyncManifestKey,
-  measureBrowserSyncUsage,
-  storageItemBytes,
-} from './browser-sync'
-import type { FolderSyncGenerationRow, FolderSettingsRow, BrowserSyncManifest, FolderSyncData } from '@/domain/folder/types'
-
-const scope = 'account-scope-0001'
-
-const settings: FolderSettingsRow = {
-  accountScopeId: scope, enabled: true, hideOrganizedChats: false, collapsedFolderIds: [],
-  updatedAt: '2026-01-01T00:00:00.000Z', settingsVersion: '0000000000001:000000:device-a', settingsPending: false,
-}
-
-async function generation(revision: string, id = 'generation-1', data: FolderSyncData = { folders: [], memberships: [], chatReferences: [] }): Promise<FolderSyncGenerationRow> {
-  const payload = encodeLzStringBase64(data)
-  return {
-    id, accountScopeId: scope, syncMode: 'browser-sync', syncEpoch: 'epoch-a', dataRevision: revision,
-    payloadHash: await sha256Hex(payload), payload, includedOperationIds: [],
-    createdAt: '2026-01-01T00:00:00.000Z', state: 'prepared',
-  }
-}
-
-describe('BrowserSyncFolderProvider', () => {
-  beforeEach(() => {
-    state.values.clear()
-    state.failSet = false
-    state.quotaBytes = 100_000
-    state.perItemBytes = 8_192
-    state.maxItems = 512
-    state.remove.mockClear()
-    state.set.mockClear()
-    vi.mocked(browser.storage.sync.get).mockClear()
+describe('fixed account snapshot transport', () => {
+  it('keeps account keys independent of the payload version and validates chunk indexes consistently', () => {
+    expect(browserSyncManifestKey(scopeA)).toBe(`folders:${scopeA}:manifest`)
+    expect(browserSyncChunkKey(scopeA, 511)).toBe(`folders:${scopeA}:chunk:511`)
+    expect(folderSyncKeyScope(browserSyncChunkKey(scopeA, 511))).toBe(scopeA)
+    for (const suffix of ['-1', '01', '512', '1.5']) expect(folderSyncKeyScope(`folders:${scopeA}:chunk:${suffix}`)).toBeUndefined()
+    expect(folderSyncKeyScope(`folders:v4:${scopeA}:manifest`)).toBeUndefined()
   })
 
-  it('writes one V3 active manifest and reads it without a confirmation read-back', async () => {
-    const provider = new BrowserSyncFolderProvider()
-    const result = await provider.publish(await generation('revision-1', 'generation-1'), settings)
-    expect(browser.storage.sync.get).toHaveBeenCalledTimes(1)
-    expect(browser.storage.sync.get).toHaveBeenCalledWith(null)
-    const actual = await measureBrowserSyncUsage()
-    expect(actual.folderBytes).toBe(result.projectedFolderBytes)
-    expect(actual.totalBytes).toBe(result.projectedTotalBytes)
-
-    const manifest = state.values.get(browserSyncManifestKey(scope)) as Record<string, unknown>
-    expect(manifest).toMatchObject({ schemaVersion: 3, generationId: 'generation-1', dataRevision: 'revision-1' })
-    expect(manifest).not.toHaveProperty('previous')
-    expect(state.set).toHaveBeenCalledTimes(1)
-    await expect(provider.read(scope)).resolves.toMatchObject({ status: 'complete', manifest: { dataRevision: 'revision-1' } })
+  it('protects an unsupported manifest before decoding chunks or starting a publication', async () => {
+    const key = browserSyncManifestKey(scopeA)
+    storage.values.set(key, { schemaVersion: 5, accountScopeId: scopeA, futureFormat: 'opaque' })
+    storage.values.set(browserSyncChunkKey(scopeA, 0), { opaque: 'future payload' })
+    const before = [...storage.values]
+    expect(await provider().read(scopeA)).toEqual({ status: 'unsupported-schema-version', schemaVersion: 5 })
+    const marker = vi.fn(writing)
+    const pending = await publication('pending')
+    pending.state = 'writing'
+    await expect(provider().publish(pending, marker)).rejects.toBeInstanceOf(BrowserSyncUnsupportedVersionError)
+    expect(marker).not.toHaveBeenCalled()
+    expect([...storage.values]).toEqual(before)
   })
 
-  it('round-trips multiple ordered chunks within the item byte limit', async () => {
-    let seed = 42
-    const randomTitle = () => Array.from({ length: 400 }, () => {
-      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0
-      return 'abcdefghijklmnopqrstuvwxyz0123456789'[seed % 36]
-    }).join('') + '中文😀'
-    const data: FolderSyncData = {
-      folders: [], memberships: [],
-      chatReferences: Array.from({ length: 100 }, (_, index) => ({
-        chatId: `chat-${index}`, cachedTitle: randomTitle(),
-        createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z', titleVersionStamp: settings.settingsVersion,
-      })),
-    }
-    const provider = new BrowserSyncFolderProvider()
-    await provider.publish(await generation('revision-multi', 'generation-multi', data), settings)
-    const manifest = state.values.get(browserSyncManifestKey(scope)) as BrowserSyncManifest
-    expect(manifest.chunkCount).toBeGreaterThan(1)
-    for (const [key, value] of state.values) expect(storageItemBytes(key, value)).toBeLessThan(state.perItemBytes)
-    const read = await provider.read(scope)
-    expect(read).toMatchObject({ status: 'complete', data: { chatReferences: data.chatReferences.map(row => ({ ...row, accountScopeId: scope })) } })
-    const chunk = [...state.values.keys()].find(key => key.includes(':chunk:'))!
-    state.values.set(chunk, 'corrupted')
-    await expect(provider.read(scope)).resolves.toMatchObject({ status: 'invalid', code: 'invalid-payload', manifest })
-  })
-
-  it('updates only Manifest settings while preserving the data pointer and chunks', async () => {
-    const provider = new BrowserSyncFolderProvider()
-    await provider.publish(await generation('revision-1'), settings)
-    const before = new Map(state.values)
-    state.set.mockClear()
-    state.remove.mockClear()
-    await provider.publishSettings(scope, { ...settings, hideOrganizedChats: true, settingsVersion: '0000000000002:000000:device-a' })
-    expect(state.set).toHaveBeenCalledTimes(1)
-    expect(Object.keys(state.set.mock.calls[0][0])).toEqual([browserSyncManifestKey(scope)])
-    expect(state.remove).not.toHaveBeenCalled()
-    for (const [key, value] of before) if (key.includes(':chunk:')) expect(state.values.get(key)).toEqual(value)
-    expect(state.values.get(browserSyncManifestKey(scope))).toMatchObject({ generationId: 'generation-1', dataRevision: 'revision-1', settings: { hideOrganizedChats: true } })
-  })
-
-  it('preserves newer remote settings when publishing a prepared data generation', async () => {
-    const provider = new BrowserSyncFolderProvider()
-    await provider.publish(await generation('revision-1'), { ...settings, enabled: false, settingsVersion: '0000000000002:000000:remote' })
-    await provider.publish(await generation('revision-2', 'generation-2'), settings, 'generation-1')
-    expect(state.values.get(browserSyncManifestKey(scope))).toMatchObject({ generationId: 'generation-2', settings: { enabled: false }, settingsVersion: '0000000000002:000000:remote' })
-    state.remove.mockClear()
-    await expect(provider.publish(await generation('revision-3', 'generation-3'), settings, 'generation-1')).rejects.toThrow('active generation changed')
-    expect(state.remove).not.toHaveBeenCalled()
-  })
-
-  it('reports missing chunks as incomplete without parsing partial data', async () => {
-    const provider = new BrowserSyncFolderProvider()
-    await provider.publish(await generation('revision-1', 'generation-1'), settings)
-    const chunk = [...state.values.keys()].find((key) => key.includes(':chunk:'))!
-    state.values.delete(chunk)
-    await expect(provider.read(scope)).resolves.toMatchObject({ status: 'incomplete', missingChunkIndexes: [0] })
-  })
-
-  it('reports malformed replicas as invalid instead of falling back to another generation', async () => {
-    const provider = new BrowserSyncFolderProvider()
-    state.values.set(browserSyncManifestKey(scope), { schemaVersion: 3, accountScopeId: scope })
-    await expect(provider.read(scope)).resolves.toEqual({ status: 'invalid', code: 'invalid-manifest' })
-  })
-
-  it('checks UTF-8 storage item bytes rather than string length', () => {
-    expect(storageItemBytes('鍵', '😀')).toBeGreaterThan('鍵'.length + '😀'.length)
-  })
-
-  it('measures all actual V3 Folder keys including other scopes and orphans, with exact UTF-8/JSON bytes', async () => {
-    state.values.set('folders:v3:another-scope:generation:orphan:chunk:0', '😀\\"\n')
-    state.values.set('folders:v3:local-scope:manifest', { text: '中文' })
-    state.values.set('other-setting', 'not Folder data')
-    const folderBytes = [...state.values.entries()].filter(([key]) => key.startsWith('folders:v3:'))
-      .reduce((total, [key, value]) => total + storageItemBytes(key, value), 0)
-    const totalBytes = [...state.values.entries()].reduce((total, [key, value]) => total + storageItemBytes(key, value), 0)
-    await expect(measureBrowserSyncUsage()).resolves.toEqual({
-      folderBytes, totalBytes, folderBudgetBytes: FOLDER_SYNC_BUDGET_BYTES, quotaBytes: state.quotaBytes,
-      usagePercent: folderBytes / FOLDER_SYNC_BUDGET_BYTES * 100,
+  it('protects a future manifest that arrives during publication preflight', async () => {
+    const pending = await publication('pending')
+    const key = browserSyncManifestKey(scopeA)
+    vi.spyOn(browser.storage.sync, 'get').mockImplementation(async (keys) => {
+      if (keys === key) storage.values.set(key, { accountScopeId: scopeA, schemaVersion: 5 })
+      return keys === null ? Object.fromEntries(storage.values)
+        : Object.fromEntries((Array.isArray(keys) ? keys : [keys]).map((entry) => [entry, storage.values.get(entry as string)]))
     })
-    expect(browser.storage.sync.get).toHaveBeenCalledExactlyOnceWith(null)
-    expect(state.set).not.toHaveBeenCalled()
-    expect(state.remove).not.toHaveBeenCalled()
+    const marker = vi.fn(writing)
+    await expect(provider().publish(pending, marker)).rejects.toBeInstanceOf(BrowserSyncUnsupportedVersionError)
+    expect(marker).not.toHaveBeenCalled()
+    expect(storage.values.size).toBe(1)
   })
 
-  it('includes both current and projected usage in rejected preflight without mutating storage', async () => {
-    const provider = new BrowserSyncFolderProvider()
-    state.values.set('other-setting', 'outside Folders')
-    state.quotaBytes = 1
-    const before = Object.fromEntries(state.values)
-    try {
-      await provider.publish(await generation('revision-1', 'generation-1'), settings)
-      expect.fail('Expected quota preflight to fail')
-    } catch (error) {
-      expect(error).toBeInstanceOf(BrowserSyncQuotaError)
-      const quotaError = error as BrowserSyncQuotaError
-      expect(quotaError.currentUsage?.folderBytes).toBe(0)
-      expect(quotaError.currentUsage?.totalBytes).toBe(storageItemBytes('other-setting', 'outside Folders'))
-      expect(quotaError.usage?.projectedFolderBytes).toBeGreaterThan(0)
+  it('rechecks unknown formats after persisting the writing marker, before destructive storage writes', async () => {
+    const key = browserSyncManifestKey(scopeA)
+    await expect(provider().publish(await publication('pending'), async () => {
+      storage.values.set(key, { accountScopeId: scopeA, schemaVersion: 5 })
+    })).rejects.toBeInstanceOf(BrowserSyncUnsupportedVersionError)
+    expect(storage.values.get(key)).toEqual({ accountScopeId: scopeA, schemaVersion: 5 })
+    expect(storage.values.size).toBe(1)
+  })
+
+  it('round trips valid empty snapshots and full settings, distinct from absent storage', async () => {
+    expect(await provider().read(scopeA)).toEqual({ status: 'absent' })
+    const next = await publication('empty')
+    next.settings = { enabled: false, hideOrganizedChats: true }
+    const result = await provider().publish(next, writing)
+    expect(await provider().read(scopeA)).toMatchObject({ status: 'complete', data: { folders: [], memberships: [] }, manifest: { schemaVersion: 4, snapshotId: 'empty', settings: next.settings } })
+    expect(result.projectedFolderBytes).toBe(calculateBrowserSyncUsage(Object.fromEntries(storage.values)).folderBytes)
+    expect(storage.values.size).toBe(2)
+  })
+
+  it.each(['missing', 'mixed', 'corrupt', 'hash', 'bytes', 'scope', 'tree', 'reference', 'unknown-field'])('rejects %s input', async (mode) => {
+    await provider().publish(await publication('first', data('First')), writing)
+    const key = browserSyncManifestKey(scopeA)
+    const manifest = storage.values.get(key) as BrowserSyncManifest
+    if (mode === 'missing') storage.values.delete(browserSyncChunkKey(scopeA, 0))
+    if (mode === 'mixed') storage.values.set(browserSyncChunkKey(scopeA, 0), { snapshotId: 'other', payload: 'x' })
+    if (mode === 'corrupt') storage.values.set(browserSyncChunkKey(scopeA, 0), { snapshotId: 'first', payload: 'x' })
+    if (mode === 'hash') storage.values.set(key, { ...manifest, payloadHash: '0'.repeat(64) })
+    if (mode === 'bytes') storage.values.set(key, { ...manifest, payloadBytes: 1 })
+    if (mode === 'scope') storage.values.set(key, { ...manifest, accountScopeId: scopeB })
+    if (['tree', 'reference', 'unknown-field'].includes(mode)) {
+      const value = data('Bad')
+      if (mode === 'tree') value.folders[0].parentFolderId = 'missing'
+      if (mode === 'reference') value.chatReferences.push({ chatId: 'unused', cachedTitle: '', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' })
+      const payload = encodeLzStringBase64(mode === 'unknown-field' ? { ...value, accountScopeId: scopeB } : value)
+      storage.values.set(key, { ...manifest, payloadBytes: payload.length, payloadHash: await sha256Hex(payload) })
+      storage.values.set(browserSyncChunkKey(scopeA, 0), { snapshotId: 'first', payload })
     }
-    expect(Object.fromEntries(state.values)).toEqual(before)
-    expect(state.set).not.toHaveBeenCalled()
-    expect(state.remove).not.toHaveBeenCalled()
+    expect((await provider().read(scopeA)).status).toBe(['missing', 'mixed'].includes(mode) ? 'incomplete' : 'invalid')
   })
 
-  it('does not remove old chunks when the exact quota preflight fails', async () => {
-    const provider = new BrowserSyncFolderProvider()
-    await provider.publish(await generation('revision-1', 'generation-1'), settings)
-    state.quotaBytes = 1
-    await expect(provider.publish(await generation('revision-2', 'generation-2'), settings, 'generation-1')).rejects.toThrow('quota-exceeded')
-    expect(state.remove).toHaveBeenCalledTimes(0)
-    expect(state.set).toHaveBeenCalledTimes(1)
+  it('isolates settings and cleanup across accounts and shrinks fixed keys without generation history', async () => {
+    const large = emptyData.folders.concat(Array.from({ length: 220 }, (_, i) => data(`Folder ${i} ${crypto.randomUUID()}`, `id-${i}`).folders[0]))
+    await provider().publish(await publication('large', { ...emptyData, folders: large }), writing)
+    await provider().publish(await publication('foreign', data('Foreign', 'foreign'), scopeB), writing)
+    const foreign = [...storage.values].filter(([key]) => folderSyncKeyScope(key) === scopeB)
+    expect([...storage.values.keys()].filter((key) => folderSyncKeyScope(key) === scopeA).length).toBeGreaterThan(2)
+    let base = 'large'
+    for (let index = 0; index < 30; index += 1) {
+      const id = `small-${index}`
+      await provider().publish(await publication(id, emptyData, scopeA, base), writing); base = id
+    }
+    expect([...storage.values].filter(([key]) => folderSyncKeyScope(key) === scopeB)).toEqual(foreign)
+    expect([...storage.values.keys()].filter((key) => folderSyncKeyScope(key) === scopeA)).toHaveLength(2)
   })
 
-  it('keeps the prepared generation reusable after chunks were removed and set failed', async () => {
-    const provider = new BrowserSyncFolderProvider()
-    await provider.publish(await generation('revision-1', 'generation-1'), settings)
-    state.failSet = true
-    await expect(provider.publish(await generation('revision-2', 'generation-2'), settings, 'generation-1')).rejects.toThrow('set failed')
-    expect(state.remove).toHaveBeenCalledTimes(1)
-    state.failSet = false
-    await provider.publish(await generation('revision-2', 'generation-2'), settings, 'generation-1')
-    await expect(provider.read(scope)).resolves.toMatchObject({ status: 'complete', manifest: { dataRevision: 'revision-2' } })
+  it.each(['folder', 'browser', 'item', 'items'])('preflights %s quota before destructive cleanup', async (limit) => {
+    await provider().publish(await publication('initial', data('Initial')), writing)
+    storage.values.set('unrelated', 'x'.repeat(1000))
+    storage.values.set(browserSyncChunkKey(scopeA, 19), { snapshotId: 'initial', payload: 'old' })
+    const next = await publication('next', data('New'), scopeA, 'initial')
+    if (limit === 'folder') storage.values.set(browserSyncManifestKey(scopeB), 'x'.repeat(72 * 1024))
+    if (limit === 'browser') storage.quotaBytes = 1000
+    if (limit === 'item') storage.perItemBytes = 80
+    if (limit === 'items') storage.maxItems = 1
+    const before = [...storage.values]
+    const marker = vi.fn(writing)
+    await expect(provider().publish(next, marker)).rejects.toBeInstanceOf(BrowserSyncQuotaError)
+    expect(marker).not.toHaveBeenCalled()
+    expect([...storage.values]).toEqual(before)
   })
+
+  it('counts UTF8 keys, chunk envelopes, all scopes and unrelated extension bytes', () => {
+    const values = { [browserSyncChunkKey(scopeA, 0)]: { snapshotId: 'a', payload: '你好' }, [browserSyncManifestKey(scopeB)]: { foo: 'bar' }, unrelated: 'other' }
+    const result = calculateBrowserSyncUsage(values)
+    expect(result.totalBytes).toBe(Object.entries(values).reduce((sum, [key, value]) => sum + storageItemBytes(key, value), 0))
+    expect(result.totalBytes - result.folderBytes).toBe(storageItemBytes('unrelated', 'other'))
+  })
+
+  it('detects a manifest change between reading chunks and finishing verification', async () => {
+    await provider().publish(await publication('a'), writing)
+    vi.spyOn(browser.storage.sync, 'get').mockImplementation(async (keys) => {
+      const result = keys === null ? Object.fromEntries(storage.values)
+        : Object.fromEntries((Array.isArray(keys) ? keys : [keys]).map((key) => [key, storage.values.get(key)]))
+      if (Array.isArray(keys)) storage.values.set(browserSyncManifestKey(scopeA), { ...(storage.values.get(browserSyncManifestKey(scopeA)) as BrowserSyncManifest), snapshotId: 'b' })
+      return result
+    })
+    expect(await provider().read(scopeA)).toMatchObject({ status: 'invalid', code: 'replica-changed' })
+  })
+})
+
+it('classifies an oversized valid compressed snapshot as Folder quota before creating chunks or writing keys', async () => {
+  const folders = Array.from({ length: 3000 }, (_, index) => data(crypto.randomUUID(), `random-${index}`).folders[0])
+  const next = await publication('too-large', { ...emptyData, folders })
+  expect(next.payload.length).toBeGreaterThan(70 * 1024)
+  const marker = vi.fn(writing)
+  await expect(provider().publish(next, marker)).rejects.toMatchObject({ code: 'folder-budget-exceeded' })
+  expect(marker).not.toHaveBeenCalled()
+  expect(storage.values.size).toBe(0)
+})
+
+it('reclaims obsolete foreign tail keys beyond the current manifest without blocking publication', async () => {
+  await provider().publish(await publication('base', data('Base')), writing)
+  storage.values.set(browserSyncChunkKey(scopeA, 8), { snapshotId: 'obsolete-tail', payload: 'stale' })
+  await provider().publish(await publication('next', emptyData, scopeA, 'base'), writing)
+  expect(storage.values.has(browserSyncChunkKey(scopeA, 8))).toBe(false)
+  expect(storage.values.size).toBe(2)
 })

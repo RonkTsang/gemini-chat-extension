@@ -88,7 +88,7 @@ export class FolderNewChatController {
       && state.identity.identity.accountScopeId === intent.accountScopeId
       && getAccountPath() === intent.accountPath
       && state.projection?.settings.enabled === true
-      && Boolean(state.projection.folders.some((folder) => folder.id === intent.folderId && !folder.deletedAt))
+      && Boolean(state.projection.folders.some((folder) => folder.id === intent.folderId))
   }
   async open(folderId: string): Promise<void> {
     this.start()

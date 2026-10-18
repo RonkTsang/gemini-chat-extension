@@ -39,7 +39,7 @@ function request(method: FolderRpcMethod, params: unknown = {}) {
 describe('Folders usage RPC', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    state.execute.mockReset()
+    state.execute.mockReset().mockResolvedValue({ data: undefined, commit: { accountScopeId: scope, dataRevision: 'local-revision', effect: 'organization' } })
     state.revision.mockReset().mockResolvedValue('local-revision')
     state.measure.mockResolvedValue({ folderBytes: 10, folderBudgetBytes: 70 * 1024, totalBytes: 20, quotaBytes: 100 * 1024, usagePercent: 0.01 })
     state.record.mockResolvedValue(undefined)
@@ -51,36 +51,15 @@ describe('Folders usage RPC', () => {
   it.each([
     ['createFolder', { name: 'Saved folder' }],
     ['createSnapshot', {}],
-  ] as const)('does not report a completed %s as a failed save when its response revision read fails', async (method, params) => {
-    state.execute.mockResolvedValueOnce({ id: 'saved-result' })
-    state.revision.mockRejectedValueOnce(new Error('Revision read failed'))
+  ] as const)('returns the committed %s even when later revision reads fail', async (method, params) => {
+    state.execute.mockResolvedValueOnce({ data: { id: 'saved-result' }, commit: { accountScopeId: scope, dataRevision: 'committed-revision' } })
+    state.revision.mockRejectedValue(new Error('Revision read failed'))
     const handler = createFolderRpcHandler(scheduler)
     await expect(handler(request(method, params), sender)).resolves.toMatchObject({
-      ok: false,
-      error: { code: 'INTERNAL_ERROR', retryable: false, currentRevision: 'local-revision' },
+      ok: true, dataRevision: 'committed-revision', data: { id: 'saved-result' },
     })
     expect(state.execute).toHaveBeenCalledTimes(1)
-  })
-
-  it('still returns a response when both revision reads fail after a completed write', async () => {
-    state.execute.mockResolvedValueOnce({ id: 'saved-folder' })
-    state.revision.mockRejectedValue(new Error('Database read failed'))
-    const handler = createFolderRpcHandler(scheduler)
-    await expect(handler(request('createFolder', { name: 'Saved folder' }), sender)).resolves.toMatchObject({
-      ok: false, error: { code: 'INTERNAL_ERROR', retryable: false, currentRevision: undefined },
-    })
-    expect(state.execute).toHaveBeenCalledTimes(1)
-    expect(state.revision).toHaveBeenCalledTimes(2)
-  })
-
-  it('does not classify a post-commit revision quota error as a protection or save failure', async () => {
-    state.execute.mockResolvedValueOnce({ id: 'saved-folder' })
-    state.revision.mockRejectedValueOnce(new DOMException('Quota reached', 'QuotaExceededError'))
-    const handler = createFolderRpcHandler(scheduler)
-    await expect(handler(request('createFolder', { name: 'Saved folder' }), sender)).resolves.toMatchObject({
-      ok: false,
-      error: { code: 'INTERNAL_ERROR', message: 'Folders could not complete that request.', retryable: false },
-    })
+    expect(state.revision).not.toHaveBeenCalled()
   })
 
   it.each([

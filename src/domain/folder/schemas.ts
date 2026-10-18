@@ -7,14 +7,16 @@ import {
 } from './appearance'
 import {
   ROOT_FOLDER_ID,
+  BROWSER_SYNC_SCHEMA_VERSION,
   type BrowserSyncManifest,
   type FolderAccountData,
+  type FolderOrganizationData,
   type FolderSyncData,
   type FolderExportPayload,
 } from './types'
 import { validateAndProjectFolderTree } from './tree-projection'
+import { scopeFolderOrganizationData } from './organization-data'
 
-const versionStampSchema = z.string().min(1).max(160)
 const accountScopeSchema = z.string().min(16).max(128)
 const timestampSchema = z.string().datetime()
 const orderKeySchema = z.string().regex(/^[0-9A-Za-z]+$/).length(32)
@@ -36,15 +38,6 @@ export const folderRowSchema = z.object({
   orderKey: orderKeySchema,
   createdAt: timestampSchema,
   updatedAt: timestampSchema,
-  versionStamp: versionStampSchema,
-  fieldVersions: z.object({
-    name: versionStampSchema,
-    iconKey: versionStampSchema,
-    colorValue: versionStampSchema,
-    position: versionStampSchema,
-  }),
-  deletedAt: timestampSchema.optional(),
-  deleteVersionStamp: versionStampSchema.optional(),
 })
 
 export const folderMembershipRowSchema = z.object({
@@ -55,12 +48,7 @@ export const folderMembershipRowSchema = z.object({
   orderKey: orderKeySchema,
   createdAt: timestampSchema,
   updatedAt: timestampSchema,
-  versionStamp: versionStampSchema,
-  positionVersionStamp: versionStampSchema,
   pinnedOrderKey: orderKeySchema.optional(),
-  pinVersionStamp: versionStampSchema.optional(),
-  deletedAt: timestampSchema.optional(),
-  deleteVersionStamp: versionStampSchema.optional(),
 })
 
 export const chatReferenceRowSchema = z.object({
@@ -69,7 +57,6 @@ export const chatReferenceRowSchema = z.object({
   cachedTitle: z.string().max(500),
   createdAt: timestampSchema,
   updatedAt: timestampSchema,
-  titleVersionStamp: versionStampSchema,
 })
 
 export const folderSyncSettingsSchema = z.object({
@@ -83,7 +70,6 @@ export const folderSettingsPatchSchema = z.object({
   collapsedFolderIds: z.array(z.string().min(1)).max(500).optional(),
 }).strict()
 
-export const settingsVersionSchema = z.string().regex(/^\d{13}:\d{6}:[A-Za-z0-9_.-]+$/u).max(160)
 
 const accountDataShape = {
   accountScopeId: accountScopeSchema,
@@ -114,6 +100,10 @@ function validateAccountData(value: FolderAccountData, ctx: z.RefinementCtx): vo
   if (chatIds.size !== value.chatReferences.length) {
     ctx.addIssue({ code: 'custom', message: 'Duplicate chat reference' })
   }
+  const referencedChatIds = new Set(value.memberships.map((row) => row.chatId))
+  if (value.chatReferences.some((row) => !referencedChatIds.has(row.chatId))) {
+    ctx.addIssue({ code: 'custom', message: 'Unreferenced chat reference' })
+  }
   for (const membership of value.memberships) {
     if (!folderIds.has(membership.folderId)) {
       ctx.addIssue({ code: 'custom', message: 'Membership references missing folder' })
@@ -130,31 +120,32 @@ function validateAccountData(value: FolderAccountData, ctx: z.RefinementCtx): vo
 
 export const folderAccountDataSchema = z.object(accountDataShape).strict().superRefine(validateAccountData)
 
-export const folderSyncDataSchema = z.object({
+export const folderOrganizationDataSchema = z.object({
   folders: z.array(folderRowSchema.omit({ accountScopeId: true }).strict()),
   memberships: z.array(folderMembershipRowSchema.omit({ accountScopeId: true }).strict()),
   chatReferences: z.array(chatReferenceRowSchema.omit({ accountScopeId: true }).strict()),
 }).strict()
 
+export const folderSyncDataSchema = folderOrganizationDataSchema
+
 export const folderExportPayloadSchema = z.object({
   schemaVersion: z.literal(1),
-  ...accountDataShape,
-  settings: folderSyncSettingsSchema,
-  settingsVersion: settingsVersionSchema,
+  accountScopeId: accountScopeSchema,
   exportedAt: timestampSchema,
-}).strict().superRefine(validateAccountData)
+  data: folderOrganizationDataSchema,
+}).strict().superRefine((value, ctx) => {
+  validateAccountData(scopeFolderOrganizationData(value.accountScopeId, value.data), ctx)
+})
 
 export const browserSyncManifestSchema = z.object({
-  schemaVersion: z.literal(3),
+  schemaVersion: z.literal(BROWSER_SYNC_SCHEMA_VERSION),
   accountScopeId: accountScopeSchema,
-  generationId: z.string().min(1).max(128),
-  dataRevision: z.string().min(1).max(256),
-  authorityEpoch: z.string().min(1).max(128),
+  snapshotId: z.string().min(1).max(128),
+  baseSnapshotId: z.string().min(1).max(128).optional(),
   chunkCount: z.number().int().min(1).max(512),
   payloadBytes: z.number().int().positive().max(70 * 1024),
   payloadHash: z.string().regex(/^[a-f0-9]{64}$/),
   settings: folderSyncSettingsSchema,
-  settingsVersion: settingsVersionSchema,
 }).strict()
 
 export function parseFolderAccountData(value: unknown): FolderAccountData {
@@ -162,7 +153,11 @@ export function parseFolderAccountData(value: unknown): FolderAccountData {
 }
 
 export function parseFolderSyncData(value: unknown): FolderSyncData {
-  return folderSyncDataSchema.parse(value)
+  return parseFolderOrganizationData(value)
+}
+
+export function parseFolderOrganizationData(value: unknown): FolderOrganizationData {
+  return folderOrganizationDataSchema.parse(value)
 }
 
 export function parseFolderExportPayload(value: unknown): FolderExportPayload {

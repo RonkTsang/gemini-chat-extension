@@ -11,7 +11,7 @@ import {
   Text,
 } from '@chakra-ui/react'
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
-import TipsAndUpdateIcon from '~/assets/tips-and-update.svg?react'
+import TipsAndUpdateIcon from '@/assets/tips-and-update.svg?react'
 
 import { FolderAppearancePicker } from '@/components/folders/FolderAppearancePicker'
 import { GeminiDialogButton, GeminiDialogContent } from '@/components/ui/gemini'
@@ -47,20 +47,23 @@ function FolderEditorDialog({ folderId }: { folderId?: string }) {
   const isEditing = Boolean(folderId)
   const editorOpen = state.dialog?.kind === 'create' || state.dialog?.kind === 'edit'
   const addToChat = state.dialog?.kind === 'create' ? state.dialog.addToChat : undefined
-  const initial = folder
-    ? { name: folder.name, iconKey: folder.iconKey, colorValue: folder.colorValue }
-    : { name: '', iconKey: DEFAULT_FOLDER_ICON_KEY, colorValue: DEFAULT_FOLDER_COLOR_VALUE }
+  const [initial, setInitial] = useState<{ name: string; iconKey: FolderIconKey; colorValue: FolderColorValue }>({ name: '', iconKey: DEFAULT_FOLDER_ICON_KEY, colorValue: DEFAULT_FOLDER_COLOR_VALUE })
   const dirty = name !== initial.name || iconKey !== initial.iconKey || colorValue !== initial.colorValue
   const normalizedName = name.normalize('NFKC').trim()
   const canSave = Boolean(normalizedName) && (!isEditing || dirty) && !saving
 
   useEffect(() => {
+    const initial = folder
+      ? { name: folder.name, iconKey: folder.iconKey, colorValue: folder.colorValue }
+      : { name: '', iconKey: DEFAULT_FOLDER_ICON_KEY, colorValue: DEFAULT_FOLDER_COLOR_VALUE }
+    setInitial(initial)
     setName(initial.name)
     setIconKey(initial.iconKey)
     setColorValue(initial.colorValue)
     setError(undefined)
     setSaving(false)
-  }, [folderId, initial.colorValue, initial.iconKey, initial.name])
+    // The opened dialog owns its draft. Incoming snapshots must not reset it.
+  }, [state.dialog])
 
   useEffect(() => {
     if (editorOpen) setPlaceholderIndex(Math.floor(Math.random() * FOLDER_NAME_PLACEHOLDERS.length))
@@ -80,7 +83,7 @@ function FolderEditorDialog({ folderId }: { folderId?: string }) {
     setError(undefined)
     try {
       if (folderId) {
-        const patch: FolderUpdateInput = {}
+        const patch: FolderUpdateInput = { expectedRevision: state.dialog?.kind === 'edit' ? state.dialog.expectedRevision : undefined }
         if (normalizedName !== initial.name) patch.name = normalizedName
         if (iconKey !== initial.iconKey) patch.iconKey = iconKey
         if (colorValue !== initial.colorValue) patch.colorValue = colorValue

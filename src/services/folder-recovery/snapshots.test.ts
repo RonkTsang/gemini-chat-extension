@@ -18,11 +18,9 @@ function payload(name: string, accountScopeId = scope): FolderExportPayload {
   const stamp = '0000000000000:000000:test'
   return {
     schemaVersion: 1, accountScopeId, exportedAt: timestamp,
-    settings: { enabled: true, hideOrganizedChats: false }, settingsVersion: stamp,
-    folders: [{ id: 'folder-1', accountScopeId, parentFolderId: '__root__', name, iconKey: 'folder', colorValue: '#4285F4',
-      orderKey: 'a', createdAt: timestamp, updatedAt: timestamp, versionStamp: stamp,
-      fieldVersions: { name: stamp, iconKey: stamp, colorValue: stamp, position: stamp } }],
-    memberships: [], chatReferences: [],
+    data: { folders: [{ id: 'folder-1', parentFolderId: '__root__', name, iconKey: 'folder', colorValue: '#4285F4',
+      orderKey: 'a'.repeat(32), createdAt: timestamp, updatedAt: timestamp}],
+    memberships: [], chatReferences: [] },
   }
 }
 function advance(milliseconds: number) { vi.setSystemTime(Date.now() + milliseconds) }
@@ -71,19 +69,18 @@ describe('Folder restore point policy', () => {
     const first = await saveFolderSnapshot(payload('First'), 'rev-0', 'automatic', ample)
     expect(first).toMatchObject({ folderCount: 1, chatCount: 0 })
     const nextPayload = payload('First')
-    nextPayload.folders.push({ ...nextPayload.folders[0], id: 'folder-2', name: 'Second' })
+    nextPayload.data.folders.push({ ...nextPayload.data.folders[0], id: 'folder-2', name: 'Second' })
     advance(1000)
     const grouped = await saveFolderSnapshot(nextPayload, 'rev-1', 'automatic', ample)
     expect(grouped).toMatchObject({ id: first.id, folderCount: 2, chatCount: 0 })
     expect(await db.folder_snapshots.get(first.id)).toMatchObject({ folderCount: 2, chatCount: 0 })
   })
 
-  it('deduplicates organization independently of timestamps, settings and logical versions; manual points end groups', async () => {
+  it('deduplicates organization independently of timestamps; manual points end groups', async () => {
     const first = await saveFolderSnapshot(payload('A'), 'rev-0', 'automatic', ample)
     advance(1000)
     const same = payload('A')
-    same.settings.enabled = false
-    same.folders[0].versionStamp = '0000000000001:000001:other'
+    same.data.folders[0].updatedAt = new Date().toISOString()
     const manual = await saveFolderSnapshot(same, 'rev-1', 'manual', ample)
     expect(manual.id).toBe(first.id)
     expect(manual.reasons).toEqual(['automatic', 'manual'])
@@ -198,15 +195,15 @@ describe('Folder restore point policy', () => {
       }
       return title
     }
-    large.chatReferences = Array.from({ length: 2000 }, (_, index) => ({
-      accountScopeId: scope, chatId: `chat-${index}`, cachedTitle: letters(),
-      createdAt: large.exportedAt, updatedAt: large.exportedAt, titleVersionStamp: large.settingsVersion,
+    large.data.chatReferences = Array.from({ length: 2000 }, (_, index) => ({
+      chatId: `chat-${index}`, cachedTitle: letters(),
+      createdAt: large.exportedAt, updatedAt: large.exportedAt,
     }))
     const saved = await saveFolderSnapshot(large, 'rev', 'manual', ample)
     expect(snapshotBytes(saved)).toBeGreaterThan(100_000)
     expect(snapshotBytes(saved)).toBeLessThan(20 * 1024 * 1024)
     const before = await db.folder_snapshots.count()
-    await expect(saveFolderSnapshot({ ...large, folders: [{ ...large.folders[0], name: 'Changed' }] }, 'rev-2', 'before-import', {
+    await expect(saveFolderSnapshot({ ...large, data: { ...large.data, folders: [{ ...large.data.folders[0], name: 'Changed' }] } }, 'rev-2', 'before-import', {
       ...ample, budgetBytes: snapshotBytes(saved) / 2,
     })).rejects.toMatchObject({ code: 'SNAPSHOT_TOO_LARGE' })
     expect(await db.folder_snapshots.count()).toBe(before)

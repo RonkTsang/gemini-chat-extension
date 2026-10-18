@@ -14,8 +14,6 @@ const DEFAULT_SETTINGS: Omit<FolderSettingsRow, 'accountScopeId'> = {
   hideOrganizedChats: false,
   collapsedFolderIds: [],
   updatedAt: '',
-  settingsVersion: '0000000000000:000000:default',
-  settingsPending: false,
 }
 
 export interface CursorPage<T> { items: T[]; nextCursor?: string }
@@ -42,6 +40,14 @@ function page<T extends { id: string; orderKey: string }>(rows: T[], cursor: str
 }
 
 export class FolderQueryService {
+  /** Data and its guard revision must describe the same committed organization. */
+  async readProjection<T>(accountScopeId: string, read: () => Promise<T>): Promise<{ data: T; dataRevision: string }> {
+    return db.transaction('r', [db.folders, db.folder_memberships, db.folder_chat_references, db.folder_settings, db.folder_sync_states], async () => {
+      const data = await read()
+      return { data, dataRevision: await this.revision(accountScopeId) }
+    })
+  }
+
   async getSettings(accountScopeId: string): Promise<FolderSettingsRow> {
     return (await db.folder_settings.get(accountScopeId)) ?? {
       accountScopeId,
@@ -60,11 +66,11 @@ export class FolderQueryService {
         .between([accountScopeId, ROOT_FOLDER_ID, Dexie.minKey], [accountScopeId, ROOT_FOLDER_ID, Dexie.maxKey])
         .toArray(),
     ])
-    const live = folders.filter((folder) => !folder.deletedAt).sort((a, b) => a.orderKey.localeCompare(b.orderKey) || a.id.localeCompare(b.id))
+    const live = folders.sort((a, b) => a.orderKey.localeCompare(b.orderKey) || a.id.localeCompare(b.id))
     const counts = await Promise.all(live.slice(0, folderLimit).map(async (folder) => ({
       id: folder.id,
       count: (await db.folder_memberships.where('[accountScopeId+folderId]').equals([accountScopeId, folder.id]).toArray())
-        .filter((membership) => !membership.deletedAt).length,
+        .length,
     })))
     const countById = new Map(counts.map(({ id, count }) => [id, count]))
     const result = page(live, undefined, folderLimit)
@@ -85,11 +91,11 @@ export class FolderQueryService {
       db.folders.where('[accountScopeId+parentFolderId+orderKey]')
         .between([accountScopeId, ROOT_FOLDER_ID, Dexie.minKey], [accountScopeId, ROOT_FOLDER_ID, Dexie.maxKey]).toArray(),
     ])
-    const candidates = rows.filter((row) => !row.deletedAt).sort((a, b) => a.orderKey.localeCompare(b.orderKey) || a.id.localeCompare(b.id))
+    const candidates = rows.sort((a, b) => a.orderKey.localeCompare(b.orderKey) || a.id.localeCompare(b.id))
     const result = page(candidates, cursor, limit)
     const counts = await Promise.all(result.items.map(async (folder) => ({
       id: folder.id,
-      count: (await db.folder_memberships.where('[accountScopeId+folderId]').equals([accountScopeId, folder.id]).toArray()).filter((row) => !row.deletedAt).length,
+      count: (await db.folder_memberships.where('[accountScopeId+folderId]').equals([accountScopeId, folder.id]).toArray()).length,
     })))
     const countById = new Map(counts.map(({ id, count }) => [id, count]))
     return { items: result.items.map((folder) => this.summary(folder, countById.get(folder.id) ?? 0, settings)), nextCursor: result.nextCursor }
@@ -97,7 +103,7 @@ export class FolderQueryService {
 
   async listFolderChats(accountScopeId: string, folderId: string, cursor: string | undefined, limit: number): Promise<CursorPage<FolderChatSummary>> {
     const rows = (await db.folder_memberships.where('[accountScopeId+folderId]').equals([accountScopeId, folderId]).toArray())
-      .filter((row) => !row.deletedAt).sort(compareMembershipOrder)
+      .sort(compareMembershipOrder)
     const result = page(rows, cursor, limit, (row) => row.pinnedOrderKey ? `0${row.pinnedOrderKey}` : `1${row.orderKey}`)
     const references = await Promise.all(result.items.map((row) => db.folder_chat_references.get([accountScopeId, row.chatId])))
     return {
@@ -112,23 +118,23 @@ export class FolderQueryService {
   async getPickerOptions(accountScopeId: string, chatId: string, cursor: string | undefined, limit: number) {
     const folders = await this.listFolders(accountScopeId, cursor, limit)
     const memberships = await Promise.all(folders.items.map((folder) => db.folder_memberships.get(`${accountScopeId}:${folder.id}:${chatId}`)))
-    return { ...folders, membershipFolderIds: memberships.filter((row) => row && !row.deletedAt).map((row) => row!.folderId) }
+    return { ...folders, membershipFolderIds: memberships.filter((row) => row).map((row) => row!.folderId) }
   }
 
   async resolveChatMemberships(accountScopeId: string, chatIds: string[]): Promise<string[]> {
     const rows = await Promise.all(chatIds.map((chatId) => db.folder_memberships.where('[accountScopeId+chatId]').equals([accountScopeId, chatId]).toArray()))
-    return rows.flat().filter((row) => !row.deletedAt).map((row) => row.chatId)
+    return rows.flat().map((row) => row.chatId)
   }
 
   async getFolderDeleteImpact(accountScopeId: string, folderId: string): Promise<{ chatCount: number }> {
     const rows = await db.folder_memberships.where('[accountScopeId+folderId]').equals([accountScopeId, folderId]).toArray()
-    return { chatCount: new Set(rows.filter((row) => !row.deletedAt).map((row) => row.chatId)).size }
+    return { chatCount: new Set(rows.map((row) => row.chatId)).size }
   }
 
   async getSyncStatus(accountScopeId: string) {
-    const [state, pending, settings, recovery, folders, memberships] = await Promise.all([
+    const [state, conflict, settings, recovery, folders, memberships] = await Promise.all([
       db.folder_sync_states.get(accountScopeId),
-      db.folder_operations.where('accountScopeId').equals(accountScopeId).toArray(),
+      db.folder_sync_conflicts.get(accountScopeId),
       db.folder_settings.get(accountScopeId),
       db.folder_recovery_states.get(accountScopeId),
       db.folders.where('accountScopeId').equals(accountScopeId).toArray(),
@@ -139,14 +145,17 @@ export class FolderQueryService {
       : undefined
     return {
       mode: 'browser-sync' as const,
+      localRevision: state?.localDataRevision ?? 'uninitialized',
+      baseSnapshotId: state?.baseSnapshotId,
       ...countFolderOrganization(folders, memberships),
       localRecoveryWarning: readRecoveryFailure(accountScopeId) ?? recovery?.warning,
       localAutomaticSnapshotFailed: !!readRecoveryFailure(accountScopeId) || recovery?.automaticSnapshotFailed,
-      state: state?.browserSyncWarning
+      conflict: conflict ? { snapshotId: conflict.manifest.snapshotId, localRevision: conflict.localRevision } : undefined,
+      state: conflict ? 'conflict' as const : state?.browserSyncWarning
         ? 'needs-attention' as const
-        : settings?.settingsPending || pending.some((operation) => operation.state === 'pending')
+        : state?.dirty
           ? 'local-changes-pending' as const
-          : 'accepted-by-browser-storage' as const,
+          : state?.baseSnapshotId ? 'accepted-by-browser-storage' as const : 'idle' as const,
       lastLocalSaveAt: [state?.updatedAt, settings?.updatedAt].filter((value): value is string => !!value).sort().at(-1),
       lastBrowserStorageWriteAt: state?.lastBrowserStorageWriteAt,
       retryAt: state?.retryAt,

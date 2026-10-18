@@ -1,10 +1,12 @@
+import { folderSyncKeyScope } from '@/services/folder-sync/providers/browser-sync'
 import { browser } from 'wxt/browser'
 
-import { logDevEvent } from '@/utils/devLogger'
+import { logDevError, logDevEvent } from '@/utils/devLogger'
 import { FolderSyncCoordinator } from './coordinator'
+import type { BrowserSyncRecreationRequest, FolderSyncRunResult } from '@/domain/folder/types'
 
 export type FolderSyncRunReason =
-  | 'outbox-created'
+  | 'local-changes-committed'
   | 'browser-sync-area-changed'
   | 'background-resume'
   | 'retry-alarm'
@@ -16,14 +18,22 @@ const ACTIVITY_HINT_MIN_INTERVAL_MS = 30_000
 const MAX_ACTIVITY_HINT_SCOPES = 128
 const LOG_LABEL = '[Folders][sync]'
 
+interface SyncWake {
+  reason: FolderSyncRunReason
+  traceId?: string
+}
+
+function preferWake(current: SyncWake | undefined, incoming: SyncWake): SyncWake {
+  const priority = (reason: FolderSyncRunReason): number => reason === 'content-activity-hint' ? 0 : reason === 'browser-sync-area-changed' ? 1 : 2
+  return !current || priority(incoming.reason) >= priority(current.reason) ? incoming : current
+}
+
 /**
- * The Set only coalesces work during one service-worker lifetime. Every fact
+ * The Map only coalesces work during one service-worker lifetime. Every fact
  * that makes a later run necessary remains in IndexedDB or storage.sync.
  */
 export class FolderSyncScheduler {
-  private readonly running = new Set<string>()
-  /** One trailing pass per scope prevents commands committed mid-run from being lost. */
-  private readonly rerunRequested = new Map<string, { reason: FolderSyncRunReason; traceId?: string }>()
+  private readonly runs = new Map<string, { started: boolean; request: SyncWake; trailing?: SyncWake }>()
   // A bounded, best-effort cross-tab rate limiter. Correctness never depends
   // on it: writes, alarms, and manifest changes all bypass this cache.
   private readonly lastActivityHintAt = new Map<string, number>()
@@ -35,39 +45,84 @@ export class FolderSyncScheduler {
     this.startRun(accountScopeId, reason, traceId)
   }
 
+  async retry(accountScopeId: string, recreation?: BrowserSyncRecreationRequest): Promise<FolderSyncRunResult> {
+    if (this.runs.has(accountScopeId)) return { outcome: 'busy' }
+    const run = { started: true, request: { reason: 'user-retry' as const } }
+    this.runs.set(accountScopeId, run)
+    try {
+      const result = recreation ? await this.coordinator.recreateMissingReplica(accountScopeId, recreation)
+        : await this.coordinator.sync(accountScopeId)
+      await this.finishRun(accountScopeId, result)
+      return result
+    } finally {
+      const current = this.runs.get(accountScopeId)
+      this.runs.delete(accountScopeId)
+      if (current?.trailing) this.startRun(accountScopeId, current.trailing.reason, current.trailing.traceId)
+    }
+  }
+
+  async resolveConflict(accountScopeId: string, choice: 'remote' | 'local', expectedRevision: string, snapshotId: string): Promise<FolderSyncRunResult> {
+    const result = await this.coordinator.resolveConflict(accountScopeId, choice, expectedRevision, snapshotId)
+    await this.finishRun(accountScopeId, result)
+    return result
+  }
+
+  requestStorageChanges(changes: Record<string, unknown>, traceId?: string): void {
+    const scopes = new Set<string>()
+    for (const key of Object.keys(changes)) {
+      const scope = folderSyncKeyScope(key)
+      if (scope) scopes.add(scope)
+    }
+    scopes.forEach((scope) => this.requestRun(scope, 'browser-sync-area-changed', traceId))
+  }
+
   private startRun(accountScopeId: string, reason: FolderSyncRunReason, traceId?: string): void {
-    if (this.running.has(accountScopeId)) {
-      const trailing = this.rerunRequested.get(accountScopeId)
-      // A background activity hint is advisory. It must not downgrade an
-      // already queued command, storage, alarm, or explicit retry wake-up.
-      if (!trailing || trailing.reason === 'content-activity-hint' || reason !== 'content-activity-hint') {
-        this.rerunRequested.set(accountScopeId, { reason, traceId })
-      }
-      logDevEvent('debug', LOG_LABEL, 'browser-sync.scheduler.coalesced', { accountScopeId, reason, traceId })
+    const current = this.runs.get(accountScopeId)
+    if (current) {
+      // Requests received before execution are covered by its first read.
+      // Once execution starts, keep one trailing pass for concurrent changes.
+      if (current.started) current.trailing = preferWake(current.trailing, { reason, traceId })
+      else current.request = preferWake(current.request, { reason, traceId })
+      logDevEvent('debug', LOG_LABEL, 'browser-sync.scheduler.coalesced', { accountScopeId, reason, traceId, phase: current.started ? 'running' : 'queued' })
       return
     }
     logDevEvent('debug', LOG_LABEL, 'browser-sync.scheduler.requested', { accountScopeId, reason, traceId })
-    this.running.add(accountScopeId)
-    void this.coordinator.sync(accountScopeId, traceId)
-      .then((result) => result.retryAt ? this.scheduleRetry(accountScopeId, result.retryAt) : undefined)
+    const run: { started: boolean; request: SyncWake; trailing?: SyncWake } = { started: false, request: { reason, traceId } }
+    this.runs.set(accountScopeId, run)
+    void new Promise<void>((resolve) => setTimeout(resolve, 0))
+      .then(() => {
+        run.started = true
+        return run.request.reason === 'browser-sync-area-changed'
+          ? this.coordinator.sync(accountScopeId, run.request.traceId, true)
+          : this.coordinator.sync(accountScopeId, run.request.traceId)
+      })
+      .then((result) => this.finishRun(accountScopeId, result))
       .catch(() => this.scheduleRetry(accountScopeId))
       .finally(() => {
-        this.running.delete(accountScopeId)
-        const trailing = this.rerunRequested.get(accountScopeId)
+        this.runs.delete(accountScopeId)
+        const trailing = run.trailing
         if (!trailing) return
-        this.rerunRequested.delete(accountScopeId)
         // The hint was rate-limited when it originally arrived. Do not apply
         // the same throttle again while consuming the accepted trailing work.
         this.startRun(accountScopeId, trailing.reason, trailing.traceId)
       })
+      .catch((error) => logDevError(LOG_LABEL, 'browser-sync.retry-alarm-failed', error, { accountScopeId }))
   }
 
   async scheduleRetry(accountScopeId: string, retryAt?: string): Promise<void> {
     const delayInMinutes = retryAt
       ? Math.max(1, (Date.parse(retryAt) - Date.now()) / 60_000)
       : 1
-    await browser.alarms.create(`${ALARM_PREFIX}${accountScopeId}`, { delayInMinutes })
+    const name = `${ALARM_PREFIX}${accountScopeId}`
+    const existing = await browser.alarms.get(name)
+    if (existing && existing.scheduledTime <= Date.now() + delayInMinutes * 60_000) return
+    await browser.alarms.create(name, { delayInMinutes })
     logDevEvent('debug', LOG_LABEL, 'browser-sync.retry.scheduled', { accountScopeId, retryAt, delayInMinutes })
+  }
+
+  private async finishRun(accountScopeId: string, result: FolderSyncRunResult): Promise<void> {
+    if (result.retryAt) await this.scheduleRetry(accountScopeId, result.retryAt)
+    else await browser.alarms.clear(`${ALARM_PREFIX}${accountScopeId}`)
   }
 
   handleAlarm(name: string): void {

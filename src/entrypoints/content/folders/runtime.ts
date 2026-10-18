@@ -1,3 +1,4 @@
+import type { BrowserSyncRecreationRequest, FolderSyncRunResult } from '@/domain/folder/types'
 import type { FolderColorValue, FolderIconKey } from '@/domain/folder/appearance'
 import type { FolderUpdateInput } from '@/domain/folder/commands'
 import type {
@@ -15,6 +16,7 @@ import { geminiApi } from '@/services/gemini-api'
 import { tt } from '@/utils/i18n'
 import { deleteGeminiChat } from './native-chat-delete'
 import { browser } from 'wxt/browser'
+import { eventBus } from '@/utils/eventbus'
 import { folderBackgroundClient, type BrowserSyncStatusProjection } from './client'
 import {
   createFolderTraceId,
@@ -55,11 +57,11 @@ export type FolderDialogState =
         traceId: string
       }
     }
-  | { kind: 'edit'; folderId: string }
+  | { kind: 'edit'; folderId: string; expectedRevision?: string }
   | { kind: 'delete-folder'; folderId: string; affectedChatCount: number }
   | { kind: 'remove-membership'; folderId: string; chatId: string }
   | { kind: 'delete-chat'; folderId: string; chatId: string }
-  | { kind: 'rename-chat'; folderId: string; chatId: string; chatTitle: string }
+  | { kind: 'rename-chat'; folderId: string; chatId: string; chatTitle: string; expectedRevision?: string }
 
 export interface FolderRuntimeState {
   loadingChatFolderIds?: string[]
@@ -88,12 +90,13 @@ export class FolderRuntime {
   private sequence = 0
   private invalidationListenerStarted = false
   private lastActivityHint?: { accountScopeId: string; requestedAt: number }
+  private projectionLoad?: { accountScopeId: string; refreshNeeded: boolean; syncStatusNeeded: boolean }
 
   private readonly handleBackgroundMessage = (message: unknown): void => {
     if (!message || typeof message !== 'object' || (message as { type?: unknown }).type !== 'folders:data-changed') return
     const changed = message as {
       accountScopeId?: unknown
-      affected?: { folderIds?: unknown; chatIds?: unknown; settings?: unknown; syncStatus?: unknown }
+      affected?: { folderIds?: unknown; chatIds?: unknown; settings?: unknown; syncStatus?: unknown; recoveryStatus?: unknown }
     }
     const identity = this.state.identity
     if (identity.status !== 'available' || changed.accountScopeId !== identity.identity.accountScopeId) return
@@ -102,10 +105,16 @@ export class FolderRuntime {
     // Folder records, memberships, and settings continue to use the complete
     // refresh path below.
     const affected = changed.affected
+    if (affected?.recoveryStatus === true) eventBus.emit('folders:recovery-changed', { accountScopeId: identity.identity.accountScopeId })
     const onlySyncStatusChanged = affected?.syncStatus === true
       && affected.folderIds === undefined
       && affected.chatIds === undefined
       && affected.settings === undefined
+    if (this.projectionLoad?.accountScopeId === identity.identity.accountScopeId) {
+      if (onlySyncStatusChanged) this.projectionLoad.syncStatusNeeded = true
+      else this.projectionLoad.refreshNeeded = true
+      return
+    }
     if (onlySyncStatusChanged) {
       void this.refreshSyncStatus()
       return
@@ -130,6 +139,12 @@ export class FolderRuntime {
   }
 
   async start(): Promise<void> {
+    if (!this.invalidationListenerStarted) {
+      browser.runtime.onMessage.addListener(this.handleBackgroundMessage)
+      window.addEventListener('focus', this.handleSyncSignal)
+      window.addEventListener('online', this.handleSyncSignal)
+      this.invalidationListenerStarted = true
+    }
     await geminiIdentityService.start()
     if (!this.unsubscribeIdentity) {
       let initialLoad: Promise<void> | undefined
@@ -144,12 +159,6 @@ export class FolderRuntime {
       // getSidebarState/getSyncStatus pair after identity initialization.
       await initialLoad
     }
-    if (!this.invalidationListenerStarted) {
-      browser.runtime.onMessage.addListener(this.handleBackgroundMessage)
-      window.addEventListener('focus', this.handleSyncSignal)
-      window.addEventListener('online', this.handleSyncSignal)
-      this.invalidationListenerStarted = true
-    }
     // The initial projection already includes the current sync status. The
     // startup activity hint only schedules background work, so reading that
     // same status again would be redundant.
@@ -161,6 +170,7 @@ export class FolderRuntime {
     this.unsubscribeIdentity?.()
     this.unsubscribeIdentity = undefined
     this.identityLoad = undefined
+    this.projectionLoad = undefined
     geminiIdentityService.stop()
     if (this.invalidationListenerStarted) {
       browser.runtime.onMessage.removeListener(this.handleBackgroundMessage)
@@ -181,9 +191,13 @@ export class FolderRuntime {
       && identity.status === 'available'
       && currentIdentity.identity.accountScopeId === identity.identity.accountScopeId
     if (identity.status !== 'available') {
+      this.projectionLoad = undefined
       this.publish({ identity, projection: undefined, syncState: undefined, picker: undefined, menu: undefined, dialog: undefined, error: undefined })
       return
     }
+
+    const loading = { accountScopeId: identity.identity.accountScopeId, refreshNeeded: false, syncStatusNeeded: false }
+    this.projectionLoad = loading
 
     if (!isSameAccount) {
       this.publish({ identity, projection: undefined, syncState: undefined, picker: undefined, menu: undefined, dialog: undefined, error: undefined })
@@ -215,13 +229,25 @@ export class FolderRuntime {
       if (sequence === this.sequence) {
         this.publish({
           identity,
-          projection: undefined,
-          syncState: undefined,
+          projection: isSameAccount ? this.state.projection : undefined,
+          syncState: isSameAccount ? this.state.syncState : undefined,
           picker: undefined,
-          menu: undefined,
-          dialog: undefined,
-          error: error instanceof Error ? error.message : 'Folders are unavailable',
+          menu: isSameAccount ? this.state.menu : undefined,
+          dialog: isSameAccount ? this.state.dialog : undefined,
+          error: error instanceof Error && error.message === 'STALE_REVISION'
+            ? tt('folders_save_failed', 'Could not complete this action.')
+            : error instanceof Error ? error.message : 'Folders are unavailable',
         })
+      }
+    } finally {
+      if (this.projectionLoad === loading) {
+        this.projectionLoad = undefined
+        // A replacement can commit while the first RPC still returns the old view.
+        // Coalesce notifications into one follow-up read for this account only.
+        if (sequence === this.sequence) {
+          if (loading.refreshNeeded) await this.refresh()
+          else if (loading.syncStatusNeeded) await this.refreshSyncStatus()
+        }
       }
     }
   }
@@ -254,6 +280,7 @@ export class FolderRuntime {
       const page = await folderBackgroundClient.getChatPage(accountScopeId, this.identitySource(), folderId, cursor)
       if (sequence !== this.sequence || !this.state.projection) return
       const projection = this.state.projection
+      if (projection.dataRevision && page.dataRevision !== projection.dataRevision) throw new Error('STALE_REVISION')
       const memberships = new Map(projection.memberships.map((row) => [row.id, row]))
       const references = new Map(projection.chatReferences.map((row) => [row.chatId, row]))
       page.memberships.forEach((row) => memberships.set(row.id, row))
@@ -269,7 +296,9 @@ export class FolderRuntime {
       })
     } catch (error) {
       if (sequence === this.sequence) {
-        this.publish({ error: error instanceof Error ? error.message : 'Unable to load Folder chats' })
+        this.publish({ error: error instanceof Error && error.message === 'STALE_REVISION'
+          ? tt('folders_save_failed', 'Could not complete this action.')
+          : error instanceof Error ? error.message : 'Unable to load Folder chats' })
       }
     } finally {
       if (sequence === this.sequence) {
@@ -334,16 +363,36 @@ export class FolderRuntime {
       })
   }
 
-  async syncNow(): Promise<void> {
+  async syncNow(): Promise<FolderSyncRunResult> {
     const identity = this.state.identity
     if (identity.status !== 'available') {
       throw new Error('Browser Sync requires an identified Gemini account')
     }
     try {
-      await folderBackgroundClient.request(identity.identity.accountScopeId, identity.identity.source, 'retrySync', {})
+      return (await folderBackgroundClient.request<FolderSyncRunResult>(identity.identity.accountScopeId, identity.identity.source, 'retrySync', {})).data
     } finally {
       await this.refresh()
     }
+  }
+
+  async recreateSyncReplica(request: BrowserSyncRecreationRequest): Promise<FolderSyncRunResult> {
+    const scope = this.scope()
+    try {
+      return (await folderBackgroundClient.request<FolderSyncRunResult>(scope, this.identitySource(), 'recreateSyncReplica', request)).data
+    } finally {
+      if (this.state.identity.status === 'available' && this.state.identity.identity.accountScopeId === scope) await this.refresh()
+    }
+  }
+
+  async resolveSyncConflict(choice: 'remote' | 'local'): Promise<FolderSyncRunResult> {
+    const scope = this.scope()
+    const conflict = this.state.syncState?.conflict
+    if (!conflict) return { outcome: 'deferred' }
+    const result = await folderBackgroundClient.request<FolderSyncRunResult>(scope, this.identitySource(), 'resolveSyncConflict', {
+      choice, expectedRevision: conflict.localRevision, snapshotId: conflict.snapshotId,
+    })
+    if (this.scope() === scope) await this.refresh()
+    return result.data
   }
 
   async dismissCapacityNotice(displayedUsagePercent: number): Promise<void> {
@@ -438,7 +487,7 @@ export class FolderRuntime {
       this.closePicker()
       await this.refresh()
       const projected = this.state.projection?.memberships.some((row) => (
-        row.id === membership.id && !row.deletedAt
+        row.id === membership.id
       )) ?? false
       logFolderTrace(traceId, 'runtime.projection-refreshed', {
         accountScopeId,
@@ -527,12 +576,12 @@ export class FolderRuntime {
       && (window.location.pathname.match(/^\/u\/\d+(?=\/|$)/)?.[0] ?? '') === accountPath
     const normalizedTitle = title.normalize('NFKC').trim()
     if (!normalizedTitle) throw new Error(tt('folders_chat_title_required', 'Enter a chat title.'))
-    if (!this.projection().memberships.some((row) => row.folderId === folderId && row.chatId === chatId && !row.deletedAt)) {
+    if (!this.projection().memberships.some((row) => row.folderId === folderId && row.chatId === chatId)) {
       throw new Error('The requested Folder chat is unavailable')
     }
 
     const { data: reference } = await folderBackgroundClient.request<ChatReferenceRow>(
-      accountScopeId, identitySource, 'updateChatTitle', { chatId, title: normalizedTitle },
+      accountScopeId, identitySource, 'updateChatTitle', { chatId, title: normalizedTitle, expectedRevision: dialog?.kind === 'rename-chat' ? dialog.expectedRevision : undefined },
     )
     if (!isCurrentAccount()) throw new Error('The Gemini account changed during rename')
 
@@ -655,7 +704,7 @@ export class FolderRuntime {
 
   openEditDialog(folderId: string): void {
     if (this.projection().folders.some((folder) => folder.id === folderId)) {
-      this.publish({ menu: undefined, dialog: { kind: 'edit', folderId } })
+      this.publish({ menu: undefined, dialog: { kind: 'edit', folderId, expectedRevision: this.state.projection?.dataRevision ?? this.state.syncState?.localRevision } })
     }
   }
 
@@ -693,8 +742,8 @@ export class FolderRuntime {
   }
 
   openRenameChatDialog(folderId: string, chatId: string, chatTitle: string): void {
-    if (this.projection().memberships.some((row) => row.folderId === folderId && row.chatId === chatId && !row.deletedAt)) {
-      this.publish({ menu: undefined, dialog: { kind: 'rename-chat', folderId, chatId, chatTitle } })
+    if (this.projection().memberships.some((row) => row.folderId === folderId && row.chatId === chatId)) {
+      this.publish({ menu: undefined, dialog: { kind: 'rename-chat', folderId, chatId, chatTitle, expectedRevision: this.state.projection?.dataRevision ?? this.state.syncState?.localRevision } })
     }
   }
 

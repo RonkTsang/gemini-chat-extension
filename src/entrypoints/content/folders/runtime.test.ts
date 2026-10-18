@@ -4,7 +4,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const state = vi.hoisted(() => {
   const identity: { status: 'available'; identity: GeminiUserIdentity } = { status: 'available' as const, identity: { email: 'user@example.com', accountScopeId: 'account-scope-0001', source: 'observed' as const, resolvedAt: '2026-01-01T00:00:00.000Z' } }
   const projection = { folders: [{ id: 'folder-1' }], memberships: [], chatReferences: [], settings: { accountScopeId: identity.identity.accountScopeId, enabled: true, hideOrganizedChats: false, collapsedFolderIds: [], updatedAt: '2026-01-01T00:00:00.000Z', settingsVersion: '0000000000000:000000:default', settingsPending: false } }
-  return { identity, projection, request: vi.fn(), getProjection: vi.fn(), getSyncStatus: vi.fn(), getChatPage: vi.fn(), renameChat: vi.fn(), deleteNative: vi.fn(), confirmEmail: vi.fn(), identityListener: undefined as ((identity: { status: 'available'; identity: GeminiUserIdentity }) => void) | undefined }
+  return { identity, projection, request: vi.fn(), getProjection: vi.fn(), getSyncStatus: vi.fn(), getChatPage: vi.fn(), renameChat: vi.fn(), deleteNative: vi.fn(), confirmEmail: vi.fn(), identityListener: undefined as ((identity: { status: 'available'; identity: GeminiUserIdentity }) => void) | undefined,
+    messageListener: undefined as ((message: unknown) => void) | undefined }
 })
 
 vi.mock('./client', () => ({ folderBackgroundClient: { request: state.request, getProjection: state.getProjection, getSyncStatus: state.getSyncStatus, getChatPage: state.getChatPage } }))
@@ -13,7 +14,10 @@ vi.mock('@/services/gemini-identity', () => ({ geminiIdentityService: {
   subscribe: (listener: (identity: typeof state.identity) => void) => { state.identityListener = listener; listener(state.identity); return () => { state.identityListener = undefined } },
   start: vi.fn(async () => undefined), stop: vi.fn(), refresh: vi.fn(async () => state.identity), confirmManualEmail: state.confirmEmail, clearManualEmail: vi.fn(),
 } }))
-vi.mock('wxt/browser', () => ({ browser: { runtime: { onMessage: { addListener: vi.fn(), removeListener: vi.fn() } } } }))
+vi.mock('wxt/browser', () => ({ browser: { runtime: { onMessage: {
+  addListener: vi.fn((listener: (message: unknown) => void) => { state.messageListener = listener }),
+  removeListener: vi.fn(() => { state.messageListener = undefined }),
+} } } }))
 vi.mock('@/utils/folderTrace', () => ({ createFolderTraceId: () => 'trace', logFolderTrace: vi.fn(), logFolderTraceError: vi.fn() }))
 vi.mock('@/services/gemini-api', () => ({ geminiApi: { conversations: { renameChat: state.renameChat } } }))
 vi.mock('./native-chat-delete', () => ({ deleteGeminiChat: state.deleteNative }))
@@ -25,12 +29,64 @@ describe('FolderRuntime background boundary', () => {
   beforeEach(() => {
     state.confirmEmail.mockReset()
     state.identityListener = undefined
+    state.messageListener = undefined
     state.identity.identity.source = 'observed'
     state.getChatPage.mockReset()
     state.getProjection.mockReset().mockResolvedValue(state.projection)
     state.getSyncStatus.mockReset().mockResolvedValue({ mode: 'browser-sync', state: 'accepted-by-browser-storage' })
     state.request.mockReset().mockResolvedValue({ data: undefined, dataRevision: 'revision-1' })
     state.deleteNative.mockReset().mockResolvedValue(undefined)
+  })
+
+  it('listens before the first projection read and coalesces recovery notifications received during that read', async () => {
+    let finish!: (projection: typeof state.projection) => void
+    state.getProjection.mockImplementationOnce(() => {
+      expect(state.messageListener).toBeDefined()
+      return new Promise((resolve) => { finish = resolve })
+    })
+    const restored = { ...state.projection, folders: [{ id: 'restored' }] }
+    state.getProjection.mockResolvedValueOnce(restored)
+    const runtime = new FolderRuntime()
+    const starting = runtime.start()
+    await vi.waitFor(() => expect(finish).toBeDefined())
+    const message = { type: 'folders:data-changed', accountScopeId: 'account-scope-0001', affected: { settings: true, syncStatus: true } }
+    state.messageListener?.(message)
+    state.messageListener?.(message)
+    expect(state.getProjection).toHaveBeenCalledTimes(1)
+    finish({ ...state.projection, folders: [] })
+    await starting
+    expect(state.getProjection).toHaveBeenCalledTimes(2)
+    expect(runtime.getSnapshot().projection?.folders).toEqual([{ id: 'restored' }])
+    runtime.stop()
+  })
+
+  it('only reloads status for status notifications during initial loading, ignoring other accounts', async () => {
+    let finish!: (projection: typeof state.projection) => void
+    state.getProjection.mockImplementationOnce(() => new Promise((resolve) => { finish = resolve }))
+    const runtime = new FolderRuntime()
+    const starting = runtime.start()
+    await vi.waitFor(() => expect(finish).toBeDefined())
+    state.messageListener?.({ type: 'folders:data-changed', accountScopeId: 'other-scope-0001', affected: { settings: true } })
+    state.messageListener?.({ type: 'folders:data-changed', accountScopeId: 'account-scope-0001', affected: { syncStatus: true } })
+    finish(state.projection)
+    await starting
+    expect(state.getProjection).toHaveBeenCalledTimes(1)
+    expect(state.getSyncStatus).toHaveBeenCalledTimes(2)
+    runtime.stop()
+  })
+
+  it('drops a queued projection refresh when the runtime stops during its first read', async () => {
+    let finish!: (projection: typeof state.projection) => void
+    state.getProjection.mockImplementationOnce(() => new Promise((resolve) => { finish = resolve }))
+    const runtime = new FolderRuntime()
+    const starting = runtime.start()
+    await vi.waitFor(() => expect(finish).toBeDefined())
+    state.messageListener?.({ type: 'folders:data-changed', accountScopeId: 'account-scope-0001', affected: { settings: true } })
+    runtime.stop()
+    finish(state.projection)
+    await starting
+    expect(state.getProjection).toHaveBeenCalledTimes(1)
+    expect(runtime.getSnapshot().projection).toBeUndefined()
   })
 
   it('clears the previous account while loading a saved account and waits for its configuration', async () => {
@@ -71,6 +127,27 @@ describe('FolderRuntime background boundary', () => {
     expect(state.request).toHaveBeenCalledWith('account-scope-0001', 'manual-confirmed', 'retrySync', {})
     runtime.stop()
     await expect(runtime.syncNow()).rejects.toThrow('Browser Sync requires an identified Gemini account')
+  })
+
+  it('forwards explicit recreation guards and ignores status from the old account after switching', async () => {
+    const runtime = new FolderRuntime()
+    await runtime.start()
+    let finish!: () => void
+    state.request.mockImplementationOnce(() => new Promise((resolve) => {
+      finish = () => resolve({ data: { outcome: 'accepted-by-browser-storage' } })
+    }))
+    const request = { expectedRevision: 'confirmed', baseSnapshotId: 'missing' }
+    const pending = runtime.recreateSyncReplica(request)
+    expect(state.request).toHaveBeenLastCalledWith('account-scope-0001', 'observed', 'recreateSyncReplica', request)
+    const next = { status: 'available' as const, identity: { ...state.identity.identity, accountScopeId: 'account-scope-0002' } }
+    state.identityListener?.(next)
+    await vi.waitFor(() => expect(state.getSyncStatus).toHaveBeenCalledTimes(2))
+    const reads = state.getSyncStatus.mock.calls.length
+    finish()
+    expect(await pending).toEqual({ outcome: 'accepted-by-browser-storage' })
+    expect(state.getSyncStatus).toHaveBeenCalledTimes(reads)
+    runtime.stop()
+    await expect(runtime.recreateSyncReplica(request)).rejects.toThrow('Folders are unavailable')
   })
 
   it('never calls Gemini deletion if the protection point cannot be saved', async () => {
@@ -365,4 +442,16 @@ describe('Folder chat rename', () => {
     expect(state.renameChat).not.toHaveBeenCalled()
     runtime.stop()
   })
+})
+
+it('preserves the same-account projection and open draft when refreshing a mixed query fails', async () => {
+  const runtime = new FolderRuntime(); await runtime.start()
+  runtime.openEditDialog('folder-1')
+  const before = runtime.getSnapshot()
+  state.getProjection.mockRejectedValueOnce(new Error('STALE_REVISION'))
+  state.identityListener?.(state.identity)
+  await vi.waitFor(() => expect(runtime.getSnapshot().error).toBe('Could not complete this action.'))
+  expect(runtime.getSnapshot().projection).toBe(before.projection)
+  expect(runtime.getSnapshot().dialog).toBe(before.dialog)
+  runtime.stop()
 })

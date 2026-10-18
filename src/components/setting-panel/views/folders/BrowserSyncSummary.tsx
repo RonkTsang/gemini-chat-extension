@@ -1,4 +1,5 @@
-import { Button, HStack, IconButton, Stack, Text } from '@chakra-ui/react'
+import type { BrowserSyncRecreationRequest, FolderSyncRunResult } from '@/domain/folder/types'
+import { Button, Dialog, HStack, IconButton, Portal, Stack, Text } from '@chakra-ui/react'
 import { useEffect, useRef, useState } from 'react'
 import { LuInfo } from 'react-icons/lu'
 
@@ -17,7 +18,9 @@ interface BrowserSyncSummaryProps {
   syncState?: BrowserSyncStatusProjection
   measuring: boolean
   measurementError?: string
-  onRetry: () => Promise<void>
+  onRetry: () => Promise<FolderSyncRunResult>
+  onRecreateReplica?: (request: BrowserSyncRecreationRequest) => Promise<FolderSyncRunResult>
+  onResolveConflict: (choice: 'remote' | 'local') => Promise<FolderSyncRunResult>
   onDismissCapacity: () => void
 }
 
@@ -31,15 +34,26 @@ function availableSyncPercent(syncState?: BrowserSyncStatusProjection): number |
 }
 
 export function BrowserSyncSummary({
-  accountScopeId, isPanelOpen, unavailable, syncState, measuring, measurementError, onRetry, onDismissCapacity,
+  accountScopeId, isPanelOpen, unavailable, syncState, measuring, measurementError, onRetry, onRecreateReplica, onResolveConflict, onDismissCapacity,
 }: BrowserSyncSummaryProps) {
   const [retryFeedback, setRetryFeedback] = useState<{ accountScopeId: string; pending: boolean }>()
   const retryRequest = useRef<symbol | undefined>(undefined)
+  const [recreation, setRecreation] = useState<BrowserSyncRecreationRequest & { accountScopeId: string; counts?: string }>()
   const panelOpen = useRef(isPanelOpen !== false)
-  useEffect(() => { panelOpen.current = isPanelOpen !== false }, [isPanelOpen])
-  useEffect(() => () => { retryRequest.current = undefined }, [accountScopeId])
+  useEffect(() => {
+    panelOpen.current = isPanelOpen !== false
+    if (isPanelOpen === false) { retryRequest.current = undefined; setRetryFeedback(undefined); setRecreation(undefined) }
+  }, [isPanelOpen])
+  useEffect(() => {
+    setRecreation(undefined)
+    setRetryFeedback(undefined)
+    return () => { retryRequest.current = undefined }
+  }, [accountScopeId])
   const feedback = retryFeedback?.accountScopeId === accountScopeId ? retryFeedback : undefined
-  const needsAttention = !unavailable && syncState?.state === 'needs-attention'
+  const needsAttention = !unavailable && (syncState?.state === 'needs-attention' || (syncState?.state === 'conflict' && !!syncState.warning))
+  const unsupportedVersion = syncState?.warning === 'unsupported-schema-version'
+  const canRecreate = !unavailable && !unsupportedVersion && syncState?.warning === 'missing-replica'
+    && !!syncState.localRevision && !!syncState.baseSnapshotId && !syncState.conflict && !!onRecreateReplica
   const pending = !unavailable && syncState?.state === 'local-changes-pending'
   const remaining = availableSyncPercent(syncState)
   const remainingPercent = remaining === undefined ? undefined : formatStoragePercent(remaining)
@@ -59,24 +73,46 @@ export function BrowserSyncSummary({
   const organizationCounts = syncState ? formatSyncOrganizationCounts(syncState) : undefined
   const guideUrl: string = EXTERNAL_LINKS.FOLDER_SYNC_GUIDE
 
-  const retry = async () => {
+  const retry = async (choice?: 'remote' | 'local', recreate?: BrowserSyncRecreationRequest) => {
     if (!accountScopeId || retryRequest.current) return
     const request = Symbol('sync-retry')
     retryRequest.current = request
     setRetryFeedback({ accountScopeId, pending: true })
     try {
-      // The background accepts a request here; it does not confirm delivery.
-      await onRetry()
-      if (retryRequest.current === request && panelOpen.current) settingsToaster.create({ type: 'info', closable: true, title: tt('folders_sync_retry_requested', 'Retry requested.') })
+      const result = recreate && onRecreateReplica ? await onRecreateReplica(recreate)
+        : choice ? await onResolveConflict(choice) : await onRetry()
+      const messages = {
+        'accepted-by-browser-storage': tt('folders_sync_retry_accepted', 'Sync attempt completed. Your browser accepted this version.'),
+        conflict: tt('folders_sync_retry_conflict', 'Choose a version to continue syncing.'),
+        busy: tt('folders_sync_retry_busy', 'Sync is already running. Try again shortly.'),
+        deferred: tt('folders_sync_retry_deferred', 'The Folder version changed. Check the latest status and try again.'),
+        failed: tt('folders_sync_retry_failed', 'Sync still needs attention. Your changes remain saved on this device.'),
+      }
+      if (retryRequest.current === request && panelOpen.current) settingsToaster.create({
+        type: result.outcome === 'failed' ? 'error' : 'info', closable: true, title: messages[result.outcome],
+      })
     } catch {
-      if (retryRequest.current === request && panelOpen.current) settingsToaster.create({ type: 'error', closable: true, title: tt('folders_sync_retry_failed', 'Could not request a retry. Try again.') })
+      if (retryRequest.current === request && panelOpen.current) settingsToaster.create({ type: 'error', closable: true, title: tt('folders_sync_retry_failed', 'Sync still needs attention. Your changes remain saved on this device.') })
     } finally {
       if (retryRequest.current === request) {
         retryRequest.current = undefined
         setRetryFeedback(undefined)
+        if (recreate) setRecreation(undefined)
       }
     }
   }
+
+  const warningMessage = unsupportedVersion
+    ? tt('folders_sync_upgrade_required', 'Update Gemini Power Kit to read this synced Folder version. Your data is preserved.')
+    : syncState?.warning === 'quota-exceeded'
+    ? tt('folders_sync_quota_exceeded', 'New changes are safely saved on this device, but are not yet synced to your other devices.')
+    : syncState?.warning === 'missing-replica'
+      ? tt('folders_sync_missing_replica', 'The synced version is missing. Your changes remain saved on this device. Retry to check again, or recreate the synced version from this device.')
+      : syncState?.warning === 'incomplete-replica' || syncState?.warning === 'invalid-replica'
+        ? tt('folders_sync_invalid_replica', 'The synced version is incomplete or invalid. Your changes remain saved on this device.')
+        : syncState?.warning === 'recovery-protection-failed'
+          ? tt('folders_sync_protection_failed', 'A restore point could not be saved. Your Folder version was kept on this device.')
+          : tt('folders_sync_needs_attention', 'Sync needs attention. Your new changes are safely saved on this device.')
 
   return (
     <Stack gap={2} py={4} data-control="browser-sync-summary">
@@ -129,14 +165,43 @@ export function BrowserSyncSummary({
         <HStack justify="space-between" align="start" gap={3}>
           <Text role="status" aria-live="polite" fontSize="xs" lineHeight="tall" color={needsAttention ? 'fg.error' : 'gemOnSurfaceVariant'}>
             {unavailable ? tt('folders_unavailable_label', 'Unavailable')
-                : needsAttention ? syncState?.warning === 'quota-exceeded'
-                  ? tt('folders_sync_quota_exceeded', 'New changes are safely saved on this device, but are not yet synced to your other devices.')
-                  : tt('folders_sync_needs_attention', 'Sync needs attention. Your new changes are safely saved on this device.')
+                : needsAttention ? warningMessage
                   : pending ? tt('folders_sync_pending', 'Saved on this device. Browser Sync will write it when available.')
                     : tt('folders_sync_status_checking', 'Checking sync status…')}
           </Text>
-          {needsAttention ? <Button size="xs" variant="ghost" flexShrink={0} loading={feedback?.pending} disabled={feedback?.pending} onClick={() => void retry()}>{tt('folders_sync_retry', 'Retry')}</Button> : null}
+          {needsAttention && !unsupportedVersion ? <Button size="xs" variant="ghost" flexShrink={0} loading={feedback?.pending} disabled={feedback?.pending} onClick={() => void retry()}>{tt('folders_sync_retry', 'Retry')}</Button> : null}
         </HStack>
+      ) : null}
+      {canRecreate ? <Button size="xs" variant="outline" alignSelf="start" disabled={feedback?.pending} onClick={() => {
+        if (accountScopeId && syncState?.localRevision && syncState.baseSnapshotId) setRecreation({ accountScopeId,
+          expectedRevision: syncState.localRevision, baseSnapshotId: syncState.baseSnapshotId, counts: organizationCounts })
+      }}>{tt('folders_sync_recreate', 'Recreate synced version')}</Button> : null}
+      <Dialog.Root open={!!recreation && recreation.accountScopeId === accountScopeId && canRecreate && isPanelOpen !== false}
+        closeOnInteractOutside={false} onOpenChange={(event) => { if (!event.open && !feedback?.pending) setRecreation(undefined) }} placement="center" size="sm" role="alertdialog">
+        <Portal><Dialog.Backdrop /><Dialog.Positioner><Dialog.Content>
+          <Dialog.Header><Dialog.Title>{tt('folders_sync_recreate', 'Recreate synced version')}</Dialog.Title></Dialog.Header>
+          <Dialog.Body><Stack gap={3}>
+            {recreation?.counts ? <Text fontSize="sm">{recreation.counts}</Text> : null}
+            <Text>{tt('folders_sync_recreate_help', "Publish this device's current Folder organization and sync settings as a new synced version? If another device's version has not arrived yet, wait and retry first. Your local data will be kept.")}</Text>
+          </Stack></Dialog.Body>
+          <Dialog.Footer>
+            <Button variant="outline" disabled={feedback?.pending} onClick={() => setRecreation(undefined)}>{tt('folders_cancel', 'Cancel')}</Button>
+            <Button disabled={feedback?.pending} loading={feedback?.pending} onClick={() => {
+              if (recreation && recreation.accountScopeId === accountScopeId) void retry(undefined, { expectedRevision: recreation.expectedRevision, baseSnapshotId: recreation.baseSnapshotId })
+            }}>{tt('folders_sync_use_local', "Use this device's version")}</Button>
+          </Dialog.Footer>
+        </Dialog.Content></Dialog.Positioner></Portal>
+      </Dialog.Root>
+      {!unavailable && syncState?.conflict && !unsupportedVersion ? (
+        <Stack gap={2} role="status" data-control="browser-sync-conflict">
+          <Text fontSize="xs" fontWeight="medium">{tt('folders_sync_conflict_title', 'Choose which Folder version to keep')}</Text>
+          <Text fontSize="xs" lineHeight="tall" color="gemOnSurfaceVariant">{tt('folders_sync_conflict_help', 'This device and browser sync both have changes. Choose one complete version. Restore points will be saved before applying your choice.')}</Text>
+          {needsAttention ? <Text fontSize="xs" color="fg.error">{warningMessage}</Text> : null}
+          <HStack gap={2} wrap="wrap">
+            <Button size="xs" variant="outline" disabled={feedback?.pending} loading={feedback?.pending} onClick={() => void retry('remote')}>{tt('folders_sync_use_remote', 'Use synced version')}</Button>
+            <Button size="xs" variant="outline" disabled={feedback?.pending} onClick={() => void retry('local')}>{tt('folders_sync_use_local', "Use this device's version")}</Button>
+          </HStack>
+        </Stack>
       ) : null}
       {!unavailable && syncState?.showCapacityNotice ? (
         <HStack align="start" gap={3}>

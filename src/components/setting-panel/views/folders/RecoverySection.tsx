@@ -9,6 +9,7 @@ import { folderExportPayloadSchema } from '@/domain/folder/schemas'
 import type { FolderLocalStorageStatus, FolderSnapshotRow } from '@/domain/folder/types'
 import { folderRuntime } from '@/entrypoints/content/folders/runtime'
 import { getCurrentLocale, t, tt } from '@/utils/i18n'
+import { eventBus } from '@/utils/eventbus'
 import { LocalStorageDetails } from './LocalStorageDetails'
 import { formatOrganizationCounts } from './organization-label'
 import { SettingsSection } from './SettingsSection'
@@ -97,6 +98,12 @@ export function RecoverySection({ accountScopeId, isPanelOpen, warning, automati
 
   useEffect(() => { panelOpen.current = isPanelOpen !== false }, [isPanelOpen])
 
+  useEffect(() => eventBus.on('folders:recovery-changed', (changed) => {
+    if (changed.accountScopeId !== accountScopeId || !current() || !panelOpen.current) return
+    void refreshStatus()
+    if (showHistory) void refreshHistory(true)
+  }), [accountScopeId, showHistory])
+
   useEffect(() => {
     if (!accountScopeId || isPanelOpen === false) return
     const refresh = () => void refreshStatus()
@@ -156,7 +163,7 @@ export function RecoverySection({ accountScopeId, isPanelOpen, warning, automati
       const result = folderExportPayloadSchema.safeParse(payload)
       if (!result.success) throw new Error(tt('folders_backup_invalid', 'This file is not a valid Folder backup.'))
       if (result.data.accountScopeId !== accountScopeId) throw new Error(tt('folders_backup_account_mismatch', 'This backup belongs to a different Gemini account.'))
-      setPendingImport({ content, name: file.name, counts: countFolderOrganization(result.data.folders, result.data.memberships) })
+      setPendingImport({ content, name: file.name, counts: countFolderOrganization(result.data.data.folders, result.data.data.memberships) })
     })
   }
 

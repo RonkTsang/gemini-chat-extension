@@ -2,6 +2,7 @@ import type { FolderColorValue, FolderIconKey } from './appearance'
 
 export const ROOT_FOLDER_ID = '__root__' as const
 export const BROWSER_SYNC_CAPACITY_NOTICE_THRESHOLD_PERCENT = 80
+export const BROWSER_SYNC_SCHEMA_VERSION = 4 as const
 
 export interface BrowserSyncUsage {
   folderBytes: number
@@ -11,27 +12,21 @@ export interface BrowserSyncUsage {
   usagePercent: number
 }
 
-export type FolderVersionStamp = string
 export type FolderOrderKey = string
 export type FolderParentId = string | typeof ROOT_FOLDER_ID
 export type FolderSyncProvider = 'browser-sync' | 'google-drive'
 
-export interface FolderSyncSettings {
-  enabled: boolean
-  hideOrganizedChats: boolean
-}
+export interface FolderSyncSettings { enabled: boolean; hideOrganizedChats: boolean }
 
 export interface BrowserSyncManifest {
-  schemaVersion: 3
+  schemaVersion: typeof BROWSER_SYNC_SCHEMA_VERSION
   accountScopeId: string
-  generationId: string
-  dataRevision: string
-  authorityEpoch: string
+  snapshotId: string
+  baseSnapshotId?: string
   chunkCount: number
   payloadBytes: number
   payloadHash: string
   settings: FolderSyncSettings
-  settingsVersion: string
 }
 
 export interface FolderRow {
@@ -44,15 +39,6 @@ export interface FolderRow {
   orderKey: FolderOrderKey
   createdAt: string
   updatedAt: string
-  versionStamp: FolderVersionStamp
-  fieldVersions: {
-    name: FolderVersionStamp
-    iconKey: FolderVersionStamp
-    colorValue: FolderVersionStamp
-    position: FolderVersionStamp
-  }
-  deletedAt?: string
-  deleteVersionStamp?: FolderVersionStamp
 }
 
 export interface FolderMembershipRow {
@@ -61,14 +47,9 @@ export interface FolderMembershipRow {
   folderId: string
   chatId: string
   orderKey: FolderOrderKey
+  pinnedOrderKey?: FolderOrderKey
   createdAt: string
   updatedAt: string
-  versionStamp: FolderVersionStamp
-  positionVersionStamp: FolderVersionStamp
-  pinnedOrderKey?: FolderOrderKey
-  pinVersionStamp?: FolderVersionStamp
-  deletedAt?: string
-  deleteVersionStamp?: FolderVersionStamp
 }
 
 export interface ChatReferenceRow {
@@ -77,70 +58,48 @@ export interface ChatReferenceRow {
   cachedTitle: string
   createdAt: string
   updatedAt: string
-  titleVersionStamp: FolderVersionStamp
 }
 
-export interface FolderSettingsRow {
+export interface FolderSettingsRow extends FolderSyncSettings {
   accountScopeId: string
-  enabled: boolean
-  hideOrganizedChats: boolean
   collapsedFolderIds: string[]
   updatedAt: string
-  settingsVersion: FolderVersionStamp
-  settingsPending: boolean
 }
 
-export type FolderOperationType =
-  | 'folder.create'
-  | 'folder.update'
-  | 'folder.move'
-  | 'folder.delete-subtree'
-  | 'membership.add'
-  | 'membership.move'
-  | 'membership.pin'
-  | 'membership.remove'
-  | 'chat-reference.update'
-  | 'order.rebalance'
-  | 'snapshot.restore'
-
-export interface FolderOperationRow {
-  id: string
-  opId: string
+/** One durable publication per account; retries reuse these exact captured bytes. */
+export interface FolderSyncPublicationRow {
   accountScopeId: string
-  deviceId: string
-  baseRevision?: string
-  operationType: FolderOperationType
-  entityId: string
-  versionStamp: FolderVersionStamp
-  payload: Record<string, unknown>
-  createdAt: string
-  state: 'pending' | 'accepted-by-browser-storage' | 'confirmed-by-remote-provider'
-}
-
-export interface FolderSyncGenerationRow {
   id: string
-  accountScopeId: string
-  syncMode: 'browser-sync' | 'google-drive'
-  syncEpoch: string
+  baseSnapshotId?: string
   dataRevision: string
-  includedOperationIds: string[]
   payloadHash: string
   payload: string
+  settings: FolderSyncSettings
   createdAt: string
-  /** Active replica replaced by this local write; retained for crash recovery. */
-  replacedGenerationId?: string
-  state: 'prepared' | 'writing' | 'accepted-by-browser-storage' | 'confirmed-by-remote-provider' | 'superseded'
+  state: 'prepared' | 'writing'
 }
+
+/** One fully validated incoming candidate per account. */
+export interface FolderSyncConflictRow {
+  accountScopeId: string
+  manifest: BrowserSyncManifest
+  data: FolderOrganizationData
+  localRevision: string
+  createdAt: string
+}
+
+export type FolderSyncOutcome = 'accepted-by-browser-storage' | 'failed' | 'conflict' | 'busy' | 'deferred'
+export interface FolderSyncRunResult { outcome: FolderSyncOutcome; retryAt?: string }
+
+export interface BrowserSyncRecreationRequest { expectedRevision: string; baseSnapshotId: string }
 
 export interface FolderSyncStateRow {
   accountScopeId: string
   deviceId: string
   provider: FolderSyncProvider
-  authorityEpoch: string
   localDataRevision: string
-  lastObservedReplicaGenerationId?: string
-  lastAppliedReplicaRevision?: string
-  lastWrittenReplicaGenerationId?: string
+  baseSnapshotId?: string
+  dirty: boolean
   lastBrowserStorageWriteAt?: string
   driveFileId?: string
   driveFileVersion?: string
@@ -149,7 +108,7 @@ export interface FolderSyncStateRow {
   retryAt?: string
   retryCount?: number
   lastErrorCode?: string
-  browserSyncWarning?: 'quota-exceeded' | 'write-failed' | 'incomplete-replica' | 'invalid-replica'
+  browserSyncWarning?: 'quota-exceeded' | 'write-failed' | 'incomplete-replica' | 'invalid-replica' | 'missing-replica' | 'recovery-protection-failed' | 'unsupported-schema-version'
   browserSyncCurrentUsageBytes?: number
   browserSyncCurrentTotalBytes?: number
   browserSyncQuotaBytes?: number
@@ -165,7 +124,7 @@ export interface FolderSyncStateRow {
 export interface FolderSnapshotRow {
   id: string
   accountScopeId: string
-  reason: 'automatic' | 'manual' | 'before-delete' | 'before-import' | 'before-restore'
+  reason: 'automatic' | 'manual' | 'before-delete' | 'before-import' | 'before-restore' | 'before-sync'
   reasons?: FolderSnapshotRow['reason'][]
   organizationHash?: string
   folderCount?: number
@@ -179,19 +138,39 @@ export interface FolderSnapshotRow {
   dataRevision: string
   createdAt: string
   contentHash: string
-  /** LZ-String Base64 of raw, validated account data including tombstones. */
+  /** LZ-String Base64 of FolderOrganizationData, containing current entities. */
   compressedPayload: string
 }
 
 /** Local recovery bookkeeping; never included in backups or sync payloads. */
 export interface FolderRecoveryStateRow {
   accountScopeId: string
+  pendingRevision?: string
   groupSnapshotId?: string
   groupStartedAt?: string
   lastActionAt?: string
   warning?: 'snapshot-failed' | 'quota-exceeded' | 'budget-exceeded' | 'snapshot-too-large'
   automaticSnapshotFailed?: boolean
   updatedAt: string
+}
+
+export type FolderMutationEffect = 'organization' | 'sync-settings' | 'local-view'
+
+export interface FolderCommit {
+  accountScopeId: string
+  dataRevision: string
+  effect?: FolderMutationEffect
+}
+
+export interface FolderMutationResult<T> {
+  data: T
+  commit: FolderCommit
+}
+
+export interface FolderDataSnapshot {
+  data: FolderAccountData
+  dataRevision: string
+  pendingRevision?: string
 }
 
 export interface FolderLocalStorageStatus {
@@ -214,6 +193,8 @@ export interface FolderCoordinatorLeaseRow {
 }
 
 export interface FolderProjection {
+  /** Revision of the organization captured for this view; used for draft guards. */
+  dataRevision?: string
   chatCursors?: Record<string, string | undefined>
   folders: FolderRow[]
   memberships: FolderMembershipRow[]
@@ -228,16 +209,19 @@ export interface FolderAccountData {
   chatReferences: ChatReferenceRow[]
 }
 
-/** Account ownership is supplied by the validated Manifest when persisted locally. */
-export interface FolderSyncData {
+/** Shared portable data for Browser Sync, restore points, and exports. */
+export interface FolderOrganizationData {
   folders: Omit<FolderRow, 'accountScopeId'>[]
   memberships: Omit<FolderMembershipRow, 'accountScopeId'>[]
   chatReferences: Omit<ChatReferenceRow, 'accountScopeId'>[]
 }
 
-export interface FolderExportPayload extends FolderAccountData {
+/** Browser Sync uses the same current-entity organization format. */
+export type FolderSyncData = FolderOrganizationData
+
+export interface FolderExportPayload {
   schemaVersion: 1
-  settings: FolderSyncSettings
-  settingsVersion: string
+  accountScopeId: string
   exportedAt: string
+  data: FolderOrganizationData
 }

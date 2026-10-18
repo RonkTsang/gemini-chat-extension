@@ -7,26 +7,18 @@ import Dexie, { type Table } from 'dexie'
 
 import type { GemAvatarAssetRow } from '@/domain/gem-avatar/types'
 import type { QuickFollowIconKey } from '@/domain/quick-follow/iconKeys'
-import {
-  DEFAULT_FOLDER_COLOR_VALUE,
-  DEFAULT_FOLDER_ICON_KEY,
-  type FolderColorValue,
-  type FolderIconKey,
-  isFolderIconKey,
-  normalizeFolderColorValue,
-} from '@/domain/folder/appearance'
 import type { ThemeAssetRow } from '@/entrypoints/content/gemini-theme/background/types'
 import type {
   ChatReferenceRow,
   FolderCoordinatorLeaseRow,
   FolderMembershipRow,
-  FolderOperationRow,
   FolderRow,
   FolderSettingsRow,
   FolderSnapshotRow,
   FolderRecoveryStateRow,
   FolderSyncStateRow,
-  FolderSyncGenerationRow,
+  FolderSyncPublicationRow,
+  FolderSyncConflictRow,
 } from '@/domain/folder/types'
 
 export interface QuickFollowPromptRow {
@@ -65,23 +57,6 @@ export interface NotificationAudioAssetRow {
   updatedAt: string
 }
 
-interface LegacyFolderAppearanceRow {
-  iconKey?: string
-  colorKey?: string
-  colorValue?: FolderColorValue
-  fieldVersions?: Record<string, string>
-}
-
-const LEGACY_FOLDER_ICON_KEYS: Record<string, FolderIconKey> = {
-  briefcase: 'work',
-  heart: 'favorites',
-  star: 'favorites',
-}
-
-const LEGACY_FOLDER_COLOR_KEYS: Record<string, FolderColorValue> = {
-  amber: 'yellow',
-}
-
 export class GeminiExtensionDB extends Dexie {
   chain_prompts!: Table<ChainPromptRow, string>
   quick_follow_prompts!: Table<QuickFollowPromptRow, string>
@@ -93,9 +68,9 @@ export class GeminiExtensionDB extends Dexie {
   folder_memberships!: Table<FolderMembershipRow, string>
   folder_chat_references!: Table<ChatReferenceRow, [string, string]>
   folder_settings!: Table<FolderSettingsRow, string>
-  folder_operations!: Table<FolderOperationRow, string>
   folder_sync_states!: Table<FolderSyncStateRow, string>
-  folder_sync_generations!: Table<FolderSyncGenerationRow, string>
+  folder_sync_publications!: Table<FolderSyncPublicationRow, string>
+  folder_sync_conflicts!: Table<FolderSyncConflictRow, string>
   folder_snapshots!: Table<FolderSnapshotRow, string>
   folder_recovery_states!: Table<FolderRecoveryStateRow, string>
   folder_coordinator_leases!: Table<FolderCoordinatorLeaseRow, string>
@@ -147,92 +122,19 @@ export class GeminiExtensionDB extends Dexie {
       .upgrade(() => {
         // no-op: existing installations do not require data migration
       })
-    this.version(6)
-      .stores({
-        chain_prompts: 'id, name, createdAt, updatedAt',
-        quick_follow_prompts: 'id, updatedAt',
-        quick_follow_settings: 'id',
-        theme_assets: 'id, feature, updatedAt',
-        notification_audio_assets: 'id, updatedAt',
-        gem_avatar_assets: 'gemId, updatedAt',
-        folders: 'id, accountScopeId, [accountScopeId+parentFolderId], [accountScopeId+deletedAt], [accountScopeId+parentFolderId+orderKey]',
-        folder_memberships: 'id, accountScopeId, [accountScopeId+folderId], [accountScopeId+chatId], [accountScopeId+folderId+chatId], [accountScopeId+deletedAt]',
-        folder_chat_references: '[accountScopeId+chatId], accountScopeId, updatedAt',
-        folder_settings: 'accountScopeId, updatedAt',
-        folder_operations: 'id, accountScopeId, [accountScopeId+createdAt]',
-        folder_sync_states: 'accountScopeId, updatedAt',
-        folder_snapshots: 'id, accountScopeId, [accountScopeId+createdAt]',
-        folder_coordinator_leases: 'accountScopeId, expiresAt',
-      })
-      .upgrade(() => {
-        // Folders is an additive schema; existing product tables remain untouched.
-      })
-    this.version(7)
-      .stores({
-        folder_memberships: 'id, accountScopeId, [accountScopeId+folderId], [accountScopeId+folderId+orderKey], [accountScopeId+chatId], &[accountScopeId+folderId+chatId], [accountScopeId+deletedAt]',
-      })
-      .upgrade(() => {
-        // The compound unique key enforces one active relationship identity per
-        // Folder/chat pair even when data arrives from an external provider.
-      })
-    this.version(8)
-      .stores({})
-      .upgrade(async (transaction) => {
-        await transaction.table('folders').toCollection().modify((row: LegacyFolderAppearanceRow) => {
-          const iconKey = row.iconKey ?? DEFAULT_FOLDER_ICON_KEY
-          row.iconKey = isFolderIconKey(iconKey)
-            ? iconKey
-            : LEGACY_FOLDER_ICON_KEYS[iconKey] ?? DEFAULT_FOLDER_ICON_KEY
-
-          const legacyColor = row.colorValue ?? row.colorKey ?? DEFAULT_FOLDER_COLOR_VALUE
-          row.colorValue = normalizeFolderColorValue(legacyColor)
-            ?? LEGACY_FOLDER_COLOR_KEYS[legacyColor]
-            ?? DEFAULT_FOLDER_COLOR_VALUE
-
-          if (row.fieldVersions && !row.fieldVersions.colorValue) {
-            row.fieldVersions.colorValue = row.fieldVersions.colorKey ?? row.fieldVersions.iconKey
-            delete row.fieldVersions.colorKey
-          }
-          delete row.colorKey
-        })
-      })
-    this.version(9)
-      .stores({
-        folder_sync_generations: 'id, accountScopeId, [accountScopeId+dataRevision], [accountScopeId+createdAt], [accountScopeId+state]',
-      })
-      .upgrade(() => {
-        // Folders has not shipped; this only adds the background-owned
-        // generation table and intentionally does not import host-page data.
-      })
-    this.version(10)
-      .stores({})
-      .upgrade(async (transaction) => {
-        // Folders has not shipped. V2 deliberately starts from a new local
-        // protocol state rather than supporting a dual-read migration path.
-        await Promise.all([
-          transaction.table('folders').clear(),
-          transaction.table('folder_memberships').clear(),
-          transaction.table('folder_chat_references').clear(),
-          transaction.table('folder_settings').clear(),
-          transaction.table('folder_operations').clear(),
-          transaction.table('folder_sync_states').clear(),
-          transaction.table('folder_sync_generations').clear(),
-          transaction.table('folder_snapshots').clear(),
-          transaction.table('folder_coordinator_leases').clear(),
-        ])
-      })
-    this.version(11)
-      .stores({})
-      .upgrade(async (transaction) => {
-        // Unreleased Folder data starts fresh under the V3 protocol; no legacy parser is retained.
-        await Promise.all([
-          'folders', 'folder_memberships', 'folder_chat_references', 'folder_settings',
-          'folder_operations', 'folder_sync_states', 'folder_sync_generations',
-          'folder_snapshots', 'folder_coordinator_leases',
-        ].map((table) => transaction.table(table).clear()))
-      })
-
-    this.version(12).stores({ folder_recovery_states: 'accountScopeId, updatedAt' })
+    // Folder has not shipped. Its schema is defined once, without protocol migrations.
+    this.version(13).stores({
+      folders: 'id, accountScopeId, [accountScopeId+parentFolderId], [accountScopeId+parentFolderId+orderKey]',
+      folder_memberships: 'id, accountScopeId, [accountScopeId+folderId], [accountScopeId+folderId+orderKey], [accountScopeId+chatId], &[accountScopeId+folderId+chatId]',
+      folder_chat_references: '[accountScopeId+chatId], accountScopeId, updatedAt',
+      folder_settings: 'accountScopeId, updatedAt',
+      folder_sync_states: 'accountScopeId, updatedAt',
+      folder_sync_publications: 'accountScopeId',
+      folder_sync_conflicts: 'accountScopeId',
+      folder_snapshots: 'id, accountScopeId, [accountScopeId+createdAt]',
+      folder_coordinator_leases: 'accountScopeId, expiresAt',
+      folder_recovery_states: 'accountScopeId, updatedAt',
+    })
   }
 }
 

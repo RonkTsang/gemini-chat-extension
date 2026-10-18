@@ -17,8 +17,8 @@ export function FolderPicker() {
   const [pendingFolderId, setPendingFolderId] = useState<string>()
   const picker = state.picker; const projection = state.projection
   if (!picker || !projection) return null
-  const memberships = new Set(projection.memberships.filter(row => !row.deletedAt && row.chatId === picker.chatId).map(row => row.folderId))
-  const folders = projection.folders.filter((folder) => !folder.deletedAt).sort((a, b) => compareAscii(a.orderKey, b.orderKey))
+  const memberships = new Set(projection.memberships.filter(row => row.chatId === picker.chatId).map(row => row.folderId))
+  const folders = projection.folders.sort((a, b) => compareAscii(a.orderKey, b.orderKey))
   const addToFolder = async (folderId: string) => {
     const { chatId, traceId, cachedTitle } = picker
     setError(undefined)
