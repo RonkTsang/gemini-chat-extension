@@ -84,7 +84,7 @@ describe('Folder local organization', () => {
     expect(decodeLzStringBase64(pending.payload)).toEqual(backup.data)
     expect(snapshot.compressedPayload).toBe(pending.payload)
     expect(JSON.stringify(backup.data)).not.toContain(scopeA)
-    expect(fromFolderSyncData(scopeA, backup.data)).toEqual(await repo.getAccountData(scopeA))
+    expect(toFolderSyncData(fromFolderSyncData(scopeA, backup.data))).toEqual(toFolderSyncData(await repo.getAccountData(scopeA)))
   })
 
   it('synchronized settings change revision/dirty while collapse changes remain local', async () => {
@@ -312,7 +312,7 @@ describe('retained local organization regressions', () => {
     const membership = await repository.upsertMembership(scopeA, { folderId: folder.id, chatId: 'chat' }).then((result) => result.data)
     const pinned = await repository.setMembershipPinned(scopeA, folder.id, 'chat', true).then((result) => result.data)
     const sync = parseFolderSyncData(toFolderSyncData(await repository.getAccountData(scopeA)))
-    expect(fromFolderSyncData(scopeA, sync).memberships[0]).toEqual(pinned)
+    expect(toFolderSyncData(fromFolderSyncData(scopeA, sync)).memberships[0]).toEqual(toFolderSyncData({ accountScopeId: scopeA, folders: [], memberships: [pinned], chatReferences: [] }).memberships[0])
     const backup = await repository.exportAccountData(scopeA)
     const snapshot = await repository.createSnapshot(scopeA, 'manual')
     await repository.setMembershipPinned(scopeA, folder.id, 'chat', false).then((result) => result.data)
@@ -321,7 +321,7 @@ describe('retained local organization regressions', () => {
     await repository.setMembershipPinned(scopeA, folder.id, 'chat', false).then((result) => result.data)
     await repository.importAccountData(scopeA, backup).then((result) => result.data)
     expect((await repository.listMemberships(scopeA))[0]).toEqual(pinned)
-    const { accountScopeId: _, ...unpinned } = membership
+    const { accountScopeId: _, displayOrderKey: _display, ...unpinned } = membership
     await repository.importAccountData(scopeA, { ...backup, data: { ...backup.data, memberships: [unpinned] } }).then((result) => result.data)
     expect((await repository.listMemberships(scopeA))[0].pinnedOrderKey).toBeUndefined()
   })
@@ -332,7 +332,7 @@ describe('retained local organization regressions', () => {
     const rows = []
     for (const chatId of ['a', 'b', 'c']) rows.push(await repository.upsertMembership(scopeA, { folderId: folder.id, chatId }).then((result) => result.data))
     await repository.setMembershipPinned(scopeA, folder.id, 'a', true).then((result) => result.data)
-    await db.folder_memberships.update(rows[0].id, { pinnedOrderKey: '1'.padStart(32, '0') })
+    await db.folder_memberships.update(rows[0].id, { pinnedOrderKey: '1'.padStart(32, '0'), displayOrderKey: `0${'1'.padStart(32, '0')}` })
     await repository.setMembershipPinned(scopeA, folder.id, 'b', true).then((result) => result.data)
     const updated = await repository.listMemberships(scopeA)
     for (const row of rows) expect(updated.find((item) => item.id === row.id)?.orderKey).toBe(row.orderKey)

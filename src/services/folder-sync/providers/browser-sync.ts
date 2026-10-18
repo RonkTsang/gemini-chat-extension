@@ -1,7 +1,8 @@
 import { browser } from 'wxt/browser'
 
-import { parseBrowserSyncManifest } from '@/domain/folder/schemas'
+import { browserSyncChunkSchema, browserSyncManifestSchema, folderDeviceIdSchema, parseBrowserSyncManifest } from '@/domain/folder/schemas'
 import { BROWSER_SYNC_SCHEMA_VERSION, type BrowserSyncManifest, type BrowserSyncUsage, type FolderAccountData, type FolderSyncPublicationRow } from '@/domain/folder/types'
+import { runtimeFolderDeviceIdProvider, type FolderDeviceIdProvider } from '@/services/folder-data/device-id'
 import { decodeAndVerifySyncData, stableStringify } from '../codec'
 
 export const FOLDER_SYNC_BUDGET_BYTES = 70 * 1024
@@ -113,7 +114,7 @@ export async function measureBrowserSyncUsage(): Promise<BrowserSyncUsage> {
   return calculateBrowserSyncUsage(await browser.storage.sync.get(null) as Record<string, unknown>)
 }
 
-function chunksFor(payload: string, accountScopeId: string, snapshotId: string): string[] {
+function chunksFor(payload: string, accountScopeId: string, snapshotId: string, did: string): string[] {
   const chunks: string[] = []
   const limit = Math.min(CHUNK_TARGET_BYTES, syncLimits().quotaBytesPerItem)
   let cursor = 0
@@ -125,7 +126,7 @@ function chunksFor(payload: string, accountScopeId: string, snapshotId: string):
     while (low <= high) {
       const length = Math.floor((low + high) / 2)
       if (storageItemBytes(browserSyncChunkKey(accountScopeId, chunks.length),
-        { snapshotId, payload: payload.slice(cursor, cursor + length) }) <= limit) {
+        { did, snapshotId, payload: payload.slice(cursor, cursor + length) }) <= limit) {
         best = length; low = length + 1
       } else high = length - 1
     }
@@ -136,15 +137,27 @@ function chunksFor(payload: string, accountScopeId: string, snapshotId: string):
   return chunks
 }
 
-function parseChunk(value: unknown, snapshotId: string): string | undefined {
-  if (typeof value !== 'object' || !value || Array.isArray(value)) return undefined
-  const entry = value as Record<string, unknown>
-  if (Object.keys(entry).length !== 2 || entry.snapshotId !== snapshotId || typeof entry.payload !== 'string') return undefined
-  return entry.payload
+function parseChunk(value: unknown, snapshotId: string, did?: string): string | undefined {
+  const parsed = browserSyncChunkSchema.safeParse(value)
+  if (!parsed.success || parsed.data.snapshotId !== snapshotId) return undefined
+  if (parsed.data.did !== undefined && did !== undefined && parsed.data.did !== did) return undefined
+  return parsed.data.payload
+}
+
+/** Validate notification envelopes only; never decode, hash, or copy their payloads. */
+export function browserSyncChangeAuthor(key: string, change: unknown): string | undefined {
+  if (!change || typeof change !== 'object' || Array.isArray(change)) return undefined
+  const value = (change as Record<string, unknown>).newValue
+  const parsed = key.endsWith(':manifest') ? browserSyncManifestSchema.safeParse(value) : browserSyncChunkSchema.safeParse(value)
+  if (!parsed.success) return undefined
+  if ('accountScopeId' in parsed.data && parsed.data.accountScopeId !== folderSyncKeyScope(key)) return undefined
+  return parsed.data.did
 }
 
 /** Fixed account keys hold one snapshot. Multi-key writes may be temporarily unreadable. */
 export class BrowserSyncFolderProvider {
+  constructor(private readonly deviceIdProvider: FolderDeviceIdProvider = runtimeFolderDeviceIdProvider) {}
+
   async read(accountScopeId: string): Promise<BrowserSyncReadResult> {
     const key = browserSyncManifestKey(accountScopeId)
     const first = (await browser.storage.sync.get(key))[key]
@@ -162,7 +175,7 @@ export class BrowserSyncFolderProvider {
     if (manifest.accountScopeId !== accountScopeId) return { status: 'invalid', code: 'manifest-scope-mismatch' }
     const keys = Array.from({ length: manifest.chunkCount }, (_, index) => browserSyncChunkKey(accountScopeId, index))
     const values = await browser.storage.sync.get(keys)
-    const chunks = keys.map((chunkKey) => parseChunk(values[chunkKey], manifest.snapshotId))
+    const chunks = keys.map((chunkKey) => parseChunk(values[chunkKey], manifest.snapshotId, manifest.did))
     const missingChunkIndexes = chunks.flatMap((value, index) => value === undefined ? [index] : [])
     if (missingChunkIndexes.length) return { status: 'incomplete', manifest, missingChunkIndexes }
     try {
@@ -184,8 +197,9 @@ export class BrowserSyncFolderProvider {
     if (new TextEncoder().encode(publication.payload).byteLength > FOLDER_SYNC_BUDGET_BYTES) {
       throw new BrowserSyncQuotaError('folder-budget-exceeded', undefined, calculateBrowserSyncUsage(values))
     }
-    const chunks = chunksFor(publication.payload, accountScopeId, publication.id)
-    const manifest = parseBrowserSyncManifest({ schemaVersion: BROWSER_SYNC_SCHEMA_VERSION, accountScopeId, snapshotId: publication.id,
+    const did = folderDeviceIdSchema.parse(await this.deviceIdProvider.getDeviceId())
+    const chunks = chunksFor(publication.payload, accountScopeId, publication.id, did)
+    const manifest = parseBrowserSyncManifest({ did, schemaVersion: BROWSER_SYNC_SCHEMA_VERSION, accountScopeId, snapshotId: publication.id,
       ...(publication.baseSnapshotId ? { baseSnapshotId: publication.baseSnapshotId } : {}),
       chunkCount: chunks.length, payloadBytes: new TextEncoder().encode(publication.payload).byteLength,
       payloadHash: publication.payloadHash, settings: publication.settings })
@@ -214,13 +228,13 @@ export class BrowserSyncFolderProvider {
       }
     }
     if (current && publication.state !== 'writing') {
-      const active = Array.from({ length: current.chunkCount }, (_, index) => parseChunk(values[browserSyncChunkKey(accountScopeId, index)], current.snapshotId))
+      const active = Array.from({ length: current.chunkCount }, (_, index) => parseChunk(values[browserSyncChunkKey(accountScopeId, index)], current.snapshotId, current.did))
       if (active.some((chunk) => chunk === undefined)) throw new BrowserSyncReplicaChangedError()
       try { await decodeAndVerifySyncData(current, active.join('')) }
       catch { throw new BrowserSyncReplicaChangedError() }
     }
     const next: Record<string, unknown> = { [key]: manifest }
-    chunks.forEach((payload, index) => { next[browserSyncChunkKey(accountScopeId, index)] = { snapshotId: publication.id, payload } })
+    chunks.forEach((payload, index) => { next[browserSyncChunkKey(accountScopeId, index)] = { did, snapshotId: publication.id, payload } })
     const staleKeys = accountChunks.filter((entry) => !Object.hasOwn(next, entry))
     const projected = { ...values, ...next }
     staleKeys.forEach((entry) => delete projected[entry])

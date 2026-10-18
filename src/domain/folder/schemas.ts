@@ -137,7 +137,16 @@ export const folderExportPayloadSchema = z.object({
   validateAccountData(scopeFolderOrganizationData(value.accountScopeId, value.data), ctx)
 })
 
+export const folderDeviceIdSchema = z.string().min(1).max(128).refine((value) => value.trim().length > 0)
+
+export const browserSyncChunkSchema = z.object({
+  did: folderDeviceIdSchema.optional(),
+  snapshotId: z.string().min(1).max(128),
+  payload: z.string(),
+}).strict()
+
 export const browserSyncManifestSchema = z.object({
+  did: folderDeviceIdSchema.optional(),
   schemaVersion: z.literal(BROWSER_SYNC_SCHEMA_VERSION),
   accountScopeId: accountScopeSchema,
   snapshotId: z.string().min(1).max(128),

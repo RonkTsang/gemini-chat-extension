@@ -5,8 +5,8 @@ export function toFolderOrganizationData(data: FolderAccountData): FolderOrganiz
   const unscoped = <T extends { accountScopeId: string }>(rows: T[]): Omit<T, 'accountScopeId'>[] =>
     rows.map(({ accountScopeId: _, ...row }) => row)
   return {
-    folders: unscoped(data.folders),
-    memberships: unscoped(data.memberships).map((row) => ({ ...row, id: `${row.folderId}:${row.chatId}` })),
+    folders: unscoped(data.folders).map(({ nameKey: _, ...row }) => row),
+    memberships: unscoped(data.memberships).map(({ displayOrderKey: _, ...row }) => ({ ...row, id: `${row.folderId}:${row.chatId}` })),
     chatReferences: unscoped(data.chatReferences),
   }
 }

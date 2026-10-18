@@ -1,3 +1,7 @@
+import { nanoid } from 'nanoid'
+import { logDevEvent } from '@/utils/devLogger'
+import { folderAffectedSchema, folderChangeSchema, type FolderChange } from '@/domain/folder/changes'
+import type { FolderRpcMethod } from '@/domain/folder/rpc'
 import type { BrowserSyncRecreationRequest, FolderSyncRunResult } from '@/domain/folder/types'
 import type { FolderColorValue, FolderIconKey } from '@/domain/folder/appearance'
 import type { FolderUpdateInput } from '@/domain/folder/commands'
@@ -8,6 +12,7 @@ import type {
   FolderRow,
   FolderSnapshotRow,
   FolderLocalStorageStatus,
+  FolderSettingsRow,
 } from '@/domain/folder/types'
 import type { FolderAccountHistory } from '@/domain/folder/account-history'
 import { folderAccountHistory } from '@/services/gemini-identity/account-history'
@@ -75,6 +80,13 @@ export interface FolderRuntimeState {
 }
 
 type Listener = () => void
+interface ProjectionLoad {
+  accountScopeId: string
+  refreshNeeded: boolean
+  syncStatusNeeded: boolean
+  settingsChange?: FolderChange
+  requestId?: string
+}
 
 const ACTIVITY_HINT_COOLDOWN_MS = 30_000
 
@@ -90,36 +102,30 @@ export class FolderRuntime {
   private sequence = 0
   private invalidationListenerStarted = false
   private lastActivityHint?: { accountScopeId: string; requestedAt: number }
-  private projectionLoad?: { accountScopeId: string; refreshNeeded: boolean; syncStatusNeeded: boolean }
+  private projectionLoad?: ProjectionLoad
+  private viewTask?: Promise<void>
+  private lastChangeRequestId?: string
+  private settingsSequence = 0
+  private accountSequence = 0
 
   private readonly handleBackgroundMessage = (message: unknown): void => {
     if (!message || typeof message !== 'object' || (message as { type?: unknown }).type !== 'folders:data-changed') return
-    const changed = message as {
-      accountScopeId?: unknown
-      affected?: { folderIds?: unknown; chatIds?: unknown; settings?: unknown; syncStatus?: unknown; recoveryStatus?: unknown }
-    }
+    const changed = message as { accountScopeId?: unknown; affected?: unknown }
     const identity = this.state.identity
     if (identity.status !== 'available' || changed.accountScopeId !== identity.identity.accountScopeId) return
-    // activityHint/retrySync publishes a syncStatus-only invalidation. It must
-    // not make the content script re-query the entire Sidebar projection.
-    // Folder records, memberships, and settings continue to use the complete
-    // refresh path below.
-    const affected = changed.affected
+    const affected = folderAffectedSchema.safeParse(changed.affected).data
     if (affected?.recoveryStatus === true) eventBus.emit('folders:recovery-changed', { accountScopeId: identity.identity.accountScopeId })
-    const onlySyncStatusChanged = affected?.syncStatus === true
-      && affected.folderIds === undefined
-      && affected.chatIds === undefined
-      && affected.settings === undefined
-    if (this.projectionLoad?.accountScopeId === identity.identity.accountScopeId) {
-      if (onlySyncStatusChanged) this.projectionLoad.syncStatusNeeded = true
-      else this.projectionLoad.refreshNeeded = true
-      return
-    }
+    const onlySyncStatusChanged = affected?.syncStatus === true && !affected.all && !affected.folders
+      && affected.folderMetadataIds === undefined && affected.folderIds === undefined && affected.chatIds === undefined && !affected.settings
     if (onlySyncStatusChanged) {
-      void this.refreshSyncStatus()
+      if (this.projectionLoad) this.projectionLoad.syncStatusNeeded = true
+      else void this.refreshSyncStatus().catch((error: unknown) => this.reportRefreshError(identity.identity.accountScopeId, error))
       return
     }
-    void this.refresh()
+    if (affected?.settings) ++this.settingsSequence
+    const change = folderChangeSchema.safeParse(message)
+    void this.applyChange(identity.identity.accountScopeId, change.success ? change.data : undefined, 'broadcast')
+      .catch((error: unknown) => this.reportRefreshError(identity.identity.accountScopeId, error))
   }
 
   private readonly handleSyncSignal = (): void => {
@@ -149,7 +155,7 @@ export class FolderRuntime {
     if (!this.unsubscribeIdentity) {
       let initialLoad: Promise<void> | undefined
       this.unsubscribeIdentity = geminiIdentityService.subscribe((result) => {
-        const load = this.loadIdentity(result)
+        const load = this.loadIdentity(result, undefined, initialLoad ? 'identity' : 'startup')
         this.identityLoad = load
         initialLoad ??= load
         void load
@@ -171,6 +177,10 @@ export class FolderRuntime {
     this.unsubscribeIdentity = undefined
     this.identityLoad = undefined
     this.projectionLoad = undefined
+    this.viewTask = undefined
+    this.lastChangeRequestId = undefined
+    ++this.settingsSequence
+    ++this.accountSequence
     geminiIdentityService.stop()
     if (this.invalidationListenerStarted) {
       browser.runtime.onMessage.removeListener(this.handleBackgroundMessage)
@@ -183,7 +193,15 @@ export class FolderRuntime {
     this.listeners.forEach((listener) => listener())
   }
 
-  private async loadIdentity(identity: GeminiIdentityResult): Promise<void> {
+  private loadIdentity(identity: GeminiIdentityResult, traceId = import.meta.env.DEV ? `folder-view-${nanoid(10)}` : undefined, source = 'identity'): Promise<void> {
+    const task = this.captureIdentity(identity, traceId, source)
+    this.viewTask = task
+    return task
+  }
+
+  private async captureIdentity(identity: GeminiIdentityResult, traceId: string | undefined, source: string): Promise<void> {
+    const startedAt = import.meta.env.DEV ? performance.now() : 0
+    if (import.meta.env.DEV) logDevEvent('debug', '[Folders][projection]', 'projection.started', { traceId, source, mode: 'full', context: 'content', phase: 'projection' })
     const sequence = ++this.sequence
     this.publish({ loadingChatFolderIds: [] })
     const currentIdentity = this.state.identity
@@ -191,15 +209,20 @@ export class FolderRuntime {
       && identity.status === 'available'
       && currentIdentity.identity.accountScopeId === identity.identity.accountScopeId
     if (identity.status !== 'available') {
+      ++this.accountSequence
+      this.lastChangeRequestId = undefined
       this.projectionLoad = undefined
       this.publish({ identity, projection: undefined, syncState: undefined, picker: undefined, menu: undefined, dialog: undefined, error: undefined })
       return
     }
 
-    const loading = { accountScopeId: identity.identity.accountScopeId, refreshNeeded: false, syncStatusNeeded: false }
+    const loading: ProjectionLoad = { accountScopeId: identity.identity.accountScopeId, refreshNeeded: false, syncStatusNeeded: false }
     this.projectionLoad = loading
 
     if (!isSameAccount) {
+      ++this.accountSequence
+      this.lastChangeRequestId = undefined
+      ++this.settingsSequence
       this.publish({ identity, projection: undefined, syncState: undefined, picker: undefined, menu: undefined, dialog: undefined, error: undefined })
     }
     try {
@@ -207,9 +230,14 @@ export class FolderRuntime {
         identity.identity.accountScopeId,
         identity.identity.source,
         isSameAccount ? this.state.projection : undefined,
+        traceId,
       )
-      const syncState = await folderBackgroundClient.getSyncStatus(identity.identity.accountScopeId, identity.identity.source)
+      const syncState = await folderBackgroundClient.getSyncStatus(identity.identity.accountScopeId, identity.identity.source, traceId)
       if (sequence === this.sequence) {
+        if (syncState.localRevision && projection.dataRevision !== syncState.localRevision) {
+          loading.refreshNeeded = true
+          if (import.meta.env.DEV) logDevEvent('debug', '[Folders][projection]', 'projection.fallback', { context: 'content', phase: 'projection', source, reason: 'status-revision-gap' })
+        }
         // A sync refresh is also requested whenever the Gemini tab regains
         // focus. Keep active same-account UI surfaces so an unrelated refresh
         // cannot dismiss an editor or action menu mid-interaction. Account
@@ -223,9 +251,14 @@ export class FolderRuntime {
           dialog: isSameAccount ? this.state.dialog : undefined,
           error: undefined,
         })
+        if (import.meta.env.DEV) logDevEvent('debug', '[Folders][projection]', 'projection.updated', { traceId, source, mode: 'full', context: 'content', phase: 'projection', result: 'success',
+          durationMs: performance.now() - startedAt, dataRevision: projection.dataRevision, folders: projection.folders.length, memberships: projection.memberships.length })
         if (!isSameAccount) this.requestBrowserSync(undefined, false)
+      } else {
+        if (import.meta.env.DEV) logDevEvent('debug', '[Folders][projection]', 'projection.discarded', { traceId, context: 'content', phase: 'projection', result: 'discarded', reason: 'sequence-changed', durationMs: performance.now() - startedAt })
       }
     } catch (error) {
+      if (import.meta.env.DEV) logDevEvent('debug', '[Folders][projection]', 'projection.failed', { traceId, context: 'content', phase: 'projection', result: 'failed', durationMs: performance.now() - startedAt })
       if (sequence === this.sequence) {
         this.publish({
           identity,
@@ -240,15 +273,7 @@ export class FolderRuntime {
         })
       }
     } finally {
-      if (this.projectionLoad === loading) {
-        this.projectionLoad = undefined
-        // A replacement can commit while the first RPC still returns the old view.
-        // Coalesce notifications into one follow-up read for this account only.
-        if (sequence === this.sequence) {
-          if (loading.refreshNeeded) await this.refresh()
-          else if (loading.syncStatusNeeded) await this.refreshSyncStatus()
-        }
-      }
+      await this.finishProjectionLoad(loading, sequence, source)
     }
   }
 
@@ -266,13 +291,122 @@ export class FolderRuntime {
     return this.state.projection
   }
 
-  private async refresh(): Promise<void> {
-    await this.loadIdentity(this.state.identity)
+  private refresh(traceId?: string, source = 'command'): Promise<void> {
+    if (this.projectionLoad) {
+      this.projectionLoad.refreshNeeded = true
+      return this.viewTask ?? Promise.resolve()
+    }
+    return this.loadIdentity(this.state.identity, traceId, source)
+  }
+
+  private reportRefreshError(accountScopeId: string, error: unknown): void {
+    if (this.state.identity.status === 'available' && this.state.identity.identity.accountScopeId === accountScopeId) {
+      this.publish({ error: error instanceof Error ? error.message : 'Folders are unavailable' })
+    }
+  }
+
+  private async finishProjectionLoad(loading: ProjectionLoad, sequence: number, source: string): Promise<void> {
+    if (this.projectionLoad !== loading) return
+    this.projectionLoad = undefined
+    if (sequence !== this.sequence) return
+    // Keep at most one trailing refresh; unknown ranges require a complete baseline.
+    if (loading.refreshNeeded) await this.refresh(undefined, source)
+    else if (loading.settingsChange) await this.applyChange(loading.accountScopeId, loading.settingsChange, 'broadcast')
+    else if (loading.syncStatusNeeded) await this.refreshSyncStatus()
+  }
+
+  private async applyChange(accountScopeId: string, change: FolderChange | undefined, source: string, returned?: { settings?: FolderSettingsRow; reference?: ChatReferenceRow }): Promise<void> {
+    if (this.state.identity.status !== 'available' || this.state.identity.identity.accountScopeId !== accountScopeId) return
+    if (change && change.accountScopeId !== accountScopeId) change = undefined
+    if (change && change.requestId === this.lastChangeRequestId) {
+      if (import.meta.env.DEV) logDevEvent('debug', '[Folders][projection]', 'projection.deduplicated', { context: 'content', phase: 'projection', source, reason: 'request-id' })
+      return
+    }
+    const loading = this.projectionLoad
+    if (loading) {
+      if (!change || change.requestId !== loading.requestId) {
+        const affected = change?.affected
+        if (change && affected?.settings && !affected.all && !affected.folders && !affected.folderMetadataIds && !affected.folderIds && !affected.chatIds) loading.settingsChange = change
+        else loading.refreshNeeded = true
+        if (import.meta.env.DEV) logDevEvent('debug', '[Folders][projection]', 'projection.merged', { context: 'content', phase: 'projection', source, fallback: loading.refreshNeeded })
+      }
+      await this.viewTask
+      return
+    }
+    const previous = this.state.projection
+    const affected = change?.affected
+    const localView = change && change.baseRevision === change.dataRevision && affected?.settings
+      && !affected.all && !affected.folders && !affected.folderMetadataIds && !affected.folderIds && !affected.chatIds
+    const knownRange = affected && (affected.folders || affected.folderMetadataIds?.length || affected.folderIds?.length || affected.chatIds?.length || affected.settings)
+    if (!change || change.affected.all || !knownRange || !previous || (!localView && (!previous.dataRevision || previous.dataRevision !== change.baseRevision))) {
+      // Equal organization revisions can deduplicate organization events, but not settings changes.
+      if (change && knownRange && !change.affected.settings && !change.affected.all && previous?.dataRevision === change.dataRevision) return
+      if (import.meta.env.DEV) logDevEvent('debug', '[Folders][projection]', 'projection.fallback', { context: 'content', phase: 'projection', source,
+        reason: !change ? 'unknown-change' : change.affected.all ? 'replacement' : 'revision-gap' })
+      await this.refresh(undefined, source)
+      return
+    }
+    const task = this.refreshChangedProjection(previous, change, source, returned)
+    this.viewTask = task
+    await task
+  }
+
+  private async refreshChangedProjection(previous: FolderProjection, change: FolderChange, source: string, returned?: { settings?: FolderSettingsRow; reference?: ChatReferenceRow }): Promise<void> {
+    const startedAt = import.meta.env.DEV ? performance.now() : 0
+    const sequence = ++this.sequence
+    const loading: ProjectionLoad = { accountScopeId: change.accountScopeId, refreshNeeded: false, syncStatusNeeded: false, requestId: change.requestId }
+    this.projectionLoad = loading
+    this.publish({ loadingChatFolderIds: [] })
+    try {
+      const projection = await folderBackgroundClient.getChangedProjection(previous, change, this.identitySource(), returned)
+      if (sequence !== this.sequence) {
+        if (import.meta.env.DEV) logDevEvent('debug', '[Folders][projection]', 'projection.discarded', {
+          context: 'content', phase: 'projection', source, mode: 'partial', requestId: change.requestId, reason: 'sequence-changed',
+        })
+        return
+      }
+      this.lastChangeRequestId = change.requestId
+      this.publish({ projection, error: undefined })
+      if (change.dataRevision !== change.baseRevision) await this.refreshSyncStatus()
+      if (import.meta.env.DEV) logDevEvent('debug', '[Folders][projection]', 'projection.updated', {
+        context: 'content', phase: 'projection', source, mode: 'partial', requestId: change.requestId, dataRevision: projection.dataRevision,
+        result: 'success', durationMs: performance.now() - startedAt,
+      })
+    } catch (error) {
+      if (sequence === this.sequence) {
+        if (error instanceof Error && error.message === 'STALE_REVISION') {
+          loading.refreshNeeded = true
+          if (import.meta.env.DEV) logDevEvent('debug', '[Folders][projection]', 'projection.fallback', { context: 'content', phase: 'projection', source, reason: 'query-revision-changed' })
+        } else {
+          this.reportRefreshError(change.accountScopeId, error)
+          if (import.meta.env.DEV) logDevEvent('debug', '[Folders][projection]', 'projection.failed', {
+            context: 'content', phase: 'projection', source, mode: 'partial', requestId: change.requestId, result: 'failed', durationMs: performance.now() - startedAt,
+          })
+        }
+      }
+    } finally {
+      await this.finishProjectionLoad(loading, sequence, source)
+    }
+  }
+
+  private async command<T>(method: FolderRpcMethod, params: unknown, traceId?: string): Promise<T> {
+    const accountScopeId = this.scope()
+    const accountSequence = this.accountSequence
+    const accountPath = window.location.pathname.match(/^\/u\/\d+(?=\/|$)/)?.[0] ?? ''
+    const isCurrentAccount = () => accountSequence === this.accountSequence && this.state.identity.status === 'available' && this.state.identity.identity.accountScopeId === accountScopeId
+      && (window.location.pathname.match(/^\/u\/\d+(?=\/|$)/)?.[0] ?? '') === accountPath
+    const result = traceId
+      ? await folderBackgroundClient.request<T>(accountScopeId, this.identitySource(), method, params, traceId)
+      : await folderBackgroundClient.request<T>(accountScopeId, this.identitySource(), method, params)
+    if (!isCurrentAccount()) throw new Error('The Gemini account changed during this action')
+    await this.applyChange(accountScopeId, result.change, 'command', method === 'updateChatTitle' ? { reference: result.data as ChatReferenceRow } : undefined)
+    if (!isCurrentAccount()) throw new Error('The Gemini account changed during this action')
+    return result.data
   }
 
   async loadMoreChats(folderId: string): Promise<void> {
     const cursor = this.state.projection?.chatCursors?.[folderId]
-    if (!cursor || this.state.loadingChatFolderIds?.includes(folderId)) return
+    if (!cursor || this.projectionLoad || this.state.loadingChatFolderIds?.includes(folderId)) return
     const accountScopeId = this.scope()
     const sequence = this.sequence
     this.publish({ loadingChatFolderIds: [...(this.state.loadingChatFolderIds ?? []), folderId] })
@@ -296,9 +430,11 @@ export class FolderRuntime {
       })
     } catch (error) {
       if (sequence === this.sequence) {
-        this.publish({ error: error instanceof Error && error.message === 'STALE_REVISION'
-          ? tt('folders_save_failed', 'Could not complete this action.')
-          : error instanceof Error ? error.message : 'Unable to load Folder chats' })
+        if (error instanceof Error && error.message === 'STALE_REVISION') {
+          await this.refresh(undefined, 'pagination')
+          return
+        }
+        this.publish({ error: error instanceof Error ? error.message : 'Unable to load Folder chats' })
       }
     } finally {
       if (sequence === this.sequence) {
@@ -310,15 +446,21 @@ export class FolderRuntime {
   private async refreshSyncStatus(): Promise<void> {
     const identity = this.state.identity
     if (identity.status !== 'available') return
+    const sequence = this.sequence
     const syncState = await folderBackgroundClient.getSyncStatus(
       identity.identity.accountScopeId,
       identity.identity.source,
     )
     if (
-      this.state.identity.status === 'available'
+      sequence === this.sequence && this.state.identity.status === 'available'
       && this.state.identity.identity.accountScopeId === identity.identity.accountScopeId
     ) {
       this.publish({ syncState })
+      if (syncState.localRevision && this.state.projection?.dataRevision && syncState.localRevision !== this.state.projection.dataRevision) {
+        if (import.meta.env.DEV) logDevEvent('debug', '[Folders][projection]', 'projection.fallback', { context: 'content', phase: 'projection', source: 'status', reason: 'status-revision-gap' })
+        if (this.projectionLoad) this.projectionLoad.refreshNeeded = true
+        else await this.refresh(undefined, 'status-revision-gap')
+      }
     }
   }
 
@@ -338,7 +480,7 @@ export class FolderRuntime {
     }
     this.lastActivityHint = { accountScopeId: identity.identity.accountScopeId, requestedAt: now }
     if (traceId) {
-      logFolderTrace(traceId, 'sync.requested', {
+      if (import.meta.env.DEV) logFolderTrace(traceId, 'sync.requested', {
         accountScopeId: identity.identity.accountScopeId,
       })
     }
@@ -346,14 +488,14 @@ export class FolderRuntime {
       .then(async () => {
         if (refreshStatus) await this.refreshSyncStatus()
         if (traceId) {
-          logFolderTrace(traceId, 'sync.completed', {
+          if (import.meta.env.DEV) logFolderTrace(traceId, 'sync.completed', {
             accountScopeId: identity.identity.accountScopeId,
           })
         }
       })
       .catch(async (error) => {
         if (traceId) {
-          logFolderTraceError(traceId, 'sync.failed', error, {
+          if (import.meta.env.DEV) logFolderTraceError(traceId, 'sync.failed', error, {
             accountScopeId: identity.identity.accountScopeId,
           })
         }
@@ -425,7 +567,7 @@ export class FolderRuntime {
   async reload(): Promise<void> {
     const sequence = this.sequence
     await geminiIdentityService.refresh()
-    if (sequence === this.sequence) await this.refresh()
+    if (sequence === this.sequence) await this.refresh(undefined, 'manual')
     else await this.identityLoad
   }
 
@@ -439,57 +581,44 @@ export class FolderRuntime {
     if (identity.status !== 'available') throw new Error('Folders are unavailable')
     let folder: FolderRow
     if (addToChat) {
-      folder = (await folderBackgroundClient.request<{ folder: FolderRow }>(this.scope(), identity.identity.source, 'createFolderAndAddChat', { folder: { name, iconKey, colorValue }, chatId: addToChat.chatId, cachedTitle: addToChat.cachedTitle })).data.folder
+      folder = (await this.command<{ folder: FolderRow }>('createFolderAndAddChat', { folder: { name, iconKey, colorValue }, chatId: addToChat.chatId, cachedTitle: addToChat.cachedTitle })).folder
     } else {
-      folder = (await folderBackgroundClient.request<FolderRow>(this.scope(), identity.identity.source, 'createFolder', { name, iconKey, colorValue })).data
+      folder = await this.command<FolderRow>('createFolder', { name, iconKey, colorValue })
     }
     this.closeDialog()
     this.closePicker()
-    await this.refresh()
     return folder
   }
 
   async updateFolder(folderId: string, patch: FolderUpdateInput): Promise<FolderRow> {
-    const folder = (await folderBackgroundClient.request<FolderRow>(this.scope(), this.identitySource(), 'updateFolder', { folderId, patch })).data
+    const folder = await this.command<FolderRow>('updateFolder', { folderId, patch })
     this.closeDialog()
-    await this.refresh()
     return folder
   }
 
   async moveFolder(folderId: string, beforeId?: string, afterId?: string): Promise<void> {
-    await folderBackgroundClient.request(this.scope(), this.identitySource(), 'moveFolder', { folderId, beforeId, afterId })
-    await this.refresh()
+    await this.command('moveFolder', { folderId, beforeId, afterId })
   }
 
   async deleteFolder(folderId: string): Promise<void> {
-    await folderBackgroundClient.request(this.scope(), this.identitySource(), 'deleteFolder', { folderId })
+    await this.command('deleteFolder', { folderId })
     this.closeDialog()
-    await this.refresh()
   }
 
   async addMembership(
     folderId: string,
     chatId: string,
     cachedTitle?: string,
-    traceId = createFolderTraceId(),
+    traceId = import.meta.env.DEV ? createFolderTraceId() : '',
   ): Promise<FolderMembershipRow> {
     let accountScopeId: string | undefined
     try {
       accountScopeId = this.scope()
-      logFolderTrace(traceId, 'runtime.command-started', { accountScopeId, folderId, chatId })
-      const membership = (await folderBackgroundClient.request<FolderMembershipRow>(accountScopeId, this.identitySource(), 'addMembership', { folderId, chatId, cachedTitle })).data
-      logFolderTrace(traceId, 'runtime.repository-committed', {
-        accountScopeId,
-        folderId,
-        chatId,
-        membershipId: membership.id,
-      })
+      if (import.meta.env.DEV) logFolderTrace(traceId, 'runtime.command-started', { accountScopeId, folderId, chatId })
+      const membership = await this.command<FolderMembershipRow>('addMembership', { folderId, chatId, cachedTitle }, traceId)
       this.closePicker()
-      await this.refresh()
-      const projected = this.state.projection?.memberships.some((row) => (
-        row.id === membership.id
-      )) ?? false
-      logFolderTrace(traceId, 'runtime.projection-refreshed', {
+      const projected = import.meta.env.DEV && (this.state.projection?.memberships.some((row) => row.id === membership.id) ?? false)
+      if (import.meta.env.DEV) logFolderTrace(traceId, 'runtime.projection-refreshed', {
         accountScopeId,
         folderId,
         chatId,
@@ -498,7 +627,7 @@ export class FolderRuntime {
       })
       return membership
     } catch (error) {
-      logFolderTraceError(traceId, 'runtime.command-failed', error, {
+      if (import.meta.env.DEV) logFolderTraceError(traceId, 'runtime.command-failed', error, {
         accountScopeId,
         folderId,
         chatId,
@@ -508,43 +637,30 @@ export class FolderRuntime {
   }
 
   async moveMembership(folderId: string, chatId: string, beforeId?: string, afterId?: string): Promise<void> {
-    await folderBackgroundClient.request(this.scope(), this.identitySource(), 'moveMembership', { folderId, targetFolderId: folderId, chatId, beforeId, afterId })
-    await this.refresh()
+    await this.command('moveMembership', { folderId, targetFolderId: folderId, chatId, beforeId, afterId })
   }
 
   async completeNewChatTitle(chatId: string, title: string, expectedTitle: string): Promise<void> {
-    const accountScopeId = this.scope()
-    const { data: reference } = await folderBackgroundClient.request<ChatReferenceRow>(
-      accountScopeId, this.identitySource(), 'updateChatTitle', { chatId, title, expectedTitle },
-    )
-    if (this.state.identity.status !== 'available' || this.state.identity.identity.accountScopeId !== accountScopeId) return
-    const projection = this.projection()
-    this.publish({ projection: {
-      ...projection,
-      chatReferences: [...projection.chatReferences.filter((row) => row.chatId !== chatId), reference],
-    } })
+    await this.command<ChatReferenceRow>('updateChatTitle', { chatId, title, expectedTitle })
   }
 
   async setMembershipPinned(folderId: string, chatId: string, pinned: boolean): Promise<void> {
     const accountScopeId = this.scope()
-    const identitySource = this.identitySource()
     const accountPath = window.location.pathname.match(/^\/u\/\d+(?=\/|$)/)?.[0] ?? ''
     const isCurrentAccount = () => this.state.identity.status === 'available'
       && this.state.identity.identity.accountScopeId === accountScopeId
       && (window.location.pathname.match(/^\/u\/\d+(?=\/|$)/)?.[0] ?? '') === accountPath
     this.closeMenu()
     try {
-      await folderBackgroundClient.request(accountScopeId, identitySource, 'setMembershipPinned', { folderId, chatId, pinned })
-      if (isCurrentAccount()) await this.refresh()
+      await this.command('setMembershipPinned', { folderId, chatId, pinned })
     } catch (error) {
       if (isCurrentAccount()) this.publish({ error: error instanceof Error ? error.message : 'Unable to update chat pin' })
     }
   }
 
   async removeMembership(folderId: string, chatId: string): Promise<void> {
-    await folderBackgroundClient.request(this.scope(), this.identitySource(), 'removeMembership', { folderId, chatId })
+    await this.command('removeMembership', { folderId, chatId })
     this.closeDialog()
-    await this.refresh()
   }
 
   async deleteChat(folderId: string, chatId: string): Promise<void> {
@@ -554,21 +670,19 @@ export class FolderRuntime {
     try {
       if (this.scope() !== accountScopeId) throw new Error('The Gemini account changed during deletion')
       await deleteGeminiChat(chatId)
-      await folderBackgroundClient.request(accountScopeId, identitySource, 'removeChatAfterGeminiDelete', {
+      await this.command('removeChatAfterGeminiDelete', {
         chatId, deletionReceipt: 'gemini-native-confirmed', protectionSnapshotId: protection.id,
       })
       this.closeDialog()
-      await this.refresh()
     } finally {
       try { await folderBackgroundClient.request(accountScopeId, identitySource, 'releaseSnapshot', { snapshotId: protection.id, protectionToken: protection.protectionToken }) } catch (error) {
-        logFolderTraceError('native-delete', 'recovery.protection-release-failed', error, { accountScopeId })
+        if (import.meta.env.DEV) logFolderTraceError('native-delete', 'recovery.protection-release-failed', error, { accountScopeId })
       }
     }
   }
 
   async renameChat(folderId: string, chatId: string, title: string): Promise<void> {
     const accountScopeId = this.scope()
-    const identitySource = this.identitySource()
     const dialog = this.state.dialog
     const accountPath = window.location.pathname.match(/^\/u\/\d+(?=\/|$)/)?.[0] ?? ''
     const isCurrentAccount = () => this.state.identity.status === 'available'
@@ -580,19 +694,10 @@ export class FolderRuntime {
       throw new Error('The requested Folder chat is unavailable')
     }
 
-    const { data: reference } = await folderBackgroundClient.request<ChatReferenceRow>(
-      accountScopeId, identitySource, 'updateChatTitle', { chatId, title: normalizedTitle, expectedRevision: dialog?.kind === 'rename-chat' ? dialog.expectedRevision : undefined },
-    )
+    const reference = await this.command<ChatReferenceRow>('updateChatTitle', { chatId, title: normalizedTitle, expectedRevision: dialog?.kind === 'rename-chat' ? dialog.expectedRevision : undefined })
     if (!isCurrentAccount()) throw new Error('The Gemini account changed during rename')
 
-    // Patch the shared title reference so every loaded membership updates while
-    // expanded pages, cursors, and unrelated controls retain their current state.
-    const projection = this.projection()
     this.publish({
-      projection: {
-        ...projection,
-        chatReferences: [...projection.chatReferences.filter((row) => row.chatId !== chatId), reference],
-      },
       syncState: this.state.syncState?.state === 'accepted-by-browser-storage'
         ? { ...this.state.syncState, state: 'local-changes-pending' }
         : this.state.syncState,
@@ -617,8 +722,11 @@ export class FolderRuntime {
     hideOrganizedChats?: boolean
     collapsedFolderIds?: string[]
   }): Promise<void> {
-    await folderBackgroundClient.request(this.scope(), this.identitySource(), 'updateSettings', { patch })
-    await this.refresh()
+    const accountScopeId = this.scope()
+    const accountSequence = this.accountSequence
+    const sequence = ++this.settingsSequence
+    const result = await folderBackgroundClient.request<FolderSettingsRow>(accountScopeId, this.identitySource(), 'updateSettings', { patch })
+    if (accountSequence === this.accountSequence) await this.applyChange(accountScopeId, result.change, 'command', sequence === this.settingsSequence ? { settings: result.data } : undefined)
   }
 
   async setFolderCollapsed(folderId: string, collapsed: boolean): Promise<void> {
@@ -639,17 +747,17 @@ export class FolderRuntime {
   openPicker(
     chatId: string,
     anchorRect: DOMRect,
-    traceId = createFolderTraceId(),
+    traceId = import.meta.env.DEV ? createFolderTraceId() : '',
     cachedTitle?: string,
   ): void {
     if (this.state.projection && this.state.identity.status === 'available') {
-      logFolderTrace(traceId, 'runtime.picker-opened', {
+      if (import.meta.env.DEV) logFolderTrace(traceId, 'runtime.picker-opened', {
         accountScopeId: this.state.identity.identity.accountScopeId,
         chatId,
       })
       this.publish({ picker: { chatId, anchorRect, traceId, cachedTitle }, menu: undefined })
     } else {
-      logFolderTrace(traceId, 'runtime.picker-rejected', {
+      if (import.meta.env.DEV) logFolderTrace(traceId, 'runtime.picker-rejected', {
         chatId,
         identityStatus: this.state.identity.status,
         projectionReady: Boolean(this.state.projection),

@@ -154,3 +154,41 @@ it('reclaims obsolete foreign tail keys beyond the current manifest without bloc
   expect(storage.values.has(browserSyncChunkKey(scopeA, 8))).toBe(false)
   expect(storage.values.size).toBe(2)
 })
+
+it('reads did-less v4 snapshots and validates any present chunk or manifest author', async () => {
+  await provider().publish(await publication('legacy', data('Legacy')), writing)
+  for (const [key, value] of storage.values) {
+    const { did: _did, ...legacy } = value as Record<string, unknown>
+    storage.values.set(key, legacy)
+  }
+  expect(await provider().read(scopeA)).toMatchObject({ status: 'complete' })
+  const key = browserSyncChunkKey(scopeA, 0)
+  storage.values.set(key, { ...(storage.values.get(key) as object), did: '' })
+  expect(await provider().read(scopeA)).toMatchObject({ status: 'incomplete' })
+})
+
+it('writes a coherent author on every item and includes its overhead in chunk sizing and usage', async () => {
+  const did = 'd'.repeat(128)
+  const transport = new BrowserSyncFolderProvider({ getDeviceId: async () => did })
+  const folders = Array.from({ length: 220 }, (_, index) => data(crypto.randomUUID(), `id-${index}`).folders[0])
+  const result = await transport.publish(await publication('tagged', { ...emptyData, folders }), writing)
+  expect(storage.values.size).toBeGreaterThan(2)
+  for (const [key, value] of storage.values) {
+    expect(value).toMatchObject({ did })
+    expect(storageItemBytes(key, value)).toBeLessThanOrEqual(7000)
+  }
+  expect(result.projectedFolderBytes).toBe(calculateBrowserSyncUsage(Object.fromEntries(storage.values)).folderBytes)
+  storage.values.set(browserSyncChunkKey(scopeA, 0), { ...(storage.values.get(browserSyncChunkKey(scopeA, 0)) as object), did: 'foreign' })
+  expect(await transport.read(scopeA)).toMatchObject({ status: 'incomplete' })
+})
+
+it('retries installation identity loading after a failed local read', async () => {
+  vi.resetModules()
+  vi.mocked(browser.storage.local.get).mockRejectedValueOnce(new Error('local read failed'))
+  const { runtimeFolderDeviceIdProvider } = await import('@/services/folder-data/device-id')
+  await expect(runtimeFolderDeviceIdProvider.getDeviceId()).rejects.toThrow('local read failed')
+  expect(await runtimeFolderDeviceIdProvider.getDeviceId()).toBe('test-device')
+  const count = vi.mocked(browser.storage.local.get).mock.calls.length
+  expect(await runtimeFolderDeviceIdProvider.getDeviceId()).toBe('test-device')
+  expect(browser.storage.local.get).toHaveBeenCalledTimes(count)
+})

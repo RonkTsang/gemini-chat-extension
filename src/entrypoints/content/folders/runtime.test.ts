@@ -3,12 +3,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const state = vi.hoisted(() => {
   const identity: { status: 'available'; identity: GeminiUserIdentity } = { status: 'available' as const, identity: { email: 'user@example.com', accountScopeId: 'account-scope-0001', source: 'observed' as const, resolvedAt: '2026-01-01T00:00:00.000Z' } }
-  const projection = { folders: [{ id: 'folder-1' }], memberships: [], chatReferences: [], settings: { accountScopeId: identity.identity.accountScopeId, enabled: true, hideOrganizedChats: false, collapsedFolderIds: [], updatedAt: '2026-01-01T00:00:00.000Z', settingsVersion: '0000000000000:000000:default', settingsPending: false } }
-  return { identity, projection, request: vi.fn(), getProjection: vi.fn(), getSyncStatus: vi.fn(), getChatPage: vi.fn(), renameChat: vi.fn(), deleteNative: vi.fn(), confirmEmail: vi.fn(), identityListener: undefined as ((identity: { status: 'available'; identity: GeminiUserIdentity }) => void) | undefined,
+  const projection = { dataRevision: 'revision-1', folders: [{ id: 'folder-1' }], memberships: [], chatReferences: [], settings: { accountScopeId: identity.identity.accountScopeId, enabled: true, hideOrganizedChats: false, collapsedFolderIds: [], updatedAt: '2026-01-01T00:00:00.000Z', settingsVersion: '0000000000000:000000:default', settingsPending: false } }
+  return { identity, projection, request: vi.fn(), getProjection: vi.fn(), getChangedProjection: vi.fn(), getSyncStatus: vi.fn(), getChatPage: vi.fn(), renameChat: vi.fn(), deleteNative: vi.fn(), confirmEmail: vi.fn(), identityListener: undefined as ((identity: { status: 'available'; identity: GeminiUserIdentity }) => void) | undefined,
     messageListener: undefined as ((message: unknown) => void) | undefined }
 })
 
-vi.mock('./client', () => ({ folderBackgroundClient: { request: state.request, getProjection: state.getProjection, getSyncStatus: state.getSyncStatus, getChatPage: state.getChatPage } }))
+vi.mock('./client', () => ({ folderBackgroundClient: { request: state.request, getProjection: state.getProjection, getChangedProjection: state.getChangedProjection, getSyncStatus: state.getSyncStatus, getChatPage: state.getChatPage } }))
 vi.mock('@/services/gemini-identity', () => ({ geminiIdentityService: {
   getCurrent: () => state.identity,
   subscribe: (listener: (identity: typeof state.identity) => void) => { state.identityListener = listener; listener(state.identity); return () => { state.identityListener = undefined } },
@@ -24,6 +24,16 @@ vi.mock('./native-chat-delete', () => ({ deleteGeminiChat: state.deleteNative })
 vi.mock('@/utils/i18n', () => ({ tt: (_key: string, fallback: string) => fallback }))
 
 import { FolderRuntime } from './runtime'
+import type { FolderChange } from '@/domain/folder/changes'
+import type { ChatReferenceRow, FolderProjection, FolderSettingsRow } from '@/domain/folder/types'
+
+beforeEach(() => {
+  state.getChangedProjection.mockReset().mockImplementation(async (previous: FolderProjection, change: FolderChange, _source, returned?: { settings?: FolderSettingsRow; reference?: ChatReferenceRow }) => ({
+    ...previous, dataRevision: change.baseRevision === change.dataRevision ? previous.dataRevision : change.dataRevision,
+    settings: returned?.settings ?? previous.settings,
+    chatReferences: returned?.reference ? [...previous.chatReferences.filter((row) => row.chatId !== returned.reference!.chatId), returned.reference] : previous.chatReferences,
+  }))
+})
 
 describe('FolderRuntime background boundary', () => {
   beforeEach(() => {
@@ -118,7 +128,7 @@ describe('FolderRuntime background boundary', () => {
     const runtime = new FolderRuntime()
     await runtime.start()
     expect(state.request).toHaveBeenCalledWith('account-scope-0001', 'manual-confirmed', 'activityHint', {})
-    expect(state.getProjection).toHaveBeenCalledWith('account-scope-0001', 'manual-confirmed', undefined)
+    expect(state.getProjection).toHaveBeenCalledWith('account-scope-0001', 'manual-confirmed', undefined, expect.any(String))
     state.request.mockResolvedValue({ data: { mode: 'browser-sync', state: 'accepted-by-browser-storage', currentUsageBytes: 10 }, dataRevision: 'revision-1' })
     await runtime.measureBrowserSyncUsage()
     expect(runtime.getSnapshot().syncState?.currentUsageBytes).toBe(10)
@@ -210,7 +220,7 @@ describe('FolderRuntime background boundary', () => {
     await runtime.start()
     state.request.mockResolvedValueOnce({ data: { id: 'membership-1', folderId: 'folder-1', chatId: 'chat-1' }, dataRevision: 'revision-2' })
     await runtime.addMembership('folder-1', 'chat-1', 'A chat')
-    expect(state.request).toHaveBeenCalledWith('account-scope-0001', 'observed', 'addMembership', { folderId: 'folder-1', chatId: 'chat-1', cachedTitle: 'A chat' })
+    expect(state.request).toHaveBeenCalledWith('account-scope-0001', 'observed', 'addMembership', { folderId: 'folder-1', chatId: 'chat-1', cachedTitle: 'A chat' }, 'trace')
     runtime.stop()
   })
 
@@ -224,7 +234,7 @@ describe('FolderRuntime background boundary', () => {
     await runtime.loadMoreChats('folder-1')
     expect(state.getChatPage).toHaveBeenCalledExactlyOnceWith('account-scope-0001', 'observed', 'folder-1', 'cursor-1')
     expect(runtime.getSnapshot().loadingChatFolderIds).toEqual(['folder-1'])
-    resolvePage({ memberships: [{ id: 'member-1', folderId: 'folder-1', chatId: 'chat-1' }], chatReferences: [{ chatId: 'chat-1', cachedTitle: 'Chat' }] })
+    resolvePage({ dataRevision: 'revision-1', memberships: [{ id: 'member-1', folderId: 'folder-1', chatId: 'chat-1' }], chatReferences: [{ chatId: 'chat-1', cachedTitle: 'Chat' }] })
     await pending
     expect(runtime.getSnapshot().projection?.memberships).toHaveLength(1)
     expect(runtime.getSnapshot().projection?.chatCursors?.['folder-1']).toBeUndefined()
@@ -270,7 +280,7 @@ describe('FolderRuntime background boundary', () => {
     })
     const previousProjection = runtime.getSnapshot().projection
     await runtime.setFolderCollapsed('folder-1', true)
-    expect(state.getProjection).toHaveBeenLastCalledWith('account-scope-0001', 'observed', previousProjection)
+    expect(state.getProjection).toHaveBeenLastCalledWith('account-scope-0001', 'observed', previousProjection, expect.any(String))
     expect(runtime.getSnapshot().projection?.settings.collapsedFolderIds).toEqual(['folder-1'])
     expect(runtime.getSnapshot().projection?.memberships).toEqual([membership])
     expect(runtime.getSnapshot().projection?.chatReferences).toEqual([reference])
@@ -372,6 +382,7 @@ describe('Folder chat rename', () => {
     state.getSyncStatus.mockReset().mockResolvedValue({ mode: 'browser-sync', state: 'accepted-by-browser-storage' })
     state.request.mockReset().mockImplementation(async (_scope, _source, method) => ({
       data: method === 'updateChatTitle' ? reference : undefined, dataRevision: 'revision-2',
+      ...(method === 'updateChatTitle' ? { change: { accountScopeId: 'account-scope-0001', requestId: 'rename-1', baseRevision: 'revision-1', dataRevision: 'revision-2', affected: { chatIds: [chatId] } } } : {}),
     }))
     state.renameChat.mockReset().mockResolvedValue({
       ok: true, data: { accepted: true, conversationId: `c_${chatId}`, title: 'New title' },
@@ -384,7 +395,7 @@ describe('Folder chat rename', () => {
     runtime.openChatMenu('folder-1', chatId, 'Old title', document.createElement('button'))
     runtime.openRenameChatDialog('folder-1', chatId, 'Old title')
     expect(runtime.getSnapshot().menu).toBeUndefined()
-    expect(runtime.getSnapshot().dialog).toEqual({ kind: 'rename-chat', folderId: 'folder-1', chatId, chatTitle: 'Old title' })
+    expect(runtime.getSnapshot().dialog).toEqual({ kind: 'rename-chat', folderId: 'folder-1', chatId, chatTitle: 'Old title', expectedRevision: 'revision-1' })
     runtime.stop()
   })
 
@@ -394,7 +405,7 @@ describe('Folder chat rename', () => {
     runtime.openRenameChatDialog('folder-1', chatId, 'Old title')
     const projection = runtime.getSnapshot().projection!
     state.renameChat.mockImplementation(async () => {
-      expect(state.request).toHaveBeenCalledWith('account-scope-0001', 'observed', 'updateChatTitle', { chatId, title: 'New title' })
+      expect(state.request).toHaveBeenCalledWith('account-scope-0001', 'observed', 'updateChatTitle', { chatId, title: 'New title', expectedRevision: 'revision-1' })
       expect(runtime.getSnapshot().projection?.chatReferences).toEqual([reference])
       return { ok: true, data: { accepted: true, conversationId: `c_${chatId}`, title: 'New title' } }
     })
@@ -454,4 +465,144 @@ it('preserves the same-account projection and open draft when refreshing a mixed
   expect(runtime.getSnapshot().projection).toBe(before.projection)
   expect(runtime.getSnapshot().dialog).toBe(before.dialog)
   runtime.stop()
+})
+
+describe('Folder scoped invalidation races', () => {
+  const change = (requestId: string, affected: FolderChange['affected'], baseRevision = 'revision-1', dataRevision = 'revision-2'): FolderChange => ({
+    accountScopeId: 'account-scope-0001', requestId, baseRevision, dataRevision, affected,
+  })
+  const broadcast = (value: FolderChange) => state.messageListener?.({ type: 'folders:data-changed', ...value })
+  beforeEach(() => {
+    window.history.replaceState({}, '', '/app')
+    state.identity.identity.source = 'observed'
+    state.getProjection.mockReset().mockResolvedValue(state.projection)
+    state.getSyncStatus.mockReset().mockResolvedValue({ mode: 'browser-sync', state: 'accepted-by-browser-storage' })
+    state.getChatPage.mockReset()
+    state.request.mockReset().mockResolvedValue({ data: undefined, dataRevision: 'revision-1' })
+  })
+
+  it('applies successful collapsed settings, preserves failure state, and does not deduplicate independent same-revision settings events', async () => {
+    const runtime = new FolderRuntime(); await runtime.start()
+    const before = runtime.getSnapshot().projection!
+    const local = change('collapse', { settings: true }, 'revision-1', 'revision-1')
+    state.request.mockResolvedValueOnce({ data: { ...before.settings, collapsedFolderIds: ['folder-1'] }, dataRevision: 'revision-1', change: local })
+    await runtime.setFolderCollapsed('folder-1', true)
+    expect(runtime.getSnapshot().projection?.settings.collapsedFolderIds).toEqual(['folder-1'])
+    expect(state.getProjection).toHaveBeenCalledTimes(1)
+    const saved = runtime.getSnapshot().projection
+    state.request.mockRejectedValueOnce(new Error('Settings failed'))
+    await expect(runtime.setFolderCollapsed('folder-1', false)).rejects.toThrow('Settings failed')
+    expect(runtime.getSnapshot().projection).toBe(saved)
+    broadcast(local)
+    expect(state.getChangedProjection).toHaveBeenCalledTimes(1)
+    broadcast(change('other-tab-collapse', { settings: true }, 'revision-1', 'revision-1'))
+    await vi.waitFor(() => expect(state.getChangedProjection).toHaveBeenCalledTimes(2))
+    expect(state.getProjection).toHaveBeenCalledTimes(1)
+    runtime.stop()
+  })
+
+  it('merges duplicate broadcasts before the command response and does not refresh twice', async () => {
+    const runtime = new FolderRuntime(); await runtime.start()
+    let respond!: (value: unknown) => void
+    let finish!: (value: unknown) => void
+    state.request.mockImplementationOnce(() => new Promise((resolve) => { respond = resolve }))
+    state.getChangedProjection.mockImplementationOnce(() => new Promise((resolve) => { finish = resolve }))
+    const pending = runtime.updateFolder('folder-1', { name: 'New name' })
+    const changed = change('rename-folder', { folders: true })
+    broadcast(changed); broadcast(changed)
+    expect(state.getChangedProjection).toHaveBeenCalledTimes(1)
+    respond({ data: { id: 'folder-1' }, dataRevision: 'revision-2', change: changed })
+    finish({ ...state.projection, dataRevision: 'revision-2' })
+    await pending
+    expect(state.getChangedProjection).toHaveBeenCalledTimes(1)
+    expect(state.getProjection).toHaveBeenCalledTimes(1)
+    expect(runtime.getSnapshot().projection?.dataRevision).toBe('revision-2')
+    runtime.stop()
+  })
+
+  it('coalesces different concurrent edits into one complete trailing refresh', async () => {
+    const runtime = new FolderRuntime(); await runtime.start()
+    let finish!: (value: unknown) => void
+    state.getChangedProjection.mockImplementationOnce(() => new Promise((resolve) => { finish = resolve }))
+    broadcast(change('first', { folderIds: ['folder-1'] }))
+    broadcast(change('second', { folderIds: ['folder-2'] }, 'revision-2', 'revision-3'))
+    broadcast(change('second', { folderIds: ['folder-2'] }, 'revision-2', 'revision-3'))
+    state.getProjection.mockResolvedValueOnce({ ...state.projection, dataRevision: 'revision-3' })
+    finish({ ...state.projection, dataRevision: 'revision-2' })
+    await vi.waitFor(() => expect(runtime.getSnapshot().projection?.dataRevision).toBe('revision-3'))
+    expect(state.getProjection).toHaveBeenCalledTimes(2)
+    runtime.stop()
+  })
+
+  it.each(['gap', 'unknown', 'replacement', 'stale-query'])('falls back to a complete projection for %s without marking unrelated old data as current', async (kind) => {
+    const runtime = new FolderRuntime(); await runtime.start()
+    const before = runtime.getSnapshot().projection
+    let finish!: (value: unknown) => void
+    state.getProjection.mockImplementationOnce(() => new Promise((resolve) => { finish = resolve }))
+    if (kind === 'stale-query') state.getChangedProjection.mockRejectedValueOnce(new Error('STALE_REVISION'))
+    if (kind === 'unknown') state.messageListener?.({ type: 'folders:data-changed', accountScopeId: 'account-scope-0001', dataRevision: 'revision-3', affected: {} })
+    else broadcast(change('change', kind === 'replacement' ? { all: true } : { folderIds: ['folder-1'] }, kind === 'gap' ? 'missing' : 'revision-1'))
+    await vi.waitFor(() => expect(finish).toBeDefined())
+    expect(runtime.getSnapshot().projection).toBe(before)
+    finish({ ...state.projection, dataRevision: 'revision-3' })
+    await vi.waitFor(() => expect(runtime.getSnapshot().projection?.dataRevision).toBe('revision-3'))
+    runtime.stop()
+  })
+
+  it('discards an old page when a scoped refresh starts and rebuilds its cursor', async () => {
+    state.getProjection.mockResolvedValueOnce({ ...state.projection, chatCursors: { 'folder-1': 'old-cursor' } })
+    const runtime = new FolderRuntime(); await runtime.start()
+    let finish!: (value: unknown) => void
+    state.getChatPage.mockImplementationOnce(() => new Promise((resolve) => { finish = resolve }))
+    const pending = runtime.loadMoreChats('folder-1')
+    broadcast(change('pin', { folderIds: ['folder-1'] }))
+    await vi.waitFor(() => expect(runtime.getSnapshot().projection?.dataRevision).toBe('revision-2'))
+    finish({ dataRevision: 'revision-1', memberships: [{ id: 'stale' }], chatReferences: [] })
+    await pending
+    expect(runtime.getSnapshot().projection?.memberships).toEqual([])
+    runtime.stop()
+  })
+
+  it('does not apply an old settings response after leaving and returning to the same account', async () => {
+    const runtime = new FolderRuntime(); await runtime.start()
+    let finish!: (value: unknown) => void
+    state.request.mockImplementationOnce(() => new Promise((resolve) => { finish = resolve }))
+    const pending = runtime.setFolderCollapsed('folder-1', true)
+    state.identityListener?.({ ...state.identity, identity: { ...state.identity.identity, accountScopeId: 'account-scope-0002' } })
+    await vi.waitFor(() => expect(state.getSyncStatus).toHaveBeenCalledTimes(2))
+    state.identityListener?.(state.identity)
+    await vi.waitFor(() => expect(state.getSyncStatus).toHaveBeenCalledTimes(3))
+    finish({ data: { ...state.projection.settings, collapsedFolderIds: ['folder-1'] }, dataRevision: 'revision-1', change: change('old-collapse', { settings: true }, 'revision-1', 'revision-1') })
+    await pending
+    expect(runtime.getSnapshot().projection?.settings.collapsedFolderIds).toEqual([])
+    expect(state.getChangedProjection).not.toHaveBeenCalled()
+    runtime.stop()
+  })
+
+  it('recovers missed organization notifications when status reports a newer revision', async () => {
+    const runtime = new FolderRuntime(); await runtime.start()
+    state.getProjection.mockResolvedValueOnce({ ...state.projection, dataRevision: 'revision-3' })
+    state.getSyncStatus.mockResolvedValue({ mode: 'browser-sync', state: 'accepted-by-browser-storage', localRevision: 'revision-3' })
+    broadcast(change('pin', { folderIds: ['folder-1'] }))
+    await vi.waitFor(() => expect(runtime.getSnapshot().projection?.dataRevision).toBe('revision-3'))
+    expect(state.getProjection).toHaveBeenCalledTimes(2)
+    expect(state.getChangedProjection).toHaveBeenCalledTimes(1)
+    runtime.stop()
+  })
+
+  it('rereads settings after out-of-order local write responses instead of applying the old returned value', async () => {
+    const runtime = new FolderRuntime(); await runtime.start()
+    let first!: (value: unknown) => void
+    state.request.mockImplementationOnce(() => new Promise((resolve) => { first = resolve }))
+    const old = runtime.setFolderCollapsed('folder-1', true)
+    const latestSettings = { ...state.projection.settings, collapsedFolderIds: [] }
+    state.request.mockResolvedValueOnce({ data: latestSettings, change: change('second-collapse', { settings: true }, 'revision-1', 'revision-1') })
+    await runtime.setFolderCollapsed('folder-1', false)
+    first({ data: { ...latestSettings, collapsedFolderIds: ['folder-1'] }, change: change('first-collapse', { settings: true }, 'revision-1', 'revision-1') })
+    await old
+    expect(state.getChangedProjection.mock.calls.at(-1)?.[3]).toBeUndefined()
+    expect(runtime.getSnapshot().projection?.settings.collapsedFolderIds).toEqual([])
+    expect(state.getProjection).toHaveBeenCalledTimes(1)
+    runtime.stop()
+  })
 })

@@ -48,7 +48,7 @@ it('discovers and restores multiple accounts on background initialization withou
 })
 
 it('waits quietly for a chunk-only replica and restores it when the manifest arrives', async () => {
-  await new BrowserSyncFolderProvider().publish(await publication('arriving', data('Arrived')), async () => undefined)
+  await new BrowserSyncFolderProvider({ getDeviceId: async () => 'foreign-device' }).publish(await publication('arriving', data('Arrived')), async () => undefined)
   const key = browserSyncManifestKey(scopeA)
   const manifest = storage.values.get(key)
   storage.values.delete(key)

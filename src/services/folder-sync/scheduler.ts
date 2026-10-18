@@ -1,4 +1,5 @@
-import { folderSyncKeyScope } from '@/services/folder-sync/providers/browser-sync'
+import { browserSyncChangeAuthor, folderSyncKeyScope } from '@/services/folder-sync/providers/browser-sync'
+import { runtimeFolderDeviceIdProvider, type FolderDeviceIdProvider } from '@/services/folder-data/device-id'
 import { browser } from 'wxt/browser'
 
 import { logDevError, logDevEvent } from '@/utils/devLogger'
@@ -38,7 +39,8 @@ export class FolderSyncScheduler {
   // on it: writes, alarms, and manifest changes all bypass this cache.
   private readonly lastActivityHintAt = new Map<string, number>()
 
-  constructor(private readonly coordinator = new FolderSyncCoordinator()) {}
+  constructor(private readonly coordinator = new FolderSyncCoordinator(),
+    private readonly deviceIdProvider: FolderDeviceIdProvider = runtimeFolderDeviceIdProvider) {}
 
   requestRun(accountScopeId: string, reason: FolderSyncRunReason, traceId?: string): void {
     if (reason === 'content-activity-hint' && !this.acceptActivityHint(accountScopeId)) return
@@ -68,12 +70,29 @@ export class FolderSyncScheduler {
   }
 
   requestStorageChanges(changes: Record<string, unknown>, traceId?: string): void {
-    const scopes = new Set<string>()
-    for (const key of Object.keys(changes)) {
+    // Retain only bounded metadata while identity loads, never notification payloads.
+    const authors = new Map<string, string | undefined>()
+    for (const [key, change] of Object.entries(changes)) {
       const scope = folderSyncKeyScope(key)
-      if (scope) scopes.add(scope)
+      if (!scope) continue
+      const did = browserSyncChangeAuthor(key, change)
+      authors.set(scope, authors.has(scope) && authors.get(scope) !== did ? undefined : did)
     }
-    scopes.forEach((scope) => this.requestRun(scope, 'browser-sync-area-changed', traceId))
+    const candidates: Array<[string, string]> = []
+    for (const [scope, did] of authors) {
+      if (did === undefined) this.requestRun(scope, 'browser-sync-area-changed', traceId)
+      else candidates.push([scope, did])
+    }
+    if (!candidates.length) return
+    void Promise.resolve().then(() => this.deviceIdProvider.getDeviceId()).then((localDid) => {
+      for (const [scope, did] of candidates) {
+        if (did === localDid) logDevEvent('debug', LOG_LABEL, 'browser-sync.storage.own-echo-skipped', { accountScopeId: scope, traceId })
+        else this.requestRun(scope, 'browser-sync-area-changed', traceId)
+      }
+    }).catch(() => {
+      // Identity is an optimization: failure must preserve the ordinary full check.
+      for (const [scope] of candidates) this.requestRun(scope, 'browser-sync-area-changed', traceId)
+    })
   }
 
   private startRun(accountScopeId: string, reason: FolderSyncRunReason, traceId?: string): void {

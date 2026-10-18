@@ -40,7 +40,7 @@ export class FolderSyncCoordinator {
     const state = await this.repository.getSyncState(accountScopeId)
     await publishFolderInvalidation({ type: 'folders:data-changed', accountScopeId,
       dataRevision: state?.localDataRevision ?? 'uninitialized',
-      affected: dataChanged ? { settings: true, syncStatus: true } : { syncStatus: true } })
+      affected: dataChanged ? { all: true, settings: true, syncStatus: true } : { syncStatus: true } })
   }
 
   private recover(accountScopeId: string): void {

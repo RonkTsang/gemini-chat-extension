@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 import { chatReferenceRowSchema, folderExportPayloadSchema, folderSettingsPatchSchema, folderMembershipRowSchema, folderRowSchema } from './schemas'
 import { BROWSER_SYNC_CAPACITY_NOTICE_THRESHOLD_PERCENT } from './types'
+import { folderChangeSchema, type FolderChange } from './changes'
 
 export const FOLDER_RPC_NAMESPACE = 'folders' as const
 export const FOLDER_RPC_PROTOCOL_VERSION = 1 as const
@@ -20,7 +21,7 @@ const folderInputSchema = z.object({
 
 export const folderRpcMethodSchema = z.enum([
   'getSidebarState', 'listFolders', 'listFolderChats', 'getPickerOptions',
-  'resolveChatMemberships', 'getFolderDeleteImpact', 'getSettings', 'getSyncStatus',
+  'resolveChatMemberships', 'getFolderDeleteImpact', 'getSettings', 'getSyncStatus', 'getFolderSummaries', 'getChatReferences',
   'listSnapshots', 'getRestoreImpact', 'createFolder', 'createFolderAndAddChat',
   'updateFolder', 'moveFolder', 'deleteFolder', 'addMembership', 'moveMembership',
   'setMembershipPinned', 'removeMembership', 'removeChatAfterGeminiDelete', 'updateChatTitle', 'updateSettings', 'createSnapshot',
@@ -35,6 +36,7 @@ export const folderRpcEnvelopeSchema = z.object({
   namespace: z.literal(FOLDER_RPC_NAMESPACE),
   protocolVersion: z.literal(FOLDER_RPC_PROTOCOL_VERSION),
   requestId: requestIdSchema,
+  traceId: requestIdSchema.optional(),
   method: folderRpcMethodSchema,
   accountScopeId: accountScopeIdSchema,
   identitySource: z.enum(['observed', 'manual-confirmed']),
@@ -52,7 +54,7 @@ export const folderRpcErrorCodeSchema = z.enum([
 export type FolderRpcErrorCode = z.infer<typeof folderRpcErrorCodeSchema>
 
 export const folderRpcResponseSchema = z.discriminatedUnion('ok', [
-  z.object({ ok: z.literal(true), requestId: requestIdSchema, dataRevision: z.string().min(1), data: z.unknown() }),
+  z.object({ ok: z.literal(true), requestId: requestIdSchema, dataRevision: z.string().min(1), data: z.unknown(), change: folderChangeSchema.optional() }),
   z.object({ ok: z.literal(false), requestId: requestIdSchema, error: z.object({
     code: folderRpcErrorCodeSchema,
     message: z.string().min(1).max(240),
@@ -61,7 +63,7 @@ export const folderRpcResponseSchema = z.discriminatedUnion('ok', [
   }) }),
 ])
 export type FolderRpcResponse<T = unknown> =
-  | { ok: true; requestId: string; dataRevision: string; data: T }
+  | { ok: true; requestId: string; dataRevision: string; data: T; change?: FolderChange }
   | { ok: false; requestId: string; error: { code: FolderRpcErrorCode; message: string; retryable: boolean; currentRevision?: string } }
 
 export const folderRpcParams = {
@@ -73,6 +75,8 @@ export const folderRpcParams = {
   getFolderDeleteImpact: z.object({ folderId: z.string().min(1) }),
   getSettings: z.object({}),
   getSyncStatus: z.object({}),
+  getFolderSummaries: z.object({ folderIds: z.array(z.string().min(1)).min(1).max(1000) }),
+  getChatReferences: z.object({ chatIds: z.array(z.string().min(1)).min(1).max(1000) }),
   getLocalStorageStatus: z.object({}),
   prepareChatDeletion: z.object({}),
   releaseSnapshot: z.object({ snapshotId: z.string().min(1), protectionToken: z.string().min(1) }),

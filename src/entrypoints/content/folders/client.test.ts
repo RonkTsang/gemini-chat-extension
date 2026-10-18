@@ -124,3 +124,38 @@ it('recovers a projection on the bounded retry after pagination changed revision
   expect(projection.folders).toHaveLength(1)
   expect(starts).toBe(2)
 })
+
+it('correlates projection RPCs and serializes response bytes only with explicit diagnostics', async () => {
+  const debug = vi.spyOn(console, 'debug').mockImplementation(() => undefined)
+  const toJSON = vi.fn(() => ({ cachedTitle: 'PRIVATE-TITLE', payload: 'PRIVATE-PAYLOAD' }))
+  transport.request.mockImplementation(async () => response({ toJSON }))
+  const client = new FolderBackgroundClient()
+  try {
+    vi.stubEnv('VITE_FOLDER_DIAGNOSTIC_RPC_BYTES', 'false')
+    await client.request(accountScopeId, 'observed', 'getSettings', {}, 'flow-trace')
+    expect(toJSON).not.toHaveBeenCalled()
+    expect(transport.request.mock.calls.at(-1)?.[0]).toMatchObject({ traceId: 'flow-trace' })
+    vi.stubEnv('VITE_FOLDER_DIAGNOSTIC_RPC_BYTES', 'true')
+    await client.request(accountScopeId, 'observed', 'getSettings', {}, 'flow-trace')
+    expect(toJSON).toHaveBeenCalledTimes(1)
+    const reports = debug.mock.calls.map(([, value]) => JSON.parse(String(value)))
+    expect(reports.at(-1)).toMatchObject({ event: 'rpc.completed', traceId: 'flow-trace', responseBytes: expect.any(Number) })
+    expect(JSON.stringify(reports)).not.toMatch(/PRIVATE-TITLE|PRIVATE-PAYLOAD/)
+    vi.stubEnv('DEV', false)
+    const clock = vi.spyOn(performance, 'now')
+    await client.request(accountScopeId, 'observed', 'getSettings', {}, 'flow-trace')
+    expect(clock).not.toHaveBeenCalled()
+    clock.mockRestore()
+    expect(transport.request.mock.calls.at(-1)?.[0]).not.toHaveProperty('traceId')
+    expect(transport.request.mock.calls.at(-1)?.[0]).toMatchObject({ requestId: expect.any(String), method: 'getSettings' })
+    expect(toJSON).toHaveBeenCalledTimes(1)
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    try {
+      transport.request.mockImplementationOnce(async (request) => ({ ok: false, requestId: request.requestId, error: { code: 'INTERNAL_ERROR', message: 'Failed', retryable: true } }))
+      await expect(client.request(accountScopeId, 'observed', 'getSettings', {}, 'flow-trace')).rejects.toThrow('Failed')
+      expect(error).toHaveBeenCalledWith('[Folders][rpc] background rejected request', expect.objectContaining({
+        requestId: transport.request.mock.calls.at(-1)?.[0].requestId, method: 'getSettings', code: 'INTERNAL_ERROR',
+      }))
+    } finally { error.mockRestore() }
+  } finally { vi.unstubAllEnvs(); debug.mockRestore() }
+})

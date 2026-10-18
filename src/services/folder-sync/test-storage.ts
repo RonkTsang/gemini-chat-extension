@@ -79,5 +79,5 @@ export async function resetStorage(): Promise<void> {
   storage.failAfterItems = undefined; storage.onSet = undefined; storage.onChanged = undefined
   storage.startup = undefined
   await Promise.all([db.folders, db.folder_memberships, db.folder_chat_references, db.folder_settings, db.folder_sync_states,
-    db.folder_sync_publications, db.folder_sync_conflicts, db.folder_snapshots, db.folder_recovery_states, db.folder_coordinator_leases].map((table) => table.clear()))
+    db.folder_organization_summaries, db.folder_sync_publications, db.folder_sync_conflicts, db.folder_snapshots, db.folder_recovery_states, db.folder_coordinator_leases].map((table) => table.clear()))
 }

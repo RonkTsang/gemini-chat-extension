@@ -1,10 +1,13 @@
 import { browser } from 'wxt/browser'
+import type { FolderAffected } from '@/domain/folder/changes'
 
 export interface FolderDataChangedMessage {
   type: 'folders:data-changed'
   accountScopeId: string
   dataRevision: string
-  affected: { folderIds?: string[]; chatIds?: string[]; settings?: boolean; syncStatus?: boolean; recoveryStatus?: boolean }
+  baseRevision?: string
+  requestId?: string
+  affected: FolderAffected
 }
 
 /** Broadcast is best-effort; active content scripts re-read on focus/startup. */

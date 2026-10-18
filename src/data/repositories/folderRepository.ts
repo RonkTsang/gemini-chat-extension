@@ -1,5 +1,11 @@
+import Dexie from 'dexie'
+import { indexFolder, indexMembership, folderNameKey, membershipDisplayOrderKey } from '@/domain/folder/local-indexes'
+import { changeFolderChatCount, hasValidChatMembership, rebuildFolderSummary } from '../folder-summary'
+import { indexedOrderKey, orderRange } from './folder-order'
+import { beginFolderAccess } from '../folder-access'
 import { nanoid } from 'nanoid'
-import { browser } from 'wxt/browser'
+import { runtimeFolderDeviceIdProvider, type FolderDeviceIdProvider } from '@/services/folder-data/device-id'
+export type { FolderDeviceIdProvider } from '@/services/folder-data/device-id'
 
 import { db } from '../db'
 import { runFolderMutation, markRecoveryPending } from './folder-mutation'
@@ -12,7 +18,7 @@ import {
   normalizeFolderColorValue,
 } from '@/domain/folder/appearance'
 import type { FolderUpdateInput } from '@/domain/folder/commands'
-import { compareAscii, keyBetween, rebalanceOrderKeys } from '@/domain/folder/order-key'
+import { compareAscii, keyBetween } from '@/domain/folder/order-key'
 import { compareMembershipOrder } from '@/domain/folder/membership-order'
 import { parseFolderAccountData, parseFolderExportPayload, folderSyncSettingsSchema, folderSettingsPatchSchema, parseFolderSyncData, parseFolderOrganizationData } from '@/domain/folder/schemas'
 import {
@@ -39,11 +45,6 @@ import {
 } from '@/domain/folder/types'
 import { fromFolderSyncData, stableStringify, toFolderSyncData } from '@/services/folder-sync/codec'
 import { decodeLzStringBase64, encodeLzStringBase64, fromFolderOrganizationData, sha256Hex, toFolderOrganizationData } from '@/services/folder-data/codec'
-import {
-  createFolderTraceId,
-  logFolderTrace,
-  logFolderTraceError,
-} from '@/utils/folderTrace'
 import { logDevError } from '@/utils/devLogger'
 
 import { saveFolderSnapshot, recordRecoveryFailure } from '@/services/folder-recovery/snapshots'
@@ -54,7 +55,6 @@ import { classifyRecoveryFailure, FolderRecoveryError, newestSnapshots, SNAPSHOT
 // is merely between the manifest and chunk writes until that recovery window
 // has elapsed.
 const INCOMPLETE_REPLICA_WARNING_GRACE_MS = 60_000
-const FOLDER_DEVICE_ID_STORAGE_KEY = 'gpk.folders.device-id.v1'
 
 function currentUsagePatch(state: FolderSyncStateRow, usage: BrowserSyncUsage): Partial<FolderSyncStateRow> {
   return {
@@ -68,37 +68,11 @@ function currentUsagePatch(state: FolderSyncStateRow, usage: BrowserSyncUsage): 
       : state.browserSyncLastDismissedUsagePercent,
   }
 }
-let runtimeDeviceIdReady: Promise<string> | undefined
 
 export class FolderCoordinatorLeaseBusyError extends Error {
   constructor(readonly retryAt: string) {
     super('Folder sync coordinator lease is held by another context')
   }
-}
-
-export interface FolderDeviceIdProvider {
-  getDeviceId(): Promise<string>
-}
-
-const runtimeFolderDeviceIdProvider: FolderDeviceIdProvider = {
-  getDeviceId(): Promise<string> {
-    runtimeDeviceIdReady ??= loadRuntimeFolderDeviceId()
-    return runtimeDeviceIdReady
-  },
-}
-
-async function loadRuntimeFolderDeviceId(): Promise<string> {
-  // Repository execution is background-only. Calling runtime.sendMessage
-  // from a service worker back to itself is not a reliable self-RPC and can
-  // fail with “Receiving end does not exist”; storage.local is the actual
-  // authority for this installation-scoped identifier.
-  const existing = (await browser.storage.local.get(FOLDER_DEVICE_ID_STORAGE_KEY))[FOLDER_DEVICE_ID_STORAGE_KEY]
-  if (typeof existing === 'string' && existing.trim()) return existing
-  const candidate = `folder-device-${nanoid()}`
-  await browser.storage.local.set({ [FOLDER_DEVICE_ID_STORAGE_KEY]: candidate })
-  const persisted = (await browser.storage.local.get(FOLDER_DEVICE_ID_STORAGE_KEY))[FOLDER_DEVICE_ID_STORAGE_KEY]
-  if (typeof persisted !== 'string' || !persisted.trim()) throw new Error('Folder installation device id is unavailable')
-  return persisted
 }
 
 export interface FolderPosition {
@@ -119,8 +93,6 @@ export interface FolderMembershipInput extends FolderPosition {
   folderId: string
   chatId: string
   cachedTitle?: string
-  /** Correlates user-action diagnostics only; never persisted or synchronized. */
-  traceId?: string
 }
 
 export interface FolderSettingsPatch {
@@ -211,10 +183,6 @@ function requireFolderColorValue(value: string): FolderColorValue {
   return normalized
 }
 
-function folderNameKey(value: string): string {
-  return value.normalize('NFKC').trim().toLocaleLowerCase('en-US')
-}
-
 function normalizeTitle(value: string): string {
   const normalized = value.normalize('NFKC').trim()
   if (normalized.length > 500) throw new Error('Chat title is too long')
@@ -223,27 +191,6 @@ function normalizeTitle(value: string): string {
 
 function sortByOrder<T extends { id: string; orderKey: string }>(rows: T[]): T[] {
   return rows.sort((left, right) => compareAscii(left.orderKey, right.orderKey) || compareAscii(left.id, right.id))
-}
-
-function resolveOrderKey<T extends { id: string; orderKey: string }>(
-  siblings: T[],
-  position?: FolderPosition,
-): string {
-  const ordered = sortByOrder([...siblings])
-  const beforeId = position?.beforeId
-  const afterId = position?.afterId
-  if (beforeId && afterId && beforeId === afterId) throw new Error('Position bounds must be distinct')
-  if (!beforeId && !afterId) return keyBetween(undefined, ordered[0]?.orderKey)
-
-  const beforeIndex = beforeId === undefined ? -1 : ordered.findIndex((row) => row.id === beforeId)
-  const afterIndex = afterId === undefined ? -1 : ordered.findIndex((row) => row.id === afterId)
-  if (beforeId && beforeIndex < 0) throw new Error('Position beforeId is unavailable')
-  if (afterId && afterIndex < 0) throw new Error('Position afterId is unavailable')
-  if (beforeId && afterId && afterIndex + 1 !== beforeIndex) {
-    throw new Error('Position bounds are no longer adjacent')
-  }
-  if (beforeId) return keyBetween(ordered[beforeIndex - 1]?.orderKey, ordered[beforeIndex].orderKey)
-  return keyBetween(ordered[afterIndex].orderKey, ordered[afterIndex + 1]?.orderKey)
 }
 
 export class FolderRepositoryImpl implements FolderRepository {
@@ -300,11 +247,34 @@ export class FolderRepositoryImpl implements FolderRepository {
     })
   }
 
-  private async pruneChatReferences(accountScopeId: string): Promise<void> {
-    const memberships = await db.folder_memberships.where('accountScopeId').equals(accountScopeId).toArray()
-    const chatIds = new Set(memberships.map((row) => row.chatId))
-    await db.folder_chat_references.where('accountScopeId').equals(accountScopeId)
-      .filter((row) => !chatIds.has(row.chatId)).delete()
+  private async pruneChatReference(accountScopeId: string, chatId: string, folderExists?: Map<string, boolean>): Promise<boolean> {
+    if (await hasValidChatMembership(Dexie.currentTransaction!, accountScopeId, chatId, folderExists)) return false
+    await db.folder_chat_references.delete([accountScopeId, chatId])
+    return true
+  }
+
+  private async changeChatCount(accountScopeId: string, delta: number): Promise<void> {
+    await changeFolderChatCount(Dexie.currentTransaction!, accountScopeId, delta)
+  }
+
+  private async assertUniqueName(accountScopeId: string, name: string, excludeId?: string): Promise<void> {
+    const ids = await db.folders.where('[accountScopeId+nameKey]').equals([accountScopeId, folderNameKey(name)]).limit(excludeId ? 2 : 1).primaryKeys()
+    if (ids.some((id) => id !== excludeId)) throw new Error('Folder name already exists')
+  }
+
+  private async subtree(accountScopeId: string, folderId: string): Promise<Array<{ id: string; depth: number }>> {
+    const result = [{ id: folderId, depth: 1 }]
+    const seen = new Set([folderId])
+    for (let index = 0; index < result.length; index += 1) {
+      const parent = result[index]
+      const ids = await db.folders.where('[accountScopeId+parentFolderId]').equals([accountScopeId, parent.id]).primaryKeys()
+      for (const id of ids) {
+        if (seen.has(id)) throw new Error('Folder tree contains a cycle')
+        seen.add(id)
+        result.push({ id, depth: parent.depth + 1 })
+      }
+    }
+    return result
   }
 
   private async ensureSyncState(accountScopeId: string, deviceId: string): Promise<FolderSyncStateRow> {
@@ -325,57 +295,29 @@ export class FolderRepositoryImpl implements FolderRepository {
   }
 
   private async resolveFolderOrderKey(
-    accountScopeId: string,
-    parentFolderId: string,
-    siblings: FolderRow[],
-    position: FolderPosition | undefined,
-    deviceId: string,
+    accountScopeId: string, parentFolderId: string, position?: FolderPosition, excludeId?: string,
   ): Promise<string> {
-    try {
-      return resolveOrderKey(siblings, position)
-    } catch (error) {
-      if (!(error instanceof Error) || !error.message.includes('space exhausted')) throw error
-      const ordered = sortByOrder([...siblings])
-      const keys = rebalanceOrderKeys(ordered.map((folder) => folder.id))
-
-      const updated = ordered.map((folder) => ({
-        ...folder,
-        orderKey: keys.get(folder.id)!,
-        updatedAt: now(),
-      }))
-      await db.folders.bulkPut(updated)
-      await this.markOrganizationChanged(accountScopeId, deviceId)
-      return resolveOrderKey(updated, position)
-    }
+    const [lower, upper] = orderRange(accountScopeId, parentFolderId)
+    return indexedOrderKey({ table: db.folders, index: '[accountScopeId+parentFolderId+orderKey+id]', lower, upper,
+      position, excludeId, key: (row) => row.orderKey,
+      accepts: (row) => row.accountScopeId === accountScopeId && row.parentFolderId === parentFolderId,
+      patch: (row, orderKey) => indexFolder({ ...row, orderKey, updatedAt: now() }) })
   }
 
   private async resolveMembershipOrderKey(
-    accountScopeId: string,
-    folderId: string,
-    siblings: FolderMembershipRow[],
-    position: FolderPosition | undefined,
-    deviceId: string,
-    pinned = false,
+    accountScopeId: string, folderId: string, position?: FolderPosition, excludeId?: string, pinned = false,
+    validatePinGroup = false,
   ): Promise<string> {
-    const orderedRows = () => siblings.map((row) => ({ ...row, orderKey: pinned ? row.pinnedOrderKey! : row.orderKey }))
-    try {
-      return resolveOrderKey(orderedRows(), position)
-    } catch (error) {
-      if (!(error instanceof Error) || !error.message.includes('space exhausted')) throw error
-      const ordered = sortByOrder(orderedRows())
-      const keys = rebalanceOrderKeys(ordered.map((membership) => membership.id))
-      const updated = siblings.map((membership) => ({
-        ...membership,
-        ...(pinned
-          ? { pinnedOrderKey: keys.get(membership.id)! }
-          : { orderKey: keys.get(membership.id)! }),
-        updatedAt: now(),
-
-      }))
-      await db.folder_memberships.bulkPut(updated)
-      await this.markOrganizationChanged(accountScopeId, deviceId)
-      return resolveOrderKey(updated.map((row) => ({ ...row, orderKey: pinned ? row.pinnedOrderKey! : row.orderKey })), position)
-    }
+    const [lower, upper] = pinned
+      ? [[accountScopeId, folderId, '0', Dexie.minKey], [accountScopeId, folderId, '1', Dexie.minKey]]
+      : orderRange(accountScopeId, folderId)
+    return indexedOrderKey({ table: db.folder_memberships,
+      index: pinned ? '[accountScopeId+folderId+displayOrderKey+id]' : '[accountScopeId+folderId+orderKey+id]',
+      lower, upper, position, excludeId, key: (row) => pinned ? row.pinnedOrderKey! : row.orderKey,
+      indexKey: pinned ? membershipDisplayOrderKey : undefined,
+      accepts: (row) => row.accountScopeId === accountScopeId && row.folderId === folderId,
+      anchorAccepts: validatePinGroup ? (row) => !!row.pinnedOrderKey === pinned : undefined,
+      patch: (row, orderKey) => indexMembership({ ...row, ...(pinned ? { pinnedOrderKey: orderKey } : { orderKey }), updatedAt: now() }) })
   }
 
   async getSettings(accountScopeId: string): Promise<FolderSettingsRow> {
@@ -396,7 +338,7 @@ export class FolderRepositoryImpl implements FolderRepository {
     await this.ensureSyncState(accountScopeId, deviceId)
     let result!: FolderSettingsRow
     let mutationEffect: 'sync-settings' | 'local-view' | undefined
-    return runFolderMutation(accountScopeId, [db.folder_settings], async () => {
+    return runFolderMutation('updateSettings', accountScopeId, [db.folder_settings], async () => {
       const prior = await this.ensureSettings(accountScopeId)
       const settings = folderSyncSettingsSchema.parse({
         enabled: patch.enabled ?? prior.enabled,
@@ -470,7 +412,7 @@ export class FolderRepositoryImpl implements FolderRepository {
     const name = normalizeFolderName(input.name)
     const parentFolderId = input.parentFolderId ?? ROOT_FOLDER_ID
     let result!: FolderRow
-    return runFolderMutation(accountScopeId, [db.folders, db.folder_sync_states], async () => {
+    return runFolderMutation('createFolder', accountScopeId, [db.folders, db.folder_sync_states], async () => {
       if (parentFolderId !== ROOT_FOLDER_ID) {
         let parent = await db.folders.get(parentFolderId)
         let depth = 1
@@ -483,11 +425,7 @@ export class FolderRepositoryImpl implements FolderRepository {
         }
         if (!parent) throw new Error('Parent folder is unavailable')
       }
-      const folders = await db.folders.where('accountScopeId').equals(accountScopeId).toArray()
-      if (folders.some((folder) => folderNameKey(folder.name) === folderNameKey(name))) {
-        throw new Error('Folder name already exists')
-      }
-      const siblings = folders.filter((folder) => folder.parentFolderId === parentFolderId)
+      await this.assertUniqueName(accountScopeId, name)
 
       const timestamp = now()
       result = {
@@ -497,10 +435,11 @@ export class FolderRepositoryImpl implements FolderRepository {
         name,
         iconKey: requireFolderIconKey(input.iconKey ?? DEFAULT_FOLDER_ICON_KEY),
         colorValue: requireFolderColorValue(input.colorValue ?? DEFAULT_FOLDER_COLOR_VALUE),
-        orderKey: await this.resolveFolderOrderKey(accountScopeId, parentFolderId, siblings, input, deviceId),
+        orderKey: await this.resolveFolderOrderKey(accountScopeId, parentFolderId, input),
         createdAt: timestamp,
         updatedAt: timestamp,
       }
+      result = indexFolder(result)
       await db.folders.put(result)
       await this.markOrganizationChanged(accountScopeId, deviceId)
       return result
@@ -515,17 +454,16 @@ export class FolderRepositoryImpl implements FolderRepository {
     const parentFolderId = input.parentFolderId ?? ROOT_FOLDER_ID
     let folder!: FolderRow
     let membership!: FolderMembershipRow
-    return runFolderMutation(accountScopeId, [db.folders, db.folder_memberships, db.folder_chat_references, db.folder_sync_states], async () => {
-      const folders = await db.folders.where('accountScopeId').equals(accountScopeId).toArray()
+    return runFolderMutation('createFolderAndAddChat', accountScopeId, [db.folders, db.folder_memberships, db.folder_chat_references, db.folder_sync_states, db.folder_organization_summaries], async () => {
       if (parentFolderId !== ROOT_FOLDER_ID) throw new Error('P0 only supports root Folders')
-      if (folders.some((row) => folderNameKey(row.name) === folderNameKey(name))) throw new Error('Folder name already exists')
+      await this.assertUniqueName(accountScopeId, name)
       const timestamp = now()
 
       folder = {
         id: nanoid(), accountScopeId, parentFolderId, name,
         iconKey: requireFolderIconKey(input.iconKey ?? DEFAULT_FOLDER_ICON_KEY),
         colorValue: requireFolderColorValue(input.colorValue ?? DEFAULT_FOLDER_COLOR_VALUE),
-        orderKey: await this.resolveFolderOrderKey(accountScopeId, parentFolderId, folders.filter((row) => row.parentFolderId === parentFolderId), input, deviceId),
+        orderKey: await this.resolveFolderOrderKey(accountScopeId, parentFolderId, input),
         createdAt: timestamp, updatedAt: timestamp,
 
       }
@@ -539,8 +477,12 @@ export class FolderRepositoryImpl implements FolderRepository {
         accountScopeId, chatId, cachedTitle: cachedTitle === undefined ? existingReference?.cachedTitle ?? '' : normalizeTitle(cachedTitle),
         createdAt: existingReference?.createdAt ?? timestamp, updatedAt: timestamp,
       }
+      folder = indexFolder(folder)
+      membership = indexMembership(membership)
       await db.folders.put(folder)
+      const alreadyOrganized = await hasValidChatMembership(Dexie.currentTransaction!, accountScopeId, chatId)
       await db.folder_memberships.put(membership)
+      if (!alreadyOrganized) await this.changeChatCount(accountScopeId, 1)
       await db.folder_chat_references.put(reference)
       await this.markOrganizationChanged(accountScopeId, deviceId)
       return { folder, membership }
@@ -551,17 +493,12 @@ export class FolderRepositoryImpl implements FolderRepository {
     requireScope(accountScopeId)
     const deviceId = await this.preheatDevice()
     let result!: FolderRow
-    return runFolderMutation(accountScopeId, [db.folders, db.folder_sync_states], async () => {
+    return runFolderMutation('updateFolder', accountScopeId, [db.folders, db.folder_sync_states], async () => {
       if (patch.expectedRevision && (await db.folder_sync_states.get(accountScopeId))?.localDataRevision !== patch.expectedRevision) throw new Error('STALE_REVISION')
       const prior = await db.folders.get(folderId)
       if (!prior || prior.accountScopeId !== accountScopeId) throw new Error('Folder is unavailable')
       const name = patch.name === undefined ? prior.name : normalizeFolderName(patch.name)
-      if (patch.name !== undefined) {
-        const folders = await db.folders.where('accountScopeId').equals(accountScopeId).toArray()
-        if (folders.some((folder) => folder.id !== folderId && folderNameKey(folder.name) === folderNameKey(name))) {
-          throw new Error('Folder name already exists')
-        }
-      }
+      if (name !== prior.name) await this.assertUniqueName(accountScopeId, name, folderId)
       const iconKey = patch.iconKey === undefined ? prior.iconKey : requireFolderIconKey(patch.iconKey)
       const colorValue = patch.colorValue === undefined ? prior.colorValue : requireFolderColorValue(patch.colorValue)
       if (name === prior.name && iconKey === prior.iconKey && colorValue === prior.colorValue) return prior
@@ -574,6 +511,7 @@ export class FolderRepositoryImpl implements FolderRepository {
         updatedAt: now(),
 
       }
+      result = indexFolder(result)
       await db.folders.put(result)
       await this.markOrganizationChanged(accountScopeId, deviceId)
       return result
@@ -584,56 +522,34 @@ export class FolderRepositoryImpl implements FolderRepository {
     requireScope(accountScopeId)
     const deviceId = await this.preheatDevice()
     let result!: FolderRow
-    return runFolderMutation(accountScopeId, [db.folders, db.folder_sync_states], async () => {
-      const folders = await db.folders.where('accountScopeId').equals(accountScopeId).toArray()
-      const moving = folders.find((folder) => folder.id === folderId)
-      if (!moving) throw new Error('Folder is unavailable')
-      if (parentFolderId !== ROOT_FOLDER_ID) {
-        const parent = folders.find((folder) => folder.id === parentFolderId)
-        if (!parent) throw new Error('Parent folder is unavailable')
-        const ancestors = new Set<string>()
-        let cursor: FolderRow | undefined = parent
-        while (cursor) {
-          if (cursor.id === moving.id) throw new Error('A folder cannot become its own descendant')
-          if (cursor.parentFolderId === ROOT_FOLDER_ID) break
-          if (ancestors.has(cursor.id)) throw new Error('Folder tree contains a cycle')
-          ancestors.add(cursor.id)
-          cursor = folders.find((folder) => folder.id === cursor?.parentFolderId)
-          if (!cursor) throw new Error('Parent folder is unavailable')
-        }
-      }
-      const depthFromTargetRoot = (() => {
-        if (parentFolderId === ROOT_FOLDER_ID) return 1
+    return runFolderMutation('moveFolder', accountScopeId, [db.folders, db.folder_sync_states], async () => {
+      const moving = await db.folders.get(folderId)
+      if (!moving || moving.accountScopeId !== accountScopeId) throw new Error('Folder is unavailable')
+      if (moving.parentFolderId !== parentFolderId) {
         let depth = 1
-        let cursor = folders.find((folder) => folder.id === parentFolderId)
-        while (cursor) {
+        let cursor = parentFolderId
+        const seen = new Set<string>()
+        while (cursor !== ROOT_FOLDER_ID) {
+          if (cursor === folderId) throw new Error('A folder cannot become its own descendant')
+          if (seen.has(cursor)) throw new Error('Folder tree contains a cycle')
+          seen.add(cursor)
+          const parent = await db.folders.get(cursor)
+          if (!parent || parent.accountScopeId !== accountScopeId) throw new Error('Parent folder is unavailable')
+          cursor = parent.parentFolderId
           depth += 1
-          if (cursor.parentFolderId === ROOT_FOLDER_ID) return depth
-          cursor = folders.find((folder) => folder.id === cursor?.parentFolderId)
+          if (depth > 32) throw new Error('Folder depth exceeds the supported limit')
         }
-        throw new Error('Parent folder is unavailable')
-      })()
-      const descendants = new Map<string, FolderRow[]>()
-      for (const folder of folders) {
-        const children = descendants.get(folder.parentFolderId) ?? []
-        children.push(folder)
-        descendants.set(folder.parentFolderId, children)
+        const subtree = await this.subtree(accountScopeId, folderId)
+        if (subtree.some((row) => depth + row.depth - 1 > 32)) throw new Error('Folder depth exceeds the supported limit')
       }
-      const maxRelativeDepth = (id: string, depth = 1): number => {
-        const children = descendants.get(id) ?? []
-        return children.reduce((maximum, child) => Math.max(maximum, maxRelativeDepth(child.id, depth + 1)), depth)
-      }
-      if (depthFromTargetRoot + maxRelativeDepth(moving.id) - 1 > 32) {
-        throw new Error('Folder depth exceeds the supported limit')
-      }
-      const siblings = folders.filter((folder) => folder.parentFolderId === parentFolderId && folder.id !== moving.id)
 
       result = {
         ...moving,
         parentFolderId,
-        orderKey: await this.resolveFolderOrderKey(accountScopeId, parentFolderId, siblings, position, deviceId),
+        orderKey: await this.resolveFolderOrderKey(accountScopeId, parentFolderId, position, moving.id),
         updatedAt: now(),
       }
+      result = indexFolder(result)
       await db.folders.put(result)
       await this.markOrganizationChanged(accountScopeId, deviceId)
       return result
@@ -644,27 +560,27 @@ export class FolderRepositoryImpl implements FolderRepository {
     requireScope(accountScopeId)
     const deviceId = await this.preheatDevice()
     const target = await db.folders.get(folderId)
-    if (!target || target.accountScopeId !== accountScopeId) return runFolderMutation(accountScopeId, [], async () => undefined)
+    if (!target || target.accountScopeId !== accountScopeId) return runFolderMutation('deleteFolder', accountScopeId, [], async () => undefined)
     return this.withProtection(accountScopeId, 'before-delete', async () => {
-      return runFolderMutation(accountScopeId, [db.folders, db.folder_memberships, db.folder_chat_references, db.folder_settings, db.folder_sync_states], async () => {
-        const folders = await db.folders.where('accountScopeId').equals(accountScopeId).toArray()
-        const descendants = new Set<string>([folderId])
-        let changed = true
-        while (changed) {
-          changed = false
-          for (const folder of folders) {
-            if (descendants.has(folder.parentFolderId) && !descendants.has(folder.id)) {
-              descendants.add(folder.id)
-              changed = true
-            }
-          }
+      return runFolderMutation('deleteFolder', accountScopeId, [db.folders, db.folder_memberships, db.folder_chat_references, db.folder_settings, db.folder_sync_states, db.folder_organization_summaries], async () => {
+        const current = await db.folders.get(folderId)
+        if (!current || current.accountScopeId !== accountScopeId) return
+        const descendants = new Set((await this.subtree(accountScopeId, folderId)).map((row) => row.id))
+        const affectedChats = new Set<string>()
+        for (const id of descendants) {
+          const memberships = await db.folder_memberships.where('[accountScopeId+folderId]').equals([accountScopeId, id]).toArray()
+          for (const row of memberships) affectedChats.add(row.chatId)
+          await db.folder_memberships.bulkDelete(memberships.map((row) => row.id))
         }
-        const timestamp = now()
-
         await db.folders.bulkDelete([...descendants])
-        await db.folder_memberships.where('accountScopeId').equals(accountScopeId)
-          .filter((row) => descendants.has(row.folderId)).delete()
-        await this.pruneChatReferences(accountScopeId)
+        let removedChats = 0
+        // Shared chats often point to the same surviving Folder. This map lives only for this deletion.
+        const folderExists = new Map<string, boolean>()
+        for (const chatId of affectedChats) {
+          if (await this.pruneChatReference(accountScopeId, chatId, folderExists)) removedChats += 1
+        }
+        await this.changeChatCount(accountScopeId, -removedChats)
+        const timestamp = now()
         const settings = await this.ensureSettings(accountScopeId)
         await db.folder_settings.put({
           ...settings,
@@ -677,152 +593,89 @@ export class FolderRepositoryImpl implements FolderRepository {
   }
 
   async upsertMembership(accountScopeId: string, input: FolderMembershipInput): Promise<FolderMutationResult<FolderMembershipRow>> {
-    const traceId = input.traceId ?? createFolderTraceId()
-    try {
-      requireScope(accountScopeId)
-      if (!input.chatId.trim()) throw new Error('A chat id is required')
-      logFolderTrace(traceId, 'repository.command-received', {
-        accountScopeId,
-        folderId: input.folderId,
-        chatId: input.chatId,
-        cachedTitleProvided: input.cachedTitle !== undefined,
-      })
-      const deviceId = await this.preheatDevice()
-      logFolderTrace(traceId, 'repository.device-ready', {
-        accountScopeId,
-        folderId: input.folderId,
-        chatId: input.chatId,
-        deviceId,
-      })
-      let result!: FolderMembershipRow
-      let changed = false
-      const mutation = await runFolderMutation(accountScopeId, [db.folders, db.folder_memberships, db.folder_chat_references, db.folder_sync_states], async () => {
-        logFolderTrace(traceId, 'repository.transaction-started', {
-          accountScopeId,
-          folderId: input.folderId,
-          chatId: input.chatId,
-        })
-        const folder = await db.folders.get(input.folderId)
-        if (!folder || folder.accountScopeId !== accountScopeId) throw new Error('Folder is unavailable')
-        const id = membershipId(accountScopeId, input.folderId, input.chatId)
-        const prior = await db.folder_memberships.get(id)
-        logFolderTrace(traceId, 'repository.target-validated', {
-          accountScopeId,
-          folderId: input.folderId,
-          chatId: input.chatId,
-          membershipId: id,
-          existing: Boolean(prior),
-        })
-        if (prior) {
-          if (input.cachedTitle !== undefined) {
-            const existingChat = await db.folder_chat_references.get([accountScopeId, input.chatId])
-            if (existingChat?.cachedTitle === normalizeTitle(input.cachedTitle)) { result = prior; return result }
+    requireScope(accountScopeId)
+    if (!input.chatId.trim()) throw new Error('A chat id is required')
+    const deviceId = await this.preheatDevice()
+    let result!: FolderMembershipRow
+    return runFolderMutation('upsertMembership', accountScopeId, [db.folders, db.folder_memberships, db.folder_chat_references, db.folder_sync_states, db.folder_organization_summaries], async () => {
+      const folder = await db.folders.get(input.folderId)
+      if (!folder || folder.accountScopeId !== accountScopeId) throw new Error('Folder is unavailable')
+      const id = membershipId(accountScopeId, input.folderId, input.chatId)
+      const prior = await db.folder_memberships.get(id)
+      if (prior && (prior.accountScopeId !== accountScopeId || prior.folderId !== input.folderId || prior.chatId !== input.chatId)) {
+        throw new Error('Membership is unavailable')
+      }
+      if (prior) {
+        if (input.cachedTitle !== undefined) {
+          const existingChat = await db.folder_chat_references.get([accountScopeId, input.chatId])
+          if (existingChat?.cachedTitle === normalizeTitle(input.cachedTitle)) { result = prior; return result }
 
-            const timestamp = now()
-            const chatReference: ChatReferenceRow = {
-              accountScopeId,
-              chatId: input.chatId,
-              cachedTitle: normalizeTitle(input.cachedTitle),
-              createdAt: existingChat?.createdAt ?? timestamp,
-              updatedAt: timestamp,
-
-            }
-            await db.folder_chat_references.put(chatReference)
-            await this.markOrganizationChanged(accountScopeId, deviceId)
-            changed = true
-          }
-          result = prior
-          logFolderTrace(traceId, 'repository.idempotent-membership', {
+          const timestamp = now()
+          const chatReference: ChatReferenceRow = {
             accountScopeId,
-            folderId: input.folderId,
             chatId: input.chatId,
-            membershipId: result.id,
-          })
-          return result
-        }
-        const memberships = await db.folder_memberships.where('[accountScopeId+folderId]').equals([accountScopeId, input.folderId]).toArray()
-        const siblings = memberships.filter((membership) => membership.id !== id)
+            cachedTitle: normalizeTitle(input.cachedTitle),
+            createdAt: existingChat?.createdAt ?? timestamp,
+            updatedAt: timestamp,
 
-        const timestamp = now()
-        result = {
-          id,
-          accountScopeId,
-          folderId: input.folderId,
-          chatId: input.chatId,
-          orderKey: await this.resolveMembershipOrderKey(accountScopeId, input.folderId, siblings, input, deviceId),
-          createdAt: timestamp,
-          updatedAt: timestamp,
+          }
+          await db.folder_chat_references.put(chatReference)
+          await this.markOrganizationChanged(accountScopeId, deviceId)
         }
-        await db.folder_memberships.put(result)
-        const existingChat = await db.folder_chat_references.get([accountScopeId, input.chatId])
-        const chatReference: ChatReferenceRow = {
-          accountScopeId,
-          chatId: input.chatId,
-          cachedTitle: input.cachedTitle === undefined
-            ? existingChat?.cachedTitle ?? ''
-            : normalizeTitle(input.cachedTitle),
-          createdAt: existingChat?.createdAt ?? timestamp,
-          updatedAt: timestamp,
-
-        }
-        await db.folder_chat_references.put(chatReference)
-        await this.markOrganizationChanged(accountScopeId, deviceId)
-        changed = true
-        logFolderTrace(traceId, 'repository.rows-written', {
-          accountScopeId,
-          folderId: input.folderId,
-          chatId: input.chatId,
-          membershipId: result.id,
-          wroteMembership: true,
-          wroteChatReference: true,
-          mutation: 'membership.add',
-        })
+        result = prior
         return result
-      })
-      logFolderTrace(traceId, 'repository.transaction-committed', {
+      }
+
+      const timestamp = now()
+      result = {
+        id,
         accountScopeId,
         folderId: input.folderId,
         chatId: input.chatId,
-        membershipId: result.id,
-        changed,
-      })
-      return mutation
-    } catch (error) {
-      logFolderTraceError(traceId, 'repository.command-failed', error, {
+        orderKey: await this.resolveMembershipOrderKey(accountScopeId, input.folderId, input),
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      }
+      result = indexMembership(result)
+      const alreadyOrganized = await hasValidChatMembership(Dexie.currentTransaction!, accountScopeId, input.chatId)
+      await db.folder_memberships.put(result)
+      if (!alreadyOrganized) await this.changeChatCount(accountScopeId, 1)
+      const existingChat = await db.folder_chat_references.get([accountScopeId, input.chatId])
+      const chatReference: ChatReferenceRow = {
         accountScopeId,
-        folderId: input.folderId,
         chatId: input.chatId,
-      })
-      throw error
-    }
+        cachedTitle: input.cachedTitle === undefined
+          ? existingChat?.cachedTitle ?? ''
+          : normalizeTitle(input.cachedTitle),
+        createdAt: existingChat?.createdAt ?? timestamp,
+        updatedAt: timestamp,
+
+      }
+      await db.folder_chat_references.put(chatReference)
+      await this.markOrganizationChanged(accountScopeId, deviceId)
+      return result
+    })
   }
 
   async moveMembership(accountScopeId: string, folderId: string, chatId: string, targetFolderId: string, position?: FolderPosition): Promise<FolderMutationResult<FolderMembershipRow>> {
     requireScope(accountScopeId)
     const deviceId = await this.preheatDevice()
     let result!: FolderMembershipRow
-    return runFolderMutation(accountScopeId, [db.folders, db.folder_memberships, db.folder_sync_states], async () => {
+    return runFolderMutation('moveMembership', accountScopeId, [db.folders, db.folder_memberships, db.folder_sync_states], async () => {
       const sourceId = membershipId(accountScopeId, folderId, chatId)
       const prior = await db.folder_memberships.get(sourceId)
       const target = await db.folders.get(targetFolderId)
-      if (!prior || !target || target.accountScopeId !== accountScopeId) {
+      const source = folderId === targetFolderId ? target : await db.folders.get(folderId)
+      if (!prior || prior.accountScopeId !== accountScopeId || prior.folderId !== folderId || prior.chatId !== chatId
+        || !source || source.accountScopeId !== accountScopeId || !target || target.accountScopeId !== accountScopeId) {
         throw new Error('Membership or target folder is unavailable')
       }
       const targetId = membershipId(accountScopeId, targetFolderId, chatId)
-      const existingTarget = await db.folder_memberships.get(targetId)
+      const existingTarget = targetId === sourceId ? prior : await db.folder_memberships.get(targetId)
       if (existingTarget && targetId !== sourceId) throw new Error('Chat already belongs to the target folder')
-      const siblings = (await db.folder_memberships.where('[accountScopeId+folderId]').equals([accountScopeId, targetFolderId]).toArray())
-        .filter((membership) => membership.id !== sourceId && membership.id !== targetId)
       const sameFolder = sourceId === targetId
       const pinned = sameFolder && Boolean(prior.pinnedOrderKey)
-      for (const anchorId of [position?.beforeId, position?.afterId]) {
-        const anchor = siblings.find((row) => row.id === anchorId)
-        if (anchor && Boolean(anchor.pinnedOrderKey) !== pinned) throw new Error('Cannot reorder chats across pin groups')
-      }
-      const orderKey = await this.resolveMembershipOrderKey(
-        accountScopeId, targetFolderId, pinned ? siblings.filter((row) => row.pinnedOrderKey) : siblings,
-        position, deviceId, pinned,
-      )
+      const orderKey = await this.resolveMembershipOrderKey(accountScopeId, targetFolderId, position, sourceId, pinned, true)
 
       const timestamp = now()
       result = {
@@ -836,6 +689,7 @@ export class FolderRepositoryImpl implements FolderRepository {
         updatedAt: timestamp,
       }
       if (sourceId !== targetId) await db.folder_memberships.delete(sourceId)
+      result = indexMembership(result)
       await db.folder_memberships.put(result)
       await this.markOrganizationChanged(accountScopeId, deviceId)
       return result
@@ -846,23 +700,23 @@ export class FolderRepositoryImpl implements FolderRepository {
     requireScope(accountScopeId)
     const deviceId = await this.preheatDevice()
     let result!: FolderMembershipRow
-    return runFolderMutation(accountScopeId, [db.folders, db.folder_memberships, db.folder_sync_states], async () => {
+    return runFolderMutation('setMembershipPinned', accountScopeId, [db.folders, db.folder_memberships, db.folder_sync_states], async () => {
       const prior = await db.folder_memberships.get(membershipId(accountScopeId, folderId, chatId))
       const folder = await db.folders.get(folderId)
-      if (!prior || !folder || folder.accountScopeId !== accountScopeId) {
+      if (!prior || prior.accountScopeId !== accountScopeId || prior.folderId !== folderId || prior.chatId !== chatId
+        || !folder || folder.accountScopeId !== accountScopeId) {
         throw new Error('Membership or folder is unavailable')
       }
       if (Boolean(prior.pinnedOrderKey) === pinned) {
         result = prior
         return result
       }
-      const siblings = (await db.folder_memberships.where('[accountScopeId+folderId]').equals([accountScopeId, folderId]).toArray())
-        .filter((row) => row.id !== prior.id && row.pinnedOrderKey)
       const pinnedOrderKey = pinned
-        ? await this.resolveMembershipOrderKey(accountScopeId, folderId, siblings, undefined, deviceId, true)
+        ? await this.resolveMembershipOrderKey(accountScopeId, folderId, undefined, undefined, true)
         : undefined
 
       result = { ...prior, pinnedOrderKey, updatedAt: now() }
+      result = indexMembership(result)
       await db.folder_memberships.put(result)
       await this.markOrganizationChanged(accountScopeId, deviceId)
       return result
@@ -872,11 +726,15 @@ export class FolderRepositoryImpl implements FolderRepository {
   async removeMembership(accountScopeId: string, folderId: string, chatId: string): Promise<FolderMutationResult<void>> {
     requireScope(accountScopeId)
     const deviceId = await this.preheatDevice()
-    return runFolderMutation(accountScopeId, [db.folder_memberships, db.folder_chat_references], async () => {
+    return runFolderMutation('removeMembership', accountScopeId, [db.folders, db.folder_memberships, db.folder_chat_references, db.folder_organization_summaries], async () => {
       const id = membershipId(accountScopeId, folderId, chatId)
-      if (!await db.folder_memberships.get(id)) return
+      const prior = await db.folder_memberships.get(id)
+      if (!prior) return
+      if (prior.accountScopeId !== accountScopeId || prior.folderId !== folderId || prior.chatId !== chatId) throw new Error('Membership is unavailable')
+      const folder = await db.folders.get(folderId)
       await db.folder_memberships.delete(id)
-      await this.pruneChatReferences(accountScopeId)
+      const noMembershipsRemain = await this.pruneChatReference(accountScopeId, chatId)
+      if (folder?.accountScopeId === accountScopeId && noMembershipsRemain) await this.changeChatCount(accountScopeId, -1)
       await this.markOrganizationChanged(accountScopeId, deviceId)
     })
   }
@@ -886,7 +744,7 @@ export class FolderRepositoryImpl implements FolderRepository {
     const deviceId = await this.preheatDevice()
     if (!chatId.trim()) throw new Error('A chat id is required')
     let result!: ChatReferenceRow
-    return runFolderMutation(accountScopeId, [db.folder_chat_references, db.folder_sync_states], async () => {
+    return runFolderMutation('upsertChatReference', accountScopeId, [db.folder_chat_references, db.folder_sync_states], async () => {
       if (expectedRevision && (await db.folder_sync_states.get(accountScopeId))?.localDataRevision !== expectedRevision) throw new Error('STALE_REVISION')
       const prior = await db.folder_chat_references.get([accountScopeId, chatId])
       if (!prior) throw new Error('STALE_REVISION')
@@ -915,8 +773,8 @@ export class FolderRepositoryImpl implements FolderRepository {
   async removeChatReference(accountScopeId: string, chatId: string): Promise<FolderMutationResult<void>> {
     requireScope(accountScopeId)
     const deviceId = await this.preheatDevice()
-    return runFolderMutation(accountScopeId, [db.folder_memberships, db.folder_chat_references, db.folder_sync_states], async () => {
-      const memberships = await db.folder_memberships.where('[accountScopeId+chatId]').equals([accountScopeId, chatId]).toArray()
+    return runFolderMutation('removeChatReference', accountScopeId, [db.folder_memberships, db.folder_chat_references, db.folder_sync_states], async () => {
+      const memberships = await db.folder_memberships.where('[accountScopeId+chatId]').equals([accountScopeId, chatId]).limit(1).primaryKeys()
       if (memberships.length) throw new Error('Cannot remove a chat reference with active memberships')
       const existing = await db.folder_chat_references.get([accountScopeId, chatId])
       if (!existing) return
@@ -930,22 +788,23 @@ export class FolderRepositoryImpl implements FolderRepository {
     requireScope(accountScopeId)
     const deviceId = await this.preheatDevice()
     const remove = async () => {
-      return runFolderMutation(accountScopeId, [db.folder_memberships, db.folder_chat_references, db.folder_sync_states], async () => {
+      const folderIds = new Set<string>()
+      const result = await runFolderMutation('removeChatAfterGeminiDelete', accountScopeId, [db.folders, db.folder_memberships, db.folder_chat_references, db.folder_sync_states, db.folder_organization_summaries], async () => {
         const memberships = await db.folder_memberships.where('[accountScopeId+chatId]').equals([accountScopeId, chatId]).toArray()
+        for (const membership of memberships) folderIds.add(membership.folderId)
         const active = memberships
         const reference = await db.folder_chat_references.get([accountScopeId, chatId])
         if (!active.length && !reference) return
 
-        const timestamp = now()
         if (active.length) {
+          const wasOrganized = await hasValidChatMembership(Dexie.currentTransaction!, accountScopeId, chatId)
           await db.folder_memberships.bulkDelete(active.map((row) => row.id))
-          await this.markOrganizationChanged(accountScopeId, deviceId)
+          if (wasOrganized) await this.changeChatCount(accountScopeId, -1)
         }
-        if (reference) {
-          await db.folder_chat_references.delete([accountScopeId, chatId])
-          await this.markOrganizationChanged(accountScopeId, deviceId)
-        }
+        if (reference) await db.folder_chat_references.delete([accountScopeId, chatId])
+        await this.markOrganizationChanged(accountScopeId, deviceId)
       })
+      return { ...result, commit: { ...result.commit, affected: folderIds.size > 1000 ? { all: true as const } : { folderIds: [...folderIds], chatIds: [chatId] } } }
     }
     if (protectionSnapshotId) {
       const protection = await db.folder_snapshots.get(protectionSnapshotId)
@@ -971,11 +830,18 @@ export class FolderRepositoryImpl implements FolderRepository {
 
   async getAccountDataWithRevision(accountScopeId: string): Promise<FolderDataSnapshot> {
     requireScope(accountScopeId)
-    return db.transaction('r', [db.folders, db.folder_memberships, db.folder_chat_references, db.folder_sync_states, db.folder_recovery_states], async () => {
-      const data = await this.rawAccountData(accountScopeId)
-      const state = await db.folder_sync_states.get(accountScopeId)
-      const recovery = await db.folder_recovery_states.get(accountScopeId)
-      return { data, dataRevision: state?.localDataRevision ?? 'uninitialized', pendingRevision: recovery?.pendingRevision }
+    return db.transaction('r', [db.folders, db.folder_memberships, db.folder_chat_references, db.folder_sync_states, db.folder_recovery_states], async (transaction) => {
+      const finish = import.meta.env.DEV ? beginFolderAccess(transaction, { operation: 'getAccountDataWithRevision', phase: 'full-capture', accountScopeId }) : undefined
+      let result: 'success' | 'failed' = 'failed'
+      let capturedRevision: string | undefined
+      try {
+        const data = await this.rawAccountData(accountScopeId)
+        const state = await db.folder_sync_states.get(accountScopeId)
+        const recovery = await db.folder_recovery_states.get(accountScopeId)
+        if (import.meta.env.DEV) capturedRevision = state?.localDataRevision ?? 'uninitialized'
+        if (import.meta.env.DEV) result = 'success'
+        return { data, dataRevision: state?.localDataRevision ?? 'uninitialized', pendingRevision: recovery?.pendingRevision }
+      } finally { if (import.meta.env.DEV) finish?.(result, { capturedRevision }) }
     })
   }
 
@@ -1059,7 +925,7 @@ export class FolderRepositoryImpl implements FolderRepository {
     deviceId: string,
   ): Promise<FolderMutationResult<void>> {
     const data = fromFolderOrganizationData(accountScopeId, payload.data)
-    return runFolderMutation(accountScopeId, [db.folders, db.folder_memberships, db.folder_chat_references, db.folder_settings, db.folder_sync_states], async () => {
+    return runFolderMutation('replaceAccountData', accountScopeId, [db.folders, db.folder_memberships, db.folder_chat_references, db.folder_settings, db.folder_sync_states, db.folder_organization_summaries], async () => {
       const existingFolders = await db.folders.bulkGet(data.folders.map((folder) => folder.id))
       const existingMemberships = await db.folder_memberships.bulkGet(data.memberships.map((membership) => membership.id))
       if ([...existingFolders, ...existingMemberships].some((row) => row && row.accountScopeId !== accountScopeId)) {
@@ -1070,8 +936,9 @@ export class FolderRepositoryImpl implements FolderRepository {
       await db.folders.where('accountScopeId').equals(accountScopeId).delete()
       await db.folder_memberships.where('accountScopeId').equals(accountScopeId).delete()
       await db.folder_chat_references.where('accountScopeId').equals(accountScopeId).delete()
-      await db.folders.bulkPut(data.folders)
-      await db.folder_memberships.bulkPut(data.memberships)
+      await db.folders.bulkPut(data.folders.map(indexFolder))
+      await db.folder_memberships.bulkPut(data.memberships.map(indexMembership))
+      await rebuildFolderSummary(Dexie.currentTransaction!, data)
       await db.folder_chat_references.bulkPut(data.chatReferences)
       const liveIds = new Set(data.folders.map((folder) => folder.id))
       await db.folder_settings.put({ ...currentSettings, collapsedFolderIds: currentSettings.collapsedFolderIds.filter((id) => liveIds.has(id)) })
@@ -1142,7 +1009,7 @@ export class FolderRepositoryImpl implements FolderRepository {
         await db.folder_sync_conflicts.put({ accountScopeId, manifest, data: toFolderSyncData(data), localRevision: expectedRevision, createdAt: now() })
       }
       await db.folder_sync_publications.delete(accountScopeId)
-      await db.folder_sync_states.update(accountScopeId, { retryAt: undefined, lastErrorCode: undefined, browserSyncWarning: undefined })
+      await db.folder_sync_states.update(accountScopeId, { retryAt: undefined, lastErrorCode: undefined, browserSyncWarning: undefined, conflictSummary: { snapshotId: manifest.snapshotId, localRevision: expectedRevision } })
       return true
     })
   }
@@ -1154,7 +1021,7 @@ export class FolderRepositoryImpl implements FolderRepository {
       const candidate = await db.folder_sync_conflicts.get(accountScopeId)
       if (!state || state.localDataRevision !== expectedRevision || candidate?.manifest.snapshotId !== snapshotId
         || candidate.localRevision !== expectedRevision) return false
-      await db.folder_sync_states.update(accountScopeId, { baseSnapshotId: snapshotId, dirty: true, updatedAt: now() })
+      await db.folder_sync_states.update(accountScopeId, { baseSnapshotId: snapshotId, dirty: true, conflictSummary: undefined, updatedAt: now() })
       await db.folder_sync_publications.delete(accountScopeId)
       await db.folder_sync_conflicts.delete(accountScopeId)
       return true
@@ -1176,7 +1043,7 @@ export class FolderRepositoryImpl implements FolderRepository {
         catch (error) { throw new FolderRecoveryError('SNAPSHOT_PROTECTION_FAILED', { cause: error }) }
       }
       return await db.transaction('rw', [db.folders, db.folder_memberships, db.folder_chat_references, db.folder_settings,
-        db.folder_sync_states, db.folder_recovery_states, db.folder_sync_conflicts, db.folder_sync_publications], async () => {
+        db.folder_sync_states, db.folder_recovery_states, db.folder_sync_conflicts, db.folder_sync_publications, db.folder_organization_summaries], async () => {
         const prior = await db.folder_sync_states.get(accountScopeId)
         if ((prior?.localDataRevision ?? 'uninitialized') !== expectedRevision || (prior?.dirty && !resolving)) return false
         if (resolving) {
@@ -1189,8 +1056,9 @@ export class FolderRepositoryImpl implements FolderRepository {
         await db.folders.where('accountScopeId').equals(accountScopeId).delete()
         await db.folder_memberships.where('accountScopeId').equals(accountScopeId).delete()
         await db.folder_chat_references.where('accountScopeId').equals(accountScopeId).delete()
-        await db.folders.bulkPut(parsed.folders)
-        await db.folder_memberships.bulkPut(parsed.memberships)
+        await db.folders.bulkPut(parsed.folders.map(indexFolder))
+        await db.folder_memberships.bulkPut(parsed.memberships.map(indexMembership))
+        await rebuildFolderSummary(Dexie.currentTransaction!, parsed)
         await db.folder_chat_references.bulkPut(parsed.chatReferences)
         const settings = await this.ensureSettings(accountScopeId)
         const folderIds = new Set(parsed.folders.map((row) => row.id))
@@ -1199,7 +1067,7 @@ export class FolderRepositoryImpl implements FolderRepository {
         const revision = `${deviceId}:${nanoid()}`
         await db.folder_sync_states.put({ ...prior, accountScopeId, deviceId, provider: 'browser-sync',
           localDataRevision: revision, baseSnapshotId: manifest.snapshotId, dirty: false, retryAt: undefined,
-          retryCount: 0, lastErrorCode: undefined, browserSyncWarning: undefined, incompleteReplicaSince: undefined, updatedAt: now() })
+          retryCount: 0, lastErrorCode: undefined, browserSyncWarning: undefined, incompleteReplicaSince: undefined, conflictSummary: undefined, updatedAt: now() })
         await db.folder_sync_publications.delete(accountScopeId)
         await db.folder_sync_conflicts.delete(accountScopeId)
         if (organizationChanged) await markRecoveryPending(accountScopeId, revision)
@@ -1285,7 +1153,7 @@ export class FolderRepositoryImpl implements FolderRepository {
       const pending = await db.folder_sync_publications.get(accountScopeId)
       if (!state || state.provider !== 'browser-sync' || state.localDataRevision !== request.expectedRevision
         || state.baseSnapshotId !== request.baseSnapshotId || pending?.state === 'writing'
-        || await db.folder_sync_conflicts.get(accountScopeId)) return false
+        || await db.folder_sync_conflicts.where('accountScopeId').equals(accountScopeId).count()) return false
       // Only explicit user intent may abandon a missing base. Keep all business
       // data and mark durable pending work, so a failed publication can resume.
       await db.folder_sync_states.update(accountScopeId, { baseSnapshotId: undefined, dirty: true,
@@ -1303,7 +1171,7 @@ export class FolderRepositoryImpl implements FolderRepository {
     for (let attempt = 0; attempt < 3; attempt += 1) {
       const captured = await db.transaction('r', [db.folders, db.folder_memberships, db.folder_chat_references,
         db.folder_settings, db.folder_sync_states, db.folder_sync_publications, db.folder_sync_conflicts], async () => {
-        if (await db.folder_sync_conflicts.get(accountScopeId)) throw new Error('Browser Sync conflict requires resolution')
+        if (await db.folder_sync_conflicts.where('accountScopeId').equals(accountScopeId).count()) throw new Error('Browser Sync conflict requires resolution')
         const state = (await db.folder_sync_states.get(accountScopeId))!
         const pending = await db.folder_sync_publications.get(accountScopeId)
         const settings = (await db.folder_settings.get(accountScopeId))!
@@ -1325,7 +1193,7 @@ export class FolderRepositoryImpl implements FolderRepository {
       }
       const saved = await db.transaction('rw', [db.folder_sync_states, db.folder_sync_publications, db.folder_sync_conflicts], async () => {
         const state = await db.folder_sync_states.get(accountScopeId)
-        if (state?.localDataRevision !== captured.state.localDataRevision || await db.folder_sync_conflicts.get(accountScopeId)) return false
+        if (state?.localDataRevision !== captured.state.localDataRevision || await db.folder_sync_conflicts.where('accountScopeId').equals(accountScopeId).count()) return false
         await db.folder_sync_publications.put(publication)
         return true
       })

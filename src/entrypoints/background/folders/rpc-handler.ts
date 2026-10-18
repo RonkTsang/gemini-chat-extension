@@ -1,6 +1,7 @@
 import { createExtensionRpcRouter, type ExtensionRpcMessageListener } from '@/integrations/extension-rpc/router'
 import { folderRpcEnvelopeSchema, folderRpcParams, folderRpcResponseSchema, type FolderRpcEnvelope, type FolderRpcErrorCode } from '@/domain/folder/rpc'
 import type { FolderMutationEffect } from '@/domain/folder/types'
+import type { FolderChange } from '@/domain/folder/changes'
 import type { FolderRecoveryRunner } from '@/services/folder-recovery/runner'
 import { folderRepository } from '@/data/repositories/folderRepository'
 import { measureBrowserSyncUsage } from '@/services/folder-sync/providers/browser-sync'
@@ -8,7 +9,7 @@ import { FolderRecoveryError, getLocalStorageStatus, isQuotaError } from '@/serv
 
 import { FolderCommandService } from './command-service'
 import { publishFolderInvalidation } from './invalidation'
-import { FolderQueryService } from './query-service'
+import { FolderQueryService, type FolderQueryName } from './query-service'
 import type { FolderSyncScheduler } from '@/services/folder-sync/scheduler'
 import { browser, type Browser } from 'wxt/browser'
 
@@ -37,6 +38,7 @@ function summarizeRpcParams(method: FolderRpcEnvelope['method'], params: unknown
 function rpcLogContext(request: FolderRpcEnvelope, params?: unknown): Record<string, unknown> {
   return {
     requestId: request.requestId,
+    ...(import.meta.env.DEV ? { traceId: request.traceId ?? request.requestId } : {}),
     method: request.method,
     accountScopeId: request.accountScopeId,
     identitySource: request.identitySource,
@@ -63,6 +65,7 @@ export function createFolderRpcHandler(scheduler: FolderSyncScheduler, recovery?
     validateSender: isGeminiContentSender,
     async handle(rawRequest: unknown, sender) {
       const request = rawRequest as FolderRpcEnvelope
+      const startedAt = import.meta.env.DEV ? performance.now() : 0
       const parameters = folderRpcParams[request.method].safeParse(request.params)
       if (!parameters.success) {
         console.warn('[Folders][rpc] rejected invalid parameters', rpcLogContext(request, request.params))
@@ -71,23 +74,26 @@ export function createFolderRpcHandler(scheduler: FolderSyncScheduler, recovery?
       const params = parameters.data as never
       let commandCompleted = false
       try {
-        console.info('[Folders][rpc] handling request', rpcLogContext(request, params))
+        if (import.meta.env.DEV) console.info('[Folders][rpc] handling request', rpcLogContext(request, params))
         let data: unknown
         let committedRevision: string | undefined
-        const readProjection = async <T>(read: () => Promise<T>): Promise<T> => {
-          const result = await queries.readProjection(request.accountScopeId, read)
+        const readProjection = async <T>(operation: FolderQueryName, read: () => Promise<T>): Promise<T> => {
+          const result = await queries.readProjection(request.accountScopeId, read, operation)
           committedRevision = result.dataRevision
           return result.data
         }
         let committedEffect: FolderMutationEffect | undefined
+        let change: FolderChange | undefined
         switch (request.method) {
-          case 'getSidebarState': data = await readProjection(() => queries.getSidebarState(request.accountScopeId, (params as { folderLimit: number }).folderLimit)); break
-          case 'listFolders': { const input = params as { cursor?: string; limit: number }; data = await readProjection(() => queries.listFolders(request.accountScopeId, input.cursor, input.limit)); break }
-          case 'listFolderChats': { const input = params as { folderId: string; cursor?: string; limit: number }; data = await readProjection(() => queries.listFolderChats(request.accountScopeId, input.folderId, input.cursor, input.limit)); break }
-          case 'getPickerOptions': { const input = params as { chatId: string; cursor?: string; limit: number }; data = await readProjection(() => queries.getPickerOptions(request.accountScopeId, input.chatId, input.cursor, input.limit)); break }
-          case 'resolveChatMemberships': data = await readProjection(() => queries.resolveChatMemberships(request.accountScopeId, (params as { chatIds: string[] }).chatIds)); break
-          case 'getFolderDeleteImpact': data = await readProjection(() => queries.getFolderDeleteImpact(request.accountScopeId, (params as { folderId: string }).folderId)); break
-          case 'getSettings': data = await readProjection(() => queries.getSettings(request.accountScopeId)); break
+          case 'getSidebarState': data = await readProjection('getSidebarState', () => queries.getSidebarState(request.accountScopeId, (params as { folderLimit: number }).folderLimit)); break
+          case 'listFolders': { const input = params as { cursor?: string; limit: number }; data = await readProjection('listFolders', () => queries.listFolders(request.accountScopeId, input.cursor, input.limit)); break }
+          case 'listFolderChats': { const input = params as { folderId: string; cursor?: string; limit: number }; data = await readProjection('listFolderChats', () => queries.listFolderChats(request.accountScopeId, input.folderId, input.cursor, input.limit)); break }
+          case 'getPickerOptions': { const input = params as { chatId: string; cursor?: string; limit: number }; data = await readProjection('getPickerOptions', () => queries.getPickerOptions(request.accountScopeId, input.chatId, input.cursor, input.limit)); break }
+          case 'resolveChatMemberships': data = await readProjection('resolveChatMemberships', () => queries.resolveChatMemberships(request.accountScopeId, (params as { chatIds: string[] }).chatIds)); break
+          case 'getFolderDeleteImpact': data = await readProjection('getFolderDeleteImpact', () => queries.getFolderDeleteImpact(request.accountScopeId, (params as { folderId: string }).folderId)); break
+          case 'getSettings': data = await readProjection('getSettings', () => queries.getSettings(request.accountScopeId)); break
+          case 'getFolderSummaries': data = await readProjection('getFolderSummaries', () => queries.getFolderSummaries(request.accountScopeId, (params as { folderIds: string[] }).folderIds)); break
+          case 'getChatReferences': data = await readProjection('getChatReferences', () => queries.getChatReferences(request.accountScopeId, (params as { chatIds: string[] }).chatIds)); break
           case 'getSyncStatus': data = await queries.getSyncStatus(request.accountScopeId); break
           case 'getLocalStorageStatus': data = await getLocalStorageStatus(request.accountScopeId); break
           case 'measureBrowserSyncUsage': {
@@ -108,6 +114,10 @@ export function createFolderRpcHandler(scheduler: FolderSyncScheduler, recovery?
             data = result.data
             committedRevision = result.commit.dataRevision
             committedEffect = result.commit.effect
+            if (result.commit.baseRevision && result.commit.affected) change = {
+              accountScopeId: request.accountScopeId, requestId: request.requestId,
+              baseRevision: result.commit.baseRevision, dataRevision: result.commit.dataRevision, affected: result.commit.affected,
+            }
             commandCompleted = true
             break
           }
@@ -118,7 +128,9 @@ export function createFolderRpcHandler(scheduler: FolderSyncScheduler, recovery?
           // Folder data before their RPC response. Broadcasting them as data
           // changes made every foreground tab reload its Sidebar needlessly.
           void publishFolderInvalidation(
-            { accountScopeId: request.accountScopeId, dataRevision, type: 'folders:data-changed', affected: request.method === 'createSnapshot' ? { syncStatus: true, recoveryStatus: true } : {} },
+            { accountScopeId: request.accountScopeId, dataRevision, type: 'folders:data-changed',
+              ...(change ? { requestId: change.requestId, baseRevision: change.baseRevision } : {}),
+              affected: request.method === 'createSnapshot' ? { syncStatus: true, recoveryStatus: true } : change?.affected ?? { all: true } },
             { excludeTabId: sender.tab?.id },
           ).catch((error) => console.error('[Folders][rpc] notification failed', { accountScopeId: request.accountScopeId, error }))
         } else if ((request.method === 'dismissCapacityNotice' && data === true) || request.method === 'measureBrowserSyncUsage') {
@@ -127,8 +139,9 @@ export function createFolderRpcHandler(scheduler: FolderSyncScheduler, recovery?
             { excludeTabId: sender.tab?.id },
           ).catch((error) => console.error('[Folders][rpc] notification failed', { accountScopeId: request.accountScopeId, error }))
         }
-        console.info('[Folders][rpc] completed request', { ...rpcLogContext(request, params), dataRevision })
-        return { ok: true as const, requestId: request.requestId, dataRevision, data }
+        if (import.meta.env.DEV) console.info('[Folders][rpc] completed request', { ...rpcLogContext(request, params), dataRevision,
+          context: 'background', phase: 'rpc', result: 'success', durationMs: performance.now() - startedAt })
+        return { ok: true as const, requestId: request.requestId, dataRevision, data, ...(change ? { change } : {}) }
       } catch (error) {
         const mapped = mapError(error)
         // A failed response read must not reclassify a completed write or invite
@@ -148,6 +161,7 @@ export function createFolderRpcHandler(scheduler: FolderSyncScheduler, recovery?
         console.error('[Folders][rpc] request failed', {
           ...rpcLogContext(request, params),
           code: mapped.code,
+          ...(import.meta.env.DEV ? { context: 'background', phase: 'rpc', result: 'failed', durationMs: performance.now() - startedAt } : {}),
           error: error instanceof Error
             ? { name: error.name, message: error.message, stack: error.stack }
             : { message: String(error) },

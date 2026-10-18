@@ -1,4 +1,5 @@
 import type { FolderColorValue, FolderIconKey } from './appearance'
+import type { FolderAffected } from './changes'
 
 export const ROOT_FOLDER_ID = '__root__' as const
 export const BROWSER_SYNC_CAPACITY_NOTICE_THRESHOLD_PERCENT = 80
@@ -19,6 +20,7 @@ export type FolderSyncProvider = 'browser-sync' | 'google-drive'
 export interface FolderSyncSettings { enabled: boolean; hideOrganizedChats: boolean }
 
 export interface BrowserSyncManifest {
+  did?: string
   schemaVersion: typeof BROWSER_SYNC_SCHEMA_VERSION
   accountScopeId: string
   snapshotId: string
@@ -30,6 +32,8 @@ export interface BrowserSyncManifest {
 }
 
 export interface FolderRow {
+  /** Local index only; excluded from portable organization data. */
+  nameKey?: string
   id: string
   accountScopeId: string
   parentFolderId: FolderParentId
@@ -42,6 +46,8 @@ export interface FolderRow {
 }
 
 export interface FolderMembershipRow {
+  /** Local index only; excluded from portable organization data. */
+  displayOrderKey?: string
   id: string
   accountScopeId: string
   folderId: string
@@ -94,6 +100,7 @@ export interface FolderSyncRunResult { outcome: FolderSyncOutcome; retryAt?: str
 export interface BrowserSyncRecreationRequest { expectedRevision: string; baseSnapshotId: string }
 
 export interface FolderSyncStateRow {
+  conflictSummary?: { snapshotId: string; localRevision: string }
   accountScopeId: string
   deviceId: string
   provider: FolderSyncProvider
@@ -159,6 +166,8 @@ export type FolderMutationEffect = 'organization' | 'sync-settings' | 'local-vie
 export interface FolderCommit {
   accountScopeId: string
   dataRevision: string
+  baseRevision?: string
+  affected?: FolderAffected
   effect?: FolderMutationEffect
 }
 
@@ -211,8 +220,8 @@ export interface FolderAccountData {
 
 /** Shared portable data for Browser Sync, restore points, and exports. */
 export interface FolderOrganizationData {
-  folders: Omit<FolderRow, 'accountScopeId'>[]
-  memberships: Omit<FolderMembershipRow, 'accountScopeId'>[]
+  folders: Omit<FolderRow, 'accountScopeId' | 'nameKey'>[]
+  memberships: Omit<FolderMembershipRow, 'accountScopeId' | 'displayOrderKey'>[]
   chatReferences: Omit<ChatReferenceRow, 'accountScopeId'>[]
 }
 

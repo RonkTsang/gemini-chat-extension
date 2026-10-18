@@ -172,3 +172,78 @@ it('uses the existing retry alarm for lease deferral and resumes without page ac
   scheduler.handleAlarm(`gpk-folders-retry:${scope}`)
   await vi.waitFor(() => expect(coordinator.sync).toHaveBeenCalledTimes(2))
 })
+
+const ownIdentity = { getDeviceId: async () => 'own-device' }
+const ownChunk = { did: 'own-device', snapshotId: 'snapshot', payload: 'opaque' }
+const ownManifest = { did: 'own-device', schemaVersion: 4, accountScopeId: scope, snapshotId: 'snapshot',
+  chunkCount: 1, payloadBytes: 6, payloadHash: 'a'.repeat(64), settings: { enabled: true, hideOrganizedChats: false } }
+
+it('skips split own envelopes without reading Sync or consulting the coordinator', async () => {
+  const coordinator = { sync: vi.fn(async () => ({})) }
+  const scheduler = new FolderSyncScheduler(coordinator as never, ownIdentity)
+  scheduler.requestStorageChanges({ [`folders:${scope}:manifest`]: { newValue: ownManifest } })
+  scheduler.requestStorageChanges({ [`folders:${scope}:chunk:0`]: { newValue: ownChunk } })
+  await new Promise((resolve) => setTimeout(resolve, 20))
+  expect(coordinator.sync).not.toHaveBeenCalled()
+})
+
+it.each([
+  { newValue: { ...ownChunk, did: 'foreign-device' } },
+  { newValue: { snapshotId: 'legacy', payload: 'opaque' } },
+  { newValue: { ...ownChunk, payload: 1 } },
+  { newValue: { ...ownChunk, extra: true } },
+  { newValue: { ...ownChunk, did: 'x'.repeat(129) } },
+  { oldValue: ownChunk },
+])('checks uncertain chunk notifications conservatively: %j', async (change) => {
+  const coordinator = { sync: vi.fn(async () => ({})) }
+  const scheduler = new FolderSyncScheduler(coordinator as never, ownIdentity)
+  scheduler.requestStorageChanges({ [`folders:${scope}:chunk:0`]: change, [`folders:${scope}:chunk:1`]: { newValue: ownChunk } })
+  await vi.waitFor(() => expect(coordinator.sync).toHaveBeenCalledExactlyOnceWith(scope, undefined, true))
+})
+
+it.each([5, 3])('does not suppress an unknown manifest version %s', async (schemaVersion) => {
+  const coordinator = { sync: vi.fn(async () => ({})) }
+  const scheduler = new FolderSyncScheduler(coordinator as never, ownIdentity)
+  scheduler.requestStorageChanges({ [`folders:${scope}:manifest`]: { newValue: { ...ownManifest, schemaVersion } } })
+  await vi.waitFor(() => expect(coordinator.sync).toHaveBeenCalledTimes(1))
+})
+
+it('filters each account independently within mixed callbacks', async () => {
+  const coordinator = { sync: vi.fn(async () => ({})) }
+  const scheduler = new FolderSyncScheduler(coordinator as never, ownIdentity)
+  scheduler.requestStorageChanges({ [`folders:${scope}:manifest`]: { newValue: ownManifest },
+    'folders:account-scope-0002:chunk:0': { newValue: { ...ownChunk, did: 'other' } } })
+  await vi.waitFor(() => expect(coordinator.sync).toHaveBeenCalledExactlyOnceWith('account-scope-0002', undefined, true))
+})
+
+it.each(['throw', 'reject'])('falls back to full checks when identity access fails: %s', async (mode) => {
+  const coordinator = { sync: vi.fn(async () => ({})) }
+  const scheduler = new FolderSyncScheduler(coordinator as never, { getDeviceId: () => {
+    if (mode === 'throw') throw new Error('identity unavailable')
+    return Promise.reject(new Error('identity unavailable'))
+  } })
+  scheduler.requestStorageChanges({ [`folders:${scope}:manifest`]: { newValue: ownManifest } })
+  await vi.waitFor(() => expect(coordinator.sync).toHaveBeenCalledExactlyOnceWith(scope, undefined, true))
+})
+
+it('keeps retry, activity, and alarms on the full path after own echoes', async () => {
+  const coordinator = { sync: vi.fn(async () => ({})) }
+  const scheduler = new FolderSyncScheduler(coordinator as never, ownIdentity)
+  scheduler.requestStorageChanges({ [`folders:${scope}:manifest`]: { newValue: ownManifest } })
+  await scheduler.retry(scope)
+  scheduler.requestRun(scope, 'content-activity-hint')
+  await vi.waitFor(() => expect(coordinator.sync).toHaveBeenCalledTimes(2))
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  scheduler.handleAlarm(`gpk-folders-retry:${scope}`)
+  await vi.waitFor(() => expect(coordinator.sync).toHaveBeenCalledTimes(3))
+  expect(coordinator.sync.mock.calls.every((args) => args.length < 3)).toBe(true)
+})
+
+it('checks an own-author manifest whose account scope disagrees with its key', async () => {
+  const coordinator = { sync: vi.fn(async () => ({})) }
+  const scheduler = new FolderSyncScheduler(coordinator as never, ownIdentity)
+  scheduler.requestStorageChanges({ [`folders:${scope}:manifest`]: {
+    newValue: { ...ownManifest, accountScopeId: 'account-scope-0002' },
+  } })
+  await vi.waitFor(() => expect(coordinator.sync).toHaveBeenCalledExactlyOnceWith(scope, undefined, true))
+})

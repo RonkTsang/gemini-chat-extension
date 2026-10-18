@@ -4,6 +4,9 @@
  */
 
 import Dexie, { type Table } from 'dexie'
+import { folderAccessMiddleware } from './folder-access'
+import { folderNameKey, membershipDisplayOrderKey } from '@/domain/folder/local-indexes'
+import { rebuildFolderSummary, type FolderOrganizationSummaryRow } from './folder-summary'
 
 import type { GemAvatarAssetRow } from '@/domain/gem-avatar/types'
 import type { QuickFollowIconKey } from '@/domain/quick-follow/iconKeys'
@@ -74,9 +77,11 @@ export class GeminiExtensionDB extends Dexie {
   folder_snapshots!: Table<FolderSnapshotRow, string>
   folder_recovery_states!: Table<FolderRecoveryStateRow, string>
   folder_coordinator_leases!: Table<FolderCoordinatorLeaseRow, string>
+  folder_organization_summaries!: Table<FolderOrganizationSummaryRow, string>
 
   constructor() {
     super('gemini_extension')
+    if (import.meta.env.DEV) this.use(folderAccessMiddleware)
     this.version(1).stores({
       chain_prompts: 'id, name, createdAt, updatedAt'
     })
@@ -122,7 +127,7 @@ export class GeminiExtensionDB extends Dexie {
       .upgrade(() => {
         // no-op: existing installations do not require data migration
       })
-    // Folder has not shipped. Its schema is defined once, without protocol migrations.
+    // Retain v13 so existing development databases upgrade without data loss.
     this.version(13).stores({
       folders: 'id, accountScopeId, [accountScopeId+parentFolderId], [accountScopeId+parentFolderId+orderKey]',
       folder_memberships: 'id, accountScopeId, [accountScopeId+folderId], [accountScopeId+folderId+orderKey], [accountScopeId+chatId], &[accountScopeId+folderId+chatId]',
@@ -134,6 +139,34 @@ export class GeminiExtensionDB extends Dexie {
       folder_snapshots: 'id, accountScopeId, [accountScopeId+createdAt]',
       folder_coordinator_leases: 'accountScopeId, expiresAt',
       folder_recovery_states: 'accountScopeId, updatedAt',
+    })
+    this.version(14).stores({
+      folders: 'id, accountScopeId, [accountScopeId+nameKey], [accountScopeId+parentFolderId], [accountScopeId+parentFolderId+orderKey], [accountScopeId+parentFolderId+orderKey+id]',
+      folder_memberships: 'id, accountScopeId, [accountScopeId+folderId], [accountScopeId+folderId+orderKey], [accountScopeId+folderId+orderKey+id], [accountScopeId+folderId+displayOrderKey+id], [accountScopeId+chatId], &[accountScopeId+folderId+chatId]',
+      folder_organization_summaries: 'accountScopeId',
+      folder_chat_usage: '[accountScopeId+chatId], accountScopeId',
+    }).upgrade(async (transaction) => {
+      await transaction.table<FolderRow>('folders').toCollection().modify((row) => { row.nameKey = folderNameKey(row.name) })
+      await transaction.table<FolderMembershipRow>('folder_memberships').toCollection().modify((row) => { row.displayOrderKey = membershipDisplayOrderKey(row) })
+      for (const conflict of await transaction.table<FolderSyncConflictRow>('folder_sync_conflicts').toArray()) {
+        await transaction.table('folder_sync_states').update(conflict.accountScopeId, {
+          conflictSummary: { snapshotId: conflict.manifest.snapshotId, localRevision: conflict.localRevision },
+        })
+      }
+    })
+    this.version(15).stores({
+      folders: 'id, accountScopeId, [accountScopeId+nameKey], [accountScopeId+parentFolderId], [accountScopeId+parentFolderId+orderKey+id]',
+      folder_memberships: 'id, accountScopeId, [accountScopeId+folderId], [accountScopeId+folderId+orderKey+id], [accountScopeId+folderId+displayOrderKey+id], [accountScopeId+chatId], [accountScopeId+chatId+folderId], &[accountScopeId+folderId+chatId]',
+      folder_chat_usage: null,
+    }).upgrade(async (transaction) => {
+      const folders = await transaction.table<FolderRow>('folders').toArray()
+      const memberships = await transaction.table<FolderMembershipRow>('folder_memberships').toArray()
+      const scopes = new Set([...folders, ...memberships].map((row) => row.accountScopeId))
+      await transaction.table('folder_organization_summaries').clear()
+      for (const accountScopeId of scopes) {
+        await rebuildFolderSummary(transaction, { accountScopeId, folders: folders.filter((row) => row.accountScopeId === accountScopeId),
+          memberships: memberships.filter((row) => row.accountScopeId === accountScopeId), chatReferences: [] })
+      }
     })
   }
 }

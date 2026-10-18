@@ -39,7 +39,11 @@ function request(method: FolderRpcMethod, params: unknown = {}) {
 describe('Folders usage RPC', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    state.execute.mockReset().mockResolvedValue({ data: undefined, commit: { accountScopeId: scope, dataRevision: 'local-revision', effect: 'organization' } })
+    state.execute.mockReset().mockImplementation(async (request) => ({ data: undefined, commit: {
+      accountScopeId: scope, baseRevision: 'previous-revision', dataRevision: 'local-revision', effect: 'organization',
+      affected: request.method === 'updateChatTitle' ? { chatIds: [request.params.chatId] }
+        : request.method === 'setMembershipPinned' ? { folderIds: [request.params.folderId] } : { all: true },
+    } }))
     state.revision.mockReset().mockResolvedValue('local-revision')
     state.measure.mockResolvedValue({ folderBytes: 10, folderBudgetBytes: 70 * 1024, totalBytes: 20, quotaBytes: 100 * 1024, usagePercent: 0.01 })
     state.record.mockResolvedValue(undefined)
@@ -102,6 +106,24 @@ describe('Folders usage RPC', () => {
     expect(state.execute).not.toHaveBeenCalled()
   })
 
+  it('preserves production request IDs and error feedback without diagnostic success logs', async () => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => undefined)
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    vi.stubEnv('DEV', false)
+    try {
+      const handler = createFolderRpcHandler(scheduler)
+      await expect(handler(request('getSyncStatus'), sender)).resolves.toMatchObject({ ok: true, requestId: 'request-1' })
+      state.status.mockRejectedValueOnce(new Error('Status read failed'))
+      await expect(handler({ ...request('getSyncStatus'), requestId: 'request-2' }, sender)).resolves.toMatchObject({
+        ok: false, requestId: 'request-2', error: { code: 'INTERNAL_ERROR', retryable: true },
+      })
+      expect(error).toHaveBeenCalledWith('[Folders][rpc] request failed', expect.objectContaining({ requestId: 'request-2', code: 'INTERNAL_ERROR' }))
+      expect(info).not.toHaveBeenCalled()
+      expect(state.measure).not.toHaveBeenCalled()
+      expect(state.record).not.toHaveBeenCalled()
+    } finally { vi.unstubAllEnvs(); info.mockRestore(); error.mockRestore() }
+  })
+
   it('measures and persists once on explicit request, returning status and invalidating status only', async () => {
     const handler = createFolderRpcHandler(scheduler)
     await expect(handler(request('measureBrowserSyncUsage'), sender)).resolves.toMatchObject({ ok: true, data: { currentUsageBytes: 10 } })
@@ -121,7 +143,7 @@ describe('Folders usage RPC', () => {
       .resolves.toMatchObject({ ok: true })
     expect(state.execute).toHaveBeenCalledTimes(1)
     expect(state.invalidation).toHaveBeenCalledWith(
-      { accountScopeId: scope, dataRevision: 'local-revision', type: 'folders:data-changed', affected: {} },
+      { accountScopeId: scope, baseRevision: 'previous-revision', requestId: 'request-1', dataRevision: 'local-revision', type: 'folders:data-changed', affected: { chatIds: ['e314bf90da4c7254'] } },
       { excludeTabId: 1 },
     )
   })
@@ -131,7 +153,7 @@ describe('Folders usage RPC', () => {
     await expect(handler(request('setMembershipPinned', { folderId: 'folder-1', chatId: 'chat-1', pinned: true }), sender)).resolves.toMatchObject({ ok: true })
     expect(state.execute).toHaveBeenCalledTimes(1)
     expect(state.invalidation).toHaveBeenCalledWith(
-      { accountScopeId: scope, dataRevision: 'local-revision', type: 'folders:data-changed', affected: {} },
+      { accountScopeId: scope, baseRevision: 'previous-revision', requestId: 'request-1', dataRevision: 'local-revision', type: 'folders:data-changed', affected: { folderIds: ['folder-1'] } },
       { excludeTabId: 1 },
     )
   })

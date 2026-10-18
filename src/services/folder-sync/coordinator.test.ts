@@ -5,7 +5,7 @@ import { db } from '@/data/db'
 import { FolderRepositoryImpl } from '@/data/repositories/folderRepository'
 import { BrowserSyncFolderProvider, browserSyncManifestKey, browserSyncChunkKey } from './providers/browser-sync'
 import { FolderSyncCoordinator } from './coordinator'
-import { decodeLzStringBase64 } from './codec'
+import { decodeLzStringBase64, fromFolderSyncData, toFolderSyncData } from './codec'
 import { FolderQueryService } from '@/entrypoints/background/folders/query-service'
 
 const repository = () => new FolderRepositoryImpl({ getDeviceId: async () => 'device-test' })
@@ -48,7 +48,7 @@ describe('whole snapshot decisions', () => {
       .toMatchObject({ outcome: 'accepted-by-browser-storage' })
     expect(await repo.getAccountData(scopeA)).toEqual(before)
     expect(await new BrowserSyncFolderProvider().read(scopeA)).toMatchObject({ status: 'complete',
-      manifest: { settings: { hideOrganizedChats: true } }, data: before })
+      manifest: { settings: { hideOrganizedChats: true } }, data: fromFolderSyncData(scopeA, toFolderSyncData(before)) })
     expect((await repo.getSyncState(scopeA))?.baseSnapshotId).not.toBe(prior.baseSnapshotId)
     expect((await repo.getSyncState(scopeA))?.browserSyncWarning).toBeUndefined()
   })

@@ -21,7 +21,7 @@ function traceDetails(traceId: string, step: string, details?: FolderTraceDetail
 
 /** A correlation id shared by the menu, local write, projection refresh, and sync request. */
 export function createFolderTraceId(): string {
-  return `membership-add-${nanoid(10)}`
+  return import.meta.env.DEV ? `membership-add-${nanoid(10)}` : ''
 }
 
 export function logFolderTrace(
@@ -29,7 +29,7 @@ export function logFolderTrace(
   step: string,
   details?: FolderTraceDetails,
 ): void {
-  logDevEvent('info', LOG_PREFIX, step, traceDetails(traceId, step, details))
+  if (import.meta.env.DEV) logDevEvent('info', LOG_PREFIX, step, traceDetails(traceId, step, details))
 }
 
 export function logFolderTraceError(
@@ -38,5 +38,5 @@ export function logFolderTraceError(
   error: unknown,
   details?: FolderTraceDetails,
 ): void {
-  logDevError(LOG_PREFIX, step, error, traceDetails(traceId, step, details))
+  if (import.meta.env.DEV) logDevError(LOG_PREFIX, step, error, traceDetails(traceId, step, details))
 }

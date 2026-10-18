@@ -23,7 +23,7 @@ export function FolderPicker() {
     const { chatId, traceId, cachedTitle } = picker
     setError(undefined)
     setPendingFolderId(folderId)
-    logFolderTrace(traceId, 'picker.folder-selected', {
+    if (import.meta.env.DEV) logFolderTrace(traceId, 'picker.folder-selected', {
       folderId,
       chatId,
       cachedTitleFound: Boolean(cachedTitle),
@@ -31,13 +31,13 @@ export function FolderPicker() {
     try {
       await folderRuntime.addMembership(folderId, chatId, cachedTitle, traceId)
     } catch (nextError) {
-      logFolderTraceError(traceId, 'picker.command-rejected', nextError, { folderId, chatId })
+      if (import.meta.env.DEV) logFolderTraceError(traceId, 'picker.command-rejected', nextError, { folderId, chatId })
       setError(nextError instanceof Error ? nextError.message : tt('folders_save_failed', 'Could not complete this action.'))
       return
     } finally {
       setPendingFolderId(undefined)
     }
-    logFolderTrace(traceId, 'picker.command-resolved', { folderId, chatId })
+    if (import.meta.env.DEV) logFolderTrace(traceId, 'picker.command-resolved', { folderId, chatId })
     closeOpenConversationActionsMenu(chatId)
     toaster.create({
       type: 'success',
