@@ -145,9 +145,21 @@ export interface FolderSnapshotRow {
   dataRevision: string
   createdAt: string
   contentHash: string
+  /** JSON-encoded payload value bytes; used with the logical snapshot budget. */
+  payloadBytes: number
+  validationState: 'valid' | 'invalid'
+}
+
+export interface FolderSnapshotPayloadRow {
+  id: string
   /** LZ-String Base64 of FolderOrganizationData, containing current entities. */
   compressedPayload: string
 }
+
+export type FolderSnapshotSummary = Pick<FolderSnapshotRow,
+  'id' | 'accountScopeId' | 'reason' | 'reasons' | 'folderCount' | 'chatCount' | 'createdAt' | 'updatedAt' | 'validationState'>
+
+export interface FolderSnapshotProtection { id: string; protectionToken: string }
 
 /** Local recovery bookkeeping; never included in backups or sync payloads. */
 export interface FolderRecoveryStateRow {
@@ -180,6 +192,14 @@ export interface FolderDataSnapshot {
   data: FolderAccountData
   dataRevision: string
   pendingRevision?: string
+}
+
+/** One Sync call's consistent local view; never cached across runs. */
+export interface FolderBrowserSyncCapture extends FolderDataSnapshot {
+  state: FolderSyncStateRow
+  settings: FolderSettingsRow
+  publication?: FolderSyncPublicationRow
+  hasConflict: boolean
 }
 
 export interface FolderLocalStorageStatus {

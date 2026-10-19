@@ -40,7 +40,7 @@ describe('FolderRecoveryRunner', () => {
     const points = await repo.listSnapshots(scopeA)
     expect(points).toHaveLength(1)
     expect(points[0].id).toBe(snapshot.id)
-    expect(decodeLzStringBase64<{ folders: { name: string }[] }>(points[0].compressedPayload).folders[0].name).toBe('Second')
+    expect(decodeLzStringBase64<{ folders: { name: string }[] }>((await db.folder_snapshot_payloads.get(points[0].id))!.compressedPayload).folders[0].name).toBe('Second')
     expect((await db.folder_recovery_states.get(scopeA))?.pendingRevision).toBeUndefined()
   })
 
@@ -53,7 +53,7 @@ describe('FolderRecoveryRunner', () => {
     const runner = new FolderRecoveryRunner(repo)
     runner.requestRun()
     await idle(runner)
-    expect((await repo.listSnapshots(scopeA))[0].dataRevision).toBe('remote-revision')
+    expect((await db.folder_snapshots.get((await repo.listSnapshots(scopeA))[0].id))?.dataRevision).toBe('remote-revision')
     expect((await db.folder_recovery_states.get(scopeA))?.pendingRevision).toBeUndefined()
   })
 

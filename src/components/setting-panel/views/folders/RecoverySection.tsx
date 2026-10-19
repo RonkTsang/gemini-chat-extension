@@ -6,7 +6,7 @@ import { LuInfo } from 'react-icons/lu'
 import { ToggleTip } from '@/components/ui/toggle-tip'
 import { countFolderOrganization, type FolderOrganizationCounts } from '@/domain/folder/organization-summary'
 import { folderExportPayloadSchema } from '@/domain/folder/schemas'
-import type { FolderLocalStorageStatus, FolderSnapshotRow } from '@/domain/folder/types'
+import type { FolderLocalStorageStatus, FolderSnapshotSummary } from '@/domain/folder/types'
 import { folderRuntime } from '@/entrypoints/content/folders/runtime'
 import { getCurrentLocale, t, tt } from '@/utils/i18n'
 import { eventBus } from '@/utils/eventbus'
@@ -35,12 +35,12 @@ function localized(key: string, fallback: string, values: string[]): string {
 export function RecoverySection({ accountScopeId, isPanelOpen, warning, automaticSnapshotFailed }: RecoverySectionProps) {
   const [status, setStatus] = useState<FolderLocalStorageStatus>()
   const [statusError, setStatusError] = useState<string>()
-  const [snapshots, setSnapshots] = useState<FolderSnapshotRow[]>()
+  const [snapshots, setSnapshots] = useState<FolderSnapshotSummary[]>()
   const [historyError, setHistoryError] = useState<string>()
   const [historyLoading, setHistoryLoading] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
   const [working, setWorking] = useState<RecoveryAction>()
-  const [restoreTarget, setRestoreTarget] = useState<FolderSnapshotRow>()
+  const [restoreTarget, setRestoreTarget] = useState<FolderSnapshotSummary>()
   const [pendingImport, setPendingImport] = useState<PendingImport>()
   const inputRef = useRef<HTMLInputElement>(null)
   const active = useRef(true)

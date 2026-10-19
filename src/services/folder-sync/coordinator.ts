@@ -1,7 +1,7 @@
 import { nanoid } from 'nanoid'
 
 import { folderRepository, FolderCoordinatorLeaseBusyError, type FolderRepository } from '@/data/repositories/folderRepository'
-import type { BrowserSyncRecreationRequest, FolderAccountData, FolderSyncPublicationRow, FolderSyncRunResult, FolderSnapshotRow } from '@/domain/folder/types'
+import type { BrowserSyncRecreationRequest, FolderBrowserSyncCapture, FolderAccountData, FolderSyncPublicationRow, FolderSyncRunResult, FolderSnapshotRow } from '@/domain/folder/types'
 import { publishFolderInvalidation } from '@/entrypoints/background/folders/invalidation'
 import { FolderRecoveryError } from '@/services/folder-recovery/storage'
 import { logDevError, logDevEvent } from '@/utils/devLogger'
@@ -48,8 +48,8 @@ export class FolderSyncCoordinator {
     catch (error) { logDevError('[Folders][sync]', 'recovery-wake-failed', error, { accountScopeId }) }
   }
 
-  private async publish(accountScopeId: string, pending: FolderSyncPublicationRow | undefined, context: { syncRunId: string; traceId?: string }): Promise<FolderSyncRunResult> {
-    const publication = pending ?? await this.repository.getOrCreateBrowserSyncPublication(accountScopeId)
+  private async publish(accountScopeId: string, pending: FolderSyncPublicationRow | undefined, context: { syncRunId: string; traceId?: string }, captured?: FolderBrowserSyncCapture): Promise<FolderSyncRunResult> {
+    const publication = pending ?? await this.repository.getOrCreateBrowserSyncPublication(accountScopeId, captured)
     logDevEvent('debug', '[Folders][sync]', 'browser-sync.publish.started', { accountScopeId, ...context,
       manifestKey: browserSyncManifestKey(accountScopeId), snapshotId: publication.id, baseSnapshotId: publication.baseSnapshotId,
       dataRevision: publication.dataRevision, publicationState: publication.state })
@@ -90,7 +90,7 @@ export class FolderSyncCoordinator {
       throw error
     }
     try {
-      const settings = await this.repository.getSettings(accountScopeId)
+      await this.repository.getSettings(accountScopeId)
       const state = await this.repository.getSyncState(accountScopeId)
       if (state?.provider === 'google-drive') return { outcome: 'deferred' }
       const remote = await this.transport.read(accountScopeId)
@@ -129,12 +129,11 @@ export class FolderSyncCoordinator {
         await this.invalidate(accountScopeId)
         return { outcome: 'failed', retryAt }
       }
-      const capture = await this.repository.getAccountDataWithRevision(accountScopeId)
-      const current = await this.repository.getSyncState(accountScopeId)
-      if (current?.localDataRevision !== capture.dataRevision) return { outcome: 'deferred', retryAt: new Date(Date.now() + 60_000).toISOString() }
-      const conflict = await this.repository.getBrowserSyncConflict(accountScopeId)
-      if (conflict || (current?.dirty && current.baseSnapshotId !== remote.manifest.snapshotId)) {
-        if (!await this.repository.recordBrowserSyncConflict(accountScopeId, remote.data, remote.manifest, capture.dataRevision)) {
+      const capture = await this.repository.captureBrowserSyncData(accountScopeId)
+      const current = capture.state
+      if (current.provider !== 'browser-sync') return { outcome: 'deferred' }
+      if (capture.hasConflict || (current?.dirty && current.baseSnapshotId !== remote.manifest.snapshotId)) {
+        if (!await this.repository.recordBrowserSyncConflict(accountScopeId, remote.data, remote.manifest, capture.dataRevision, capture)) {
           return { outcome: 'deferred', retryAt: new Date(Date.now() + 60_000).toISOString() }
         }
         await this.invalidate(accountScopeId)
@@ -142,19 +141,19 @@ export class FolderSyncCoordinator {
         return { outcome: 'conflict' }
       }
       if (current?.baseSnapshotId === remote.manifest.snapshotId) {
-        if (current.dirty || pending) return await this.publish(accountScopeId, pending?.state === 'writing' ? pending : undefined, context)
+        if (current.dirty || capture.publication) return await this.publish(accountScopeId, capture.publication?.state === 'writing' ? capture.publication : undefined, context, capture)
         // A retained base ID alone does not prove the local organization survived
         // a partial reset. Clean data must still describe that complete snapshot.
         if (organizationContent(capture.data) === organizationContent(remote.data)
-          && settings.enabled === remote.manifest.settings.enabled
-          && settings.hideOrganizedChats === remote.manifest.settings.hideOrganizedChats) {
-          if (await this.repository.recordBrowserSyncHealthy(accountScopeId, remote.manifest.snapshotId, capture.dataRevision)) await this.invalidate(accountScopeId)
+          && capture.settings.enabled === remote.manifest.settings.enabled
+          && capture.settings.hideOrganizedChats === remote.manifest.settings.hideOrganizedChats) {
+          if (await this.repository.recordBrowserSyncHealthy(accountScopeId, remote.manifest.snapshotId, capture.dataRevision, capture)) await this.invalidate(accountScopeId)
           logDevEvent('debug', '[Folders][sync]', 'browser-sync.snapshot.unchanged', { accountScopeId, ...context, snapshotId: remote.manifest.snapshotId, folderCount: capture.data.folders.length })
           return { outcome: 'accepted-by-browser-storage' }
         }
         logDevEvent('info', '[Folders][sync]', 'browser-sync.local-replica.repair-needed', { accountScopeId, ...context, snapshotId: remote.manifest.snapshotId })
       }
-      if (!await this.repository.applyBrowserSyncSnapshot(accountScopeId, remote.data, remote.manifest, capture.dataRevision)) {
+      if (!await this.repository.applyBrowserSyncSnapshot(accountScopeId, remote.data, remote.manifest, capture.dataRevision, false, capture)) {
         return { outcome: 'deferred', retryAt: new Date(Date.now() + 60_000).toISOString() }
       }
       logDevEvent('info', '[Folders][sync]', 'browser-sync.snapshot.applied', { accountScopeId, ...context, snapshotId: remote.manifest.snapshotId, dataRevision: capture.dataRevision })
@@ -162,7 +161,7 @@ export class FolderSyncCoordinator {
       await this.invalidate(accountScopeId, true)
       return { outcome: 'accepted-by-browser-storage' }
     } catch (error) {
-      if (error instanceof BrowserSyncReplicaChangedError) return { outcome: 'deferred', retryAt: new Date(Date.now() + 60_000).toISOString() }
+      if (error instanceof BrowserSyncReplicaChangedError || (error instanceof Error && error.message === 'STALE_REVISION')) return { outcome: 'deferred', retryAt: new Date(Date.now() + 60_000).toISOString() }
       return await this.failed(accountScopeId, error, context)
     } finally { await this.repository.releaseCoordinatorLease(accountScopeId, this.ownerId) }
   }
@@ -189,7 +188,7 @@ export class FolderSyncCoordinator {
       logDevEvent('info', '[Folders][sync]', 'browser-sync.replica.recreation-authorized', { accountScopeId, ...context, ...request })
       return await this.publish(accountScopeId, undefined, context)
     } catch (error) {
-      if (error instanceof BrowserSyncReplicaChangedError) return { outcome: 'deferred', retryAt: new Date(Date.now() + 60_000).toISOString() }
+      if (error instanceof BrowserSyncReplicaChangedError || (error instanceof Error && error.message === 'STALE_REVISION')) return { outcome: 'deferred', retryAt: new Date(Date.now() + 60_000).toISOString() }
       return await this.failed(accountScopeId, error, context)
     } finally { await this.repository.releaseCoordinatorLease(accountScopeId, this.ownerId) }
   }
@@ -205,14 +204,15 @@ export class FolderSyncCoordinator {
     const protections: FolderSnapshotRow[] = []
     try {
       const candidate = await this.repository.getBrowserSyncConflict(accountScopeId)
-      const captured = await this.repository.getAccountDataWithRevision(accountScopeId)
+      const captured = await this.repository.captureBrowserSyncData(accountScopeId)
+      if (captured.state.provider !== 'browser-sync') return { outcome: 'deferred' }
       if (captured.dataRevision !== expectedRevision || candidate?.localRevision !== expectedRevision
         || candidate.manifest.snapshotId !== snapshotId) return { outcome: 'deferred' }
       const remote = await this.transport.read(accountScopeId)
       if (remote.status === 'unsupported-schema-version') throw new BrowserSyncUnsupportedVersionError(remote.schemaVersion)
       if (remote.status !== 'complete') return { outcome: 'deferred' }
       if (stableStringify(remote.manifest) !== stableStringify(candidate.manifest)) {
-        await this.repository.recordBrowserSyncConflict(accountScopeId, remote.data, remote.manifest, captured.dataRevision)
+        await this.repository.recordBrowserSyncConflict(accountScopeId, remote.data, remote.manifest, captured.dataRevision, captured)
         await this.invalidate(accountScopeId)
         return { outcome: 'conflict' }
       }
@@ -226,23 +226,28 @@ export class FolderSyncCoordinator {
       if (latest.status === 'unsupported-schema-version') throw new BrowserSyncUnsupportedVersionError(latest.schemaVersion)
       if (latest.status !== 'complete' || stableStringify(latest.manifest) !== stableStringify(candidate.manifest)) {
         if (latest.status === 'complete') {
-          await this.repository.recordBrowserSyncConflict(accountScopeId, latest.data, latest.manifest, expectedRevision)
+          await this.repository.recordBrowserSyncConflict(accountScopeId, latest.data, latest.manifest, expectedRevision, captured)
           await this.invalidate(accountScopeId)
         }
         return { outcome: 'deferred' }
       }
       if (choice === 'remote') {
-        if (!await this.repository.applyBrowserSyncSnapshot(accountScopeId, remote.data, candidate.manifest, expectedRevision, true)) return { outcome: 'deferred' }
+        if (!await this.repository.applyBrowserSyncSnapshot(accountScopeId, remote.data, candidate.manifest, expectedRevision, true, captured)) return { outcome: 'deferred' }
         logDevEvent('info', '[Folders][sync]', 'browser-sync.conflict.resolved', { accountScopeId, ...context, choice, snapshotId })
         this.recover(accountScopeId)
         await this.invalidate(accountScopeId, true)
         return { outcome: 'accepted-by-browser-storage' }
       }
-      if (!await this.repository.selectLocalConflictVersion(accountScopeId, expectedRevision, snapshotId)) return { outcome: 'deferred' }
+      if (!await this.repository.selectLocalConflictVersion(accountScopeId, expectedRevision, snapshotId, captured)) return { outcome: 'deferred' }
       logDevEvent('info', '[Folders][sync]', 'browser-sync.conflict.resolved', { accountScopeId, ...context, choice, snapshotId })
-      return await this.publish(accountScopeId, undefined, context)
-    } catch (error) { return await this.failed(accountScopeId, error, context) }
-    finally {
+      // Selection changed only these guarded fields; the captured organization/settings still match.
+      return await this.publish(accountScopeId, undefined, context, { ...captured,
+        state: { ...captured.state, baseSnapshotId: snapshotId, dirty: true, conflictSummary: undefined },
+        publication: undefined, hasConflict: false })
+    } catch (error) {
+      if (error instanceof Error && error.message === 'STALE_REVISION') return { outcome: 'deferred', retryAt: new Date(Date.now() + 60_000).toISOString() }
+      return await this.failed(accountScopeId, error, context)
+    } finally {
       for (const protection of protections) {
         if (!protection.protectionToken) continue
         try { await this.repository.releaseSnapshot(accountScopeId, protection.id, protection.protectionToken) }

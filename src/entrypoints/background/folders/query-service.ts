@@ -3,7 +3,7 @@ import Dexie from 'dexie'
 
 import { db } from '@/data/db'
 import { newestSnapshots } from '@/services/folder-recovery/storage'
-import { withSnapshotCounts } from '@/services/folder-recovery/snapshots'
+import { toSnapshotSummary } from '@/domain/folder/snapshot'
 import { readRecoveryFailure } from '@/services/folder-recovery/failure-fallback'
 import { membershipDisplayOrderKey } from '@/domain/folder/local-indexes'
 import type { FolderChatSummary, FolderSidebarState } from '@/domain/folder/sidebar'
@@ -58,6 +58,7 @@ const QUERY_TABLES = {
   getSyncStatus: [db.folder_sync_states, db.folder_settings, db.folder_recovery_states, db.folders, db.folder_organization_summaries],
   getFolderSummaries: [db.folders, db.folder_memberships, db.folder_settings],
   getChatReferences: [db.folder_chat_references],
+  listSnapshots: [db.folder_snapshots],
 }
 export type FolderQueryName = keyof typeof QUERY_TABLES
 
@@ -214,12 +215,15 @@ export class FolderQueryService {
   }
 
   async listSnapshots(accountScopeId: string, cursor: string | undefined, limit: number) {
-    const rows = await db.folder_snapshots.where('[accountScopeId+createdAt]')
-      .between([accountScopeId, Dexie.minKey], [accountScopeId, Dexie.maxKey]).reverse().toArray()
-    const sorted = newestSnapshots(rows)
-    const boundary = cursor ? sorted.findIndex((row) => row.id === cursor) + 1 : 0
-    const items = await Promise.all(sorted.slice(boundary, boundary + limit).map(withSnapshotCounts))
-    return { items, nextCursor: boundary + limit < sorted.length ? items.at(-1)?.id : undefined }
+    return this.read('listSnapshots', async () => {
+      pageLimit(limit)
+      const rows = await db.folder_snapshots.where('[accountScopeId+createdAt]')
+        .between([accountScopeId, Dexie.minKey], [accountScopeId, Dexie.maxKey]).reverse().toArray()
+      const sorted = newestSnapshots(rows)
+      const boundary = cursor ? sorted.findIndex((row) => row.id === cursor) + 1 : 0
+      const items = sorted.slice(boundary, boundary + limit).map(toSnapshotSummary)
+      return { items, nextCursor: boundary + limit < sorted.length ? items.at(-1)?.id : undefined }
+    })
   }
 
   private summary(folder: FolderRow, chatCount: number, settings: FolderSettingsRow): FolderSummary {

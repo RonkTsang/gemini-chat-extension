@@ -9,6 +9,7 @@ import { dispatchFolderAfterCommit } from '@/services/folder-tasks/after-commit'
 
 import { FolderQueryService } from './query-service'
 import type { FolderAffected } from '@/domain/folder/changes'
+import { toSnapshotSummary } from '@/domain/folder/snapshot'
 
 function commandAffected(request: FolderRpcEnvelope): FolderAffected {
   const input = request.params as { folderId: string; targetFolderId: string; chatId: string }
@@ -104,13 +105,14 @@ export class FolderCommandService {
       case 'createSnapshot': {
         const captured = await repository.getAccountDataWithRevision(request.accountScopeId)
         const data = await repository.createSnapshot(request.accountScopeId, 'manual', false, captured)
-        return { data, commit: { accountScopeId: request.accountScopeId, dataRevision: captured.dataRevision } }
+        return { data: toSnapshotSummary(data), commit: { accountScopeId: request.accountScopeId, dataRevision: captured.dataRevision } }
       }
       case 'prepareChatDeletion':
         try {
           const captured = await repository.getAccountDataWithRevision(request.accountScopeId)
           const data = await repository.createSnapshot(request.accountScopeId, 'before-delete', true, captured)
-          return { data, commit: { accountScopeId: request.accountScopeId, dataRevision: captured.dataRevision } }
+          if (!data.protectionToken) throw new Error('Snapshot protection token is unavailable')
+          return { data: { id: data.id, protectionToken: data.protectionToken }, commit: { accountScopeId: request.accountScopeId, dataRevision: captured.dataRevision } }
         } catch (error) {
           throw new FolderRecoveryError('SNAPSHOT_PROTECTION_FAILED', { cause: error })
         }

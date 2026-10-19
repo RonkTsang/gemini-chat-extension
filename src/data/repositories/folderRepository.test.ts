@@ -82,7 +82,7 @@ describe('Folder local organization', () => {
     const snapshot = await repo.createSnapshot(scopeA, 'manual')
     const backup = await repo.exportAccountData(scopeA)
     expect(decodeLzStringBase64(pending.payload)).toEqual(backup.data)
-    expect(snapshot.compressedPayload).toBe(pending.payload)
+    expect((await db.folder_snapshot_payloads.get(snapshot.id))?.compressedPayload).toBe(pending.payload)
     expect(JSON.stringify(backup.data)).not.toContain(scopeA)
     expect(toFolderSyncData(fromFolderSyncData(scopeA, backup.data))).toEqual(toFolderSyncData(await repo.getAccountData(scopeA)))
   })
@@ -229,20 +229,17 @@ describe('retained local organization regressions', () => {
     const queries = new FolderQueryService()
     expect(await queries.getSyncStatus(scopeA)).toMatchObject({ folderCount: 2, chatCount: 12 })
     expect((await queries.getSidebarState(scopeA, 5)).chatsByFolder[first.id].items).toHaveLength(10)
-    await db.folder_snapshots.update(point.id, { folderCount: undefined, chatCount: undefined })
     await repository.removeMembership(scopeA, first.id, 'chat-1').then((result) => result.data)
     expect(await queries.getSyncStatus(scopeA)).toMatchObject({ folderCount: 2, chatCount: 11 })
     const historical = (await queries.listSnapshots(scopeA, undefined, 100)).items.find((row) => row.id === point.id)
     expect(historical).toMatchObject({ folderCount: 2, chatCount: 12 })
-    expect((await db.folder_snapshots.get(point.id))?.folderCount).toBeUndefined()
-    await db.folder_snapshots.update(point.id, { compressedPayload: 'corrupted' })
-    const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
-    try {
-      const corrupt = (await queries.listSnapshots(scopeA, undefined, 100)).items.find((row) => row.id === point.id)
-      expect(corrupt?.folderCount).toBeUndefined()
-      expect(corrupt?.chatCount).toBeUndefined()
-      expect(warning).toHaveBeenCalled()
-    } finally { warning.mockRestore() }
+    expect((await db.folder_snapshots.get(point.id))?.folderCount).toBe(2)
+    await db.folder_snapshot_payloads.update(point.id, { compressedPayload: 'corrupted' })
+    // Lists read metadata only; validation happens on explicit restore.
+    expect((await queries.listSnapshots(scopeA, undefined, 100)).items.find((row) => row.id === point.id)?.chatCount).toBe(12)
+    await expect(repository.restoreSnapshot(scopeA, point.id)).rejects.toThrow('integrity')
+    expect((await db.folder_snapshots.get(point.id))?.validationState).toBe('invalid')
+    expect((await queries.getSyncStatus(scopeA)).chatCount).toBe(11)
   })
 
   it('pins only the current membership, preserves ordinary order, and treats repeated pin requests as idempotent', async () => {
@@ -561,7 +558,7 @@ describe('retained local organization regressions', () => {
     expect(await repository.getSettings(scopeA)).toMatchObject({ enabled: false, hideOrganizedChats: true, collapsedFolderIds: [folder.id] })
     const protection = (await repository.listSnapshots(scopeA)).find((row) => row.reasons?.includes('before-import'))!
     expect(protection).toBeDefined()
-    expect(protection.protectedUntil).toBeUndefined()
+    expect((await db.folder_snapshots.get(protection.id))?.protectedUntil).toBeUndefined()
   })
 
   it('rejects a different-scope import, retains old restore points, and honors lease expiry', async () => {

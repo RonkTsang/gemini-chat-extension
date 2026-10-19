@@ -1,9 +1,12 @@
 import { browser } from 'wxt/browser'
+import Dexie from 'dexie'
 
 import { db } from '@/data/db'
 import type { FolderLocalStorageStatus, FolderRecoveryStateRow, FolderSnapshotRow } from '@/domain/folder/types'
-import { logDevError } from '@/utils/devLogger'
+import { logDevError, logDevEvent } from '@/utils/devLogger'
 import { readRecoveryFailure } from './failure-fallback'
+import { snapshotBytes } from '@/domain/folder/snapshot'
+export { snapshotBytes } from '@/domain/folder/snapshot'
 
 export const SNAPSHOT_LIMIT = 10
 export const SNAPSHOT_PRIORITY_LIMIT = 3
@@ -58,11 +61,6 @@ export async function hasUnlimitedStorage(): Promise<boolean> {
     : false
 }
 
-/** Logical UTF-8 budget; browser disk usage also includes indexes and overhead. */
-export function snapshotBytes(row: FolderSnapshotRow): number {
-  return new TextEncoder().encode(JSON.stringify(row)).byteLength
-}
-
 export function isImportant(row: FolderSnapshotRow): boolean {
   return row.reason !== 'automatic' || !!row.reasons?.some((reason) => reason !== 'automatic')
 }
@@ -73,10 +71,10 @@ export function newestSnapshots(rows: FolderSnapshotRow[]): FolderSnapshotRow[] 
 }
 
 export async function pruneRecoveryHistory(): Promise<void> {
-  await db.transaction('rw', db.folder_snapshots, () => trimSnapshots(SNAPSHOT_BUDGET_BYTES))
+  await db.transaction('rw', db.folder_snapshots, db.folder_snapshot_payloads, () => trimSnapshots(SNAPSHOT_BUDGET_BYTES))
 }
 
-/** Must be called inside a snapshots read/write transaction. */
+/** Caller owns a read/write transaction covering both snapshot stores. */
 export async function trimSnapshots(budgetBytes: number, keepIds: string[] = [], reclaimBytes = 0): Promise<void> {
   const rows = newestSnapshots(await db.folder_snapshots.toArray())
   const locked = new Set(rows.filter((row) => Date.parse(row.protectedUntil ?? '') > Date.now()).map((row) => row.id))
@@ -107,7 +105,14 @@ export async function trimSnapshots(budgetBytes: number, keepIds: string[] = [],
     reclaimed += bytes
   }
   if (total > budgetBytes) throw new FolderRecoveryError('SNAPSHOT_BUDGET_EXCEEDED')
-  await db.folder_snapshots.bulkDelete(rows.filter((row) => !retained.has(row.id)).map((row) => row.id))
+  const deleted = rows.filter((row) => !retained.has(row.id)).map((row) => row.id)
+  await db.folder_snapshot_payloads.bulkDelete(deleted)
+  await db.folder_snapshots.bulkDelete(deleted)
+  if (import.meta.env.DEV) Dexie.currentTransaction!.on('complete', () => {
+    logDevEvent('debug', '[Folders][recovery]', 'recovery.trimmed', {
+      metadataRows: rows.length, deleted: deleted.length, budgetBytes, retainedBytes: total, reclaimedBytes: reclaimed,
+    })
+  })
 }
 
 export async function getLocalStorageStatus(accountScopeId: string): Promise<FolderLocalStorageStatus> {
@@ -115,6 +120,9 @@ export async function getLocalStorageStatus(accountScopeId: string): Promise<Fol
     estimateLocalStorage(), hasUnlimitedStorage(), db.folder_snapshots.toArray(), db.folder_recovery_states.get(accountScopeId),
   ])
   const bytes = rows.reduce((sum, row) => sum + snapshotBytes(row), 0)
+  if (import.meta.env.DEV) logDevEvent('debug', '[Folders][recovery]', 'recovery.storage-status', {
+    accountScopeId, metadataRows: rows.length, snapshotBytes: bytes,
+  })
   const transientWarning = readRecoveryFailure(accountScopeId)
   const accountSnapshots = newestSnapshots(rows.filter((row) => row.accountScopeId === accountScopeId))
   return {

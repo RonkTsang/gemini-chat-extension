@@ -31,6 +31,7 @@ describe('Folder restore point policy', () => {
     vi.useFakeTimers({ toFake: ['Date'] })
     vi.setSystemTime(initialTime)
     await db.folder_snapshots.clear()
+    await db.folder_snapshot_payloads.clear()
     await db.folder_recovery_states.clear()
   })
   afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals() })
@@ -84,11 +85,11 @@ describe('Folder restore point policy', () => {
     const manual = await saveFolderSnapshot(same, 'rev-1', 'manual', ample)
     expect(manual.id).toBe(first.id)
     expect(manual.reasons).toEqual(['automatic', 'manual'])
-    const frozen = await db.folder_snapshots.get(manual.id)
+    const frozen = await db.folder_snapshot_payloads.get(manual.id)
     advance(1000)
     const next = await saveFolderSnapshot(payload('B'), 'rev-2', 'automatic', ample)
     expect(next.id).not.toBe(first.id)
-    expect((await db.folder_snapshots.get(first.id))?.compressedPayload).toBe(frozen?.compressedPayload)
+    expect((await db.folder_snapshot_payloads.get(first.id))?.compressedPayload).toBe(frozen?.compressedPayload)
     expect(await db.folder_snapshots.count()).toBe(2)
   })
 
@@ -117,7 +118,7 @@ describe('Folder restore point policy', () => {
     advance(60_001)
     const candidate = await saveFolderSnapshot(payload('New'), 'rev', 'automatic', ample)
     const budget = snapshotBytes(important) + snapshotBytes(candidate) + 30
-    await db.transaction('rw', db.folder_snapshots, () => trimSnapshots(budget, [candidate.id]))
+    await db.transaction('rw', db.folder_snapshots, db.folder_snapshot_payloads, () => trimSnapshots(budget, [candidate.id]))
     const rows = await db.folder_snapshots.toArray()
     expect(rows.map((row) => row.id)).toEqual(expect.arrayContaining([important.id, candidate.id]))
     expect(rows.reduce((sum, row) => sum + snapshotBytes(row), 0)).toBeLessThanOrEqual(budget)
@@ -130,7 +131,7 @@ describe('Folder restore point policy', () => {
       points.push(await saveFolderSnapshot(payload(`Point ${index}`), 'rev', 'automatic', ample))
       advance(60_001)
     }
-    await db.transaction('rw', db.folder_snapshots, () => trimSnapshots(20 * 1024 * 1024, [points[4].id], snapshotBytes(points[0])))
+    await db.transaction('rw', db.folder_snapshots, db.folder_snapshot_payloads, () => trimSnapshots(20 * 1024 * 1024, [points[4].id], snapshotBytes(points[0])))
     const retained = (await db.folder_snapshots.toArray()).map((row) => row.id)
     expect(retained).toHaveLength(4)
     expect(retained).not.toContain(points[0].id)
@@ -144,10 +145,10 @@ describe('Folder restore point policy', () => {
     const repository = new FolderRepositoryImpl({ getDeviceId: async () => 'test-device' })
     await repository.releaseSnapshot(scope, first.id, first.protectionToken!)
     expect((await db.folder_snapshots.get(first.id))?.protectionLeases).toHaveLength(1)
-    await db.transaction('rw', db.folder_snapshots, () => trimSnapshots(1024 * 1024, [], Number.POSITIVE_INFINITY))
+    await db.transaction('rw', db.folder_snapshots, db.folder_snapshot_payloads, () => trimSnapshots(1024 * 1024, [], Number.POSITIVE_INFINITY))
     expect(await db.folder_snapshots.get(first.id)).toBeDefined()
     advance(15 * 60_000 + 1)
-    await db.transaction('rw', db.folder_snapshots, () => trimSnapshots(1024 * 1024, [], Number.POSITIVE_INFINITY))
+    await db.transaction('rw', db.folder_snapshots, db.folder_snapshot_payloads, () => trimSnapshots(1024 * 1024, [], Number.POSITIVE_INFINITY))
     expect(await db.folder_snapshots.count()).toBe(0)
   })
 
@@ -177,11 +178,11 @@ describe('Folder restore point policy', () => {
 
   it('preserves the previous automatic group payload when a merged write runs out of disk space', async () => {
     const first = await saveFolderSnapshot(payload('Before'), 'rev', 'automatic', ample)
-    const stored = await db.folder_snapshots.get(first.id)
+    const stored = await db.folder_snapshot_payloads.get(first.id)
     advance(1000)
     vi.spyOn(db.folder_snapshots, 'put').mockRejectedValue(new DOMException('Disk full', 'QuotaExceededError'))
     await expect(saveFolderSnapshot(payload('After'), 'rev-2', 'automatic', ample)).rejects.toMatchObject({ code: 'LOCAL_STORAGE_FULL' })
-    expect((await db.folder_snapshots.get(first.id))?.compressedPayload).toBe(stored?.compressedPayload)
+    expect((await db.folder_snapshot_payloads.get(first.id))?.compressedPayload).toBe(stored?.compressedPayload)
   })
 
   it('handles a large organization and accounts for compressed data in the budget', async () => {

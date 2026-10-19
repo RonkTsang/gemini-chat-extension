@@ -2,6 +2,7 @@ import Dexie from 'dexie'
 import { indexFolder, indexMembership, folderNameKey, membershipDisplayOrderKey } from '@/domain/folder/local-indexes'
 import { changeFolderChatCount, hasValidChatMembership, rebuildFolderSummary } from '../folder-summary'
 import { indexedOrderKey, orderRange } from './folder-order'
+import { toSnapshotSummary } from '@/domain/folder/snapshot'
 import { beginFolderAccess } from '../folder-access'
 import { nanoid } from 'nanoid'
 import { runtimeFolderDeviceIdProvider, type FolderDeviceIdProvider } from '@/services/folder-data/device-id'
@@ -29,6 +30,7 @@ import {
   type ChatReferenceRow,
   type FolderCoordinatorLeaseRow,
   type FolderDataSnapshot,
+  type FolderBrowserSyncCapture,
   type FolderMutationResult,
   type FolderExportPayload,
   type FolderMembershipRow,
@@ -36,6 +38,7 @@ import {
   type FolderRow,
   type FolderSettingsRow,
   type FolderSnapshotRow,
+  type FolderSnapshotSummary,
   type FolderSyncPublicationRow,
   type FolderSyncConflictRow,
   type BrowserSyncManifest,
@@ -45,9 +48,9 @@ import {
 } from '@/domain/folder/types'
 import { fromFolderSyncData, stableStringify, toFolderSyncData } from '@/services/folder-sync/codec'
 import { decodeLzStringBase64, encodeLzStringBase64, fromFolderOrganizationData, sha256Hex, toFolderOrganizationData } from '@/services/folder-data/codec'
-import { logDevError } from '@/utils/devLogger'
+import { logDevError, logDevEvent } from '@/utils/devLogger'
 
-import { saveFolderSnapshot, recordRecoveryFailure } from '@/services/folder-recovery/snapshots'
+import { readFolderSnapshot, saveFolderSnapshot, recordRecoveryFailure } from '@/services/folder-recovery/snapshots'
 import { clearRecoveryFailure, rememberRecoveryFailure } from '@/services/folder-recovery/failure-fallback'
 import { classifyRecoveryFailure, FolderRecoveryError, newestSnapshots, SNAPSHOT_PROTECTION_TTL_MS, type FolderRecoveryOptions } from '@/services/folder-recovery/storage'
 
@@ -55,6 +58,20 @@ import { classifyRecoveryFailure, FolderRecoveryError, newestSnapshots, SNAPSHOT
 // is merely between the manifest and chunk writes until that recovery window
 // has elapsed.
 const INCOMPLETE_REPLICA_WARNING_GRACE_MS = 60_000
+
+type BrowserSyncView = Pick<FolderBrowserSyncCapture, 'state' | 'settings' | 'publication' | 'hasConflict'>
+const browserSyncViewTables = [db.folder_settings, db.folder_sync_states, db.folder_sync_publications, db.folder_sync_conflicts]
+
+/** Compare only fields that can change a Sync decision, not usage or retry timestamps. */
+function sameBrowserSyncView(left: BrowserSyncView, right: BrowserSyncView): boolean {
+  return left.state.localDataRevision === right.state.localDataRevision
+    && left.state.baseSnapshotId === right.state.baseSnapshotId && left.state.dirty === right.state.dirty
+    && left.state.provider === right.state.provider
+    && stableStringify(left.state.conflictSummary) === stableStringify(right.state.conflictSummary)
+    && left.settings.enabled === right.settings.enabled && left.settings.hideOrganizedChats === right.settings.hideOrganizedChats
+    && left.publication?.id === right.publication?.id && left.publication?.state === right.publication?.state
+    && left.publication?.payloadHash === right.publication?.payloadHash && left.hasConflict === right.hasConflict
+}
 
 function currentUsagePatch(state: FolderSyncStateRow, usage: BrowserSyncUsage): Partial<FolderSyncStateRow> {
   return {
@@ -122,23 +139,24 @@ export interface FolderRepository {
   removeChatAfterGeminiDelete(accountScopeId: string, chatId: string, protectionSnapshotId?: string): Promise<FolderMutationResult<void>>
   createSnapshot(accountScopeId: string, reason: FolderSnapshotRow['reason'], hold?: boolean, captured?: FolderDataSnapshot): Promise<FolderSnapshotRow>
   releaseSnapshot(accountScopeId: string, snapshotId: string, protectionToken: string): Promise<void>
-  listSnapshots(accountScopeId: string): Promise<FolderSnapshotRow[]>
+  listSnapshots(accountScopeId: string): Promise<FolderSnapshotSummary[]>
   restoreSnapshot(accountScopeId: string, snapshotId: string): Promise<FolderMutationResult<void>>
   exportAccountData(accountScopeId: string): Promise<FolderExportPayload>
   importAccountData(accountScopeId: string, payload: FolderExportPayload): Promise<FolderMutationResult<void>>
   getAccountData(accountScopeId: string): Promise<FolderAccountData>
   getAccountDataWithRevision(accountScopeId: string): Promise<FolderDataSnapshot>
+  captureBrowserSyncData(accountScopeId: string): Promise<FolderBrowserSyncCapture>
   getSyncState(accountScopeId: string): Promise<FolderSyncStateRow | undefined>
   listBrowserSyncWakeScopes(): Promise<string[]>
   hasPendingChanges(accountScopeId: string): Promise<boolean>
-  applyBrowserSyncSnapshot(accountScopeId: string, payload: FolderAccountData, manifest: BrowserSyncManifest, expectedRevision: string, resolving?: boolean): Promise<boolean>
-  recordBrowserSyncConflict(accountScopeId: string, payload: FolderAccountData, manifest: BrowserSyncManifest, expectedRevision: string): Promise<boolean>
+  applyBrowserSyncSnapshot(accountScopeId: string, payload: FolderAccountData, manifest: BrowserSyncManifest, expectedRevision: string, resolving?: boolean, captured?: FolderBrowserSyncCapture): Promise<boolean>
+  recordBrowserSyncConflict(accountScopeId: string, payload: FolderAccountData, manifest: BrowserSyncManifest, expectedRevision: string, captured?: FolderBrowserSyncCapture): Promise<boolean>
   getBrowserSyncConflict(accountScopeId: string): Promise<FolderSyncConflictRow | undefined>
-  selectLocalConflictVersion(accountScopeId: string, expectedRevision: string, snapshotId: string): Promise<boolean>
-  recordBrowserSyncHealthy(accountScopeId: string, snapshotId: string, expectedRevision: string): Promise<boolean>
+  selectLocalConflictVersion(accountScopeId: string, expectedRevision: string, snapshotId: string, captured?: FolderBrowserSyncCapture): Promise<boolean>
+  recordBrowserSyncHealthy(accountScopeId: string, snapshotId: string, expectedRevision: string, captured?: FolderBrowserSyncCapture): Promise<boolean>
   recordBrowserSyncFailure(accountScopeId: string, errorCode: string, warning?: FolderSyncStateRow['browserSyncWarning'], projectedUsage?: BrowserSyncUsage): Promise<string | undefined>
   recordBrowserSyncUsage(accountScopeId: string, usage: BrowserSyncUsage): Promise<void>
-  getOrCreateBrowserSyncPublication(accountScopeId: string): Promise<FolderSyncPublicationRow>
+  getOrCreateBrowserSyncPublication(accountScopeId: string, captured?: FolderBrowserSyncCapture): Promise<FolderSyncPublicationRow>
   getBrowserSyncPublication(accountScopeId: string): Promise<FolderSyncPublicationRow | undefined>
   prepareBrowserSyncRecreation(accountScopeId: string, request: BrowserSyncRecreationRequest): Promise<boolean>
   markBrowserSyncPublicationWriting(accountScopeId: string, snapshotId: string): Promise<void>
@@ -808,7 +826,7 @@ export class FolderRepositoryImpl implements FolderRepository {
     }
     if (protectionSnapshotId) {
       const protection = await db.folder_snapshots.get(protectionSnapshotId)
-      if (!protection || protection.accountScopeId !== accountScopeId || !(protection.reasons ?? [protection.reason]).includes('before-delete')) {
+      if (!protection || protection.accountScopeId !== accountScopeId || protection.validationState !== 'valid' || !(protection.reasons ?? [protection.reason]).includes('before-delete')) {
         throw new Error('Protection snapshot is unavailable')
       }
       return remove()
@@ -845,6 +863,33 @@ export class FolderRepositoryImpl implements FolderRepository {
     })
   }
 
+  /** Caller owns a transaction covering browserSyncViewTables. No organization or conflict body reads. */
+  private async readBrowserSyncView(accountScopeId: string): Promise<BrowserSyncView> {
+    const state = await db.folder_sync_states.get(accountScopeId)
+    const settings = await db.folder_settings.get(accountScopeId)
+    if (!state || !settings) throw new Error('STALE_REVISION')
+    return { state, settings, publication: await db.folder_sync_publications.get(accountScopeId),
+      hasConflict: !!await db.folder_sync_conflicts.where('accountScopeId').equals(accountScopeId).count() }
+  }
+
+  async captureBrowserSyncData(accountScopeId: string): Promise<FolderBrowserSyncCapture> {
+    requireScope(accountScopeId)
+    await this.getSettings(accountScopeId)
+    return db.transaction('r', [...browserSyncViewTables, db.folders, db.folder_memberships, db.folder_chat_references, db.folder_recovery_states], async (transaction) => {
+      const finish = import.meta.env.DEV ? beginFolderAccess(transaction, { operation: 'captureBrowserSyncData', phase: 'full-capture', accountScopeId }) : undefined
+      let result: 'success' | 'failed' = 'failed'
+      let capturedRevision: string | undefined
+      try {
+        const view = await this.readBrowserSyncView(accountScopeId)
+        if (import.meta.env.DEV) capturedRevision = view.state.localDataRevision
+        const data = await this.rawAccountData(accountScopeId)
+        const recovery = await db.folder_recovery_states.get(accountScopeId)
+        if (import.meta.env.DEV) result = 'success'
+        return { ...view, data, dataRevision: view.state.localDataRevision, pendingRevision: recovery?.pendingRevision }
+      } finally { if (import.meta.env.DEV) finish?.(result, { capturedRevision }) }
+    })
+  }
+
   async createSnapshot(accountScopeId: string, reason: FolderSnapshotRow['reason'], hold = false, captured?: FolderDataSnapshot): Promise<FolderSnapshotRow> {
     requireScope(accountScopeId)
     await this.preheatDevice()
@@ -865,7 +910,12 @@ export class FolderRepositoryImpl implements FolderRepository {
 
   async releaseSnapshot(accountScopeId: string, snapshotId: string, protectionToken: string): Promise<void> {
     requireScope(accountScopeId)
-    await db.transaction('rw', db.folder_snapshots, async () => {
+    await db.transaction('rw', db.folder_snapshots, async (transaction) => {
+      if (import.meta.env.DEV) {
+        const finish = beginFolderAccess(transaction, { operation: 'releaseSnapshot', phase: 'transaction', accountScopeId })
+        transaction.on('complete', () => finish('success'))
+        transaction.on('abort', () => finish('rollback'))
+      }
       const row = await db.folder_snapshots.get(snapshotId)
       if (row?.accountScopeId === accountScopeId) {
         row.protectionLeases = (row.protectionLeases ?? []).filter((lease) => lease.token !== protectionToken && Date.parse(lease.expiresAt) > Date.now())
@@ -876,14 +926,15 @@ export class FolderRepositoryImpl implements FolderRepository {
   }
 
   private async withProtection<T>(
-    accountScopeId: string, reason: FolderSnapshotRow['reason'], action: () => Promise<T>, targetId?: string,
+    accountScopeId: string, reason: FolderSnapshotRow['reason'], action: (targetToken: string) => Promise<T>, targetId?: string,
   ): Promise<T> {
     const targetToken = nanoid()
     if (targetId) {
       try {
         await db.transaction('rw', db.folder_snapshots, async () => {
           const target = await db.folder_snapshots.get(targetId)
-          if (!target || target.accountScopeId !== accountScopeId) throw new Error('Snapshot is unavailable')
+          if (!target || target.accountScopeId !== accountScopeId || target.validationState !== 'valid') throw new Error('Snapshot is unavailable')
+          if ((target.protectionLeases?.filter((lease) => Date.parse(lease.expiresAt) > Date.now()).length ?? 0) >= 100) throw new FolderRecoveryError('SNAPSHOT_BUDGET_EXCEEDED')
           const expiresAt = new Date(Date.now() + SNAPSHOT_PROTECTION_TTL_MS).toISOString()
           await db.folder_snapshots.update(targetId, { protectedUntil: expiresAt,
             protectionLeases: [...(target.protectionLeases ?? []).filter((lease) => Date.parse(lease.expiresAt) > Date.now()), { token: targetToken, expiresAt }],
@@ -900,7 +951,7 @@ export class FolderRepositoryImpl implements FolderRepository {
       } catch (error) {
         throw new FolderRecoveryError('SNAPSHOT_PROTECTION_FAILED', { cause: error })
       }
-      return await action()
+      return await action(targetToken)
     } finally {
       try {
         if (protection?.protectionToken) await this.releaseSnapshot(accountScopeId, protection.id, protection.protectionToken)
@@ -912,10 +963,10 @@ export class FolderRepositoryImpl implements FolderRepository {
     }
   }
 
-  async listSnapshots(accountScopeId: string): Promise<FolderSnapshotRow[]> {
+  async listSnapshots(accountScopeId: string): Promise<FolderSnapshotSummary[]> {
     requireScope(accountScopeId)
     await this.preheatDevice()
-    return newestSnapshots(await db.folder_snapshots.where('accountScopeId').equals(accountScopeId).toArray())
+    return newestSnapshots(await db.folder_snapshots.where('accountScopeId').equals(accountScopeId).toArray()).map(toSnapshotSummary)
   }
 
   private async replaceAccountData(
@@ -923,9 +974,18 @@ export class FolderRepositoryImpl implements FolderRepository {
     payload: FolderExportPayload,
     operationType: 'snapshot.restore',
     deviceId: string,
+    restorePoint?: { id: string; contentHash: string; token: string },
   ): Promise<FolderMutationResult<void>> {
     const data = fromFolderOrganizationData(accountScopeId, payload.data)
-    return runFolderMutation('replaceAccountData', accountScopeId, [db.folders, db.folder_memberships, db.folder_chat_references, db.folder_settings, db.folder_sync_states, db.folder_organization_summaries], async () => {
+    return runFolderMutation('replaceAccountData', accountScopeId, [db.folders, db.folder_memberships, db.folder_chat_references, db.folder_settings, db.folder_sync_states, db.folder_organization_summaries,
+      ...(restorePoint ? [db.folder_snapshots] : [])], async () => {
+      if (restorePoint) {
+        const held = await db.folder_snapshots.get(restorePoint.id)
+        if (held?.accountScopeId !== accountScopeId || held.contentHash !== restorePoint.contentHash
+          || !held.protectionLeases?.some((lease) => lease.token === restorePoint.token && Date.parse(lease.expiresAt) > Date.now())) {
+          throw new Error('Snapshot changed during restore')
+        }
+      }
       const existingFolders = await db.folders.bulkGet(data.folders.map((folder) => folder.id))
       const existingMemberships = await db.folder_memberships.bulkGet(data.memberships.map((membership) => membership.id))
       if ([...existingFolders, ...existingMemberships].some((row) => row && row.accountScopeId !== accountScopeId)) {
@@ -958,19 +1018,14 @@ export class FolderRepositoryImpl implements FolderRepository {
   async restoreSnapshot(accountScopeId: string, snapshotId: string): Promise<FolderMutationResult<void>> {
     requireScope(accountScopeId)
     const deviceId = await this.preheatDevice()
-    const snapshot = await db.folder_snapshots.get(snapshotId)
-    if (!snapshot || snapshot.accountScopeId !== accountScopeId) throw new Error('Snapshot is unavailable')
-    if (await sha256Hex(snapshot.compressedPayload) !== snapshot.contentHash) {
-      throw new Error('Snapshot integrity check failed')
-    }
-    const payload: FolderExportPayload = {
-      schemaVersion: 1,
-      accountScopeId,
-      exportedAt: snapshot.updatedAt ?? snapshot.createdAt,
-      data: parseFolderOrganizationData(decodeLzStringBase64<unknown>(snapshot.compressedPayload)),
-    }
-    return this.withProtection(accountScopeId, 'before-restore', () =>
-      this.replaceAccountData(accountScopeId, payload, 'snapshot.restore', deviceId), snapshotId)
+    return this.withProtection(accountScopeId, 'before-restore', async (targetToken) => {
+      const { snapshot, data } = await readFolderSnapshot(accountScopeId, snapshotId)
+      const payload: FolderExportPayload = {
+        schemaVersion: 1, accountScopeId, exportedAt: snapshot.updatedAt ?? snapshot.createdAt,
+        data,
+      }
+      return this.replaceAccountData(accountScopeId, payload, 'snapshot.restore', deviceId, { id: snapshotId, contentHash: snapshot.contentHash, token: targetToken })
+    }, snapshotId)
   }
 
   async getSyncState(accountScopeId: string): Promise<FolderSyncStateRow | undefined> {
@@ -980,8 +1035,8 @@ export class FolderRepositoryImpl implements FolderRepository {
   }
 
   async listBrowserSyncWakeScopes(): Promise<string[]> {
-    const [states, publications] = await Promise.all([db.folder_sync_states.toArray(), db.folder_sync_publications.toArray()])
-    const pendingScopes = new Set(publications.map((row) => row.accountScopeId))
+    const [states, publications] = await Promise.all([db.folder_sync_states.toArray(), db.folder_sync_publications.toCollection().primaryKeys()])
+    const pendingScopes = new Set(publications)
     return states.filter((state) => state.provider === 'browser-sync'
       && (state.dirty || !state.baseSnapshotId || pendingScopes.has(state.accountScopeId) || !!state.retryAt))
       .map((state) => state.accountScopeId)
@@ -997,13 +1052,14 @@ export class FolderRepositoryImpl implements FolderRepository {
     return db.folder_sync_conflicts.get(accountScopeId)
   }
 
-  async recordBrowserSyncConflict(accountScopeId: string, payload: FolderAccountData, manifest: BrowserSyncManifest, expectedRevision: string): Promise<boolean> {
+  async recordBrowserSyncConflict(accountScopeId: string, payload: FolderAccountData, manifest: BrowserSyncManifest, expectedRevision: string, captured?: FolderBrowserSyncCapture): Promise<boolean> {
     requireScope(accountScopeId)
     const data = parseFolderAccountData(payload)
     if (data.accountScopeId !== accountScopeId || manifest.accountScopeId !== accountScopeId) throw new Error('Conflict account scope does not match')
-    return db.transaction('rw', [db.folder_sync_states, db.folder_sync_conflicts, db.folder_sync_publications], async () => {
+    return db.transaction('rw', [db.folder_sync_states, db.folder_sync_conflicts, db.folder_sync_publications, ...(captured ? [db.folder_settings] : [])], async () => {
       const state = await db.folder_sync_states.get(accountScopeId)
       if (!state || state.localDataRevision !== expectedRevision) return false
+      if (captured && !sameBrowserSyncView(captured, await this.readBrowserSyncView(accountScopeId))) return false
       const previous = await db.folder_sync_conflicts.get(accountScopeId)
       if (stableStringify(previous?.manifest) !== stableStringify(manifest) || previous?.localRevision !== expectedRevision) {
         await db.folder_sync_conflicts.put({ accountScopeId, manifest, data: toFolderSyncData(data), localRevision: expectedRevision, createdAt: now() })
@@ -1014,13 +1070,14 @@ export class FolderRepositoryImpl implements FolderRepository {
     })
   }
 
-  async selectLocalConflictVersion(accountScopeId: string, expectedRevision: string, snapshotId: string): Promise<boolean> {
+  async selectLocalConflictVersion(accountScopeId: string, expectedRevision: string, snapshotId: string, captured?: FolderBrowserSyncCapture): Promise<boolean> {
     requireScope(accountScopeId)
-    return db.transaction('rw', [db.folder_sync_states, db.folder_sync_conflicts, db.folder_sync_publications], async () => {
+    return db.transaction('rw', [db.folder_sync_states, db.folder_sync_conflicts, db.folder_sync_publications, ...(captured ? [db.folder_settings] : [])], async () => {
       const state = await db.folder_sync_states.get(accountScopeId)
       const candidate = await db.folder_sync_conflicts.get(accountScopeId)
       if (!state || state.localDataRevision !== expectedRevision || candidate?.manifest.snapshotId !== snapshotId
         || candidate.localRevision !== expectedRevision) return false
+      if (captured && !sameBrowserSyncView(captured, await this.readBrowserSyncView(accountScopeId))) return false
       await db.folder_sync_states.update(accountScopeId, { baseSnapshotId: snapshotId, dirty: true, conflictSummary: undefined, updatedAt: now() })
       await db.folder_sync_publications.delete(accountScopeId)
       await db.folder_sync_conflicts.delete(accountScopeId)
@@ -1028,13 +1085,14 @@ export class FolderRepositoryImpl implements FolderRepository {
     })
   }
 
-  async applyBrowserSyncSnapshot(accountScopeId: string, payload: FolderAccountData, manifest: BrowserSyncManifest, expectedRevision: string, resolving = false): Promise<boolean> {
+  async applyBrowserSyncSnapshot(accountScopeId: string, payload: FolderAccountData, manifest: BrowserSyncManifest, expectedRevision: string, resolving = false, supplied?: FolderBrowserSyncCapture): Promise<boolean> {
     requireScope(accountScopeId)
     const deviceId = await this.preheatDevice()
     const parsed = parseFolderAccountData(payload)
     if (parsed.accountScopeId !== accountScopeId || manifest.accountScopeId !== accountScopeId) throw new Error('Browser Sync account scope does not match')
-    const captured = await this.getAccountDataWithRevision(accountScopeId)
-    if (captured.dataRevision !== expectedRevision) return false
+    const captured = supplied ?? await this.captureBrowserSyncData(accountScopeId)
+    if (captured.data.accountScopeId !== accountScopeId) throw new Error('Capture belongs to a different account scope')
+    if (captured.dataRevision !== expectedRevision || captured.state.provider !== 'browser-sync') return false
     const organizationChanged = stableStringify(toFolderOrganizationData(captured.data)) !== stableStringify(toFolderOrganizationData(parsed))
     let protection: FolderSnapshotRow | undefined
     try {
@@ -1044,12 +1102,14 @@ export class FolderRepositoryImpl implements FolderRepository {
       }
       return await db.transaction('rw', [db.folders, db.folder_memberships, db.folder_chat_references, db.folder_settings,
         db.folder_sync_states, db.folder_recovery_states, db.folder_sync_conflicts, db.folder_sync_publications, db.folder_organization_summaries], async () => {
-        const prior = await db.folder_sync_states.get(accountScopeId)
+        const current = await this.readBrowserSyncView(accountScopeId)
+        if (!sameBrowserSyncView(captured, current)) return false
+        const prior = current.state
         if ((prior?.localDataRevision ?? 'uninitialized') !== expectedRevision || (prior?.dirty && !resolving)) return false
         if (resolving) {
           const candidate = await db.folder_sync_conflicts.get(accountScopeId)
-          if (candidate?.manifest.snapshotId !== manifest.snapshotId || candidate.localRevision !== expectedRevision) return false
-        }
+          if (stableStringify(candidate?.manifest) !== stableStringify(manifest) || candidate?.localRevision !== expectedRevision) return false
+        } else if (current.hasConflict || current.publication?.state === 'writing') return false
         const existingFolders = await db.folders.bulkGet(parsed.folders.map((row) => row.id))
         const existingMemberships = await db.folder_memberships.bulkGet(parsed.memberships.map((row) => row.id))
         if ([...existingFolders, ...existingMemberships].some((row) => row && row.accountScopeId !== accountScopeId)) throw new Error('Browser Sync folder belongs to a different account')
@@ -1081,11 +1141,12 @@ export class FolderRepositoryImpl implements FolderRepository {
     }
   }
 
-  async recordBrowserSyncHealthy(accountScopeId: string, snapshotId: string, expectedRevision: string): Promise<boolean> {
+  async recordBrowserSyncHealthy(accountScopeId: string, snapshotId: string, expectedRevision: string, captured?: FolderBrowserSyncCapture): Promise<boolean> {
     requireScope(accountScopeId)
-    return db.transaction('rw', db.folder_sync_states, async () => {
+    return db.transaction('rw', captured ? browserSyncViewTables : [db.folder_sync_states], async () => {
       const state = await db.folder_sync_states.get(accountScopeId)
       if (!state || state.localDataRevision !== expectedRevision || state.baseSnapshotId !== snapshotId) return false
+      if (captured && !sameBrowserSyncView(captured, await this.readBrowserSyncView(accountScopeId))) return false
       if (!state.lastErrorCode && !state.retryAt && !state.browserSyncWarning && !state.incompleteReplicaSince) return false
       await db.folder_sync_states.update(accountScopeId, { retryAt: undefined, retryCount: 0, lastErrorCode: undefined,
         browserSyncWarning: undefined, incompleteReplicaSince: undefined })
@@ -1163,41 +1224,50 @@ export class FolderRepositoryImpl implements FolderRepository {
     })
   }
 
-  async getOrCreateBrowserSyncPublication(accountScopeId: string): Promise<FolderSyncPublicationRow> {
+  async getOrCreateBrowserSyncPublication(accountScopeId: string, supplied?: FolderBrowserSyncCapture): Promise<FolderSyncPublicationRow> {
     requireScope(accountScopeId)
-    const deviceId = await this.preheatDevice()
     await this.getSettings(accountScopeId)
-    await this.ensureSyncState(accountScopeId, deviceId)
     for (let attempt = 0; attempt < 3; attempt += 1) {
-      const captured = await db.transaction('r', [db.folders, db.folder_memberships, db.folder_chat_references,
-        db.folder_settings, db.folder_sync_states, db.folder_sync_publications, db.folder_sync_conflicts], async () => {
-        if (await db.folder_sync_conflicts.where('accountScopeId').equals(accountScopeId).count()) throw new Error('Browser Sync conflict requires resolution')
-        const state = (await db.folder_sync_states.get(accountScopeId))!
-        const pending = await db.folder_sync_publications.get(accountScopeId)
-        const settings = (await db.folder_settings.get(accountScopeId))!
-        return { state, pending, settings, data: await this.rawAccountData(accountScopeId) }
-      })
-      // An interrupted write must finish its exact snapshot before newer edits are captured.
-      if (captured.pending && (captured.pending.state === 'writing' || captured.pending.dataRevision === captured.state.localDataRevision)) {
-        if (await sha256Hex(captured.pending.payload) !== captured.pending.payloadHash) throw new Error('Invalid pending publication hash')
-        fromFolderSyncData(accountScopeId, parseFolderSyncData(decodeLzStringBase64(captured.pending.payload)))
-        return captured.pending
+      const view = await db.transaction('r', browserSyncViewTables, () => this.readBrowserSyncView(accountScopeId))
+      if (view.hasConflict) throw new Error('Browser Sync conflict requires resolution')
+      if (view.state.provider !== 'browser-sync') throw new Error('STALE_REVISION')
+      const pending = view.publication
+      // A writing publication must finish its exact bytes even after newer edits.
+      const reusable = pending && (pending.state === 'writing'
+        || (pending.dataRevision === view.state.localDataRevision && pending.baseSnapshotId === view.state.baseSnapshotId
+          && pending.settings.enabled === view.settings.enabled && pending.settings.hideOrganizedChats === view.settings.hideOrganizedChats))
+      if (reusable) {
+        if (await sha256Hex(pending.payload) !== pending.payloadHash) throw new Error('Invalid pending publication hash')
+        fromFolderSyncData(accountScopeId, parseFolderSyncData(decodeLzStringBase64(pending.payload)))
+        if (await db.transaction('r', browserSyncViewTables, async () => sameBrowserSyncView(view, await this.readBrowserSyncView(accountScopeId)))) {
+          if (import.meta.env.DEV) logDevEvent('debug', '[Folders][sync]', 'browser-sync.publication.reused', { accountScopeId, snapshotId: pending.id, publicationState: pending.state, dataRevision: pending.dataRevision })
+          return pending
+        }
+        continue
       }
+      const reusedCapture = import.meta.env.DEV && !!supplied
+      const captured = supplied ?? await this.captureBrowserSyncData(accountScopeId)
+      supplied = undefined
+      if (captured.data.accountScopeId !== accountScopeId) throw new Error('Capture belongs to a different account scope')
+      if (!sameBrowserSyncView(view, captured)) continue
       // Compression and hashing stay outside the IndexedDB write transaction.
       const payload = encodeLzStringBase64(toFolderSyncData(captured.data))
       const publication: FolderSyncPublicationRow = {
         accountScopeId, id: nanoid(), baseSnapshotId: captured.state.baseSnapshotId,
-        dataRevision: captured.state.localDataRevision, payload, payloadHash: await sha256Hex(payload),
+        dataRevision: captured.dataRevision, payload, payloadHash: await sha256Hex(payload),
         settings: { enabled: captured.settings.enabled, hideOrganizedChats: captured.settings.hideOrganizedChats },
         createdAt: now(), state: 'prepared',
       }
-      const saved = await db.transaction('rw', [db.folder_sync_states, db.folder_sync_publications, db.folder_sync_conflicts], async () => {
-        const state = await db.folder_sync_states.get(accountScopeId)
-        if (state?.localDataRevision !== captured.state.localDataRevision || await db.folder_sync_conflicts.where('accountScopeId').equals(accountScopeId).count()) return false
+      const saved = await db.transaction('rw', browserSyncViewTables, async () => {
+        if (!sameBrowserSyncView(captured, await this.readBrowserSyncView(accountScopeId))) return false
         await db.folder_sync_publications.put(publication)
         return true
       })
-      if (saved) return publication
+      if (saved) {
+        if (import.meta.env.DEV) logDevEvent('debug', '[Folders][sync]', 'browser-sync.publication.prepared', { accountScopeId, snapshotId: publication.id, dataRevision: captured.dataRevision, reusedCapture })
+        return publication
+      }
+      if (import.meta.env.DEV) logDevEvent('debug', '[Folders][sync]', 'browser-sync.capture.stale', { accountScopeId, dataRevision: captured.dataRevision, attempt })
     }
     throw new Error('STALE_REVISION')
   }

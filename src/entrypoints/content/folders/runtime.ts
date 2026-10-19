@@ -10,7 +10,8 @@ import type {
   FolderMembershipRow,
   FolderProjection,
   FolderRow,
-  FolderSnapshotRow,
+  FolderSnapshotSummary,
+  FolderSnapshotProtection,
   FolderLocalStorageStatus,
   FolderSettingsRow,
 } from '@/domain/folder/types'
@@ -666,7 +667,7 @@ export class FolderRuntime {
   async deleteChat(folderId: string, chatId: string): Promise<void> {
     const accountScopeId = this.scope()
     const identitySource = this.identitySource()
-    const protection = (await folderBackgroundClient.request<FolderSnapshotRow>(accountScopeId, identitySource, 'prepareChatDeletion', {})).data
+    const protection = (await folderBackgroundClient.request<FolderSnapshotProtection>(accountScopeId, identitySource, 'prepareChatDeletion', {})).data
     try {
       if (this.scope() !== accountScopeId) throw new Error('The Gemini account changed during deletion')
       await deleteGeminiChat(chatId)
@@ -740,8 +741,8 @@ export class FolderRuntime {
     return (await folderBackgroundClient.request<FolderLocalStorageStatus>(this.scope(), this.identitySource(), 'getLocalStorageStatus', {})).data
   }
 
-  async createSnapshot(): Promise<FolderSnapshotRow> {
-    return (await folderBackgroundClient.request<FolderSnapshotRow>(this.scope(), this.identitySource(), 'createSnapshot', {})).data
+  async createSnapshot(): Promise<FolderSnapshotSummary> {
+    return (await folderBackgroundClient.request<FolderSnapshotSummary>(this.scope(), this.identitySource(), 'createSnapshot', {})).data
   }
 
   openPicker(
@@ -859,11 +860,11 @@ export class FolderRuntime {
     if (this.state.dialog) this.publish({ dialog: undefined })
   }
 
-  async listSnapshots(): Promise<FolderSnapshotRow[]> {
-    return (await folderBackgroundClient.request<{ items: FolderSnapshotRow[] }>(this.scope(), this.identitySource(), 'listSnapshots', { limit: 100 })).data.items
+  async listSnapshots(): Promise<FolderSnapshotSummary[]> {
+    return (await folderBackgroundClient.request<{ items: FolderSnapshotSummary[] }>(this.scope(), this.identitySource(), 'listSnapshots', { limit: 100 })).data.items
   }
 
-  async restore(snapshot: FolderSnapshotRow): Promise<void> {
+  async restore(snapshot: FolderSnapshotSummary): Promise<void> {
     await folderBackgroundClient.request(this.scope(), this.identitySource(), 'restoreSnapshot', { snapshotId: snapshot.id })
     await this.refresh()
   }

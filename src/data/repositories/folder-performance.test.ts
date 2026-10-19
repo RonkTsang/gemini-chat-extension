@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import Dexie from 'dexie'
-import { db, GeminiExtensionDB } from '../db'
+import { db } from '../db'
 import { rebuildFolderSummary } from '../folder-summary'
 import { FolderRepositoryImpl } from './folderRepository'
 import { FolderQueryService } from '@/entrypoints/background/folders/query-service'
@@ -447,77 +447,42 @@ describe('Folder indexed access budgets (native IDB observation)', () => {
   })
 })
 
-it('upgrades populated v13 without clearing data, derives indexes and excludes orphan memberships from summary', async () => {
-  native?.stop(); native = undefined
+it('adds the final Folder schema to the pre-Folder database without changing existing feature data', async () => {
   db.close(); await db.delete()
   const old = new Dexie('gemini_extension')
-  old.version(13).stores({
-    folders: 'id, accountScopeId, [accountScopeId+parentFolderId], [accountScopeId+parentFolderId+orderKey]',
-    folder_memberships: 'id, accountScopeId, [accountScopeId+folderId], [accountScopeId+folderId+orderKey], [accountScopeId+chatId], &[accountScopeId+folderId+chatId]',
-    folder_chat_references: '[accountScopeId+chatId], accountScopeId, updatedAt', folder_sync_states: 'accountScopeId, updatedAt', folder_sync_conflicts: 'accountScopeId',
-  })
-  const data = fixture(2, 5)
-  data.folders[1].name = ' Ｆｏｌｄｅｒ ０ '
-  const orphan = { ...data.memberships[0], id: `${scopeA}:missing:orphan`, folderId: 'missing', chatId: 'orphan' }
-  await old.table('folders').bulkPut(data.folders)
-  await old.table('folder_memberships').bulkPut([...data.memberships, orphan])
-  await old.table('folder_chat_references').bulkPut(data.chatReferences)
-  await old.table('folder_sync_states').put({ accountScopeId: scopeA, localDataRevision: 'legacy', deviceId: 'legacy', provider: 'browser-sync', dirty: true, updatedAt: timestamp })
-  await old.table('folder_sync_conflicts').put({ accountScopeId: scopeA, manifest: { snapshotId: 'legacy-conflict' }, localRevision: 'legacy', data: { compressed: 'PRIVATE-PAYLOAD' }, createdAt: timestamp })
-  old.close()
-  await db.open()
-  expect(db.verno).toBe(15)
-  expect(await db.folders.count()).toBe(2)
-  expect(await db.folder_memberships.count()).toBe(11)
-  expect((await db.folders.toArray()).every((row) => row.nameKey === 'folder 0')).toBe(true)
-  expect((await db.folder_memberships.toArray()).every((row) => !!row.displayOrderKey)).toBe(true)
-  native = observeFolderIndexedDB()
-  expect(await queries.getSyncStatus(scopeA)).toMatchObject({ folderCount: 2, chatCount: 5, conflict: { snapshotId: 'legacy-conflict', localRevision: 'legacy' } })
-  expect(recordCount('folder_memberships')).toBe(0)
-  expect(recordCount('folder_sync_conflicts')).toBe(0)
-  await expect(repository().moveMembership(scopeA, 'missing', 'orphan', data.folders[0].id)).rejects.toThrow('unavailable')
-  await repository().removeMembership(scopeA, 'missing', 'orphan')
-  expect((await queries.getSyncStatus(scopeA)).chatCount).toBe(5)
-  native.stop(); native = undefined
-  // Restore the full application schema for later tests.
-  db.close(); const reopened = new GeminiExtensionDB(); await reopened.open(); reopened.close(); await db.open()
-})
-
-
-it('upgrades v14 to v15, physically removes usage and redundant indexes, and preserves durable data', async () => {
-  db.close(); await db.delete()
-  const old = new Dexie('gemini_extension')
-  old.version(14).stores({
+  old.version(5).stores({
     chain_prompts: 'id, name, createdAt, updatedAt',
-    folders: 'id, accountScopeId, [accountScopeId+nameKey], [accountScopeId+parentFolderId], [accountScopeId+parentFolderId+orderKey], [accountScopeId+parentFolderId+orderKey+id]',
-    folder_memberships: 'id, accountScopeId, [accountScopeId+folderId], [accountScopeId+folderId+orderKey], [accountScopeId+folderId+orderKey+id], [accountScopeId+folderId+displayOrderKey+id], [accountScopeId+chatId], &[accountScopeId+folderId+chatId]',
-    folder_chat_references: '[accountScopeId+chatId], accountScopeId, updatedAt',
-    folder_settings: 'accountScopeId', folder_sync_states: 'accountScopeId', folder_sync_conflicts: 'accountScopeId',
-    folder_organization_summaries: 'accountScopeId', folder_chat_usage: '[accountScopeId+chatId], accountScopeId',
+    quick_follow_prompts: 'id, updatedAt',
+    quick_follow_settings: 'id',
+    theme_assets: 'id, feature, updatedAt',
+    notification_audio_assets: 'id, updatedAt',
+    gem_avatar_assets: 'gemId, updatedAt',
   })
-  const data = fixture(2, 5)
-  await old.table('folders').bulkPut(data.folders.map(indexFolder))
-  await old.table('folder_memberships').bulkPut(data.memberships.map(indexMembership))
-  await old.table('folder_chat_references').bulkPut(data.chatReferences)
-  await old.table('folder_chat_usage').put({ accountScopeId: scopeA, chatId: 'chat-0', membershipCount: 999 })
-  await old.table('folder_organization_summaries').bulkPut([{ accountScopeId: scopeA, chatCount: 999 }, { accountScopeId: scopeB, chatCount: 999 }])
-  await old.table('folder_settings').put({ accountScopeId: scopeA, enabled: false, collapsedFolderIds: [data.folders[0].id], updatedAt: timestamp })
-  await old.table('folder_sync_states').put({ accountScopeId: scopeA, localDataRevision: 'keep-revision', baseSnapshotId: 'keep-base', dirty: true })
-  await old.table('chain_prompts').put({ id: 'unrelated', name: 'Preserved' })
-  old.close(); await db.open()
-  expect(db.verno).toBe(15)
-  expect(await db.folders.count()).toBe(2)
-  expect(await db.folder_memberships.count()).toBe(10)
-  expect(await db.folder_chat_references.count()).toBe(5)
-  expect(await db.chain_prompts.get('unrelated')).toMatchObject({ name: 'Preserved' })
-  expect(await db.folder_settings.get(scopeA)).toMatchObject({ enabled: false, collapsedFolderIds: [data.folders[0].id] })
-  expect(await db.folder_sync_states.get(scopeA)).toMatchObject({ localDataRevision: 'keep-revision', baseSnapshotId: 'keep-base', dirty: true })
-  expect((await queries.getSyncStatus(scopeA)).chatCount).toBe(5)
-  expect((await queries.getSyncStatus(scopeB)).chatCount).toBe(0)
-  const connection = db.backendDB()
-  expect(connection.objectStoreNames.contains('folder_chat_usage')).toBe(false)
-  const transaction = connection.transaction(['folders', 'folder_memberships'])
-  expect(transaction.objectStore('folders').indexNames.contains('[accountScopeId+parentFolderId+orderKey]')).toBe(false)
-  expect(transaction.objectStore('folder_memberships').indexNames.contains('[accountScopeId+folderId+orderKey]')).toBe(false)
-  expect(transaction.objectStore('folder_memberships').indexNames.contains('[accountScopeId+chatId+folderId]')).toBe(true)
+  const existing = {
+    chain_prompts: { id: 'unrelated', name: 'Preserved', createdAt: timestamp, updatedAt: timestamp },
+    quick_follow_prompts: { id: 'prompt', template: 'Preserved' },
+    quick_follow_settings: { id: 'default', orderedIds: ['prompt'], enabled: true },
+    theme_assets: { id: 'theme', feature: 'background', content: 'Preserved' },
+    notification_audio_assets: { id: 'response-complete-notification', fileName: 'Preserved' },
+    gem_avatar_assets: { gemId: 'gem', content: 'Preserved' },
+  }
+  for (const [table, row] of Object.entries(existing)) await old.table(table).put(row)
+  old.close()
+  try {
+    await db.open()
+    for (const [table, row] of Object.entries(existing)) expect(await db.table(table).toArray()).toEqual([row])
+    for (const table of db.tables.filter((table) => table.name.startsWith('folder'))) expect(await table.count()).toBe(0)
+    const connection = db.backendDB()
+    expect(connection.objectStoreNames.contains('folder_chat_usage')).toBe(false)
+    expect(connection.objectStoreNames.contains('folder_snapshot_payloads')).toBe(true)
+    const transaction = connection.transaction(['folders', 'folder_memberships', 'folder_snapshots'])
+    expect(transaction.objectStore('folders').indexNames.contains('[accountScopeId+parentFolderId+orderKey]')).toBe(false)
+    expect(transaction.objectStore('folder_memberships').indexNames.contains('[accountScopeId+chatId+folderId]')).toBe(true)
+    expect(transaction.objectStore('folder_snapshots').indexNames.contains('validationState')).toBe(false)
+    await seed(fixture(2, 5))
+    expect((await queries.getSyncStatus(scopeA)).chatCount).toBe(5)
+    expect((await queries.getSyncStatus(scopeA)).folderCount).toBe(2)
+  } finally {
+    db.close(); await db.delete(); await db.open()
+  }
 })
