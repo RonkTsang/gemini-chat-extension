@@ -1,14 +1,14 @@
 import { parseFolderSyncData } from '@/domain/folder/schemas'
 import type { BrowserSyncManifest, FolderAccountData } from '@/domain/folder/types'
 import {
-  decodeLzStringBase64,
+  decodeGzipBase64,
   fromFolderOrganizationData as fromFolderSyncData,
   sha256Hex,
 } from '@/services/folder-data/codec'
 
 export {
-  decodeLzStringBase64,
-  encodeLzStringBase64,
+  decodeGzipBase64,
+  encodeGzipBase64,
   fromFolderOrganizationData as fromFolderSyncData,
   sha256Hex,
   stableStringify,
@@ -23,6 +23,6 @@ export async function decodeAndVerifySyncData(manifest: BrowserSyncManifest, pay
   if (await sha256Hex(payload) !== manifest.payloadHash) {
     throw new Error('Folder sync content hash does not match the payload')
   }
-  const data = parseFolderSyncData(decodeLzStringBase64<unknown>(payload))
+  const data = parseFolderSyncData(await decodeGzipBase64(payload))
   return fromFolderSyncData(manifest.accountScopeId, data)
 }

@@ -1,5 +1,3 @@
-import { compressToBase64, decompressFromBase64 } from 'lz-string'
-
 import { parseFolderAccountData } from '@/domain/folder/schemas'
 import { scopeFolderOrganizationData } from '@/domain/folder/organization-data'
 import type { FolderAccountData, FolderOrganizationData } from '@/domain/folder/types'
@@ -22,26 +20,64 @@ export function stableStringify(value: unknown): string {
     .join(',')}}`
 }
 
-export function encodeLzStringBase64(value: unknown): string {
-  return compressToBase64(stableStringify(value))
+export class FolderCompressionUnavailableError extends Error {
+  constructor(api: 'CompressionStream' | 'DecompressionStream') {
+    super(`${api} is unavailable; Folder gzip processing is disabled`)
+    this.name = 'FolderCompressionUnavailableError'
+  }
 }
 
-export function decodeLzStringBase64<T>(value: string): T {
-  const decoded = decompressFromBase64(value)
-  if (decoded === null) throw new Error('Folder sync payload is not valid lz-string base64')
+function byteStream(bytes: Uint8Array<ArrayBuffer>): ReadableStream<Uint8Array<ArrayBuffer>> {
+  return new ReadableStream({
+    start(controller) {
+      controller.enqueue(bytes)
+      controller.close()
+    },
+  })
+}
+
+export async function encodeGzip(value: unknown): Promise<ArrayBuffer> {
+  if (typeof globalThis.CompressionStream !== 'function') throw new FolderCompressionUnavailableError('CompressionStream')
+  const bytes = new TextEncoder().encode(stableStringify(value))
+  return new Response(byteStream(bytes).pipeThrough(new CompressionStream('gzip'))).arrayBuffer()
+}
+
+export async function decodeGzip(payload: ArrayBuffer): Promise<unknown> {
+  if (typeof globalThis.DecompressionStream !== 'function') throw new FolderCompressionUnavailableError('DecompressionStream')
+  const bytes = await new Response(byteStream(new Uint8Array(payload)).pipeThrough(new DecompressionStream('gzip'))).arrayBuffer()
   try {
-    return JSON.parse(decoded) as T
+    return JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)) as unknown
   } catch {
-    throw new Error('Folder sync payload is not valid JSON')
+    throw new Error('Folder payload is not valid UTF-8 JSON')
   }
+}
+
+export async function encodeGzipBase64(value: unknown): Promise<string> {
+  const bytes = new Uint8Array(await encodeGzip(value))
+  const chunks: string[] = []
+  // Bound argument counts even when recovery-sized data is encoded for Sync.
+  for (let offset = 0; offset < bytes.length; offset += 8192) {
+    chunks.push(String.fromCharCode(...bytes.subarray(offset, offset + 8192)))
+  }
+  return btoa(chunks.join(''))
+}
+
+export async function decodeGzipBase64(payload: string): Promise<unknown> {
+  if (!payload.length || payload.length % 4 !== 0 || /[^A-Za-z0-9+/=]/u.test(payload)) {
+    throw new Error('Folder payload is not valid Base64')
+  }
+  const binary = atob(payload)
+  const bytes = new Uint8Array(binary.length)
+  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index)
+  return decodeGzip(bytes.buffer)
 }
 
 /** SHA-256 is required: callers must not replace it with a non-cryptographic hash. */
-export async function sha256Hex(value: string): Promise<string> {
+export async function sha256Hex(value: string | ArrayBuffer): Promise<string> {
   if (!globalThis.crypto?.subtle) {
     throw new Error('WebCrypto SHA-256 is unavailable; Folder sync is disabled')
   }
-  const digest = await globalThis.crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))
+  const digest = await globalThis.crypto.subtle.digest('SHA-256', typeof value === 'string' ? new TextEncoder().encode(value) : value)
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('')
 }
 

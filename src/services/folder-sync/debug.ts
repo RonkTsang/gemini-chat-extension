@@ -1,10 +1,10 @@
-import { decodeLzStringBase64 } from './codec'
+import { decodeGzipBase64 } from './codec'
 import { logDevEvent } from '@/utils/devLogger'
 
 const FOLDER_DECOMPRESS_DEBUG_GLOBAL = 'decompressFolderData'
 
 type FolderSyncDebugGlobal = typeof globalThis & {
-  decompressFolderData?: typeof decodeLzStringBase64
+  decompressFolderData?: typeof decodeGzipBase64
 }
 
 /** Exposes the Folder payload decoder in extension background DevTools only. */
@@ -27,12 +27,12 @@ export function installFolderSyncDebugGlobal(
   Object.defineProperty(globalRef, FOLDER_DECOMPRESS_DEBUG_GLOBAL, {
     configurable: true,
     enumerable: false,
-    value: decodeLzStringBase64,
+    value: decodeGzipBase64,
     writable: false,
   })
 
   return () => {
-    if (globalRef.decompressFolderData !== decodeLzStringBase64) {
+    if (globalRef.decompressFolderData !== decodeGzipBase64) {
       return
     }
 

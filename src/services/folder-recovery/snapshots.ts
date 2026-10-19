@@ -7,7 +7,7 @@ import { countFolderOrganization } from '@/domain/folder/organization-summary'
 import { snapshotPayloadBytes } from '@/domain/folder/snapshot'
 import { parseFolderOrganizationData } from '@/domain/folder/schemas'
 import type { FolderExportPayload, FolderOrganizationData, FolderSnapshotRow } from '@/domain/folder/types'
-import { decodeLzStringBase64, encodeLzStringBase64, sha256Hex } from '@/services/folder-data/codec'
+import { decodeGzip, encodeGzip, FolderCompressionUnavailableError, sha256Hex } from '@/services/folder-data/codec'
 import {
   classifyRecoveryFailure, FolderRecoveryError, isImportant, isQuotaError, newestSnapshots,
   SNAPSHOT_BUDGET_BYTES, SNAPSHOT_GROUP_GAP_MS, SNAPSHOT_GROUP_MAX_MS, SNAPSHOT_PROTECTION_TTL_MS,
@@ -36,9 +36,13 @@ export async function readFolderSnapshot(accountScopeId: string, id: string): Pr
     return { snapshot, payload }
   })
   let data: FolderOrganizationData | undefined
-  if (payload && await sha256Hex(payload.compressedPayload) === snapshot.contentHash) {
-    try { data = parseFolderOrganizationData(decodeLzStringBase64<unknown>(payload.compressedPayload)) }
-    catch { /* Invalid organization data is reported with the same integrity error as invalid bytes. */ }
+  if (payload?.compressedPayload instanceof ArrayBuffer && payload.compressedPayload.byteLength === snapshot.payloadBytes
+    && await sha256Hex(payload.compressedPayload) === snapshot.contentHash) {
+    try { data = parseFolderOrganizationData(await decodeGzip(payload.compressedPayload)) }
+    catch (error) {
+      if (error instanceof FolderCompressionUnavailableError) throw error
+      // Invalid organization data is reported with the same integrity error as invalid bytes.
+    }
   }
   if (!data) {
     await db.transaction('rw', db.folder_snapshots, async () => {
@@ -61,7 +65,7 @@ export async function saveFolderSnapshot(
   capturedPendingRevision?: string,
 ): Promise<FolderSnapshotRow> {
   const timestamp = new Date().toISOString()
-  const compressedPayload = encodeLzStringBase64(payload.data)
+  const compressedPayload = await encodeGzip(payload.data)
   const lease = hold ? { token: nanoid(), expiresAt: new Date(Date.now() + SNAPSHOT_PROTECTION_TTL_MS).toISOString() } : undefined
   const row: FolderSnapshotRow = {
     id: nanoid(), accountScopeId: payload.accountScopeId, reason, reasons: [reason], schemaVersion: 1,

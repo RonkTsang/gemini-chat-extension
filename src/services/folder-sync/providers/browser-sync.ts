@@ -118,7 +118,7 @@ function chunksFor(payload: string, accountScopeId: string, snapshotId: string, 
   const chunks: string[] = []
   const limit = Math.min(CHUNK_TARGET_BYTES, syncLimits().quotaBytesPerItem)
   let cursor = 0
-  // LZ-String Base64 is ASCII, so string slices preserve its encoding.
+  // Gzip Base64 is ASCII, so string slices preserve its encoding.
   while (cursor < payload.length) {
     let low = 1
     let high = payload.length - cursor

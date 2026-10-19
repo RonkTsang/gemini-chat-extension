@@ -3,9 +3,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import Dexie from 'dexie'
 
 import { db } from '@/data/db'
+import { decodeGzip } from '@/services/folder-data/codec'
+import * as folderCodec from '@/services/folder-data/codec'
+import { parseFolderOrganizationData } from '@/domain/folder/schemas'
 import { folderAccessMiddleware, type FolderAccessReport } from '@/data/folder-access'
 import { FolderRepositoryImpl } from '@/data/repositories/folderRepository'
-import { decodeLzStringBase64, encodeLzStringBase64, sha256Hex } from './codec'
+import { decodeGzipBase64, encodeGzipBase64, sha256Hex } from './codec'
 import { observeFolderIndexedDB } from '@/test/folder-idb-observer'
 import { FolderSyncCoordinator } from './coordinator'
 import { BrowserSyncFolderProvider, browserSyncChunkKey, browserSyncManifestKey } from './providers/browser-sync'
@@ -54,16 +57,31 @@ describe('Sync capture reuse and commit guards', () => {
       await repo.markBrowserSyncPublicationWriting(scopeA, saved.id)
       await repo.updateFolder(scopeA, folder.data.folder.id, { name: 'Newer' })
     }
+    const encode = vi.spyOn(folderCodec, 'encodeGzipBase64')
     native = observeFolderIndexedDB()
     expect(await repo.getOrCreateBrowserSyncPublication(scopeA)).toEqual({ ...saved, state })
+    expect(encode).not.toHaveBeenCalled()
     expectNoOrganizationReads()
+  })
+
+  it('retains dirty state and retry intent after native compression fails', async () => {
+    const repo = repository(), sync = new FolderSyncCoordinator(repo)
+    await repo.createFolder(scopeA, { name: 'Keep local' })
+    vi.spyOn(folderCodec, 'encodeGzipBase64').mockRejectedValueOnce(new folderCodec.FolderCompressionUnavailableError('CompressionStream'))
+    expect(await sync.sync(scopeA)).toMatchObject({ outcome: 'failed' })
+    expect((await repo.getSyncState(scopeA))).toMatchObject({ dirty: true })
+    expect((await repo.getSyncState(scopeA))!.retryAt).toBeDefined()
+    expect((await repo.getAccountData(scopeA)).folders[0].name).toBe('Keep local')
+    expect(await db.folder_sync_publications.get(scopeA)).toBeUndefined()
+    expect(storage.values.size).toBe(0)
+    expect(await sync.sync(scopeA)).toMatchObject({ outcome: 'accepted-by-browser-storage' })
   })
 
   it.each(['hash', 'schema'] as const)('still rejects a reusable publication with an invalid %s', async (failure) => {
     const repo = repository()
     await repo.createFolder(scopeA, { name: 'Local' })
     const point = await repo.getOrCreateBrowserSyncPublication(scopeA)
-    const payload = failure === 'schema' ? encodeLzStringBase64({ folders: [] }) : point.payload
+    const payload = failure === 'schema' ? await encodeGzipBase64({ folders: [] }) : point.payload
     await db.folder_sync_publications.update(scopeA, { payload, payloadHash: failure === 'schema' ? await sha256Hex(payload) : '0'.repeat(64) })
     native = observeFolderIndexedDB()
     await expect(repo.getOrCreateBrowserSyncPublication(scopeA)).rejects.toThrow()
@@ -139,7 +157,7 @@ describe('Sync capture reuse and commit guards', () => {
       .toMatchObject({ outcome: 'accepted-by-browser-storage' })
     expect(fullCaptures()).toHaveLength(1)
     const points = await db.folder_snapshot_payloads.toArray()
-    const names = points.flatMap((point) => decodeLzStringBase64<{ folders: { name: string }[] }>(point.compressedPayload).folders.map((folder) => folder.name))
+    const names = (await Promise.all(points.map(async (point) => parseFolderOrganizationData(await decodeGzip(point.compressedPayload))))).flatMap((data) => data.folders.map((folder) => folder.name))
     expect(names).toEqual(expect.arrayContaining(['Local', 'Remote']))
     expect(await repo.getBrowserSyncConflict(scopeA)).toBeUndefined()
   })
@@ -178,24 +196,32 @@ describe('Sync capture reuse and commit guards', () => {
     expect((await repo.getSettings(scopeA)).collapsedFolderIds).toEqual(['folder-1'])
   })
 
-  it('retries a publication after an edit during hashing, with matched data/settings/revision', async () => {
+  it.each(['compression', 'hashing'] as const)('retries a publication after an edit during %s, with matched data/settings/revision', async (phase) => {
     const repo = repository()
     const folder = await repo.createFolder(scopeA, { name: 'Before' })
-    const digest = crypto.subtle.digest.bind(crypto.subtle)
-    let changed = false
-    vi.spyOn(crypto.subtle, 'digest').mockImplementation(async (...args) => {
+    const change = async () => {
       expect(Dexie.currentTransaction).toBeFalsy()
-      if (!changed) {
-        changed = true
-        await repo.updateFolder(scopeA, folder.data.id, { name: 'After' })
-        await repo.updateSettings(scopeA, { hideOrganizedChats: true })
-      }
-      return digest(...args)
-    })
+      await repo.updateFolder(scopeA, folder.data.id, { name: 'After' })
+      await repo.updateSettings(scopeA, { hideOrganizedChats: true })
+    }
+    if (phase === 'compression') {
+      const encode = folderCodec.encodeGzipBase64
+      vi.spyOn(folderCodec, 'encodeGzipBase64').mockImplementationOnce(async (value) => {
+        const payload = await encode(value)
+        await change()
+        return payload
+      })
+    } else {
+      const digest = crypto.subtle.digest.bind(crypto.subtle)
+      vi.spyOn(crypto.subtle, 'digest').mockImplementationOnce(async (...args) => {
+        await change()
+        return digest(...args)
+      })
+    }
     native = observeFolderIndexedDB()
     const pending = await repo.getOrCreateBrowserSyncPublication(scopeA)
     expect(fullCaptures()).toHaveLength(2)
-    expect(decodeLzStringBase64(pending.payload)).toMatchObject({ folders: [{ name: 'After' }] })
+    expect(await decodeGzipBase64(pending.payload)).toMatchObject({ folders: [{ name: 'After' }] })
     expect(pending.settings.hideOrganizedChats).toBe(true)
     expect(pending.dataRevision).toBe((await repo.getSyncState(scopeA))!.localDataRevision)
   })

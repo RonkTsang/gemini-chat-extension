@@ -5,8 +5,9 @@ vi.mock('wxt/browser', () => ({ browser: { permissions: { contains: vi.fn(async 
 vi.mock('@/entrypoints/background/folders/invalidation', () => ({ publishFolderInvalidation: vi.fn(async () => undefined) }))
 
 import { db } from '@/data/db'
+import { decodeGzip } from '@/services/folder-data/codec'
+import { parseFolderOrganizationData } from '@/domain/folder/schemas'
 import { FolderRepositoryImpl } from '@/data/repositories/folderRepository'
-import { decodeLzStringBase64 } from '@/services/folder-data/codec'
 import { clearRecoveryFailure } from './failure-fallback'
 import { FolderRecoveryRunner } from './runner'
 import { recordRecoveryFailure } from './snapshots'
@@ -40,7 +41,7 @@ describe('FolderRecoveryRunner', () => {
     const points = await repo.listSnapshots(scopeA)
     expect(points).toHaveLength(1)
     expect(points[0].id).toBe(snapshot.id)
-    expect(decodeLzStringBase64<{ folders: { name: string }[] }>((await db.folder_snapshot_payloads.get(points[0].id))!.compressedPayload).folders[0].name).toBe('Second')
+    expect(parseFolderOrganizationData(await decodeGzip((await db.folder_snapshot_payloads.get(points[0].id))!.compressedPayload)).folders[0].name).toBe('Second')
     expect((await db.folder_recovery_states.get(scopeA))?.pendingRevision).toBeUndefined()
   })
 

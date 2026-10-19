@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { installFolderSyncDebugGlobal } from './debug'
-import { encodeLzStringBase64 } from './codec'
+import { encodeGzipBase64 } from './codec'
 
 describe('Folder sync debug global', () => {
   afterEach(() => {
@@ -9,13 +9,13 @@ describe('Folder sync debug global', () => {
       .decompressFolderData
   })
 
-  it('exposes the Folder decoder while running in development', () => {
+  it('exposes the Folder decoder while running in development', async () => {
     const uninstall = installFolderSyncDebugGlobal()
-    const compressedPayload = encodeLzStringBase64({ folderId: 'folder-1' })
+    const compressedPayload = await encodeGzipBase64({ folderId: 'folder-1' })
 
     expect(
-      (globalThis as typeof globalThis & {
-        decompressFolderData?: (value: string) => unknown
+      await (globalThis as typeof globalThis & {
+        decompressFolderData?: (value: string) => Promise<unknown>
       }).decompressFolderData?.(compressedPayload),
     ).toEqual({ folderId: 'folder-1' })
 

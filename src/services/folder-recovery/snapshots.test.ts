@@ -89,7 +89,7 @@ describe('Folder restore point policy', () => {
     advance(1000)
     const next = await saveFolderSnapshot(payload('B'), 'rev-2', 'automatic', ample)
     expect(next.id).not.toBe(first.id)
-    expect((await db.folder_snapshot_payloads.get(first.id))?.compressedPayload).toBe(frozen?.compressedPayload)
+    expect(new Uint8Array((await db.folder_snapshot_payloads.get(first.id))!.compressedPayload)).toEqual(new Uint8Array(frozen!.compressedPayload))
     expect(await db.folder_snapshots.count()).toBe(2)
   })
 
@@ -182,7 +182,7 @@ describe('Folder restore point policy', () => {
     advance(1000)
     vi.spyOn(db.folder_snapshots, 'put').mockRejectedValue(new DOMException('Disk full', 'QuotaExceededError'))
     await expect(saveFolderSnapshot(payload('After'), 'rev-2', 'automatic', ample)).rejects.toMatchObject({ code: 'LOCAL_STORAGE_FULL' })
-    expect((await db.folder_snapshot_payloads.get(first.id))?.compressedPayload).toBe(stored?.compressedPayload)
+    expect(new Uint8Array((await db.folder_snapshot_payloads.get(first.id))!.compressedPayload)).toEqual(new Uint8Array(stored!.compressedPayload))
   })
 
   it('handles a large organization and accounts for compressed data in the budget', async () => {

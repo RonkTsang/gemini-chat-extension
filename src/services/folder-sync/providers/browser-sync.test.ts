@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { browser } from 'wxt/browser'
 import { BrowserSyncFolderProvider, BrowserSyncQuotaError, BrowserSyncUnsupportedVersionError, browserSyncManifestKey, browserSyncChunkKey,
   calculateBrowserSyncUsage, storageItemBytes, folderSyncKeyScope } from './browser-sync'
-import { sha256Hex, encodeLzStringBase64 } from '../codec'
+import { sha256Hex, encodeGzipBase64 } from '../codec'
 import type { BrowserSyncManifest } from '@/domain/folder/types'
 
 const provider = () => new BrowserSyncFolderProvider()
@@ -80,7 +80,7 @@ describe('fixed account snapshot transport', () => {
       const value = data('Bad')
       if (mode === 'tree') value.folders[0].parentFolderId = 'missing'
       if (mode === 'reference') value.chatReferences.push({ chatId: 'unused', cachedTitle: '', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' })
-      const payload = encodeLzStringBase64(mode === 'unknown-field' ? { ...value, accountScopeId: scopeB } : value)
+      const payload = await encodeGzipBase64(mode === 'unknown-field' ? { ...value, accountScopeId: scopeB } : value)
       storage.values.set(key, { ...manifest, payloadBytes: payload.length, payloadHash: await sha256Hex(payload) })
       storage.values.set(browserSyncChunkKey(scopeA, 0), { snapshotId: 'first', payload })
     }

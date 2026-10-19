@@ -12,7 +12,8 @@ import type { FolderRpcMethod } from '@/domain/folder/rpc'
 import { FolderQueryService } from '@/entrypoints/background/folders/query-service'
 import { createFolderRpcHandler } from '@/entrypoints/background/folders/rpc-handler'
 import type { FolderSyncScheduler } from '@/services/folder-sync/scheduler'
-import { encodeLzStringBase64, sha256Hex } from '@/services/folder-data/codec'
+import { encodeGzip, sha256Hex } from '@/services/folder-data/codec'
+import * as folderCodec from '@/services/folder-data/codec'
 import { observeFolderIndexedDB } from '@/test/folder-idb-observer'
 import { readFolderSnapshot, saveFolderSnapshot } from './snapshots'
 import { getLocalStorageStatus, pruneRecoveryHistory, SNAPSHOT_BUDGET_BYTES, trimSnapshots } from './storage'
@@ -33,7 +34,7 @@ beforeEach(async () => {
   vi.spyOn(console, 'info').mockImplementation(() => undefined)
   vi.spyOn(console, 'error').mockImplementation(() => undefined)
 })
-afterEach(() => { native?.stop(); native = undefined; vi.restoreAllMocks(); vi.useRealTimers(); vi.unstubAllEnvs() })
+afterEach(() => { native?.stop(); native = undefined; vi.restoreAllMocks(); vi.useRealTimers(); vi.unstubAllEnvs(); vi.unstubAllGlobals() })
 
 function save(name: string, reason: FolderSnapshotRow['reason'] = 'automatic', scope = scopeA, hold = false) {
   return saveFolderSnapshot({ accountScopeId: scope, data: data(name) }, `revision:${name}`, reason, {}, hold)
@@ -136,9 +137,9 @@ describe('Recovery metadata and payload boundaries', () => {
         expect(report.tables[table]?.[metric] ?? 0).toBe(counts[metric])
       }
     }
-    expect(JSON.stringify(report)).not.toContain(before)
+    expect(JSON.stringify(report)).not.toContain('compressedPayload')
     const after = (await db.folder_snapshot_payloads.get(first.id))!.compressedPayload
-    expect(after).not.toBe(before)
+    expect(new Uint8Array(after)).not.toEqual(new Uint8Array(before))
     native.reset()
     advance()
     const reused = await save('Changed', 'before-delete', scopeA, true)
@@ -223,12 +224,12 @@ describe('Recovery metadata and payload boundaries', () => {
       .toEqual(['success', 'rollback', 'success'])
   })
 
-  it('keeps the logical JSON budget exact for UTF-8/escaping and lease metadata changes', async () => {
+  it('counts raw gzip bytes plus UTF-8 metadata and adjusts for released leases', async () => {
     const point = await save('预算', 'before-delete', scopeA, true)
-    const compressedPayload = '中文\\"\n🙂'
+    const compressedPayload = await encodeGzip(data('中文\\"\n🙂'))
     const row = { ...point, payloadBytes: snapshotPayloadBytes(compressedPayload) }
-    const { payloadBytes: _, validationState: __, protectionToken: ___, ...metadata } = row
-    const bytes = new TextEncoder().encode(JSON.stringify({ ...metadata, compressedPayload })).byteLength
+    const { protectionToken: _, ...metadata } = row
+    const bytes = new TextEncoder().encode(JSON.stringify(metadata)).byteLength + compressedPayload.byteLength
     expect(snapshotBytes(row)).toBe(bytes)
     await db.folder_snapshots.put({ ...row, protectionToken: undefined })
     const initial = snapshotBytes(row)
@@ -245,13 +246,15 @@ describe('Recovery metadata and payload boundaries', () => {
     const second = await save('B', 'before-delete', scopeB, true)
     // Large bodies have already been encoded; sizing metadata isolates retention from codec cost.
     const remaining = SNAPSHOT_BUDGET_BYTES - snapshotBytes(first) - snapshotBytes(second)
-    await db.folder_snapshots.update(second.id, { payloadBytes: second.payloadBytes + remaining })
+    const boundary = { ...second, payloadBytes: second.payloadBytes + remaining }
+    boundary.payloadBytes += SNAPSHOT_BUDGET_BYTES - snapshotBytes(first) - snapshotBytes(boundary)
+    await db.folder_snapshots.update(second.id, { payloadBytes: boundary.payloadBytes })
     db.close(); await db.open()
     native = observeFolderIndexedDB()
     expect((await getLocalStorageStatus(scopeA)).snapshotBytes).toBe(SNAPSHOT_BUDGET_BYTES)
     await pruneRecoveryHistory()
     expect(native.tables.folder_snapshot_payloads?.records ?? 0).toBe(0)
-    await db.folder_snapshots.update(second.id, { payloadBytes: second.payloadBytes + remaining + 1 })
+    await db.folder_snapshots.update(second.id, { payloadBytes: boundary.payloadBytes + 1 })
     await expect(pruneRecoveryHistory()).rejects.toMatchObject({ code: 'SNAPSHOT_BUDGET_EXCEEDED' })
     await expectPairs([first.id, second.id])
     advance(15 * 60_000 + 1)
@@ -262,14 +265,16 @@ describe('Recovery metadata and payload boundaries', () => {
     await expectPairs([second.id])
   })
 
-  it.each(['missing', 'hash', 'schema'] as const)('rejects %s corruption at explicit restore and keeps lists body-free afterward', async (corruption) => {
+  it.each(['missing', 'type', 'length', 'hash', 'gzip', 'schema'] as const)('rejects %s corruption at explicit restore and keeps lists body-free afterward', async (corruption) => {
     const point = await save('Target', 'manual')
     if (corruption === 'missing') await db.folder_snapshot_payloads.delete(point.id)
-    if (corruption === 'hash') await db.folder_snapshot_payloads.put({ id: point.id, compressedPayload: 'corrupt' })
-    if (corruption === 'schema') {
-      const compressedPayload = encodeLzStringBase64({ folders: [] })
+    if (corruption === 'type') await db.table<{ id: string; compressedPayload: unknown }>('folder_snapshot_payloads').put({ id: point.id, compressedPayload: 'old-development-format' })
+    if (corruption === 'length') await db.folder_snapshots.update(point.id, { payloadBytes: point.payloadBytes + 1 })
+    if (corruption === 'hash') await db.folder_snapshots.update(point.id, { contentHash: '0'.repeat(64) })
+    if (corruption === 'schema' || corruption === 'gzip') {
+      const compressedPayload = corruption === 'schema' ? await encodeGzip({ folders: [] }) : new TextEncoder().encode('corrupt').buffer
       await db.folder_snapshot_payloads.put({ id: point.id, compressedPayload })
-      await db.folder_snapshots.update(point.id, { contentHash: await sha256Hex(compressedPayload) })
+      await db.folder_snapshots.update(point.id, { contentHash: await sha256Hex(compressedPayload), payloadBytes: compressedPayload.byteLength })
     }
     const repo = repository()
     await repo.createFolder(scopeA, { name: 'Keep current' })
@@ -279,6 +284,53 @@ describe('Recovery metadata and payload boundaries', () => {
     const listed = await queries.listSnapshots(scopeA, undefined, 10)
     expect(listed.items.find((row) => row.id === point.id)).toMatchObject({ validationState: 'invalid', folderCount: undefined })
     expect(native.tables.folder_snapshot_payloads).toBeUndefined()
+  })
+
+  it('preserves a valid binary snapshot when native decompression is unavailable', async () => {
+    const point = await save('Target', 'manual')
+    db.close(); await db.open()
+    const stored = (await db.folder_snapshot_payloads.get(point.id))!.compressedPayload
+    expect(stored).toBeInstanceOf(ArrayBuffer)
+    expect(stored.byteLength).toBe(point.payloadBytes)
+    vi.stubGlobal('DecompressionStream', undefined)
+    await expect(readFolderSnapshot(scopeA, point.id)).rejects.toThrow('DecompressionStream is unavailable')
+    expect((await db.folder_snapshots.get(point.id))!.validationState).toBe('valid')
+    vi.unstubAllGlobals()
+    expect((await readFolderSnapshot(scopeA, point.id)).data.folders[0].name).toBe('Target')
+  })
+
+  it('keeps newer pending work when an edit arrives during asynchronous compression', async () => {
+    const repo = repository()
+    const first = await repo.createFolder(scopeA, { name: 'Before' })
+    const encode = folderCodec.encodeGzip
+    vi.spyOn(folderCodec, 'encodeGzip').mockImplementationOnce(async (value) => {
+      expect(Dexie.currentTransaction).toBeFalsy()
+      const bytes = await encode(value)
+      await repo.updateFolder(scopeA, first.data.id, { name: 'After' })
+      return bytes
+    })
+    const saved = await repo.createSnapshot(scopeA, 'automatic')
+    expect(saved.dataRevision).toBe(first.commit.dataRevision)
+    expect((await readFolderSnapshot(scopeA, saved.id)).data.folders[0].name).toBe('Before')
+    const current = (await repo.getSyncState(scopeA))!.localDataRevision
+    expect((await db.folder_recovery_states.get(scopeA))!.pendingRevision).toBe(current)
+    const next = await repo.createSnapshot(scopeA, 'automatic')
+    expect((await readFolderSnapshot(scopeA, next.id)).data.folders[0].name).toBe('After')
+    expect((await db.folder_recovery_states.get(scopeA))!.pendingRevision).toBeUndefined()
+  })
+
+  it('keeps pending work and blocks deletion if native compression is unavailable', async () => {
+    const repo = repository()
+    const folder = await repo.createFolder(scopeA, { name: 'Keep current' })
+    vi.stubGlobal('CompressionStream', undefined)
+    await expect(repo.createSnapshot(scopeA, 'automatic')).rejects.toThrow('CompressionStream is unavailable')
+    expect(await db.folder_recovery_states.get(scopeA)).toMatchObject({ pendingRevision: folder.commit.dataRevision,
+      warning: 'snapshot-failed', automaticSnapshotFailed: true })
+    await expect(repo.deleteFolder(scopeA, folder.data.id)).rejects.toMatchObject({ code: 'SNAPSHOT_PROTECTION_FAILED' })
+    expect((await repo.getAccountData(scopeA)).folders[0].name).toBe('Keep current')
+    expect((await repo.getSyncState(scopeA))!.dirty).toBe(true)
+    vi.unstubAllGlobals()
+    await repo.createSnapshot(scopeA, 'automatic')
   })
 
   it('hashes outside transactions and holds a target against grouping until restore commits', async () => {
@@ -310,9 +362,10 @@ describe('Recovery metadata and payload boundaries', () => {
     await repo.createFolder(scopeA, { name: 'Current' })
     const digest = crypto.subtle.digest.bind(crypto.subtle)
     const targetPayload = (await db.folder_snapshot_payloads.get(point.id))!.compressedPayload
+    const targetHash = new Uint8Array(await digest('SHA-256', targetPayload))
     vi.spyOn(crypto.subtle, 'digest').mockImplementation(async (algorithm, bytes) => {
       const result = await digest(algorithm, bytes)
-      if (new TextDecoder().decode(bytes as ArrayBuffer) === targetPayload) {
+      if (new Uint8Array(result).every((byte, index) => byte === targetHash[index])) {
         if (failure === 'expired') advance(15 * 60_000 + 1)
         else await db.folder_snapshots.update(point.id, { contentHash: 'changed-after-read' })
       }

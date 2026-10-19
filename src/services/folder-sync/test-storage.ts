@@ -51,7 +51,7 @@ export { storage }
 
 import { db } from '@/data/db'
 import { browser } from 'wxt/browser'
-import { encodeLzStringBase64, sha256Hex } from './codec'
+import { encodeGzipBase64, sha256Hex } from './codec'
 import { ROOT_FOLDER_ID, type FolderOrganizationData, type FolderSyncPublicationRow } from '@/domain/folder/types'
 
 export const scopeA = 'account-scope-0001'
@@ -64,7 +64,7 @@ export function data(name: string, id = 'folder-1'): FolderOrganizationData {
 }
 
 export async function publication(id: string, organization = emptyData, accountScopeId = scopeA, baseSnapshotId?: string): Promise<FolderSyncPublicationRow> {
-  const payload = encodeLzStringBase64(organization)
+  const payload = await encodeGzipBase64(organization)
   return { accountScopeId, id, baseSnapshotId, dataRevision: `revision:${id}`, payload,
     payloadHash: await sha256Hex(payload), settings: { enabled: true, hideOrganizedChats: false }, createdAt: new Date().toISOString(), state: 'prepared' }
 }

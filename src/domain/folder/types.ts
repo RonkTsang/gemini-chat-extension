@@ -145,15 +145,15 @@ export interface FolderSnapshotRow {
   dataRevision: string
   createdAt: string
   contentHash: string
-  /** JSON-encoded payload value bytes; used with the logical snapshot budget. */
+  /** Raw gzip bytes; used with the logical snapshot budget. */
   payloadBytes: number
   validationState: 'valid' | 'invalid'
 }
 
 export interface FolderSnapshotPayloadRow {
   id: string
-  /** LZ-String Base64 of FolderOrganizationData, containing current entities. */
-  compressedPayload: string
+  /** Gzip binary of FolderOrganizationData, containing current entities. */
+  compressedPayload: ArrayBuffer
 }
 
 export type FolderSnapshotSummary = Pick<FolderSnapshotRow,

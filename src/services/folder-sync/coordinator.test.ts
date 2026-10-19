@@ -2,10 +2,12 @@ import { storage, scopeA, scopeB, publication, data, emptyData, resetStorage } f
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { browser } from 'wxt/browser'
 import { db } from '@/data/db'
+import { decodeGzip } from '@/services/folder-data/codec'
+import { parseFolderOrganizationData } from '@/domain/folder/schemas'
 import { FolderRepositoryImpl } from '@/data/repositories/folderRepository'
 import { BrowserSyncFolderProvider, browserSyncManifestKey, browserSyncChunkKey } from './providers/browser-sync'
 import { FolderSyncCoordinator } from './coordinator'
-import { decodeLzStringBase64, fromFolderSyncData, toFolderSyncData } from './codec'
+import { fromFolderSyncData, toFolderSyncData } from './codec'
 import { FolderQueryService } from '@/entrypoints/background/folders/query-service'
 
 const repository = () => new FolderRepositoryImpl({ getDeviceId: async () => 'device-test' })
@@ -233,7 +235,7 @@ describe('whole snapshot decisions', () => {
     expect((await repo.listFolders(scopeA)).map((row) => row.name)).toEqual([choice === 'remote' ? 'Remote' : 'Local'])
     const points = await repo.listSnapshots(scopeA)
     const bodies = await db.folder_snapshot_payloads.bulkGet(points.map((row) => row.id))
-    const savedNames = bodies.flatMap((row) => decodeLzStringBase64<{ folders: { name: string }[] }>(row!.compressedPayload).folders.map((folder) => folder.name))
+    const savedNames = (await Promise.all(bodies.map(async (row) => parseFolderOrganizationData(await decodeGzip(row!.compressedPayload))))).flatMap((data) => data.folders.map((folder) => folder.name))
     expect(savedNames).toContain('Remote'); expect(savedNames).toContain('Local')
     expect(points.length).toBeLessThanOrEqual(10)
     expect(await repo.getBrowserSyncConflict(scopeA)).toBeUndefined()

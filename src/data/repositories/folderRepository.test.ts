@@ -5,9 +5,10 @@ import { FolderRecoveryError } from '@/services/folder-recovery/storage'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Dexie from 'dexie'
 import { db, GeminiExtensionDB } from '../db'
+import { decodeGzip } from '@/services/folder-data/codec'
 import { FolderRepositoryImpl } from './folderRepository'
 import { FolderQueryService } from '@/entrypoints/background/folders/query-service'
-import { fromFolderSyncData, decodeLzStringBase64, toFolderSyncData } from '@/services/folder-sync/codec'
+import { fromFolderSyncData, decodeGzipBase64, toFolderSyncData } from '@/services/folder-sync/codec'
 import { BrowserSyncFolderProvider } from '@/services/folder-sync/providers/browser-sync'
 import { clearRecoveryFailure } from '@/services/folder-recovery/failure-fallback'
 import { getLocalStorageStatus } from '@/services/folder-recovery/storage'
@@ -81,8 +82,8 @@ describe('Folder local organization', () => {
     const pending = await repo.getOrCreateBrowserSyncPublication(scopeA)
     const snapshot = await repo.createSnapshot(scopeA, 'manual')
     const backup = await repo.exportAccountData(scopeA)
-    expect(decodeLzStringBase64(pending.payload)).toEqual(backup.data)
-    expect((await db.folder_snapshot_payloads.get(snapshot.id))?.compressedPayload).toBe(pending.payload)
+    expect(await decodeGzipBase64(pending.payload)).toEqual(backup.data)
+    expect(await decodeGzip((await db.folder_snapshot_payloads.get(snapshot.id))!.compressedPayload)).toEqual(backup.data)
     expect(JSON.stringify(backup.data)).not.toContain(scopeA)
     expect(toFolderSyncData(fromFolderSyncData(scopeA, backup.data))).toEqual(toFolderSyncData(await repo.getAccountData(scopeA)))
   })
@@ -234,7 +235,7 @@ describe('retained local organization regressions', () => {
     const historical = (await queries.listSnapshots(scopeA, undefined, 100)).items.find((row) => row.id === point.id)
     expect(historical).toMatchObject({ folderCount: 2, chatCount: 12 })
     expect((await db.folder_snapshots.get(point.id))?.folderCount).toBe(2)
-    await db.folder_snapshot_payloads.update(point.id, { compressedPayload: 'corrupted' })
+    await db.folder_snapshot_payloads.update(point.id, { compressedPayload: new TextEncoder().encode('corrupted').buffer })
     // Lists read metadata only; validation happens on explicit restore.
     expect((await queries.listSnapshots(scopeA, undefined, 100)).items.find((row) => row.id === point.id)?.chatCount).toBe(12)
     await expect(repository.restoreSnapshot(scopeA, point.id)).rejects.toThrow('integrity')

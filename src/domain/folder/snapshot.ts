@@ -1,13 +1,13 @@
 import type { FolderSnapshotRow, FolderSnapshotSummary } from './types'
 
-export function snapshotPayloadBytes(compressedPayload: string): number {
-  return new TextEncoder().encode(JSON.stringify(compressedPayload)).byteLength
+export function snapshotPayloadBytes(compressedPayload: ArrayBuffer): number {
+  return compressedPayload.byteLength
 }
 
-/** Preserve the pre-split JSON budget, excluding response tokens and internal byte/validation fields. */
+/** Logical budget: gzip bytes plus persisted metadata, not IndexedDB disk usage. */
 export function snapshotBytes(row: FolderSnapshotRow): number {
-  const { payloadBytes, validationState: _, protectionToken: __, ...metadata } = row
-  return new TextEncoder().encode(JSON.stringify(metadata)).byteLength + ',"compressedPayload":'.length + payloadBytes
+  const { protectionToken: _, ...metadata } = row
+  return new TextEncoder().encode(JSON.stringify(metadata)).byteLength + row.payloadBytes
 }
 
 /** Explicit RPC whitelist: no payload, hashes, internal byte counts or lease tokens. */

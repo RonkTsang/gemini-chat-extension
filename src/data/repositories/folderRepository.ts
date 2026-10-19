@@ -47,7 +47,7 @@ import {
   type FolderSyncStateRow,
 } from '@/domain/folder/types'
 import { fromFolderSyncData, stableStringify, toFolderSyncData } from '@/services/folder-sync/codec'
-import { decodeLzStringBase64, encodeLzStringBase64, fromFolderOrganizationData, sha256Hex, toFolderOrganizationData } from '@/services/folder-data/codec'
+import { decodeGzipBase64, encodeGzipBase64, fromFolderOrganizationData, sha256Hex, toFolderOrganizationData } from '@/services/folder-data/codec'
 import { logDevError, logDevEvent } from '@/utils/devLogger'
 
 import { readFolderSnapshot, saveFolderSnapshot, recordRecoveryFailure } from '@/services/folder-recovery/snapshots'
@@ -1238,7 +1238,7 @@ export class FolderRepositoryImpl implements FolderRepository {
           && pending.settings.enabled === view.settings.enabled && pending.settings.hideOrganizedChats === view.settings.hideOrganizedChats))
       if (reusable) {
         if (await sha256Hex(pending.payload) !== pending.payloadHash) throw new Error('Invalid pending publication hash')
-        fromFolderSyncData(accountScopeId, parseFolderSyncData(decodeLzStringBase64(pending.payload)))
+        fromFolderSyncData(accountScopeId, parseFolderSyncData(await decodeGzipBase64(pending.payload)))
         if (await db.transaction('r', browserSyncViewTables, async () => sameBrowserSyncView(view, await this.readBrowserSyncView(accountScopeId)))) {
           if (import.meta.env.DEV) logDevEvent('debug', '[Folders][sync]', 'browser-sync.publication.reused', { accountScopeId, snapshotId: pending.id, publicationState: pending.state, dataRevision: pending.dataRevision })
           return pending
@@ -1251,7 +1251,7 @@ export class FolderRepositoryImpl implements FolderRepository {
       if (captured.data.accountScopeId !== accountScopeId) throw new Error('Capture belongs to a different account scope')
       if (!sameBrowserSyncView(view, captured)) continue
       // Compression and hashing stay outside the IndexedDB write transaction.
-      const payload = encodeLzStringBase64(toFolderSyncData(captured.data))
+      const payload = await encodeGzipBase64(toFolderSyncData(captured.data))
       const publication: FolderSyncPublicationRow = {
         accountScopeId, id: nanoid(), baseSnapshotId: captured.state.baseSnapshotId,
         dataRevision: captured.dataRevision, payload, payloadHash: await sha256Hex(payload),
