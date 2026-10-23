@@ -1,105 +1,131 @@
-# Folder Browser Sync 数据协议 V3
+# Folder Browser Sync：完整快照协议 V4
 
-当前实现使用一个 Manifest 和一组按编号存储的 Chunk。只支持 V3，不迁移未发布的旧 Folder 协议或旧试验数据；Dexie v11 清理旧 Folder 试验表，当前 Dexie schema 为 v12（增加本地恢复状态表），其他功能表保留。后台清理旧 Folder Sync key。
+Folders 面向通常在一台设备编辑、其他设备接收更新的使用方式。IndexedDB 保存本机工作数据，Browser Sync 传播完整快照；接收时整体替换，不做实体并集或逐字段合并。Folder 尚未上线，本次不迁移未发布实验数据；此例外仅适用于当前开发阶段，上线后的版本演进必须遵守第 9 节的数据保留约束。
 
-`observed` 与 `manual-confirmed` 身份若由相同规范化邮箱派生出同一 `accountScopeId`，使用同一同步数据和调度。手动选择不会验证当前 Gemini 登录身份；最近使用的邮箱和 scope 仅保存在本机 `browser.storage.local` 账号历史中，不进入 Manifest、Chunk 或导出文件。账号历史可在页面重载后恢复，页面自动识别的身份优先。
+## 1. 账号与数据边界
 
-## 1. 远端结构
+每次查询、发布、接收、清理都带 accountScopeId。相同规范化邮箱的自动识别和手动选择使用同一 scope；不同 Gemini 账号使用不同 key：
 
-```ts
-interface BrowserSyncManifest {
-  schemaVersion: 3
-  accountScopeId: string
-  generationId: string
-  dataRevision: string
-  authorityEpoch: string
-  chunkCount: number
-  payloadBytes: number
-  payloadHash: string
-  settings: {
-    enabled: boolean
-    hideOrganizedChats: boolean
-  }
-  settingsVersion: string
-}
-
-interface FolderSyncData {
-  folders: Omit<FolderRow, 'accountScopeId'>[]
-  memberships: Omit<FolderMembershipRow, 'accountScopeId'>[]
-  chatReferences: Omit<ChatReferenceRow, 'accountScopeId'>[]
-}
+```text
+folders:{accountScopeId}:manifest
+folders:{accountScopeId}:chunk:0
+folders:{accountScopeId}:chunk:1
+...
 ```
 
-| 字段 | 含义与价值 |
+固定分块索引不随保存次数创建 generation 命名空间。所有账号和其他扩展同步设置仍共享浏览器配额。
+
+Key 不含数据版本；当前格式由 Manifest value 中的 `schemaVersion: 4` 标识。未来升级保留相同 key，按版本显式解析。当前未发布的 V3/V4 实验 key 不读取、迁移或自动删除；它们仍计入浏览器总配额。
+
+同步内容是当前 Folder、membership、被引用的 Chat reference，以及 enabled、hideOrganizedChats。组织数据保留 ID、父节点、名称、外观、排序、置顶、必要标题和创建/更新时间，不携带 tombstone 或字段合并版本。FolderOrganizationData 为同步、导出和恢复点共用的无行级 scope 组织格式；接收时从已验证的 envelope 注入 scope。
+
+原始邮箱、账号历史、Gemini 正文、本地恢复点、运行时错误及 collapsedFolderIds 不进入同步。组织替换后保留仍有效的本机收起状态。导入与恢复组织数据仍保留当前设置。
+
+## 2. 完整性与版本
+
+组织数据经 stableStringify → UTF-8 → 原生 CompressionStream('gzip') → Base64 后分块。Manifest 记录协议版本、scope、唯一 snapshotId、baseSnapshotId、分块数量，以及实际传输的 Base64 字符串 UTF-8 字节数及 SHA-256。同步设置属于同一快照，不能在组织数据缺块时独立应用。Folder 尚未发布，直接将未发布 v4 定义为 gzip + Base64，不增加压缩字段、旧格式读取或开发数据迁移。
+
+新发布的 Manifest 和分块均包含 `did`，复用 `storage.local['gpk.folders.device-id.v1']` 的安装身份；每个分块还包含所属 snapshotId 和压缩字符串片段。`did` 为可选、有长度限制的附加字段，不改变 v4 协议版本或固定 key，旧的无 `did` 快照仍可读取；同时带有 `did` 的 Manifest 与分块须一致，容量预检计入其开销。还原顺序为 Manifest 格式/版本/scope → 全部分块格式及快照 ID → 数量与按索引拼接 → UTF-8 字节数与 hash → 解压/JSON/schema → 账号、唯一 ID、树和引用约束 → 读取期间 Manifest 未改变。任何失败不修改本机组织或设置。
+
+先识别基本 envelope 的版本，再使用受支持版本的严格 schema。不支持的版本返回 `unsupported-schema-version`，保留本机组织、设置、待发布事实及同步区，提示升级并停止自动覆盖和定时重试。发布预检及冲突选择遵守同一保护。
+
+有效空组织快照表示用户清空；没有 Manifest、缺块或损坏不表示清空。快照 ID 用于身份与分叉判断，不用墙上时钟决定跨设备先后。写入前重读只保护已观察到的状态，不提供跨设备条件写入或所有设备完成确认。
+
+## 3. 本机持久状态
+
+每账号的 FolderSyncStateRow 保存 baseSnapshotId、localDataRevision、dirty，以及重试、错误和容量事实。组织与同步设置的修改都会推进同步修订；仅本地视图修改不 dirty。
+
+folder_sync_publications 以 accountScopeId 为唯一 key，每账号至多一份待发布快照，捕获精确组织、设置、修订、基准、snapshotId、payload/hash 和发布阶段。重试复用其 ID 和内容。
+
+folder_sync_conflicts 同样每账号至多一份完整验证后的冲突候选，绑定收到的 Manifest、组织和本机修订。不保存永久 Outbox、接受发布历史或删除标记。
+
+业务事务同时提交数据、dirty/修订和 Recovery pending。提交后独立唤醒 Sync 与 Recovery；普通后台任务不延迟或重分类已经成功的业务保存。同步期间的新编辑不能被旧发布结果确认或覆盖。
+
+## 4. 决策规则
+
+| 情况 | 行为 |
 | --- | --- |
-| `schemaVersion` | 同时约定 Manifest、业务结构、压缩算法和还原流程，避免多组协议版本 |
-| `accountScopeId` | 当前 Gemini 账号的数据边界，读取时必须匹配 job scope |
-| `generationId` | 定位不可变 Chunk 集合，持久化后重试复用同一 ID |
-| `dataRevision` | 业务组织数据修订；设置和收起状态修改不改变它 |
-| `authorityEpoch` | 当前同步权威周期；保留给 provider 切换，Browser Sync 未实现 Drive 切换 |
-| `chunkCount` | 按索引生成完整 Chunk key 列表，检测缺块 |
-| `payloadBytes` | 拼接后压缩字符串的 UTF-8 字节数 |
-| `payloadHash` | 压缩字符串的 SHA-256；一次校验覆盖所有 Chunk |
-| `settings` | 两个普通布尔开关，独立于 Folder 业务数据 |
-| `settingsVersion` | 设置整体的 HLC 版本；整个对象一起选择，不逐字段混合 |
+| 相同已应用/发布快照且本机组织、同步设置一致 | 不重复替换/发布，继续必要的恢复和清理 |
+| 相同基准但干净本机内容缺失或不一致 | 保护本机后正常恢复，不仅凭基准 ID 跳过 |
+| clean 本机收到不同完整快照 | 保护本机组织后按修订检查，原子替换组织和同步设置 |
+| dirty 本机看到基准快照 | 捕获并发布本机完整快照 |
+| dirty 本机收到不同完整快照 | 持久冲突，停止自动覆盖，保留本机数据 |
+| 首次初始化且无 Manifest、本机干净 | 安静等待，不发布空快照，不持续重试，不标记已恢复 |
+| 无 Manifest、无基准且有真实修改或待发布事实 | 通过完整性预检后发布；孤立分块不能被误覆盖 |
+| 已有基准而 Manifest 消失 | 报告问题，不自动重新种入旧数据 |
+| 用户确认重建缺失副本 | 校验确认时的本机修订及基准、重新确认无 Manifest/孤立分块/冲突后，持久记录重新发布意图并发布本机完整组织及同步设置 |
+| 无关缺块/损坏副本 | 保留本机，等待完整副本或重试 |
+| 不支持的 schemaVersion | 保留两端数据并提示升级，不自动覆盖或持续重试 |
+| 明确记录的自身发布中断 | 用同一待发布快照恢复，不能误当无关异常 |
 
-存储 key：
+替换数据的写事务重新检查捕获的本机修订；校验、保护或压缩期间的新修改要求重新评估。发布完成仅确认捕获的修订，新组织或设置修改保持 dirty。Browser Storage 接受写入不证明云端或其他设备收到。
 
-```text
-folders:v3:{accountScopeId}:manifest
-folders:v3:{accountScopeId}:generation:{generationId}:chunk:{index}
-```
+## 5. 冲突与草稿
 
-Chunk value 是 `LZString.compressToBase64(stableStringify(FolderSyncData))` 的连续片段，内部无 Envelope、Manifest、设置或导出元数据。Scope 在远端记录中省略，还原后由已验证的 Manifest 注入本地行。Membership ID 保留既有格式，可能包含 scope；它是关系身份，不另造第二套 ID。
+Settings 提供“使用同步版本”和“使用此设备版本”，选择整份数据，不静默取并集。处理前重新验证存储快照和用户选择对应的 ID、本机修订；变化后重新评估。
 
-## 2. 业务行字段
+丢弃任一组织版本前将两份内容保存为有数量/容量上限的保护恢复点；保护失败则保留冲突。使用同步版本原子替换并更新基准；使用此设备版本以当前收到快照为基准发布新的本机完整状态。
 
-- Folder：`id` 唯一身份；`parentFolderId` 扁平树邻接关系；`name`、`iconKey`、`colorValue` 外观；`orderKey` 顺序；`createdAt`、`updatedAt` 展示时间；`versionStamp` 行版本；`fieldVersions` 为名称、图标、颜色、位置分别合并；`deletedAt`、`deleteVersionStamp` 保留删除 tombstone，阻止旧数据复活。
-- Membership：`id`、`folderId`、`chatId` 表达 Folder 与 Chat 归属；`orderKey` 保存普通排序；可选 `pinnedOrderKey` 表示已置顶并保存置顶组内排序；创建/更新时间；`versionStamp` 为行版本，`positionVersionStamp` 与可选 `pinVersionStamp` 分别合并普通位置和置顶状态/顺序；删除时间和版本保留 tombstone。缺少置顶字段的旧数据默认未置顶。
+页面保留重命名/编辑草稿，保存时检查捕获修订与对象仍存在。旧草稿不得重建同步已删除对象或覆盖收到的新值。
 
-置顶是当前 Membership 的独立版本寄存器：取消置顶清除 `pinnedOrderKey`，但保留新的 `pinVersionStamp`，防止其他设备的旧置顶状态覆盖取消操作。普通拖拽不更新置顶版本，置顶和置顶组内拖拽不更新普通位置版本。正常展示先置顶组、再普通组，每组按其对应 order key 与 membership ID 的 ASCII 顺序排序；后台 Chat 分页 cursor 包含组别与当前组排序键。置顶数据随完整业务数据同步、导出及恢复，不存入界面偏好。
-- Chat reference：`chatId` 引用 Gemini Chat；`cachedTitle` 本地标题缓存；创建/更新时间；`titleVersionStamp` 用于标题合并。不存 Chat 正文。
+## 6. 固定分块与有界容量
 
-## 3. 设置与设备状态
+发布前按完整 key 的 UTF-8 字节数加 JSON value 的 UTF-8 字节数计算容量，包含分块 envelope、Manifest、全部账号、遗留尾块及其他扩展同步 key。全部 Folder key 共用 70 KiB 预算，并遵守浏览器实际 QUOTA_BYTES、QUOTA_BYTES_PER_ITEM、MAX_ITEMS；默认单项目标不超过 7000 bytes。
 
-`enabled`、`hideOrganizedChats` 在 Manifest 中同步。修改开关时更新 `settingsVersion` 与本地 `settingsPending`，不生成业务 Outbox operation、Chunk 或 data revision。已有 Manifest 时只更新 Manifest，并保留最新读取到的数据指针。首次无 Manifest 时发布空业务数据或当前本地业务数据以建立完整入口。
+先持久化待发布事实，再覆盖固定分块；快照缩小时删除同账号多余尾块。预检必须先于破坏性操作，失败保留本机及待发布数据。清理失败必须可以继续，不跨账号删除，不调用全局 storage.sync.clear()。
 
-Manifest 通过 schema 和 scope 校验后，其设置可以独立应用，即使 Chunk 缺失或 payload 损坏；业务数据仍须完整校验。发布数据 generation 前重新选择本地与当前 Manifest 中较新的设置，防止旧 prepared 数据带回旧开关。相同版本但不同值使用规范化 JSON 的 ASCII 比较确定结果。本地下一次编辑会观察已有版本，避免时钟落后导致编辑被旧版本覆盖。
+无需长期保留第二份完整同步快照。中断或跨设备分批到达时，同步区可能暂时不可读：本机持久数据及待发布 payload 用于重试恢复，接收设备继续使用最后完整验证的本机数据。一次 set() 不是跨设备原子提交。
 
-本地 `FolderSettingsRow` 仍用于统一 UI 查询，但以下字段不传输：
+## 7. 调度与反馈
 
-- `collapsedFolderIds`：仅本设备 UI 状态，不进入同步、备份、导出、Outbox 或 revision；同步与导入保留本地有效 ID，删除 Folder 时清理失效 ID。
-- `settingsPending`：本机未被 Browser Storage 接受的设置修改；较旧写入结果不得确认较新本地修改。
-- `updatedAt`：本机展示时间，不作为冲突依据。
+保留启动恢复、账号活动、focus、online、业务提交、Retry、storage.onChanged 和失败 alarm。Manifest 和固定分块均监听，每次回调按账号合并。活动提示有 30 秒节流，修改、存储事件和显式重试不受此限制；正常状态不轮询。
 
-## 4. Chunk 字节限制与还原
+仅对 `storage.onChanged` 通知过滤自身回声：同一账号的每个相关变更都必须有结构有效的新值，且 `did` 均等于本机安装身份，才跳过此次唤醒。其他设备、旧格式缺少 `did`、混合作者、格式异常、未知版本及删除均走原有检查；缩减快照删除尾块也可保守触发检查。过滤只验证 envelope，不读取 storage.sync 或 IndexedDB、不解码或 hash payload；等待共享身份时仅保留账号和作者元数据。身份读取失败则保守检查，开发日志只记录跳过事件及账号，不记录作者或 payload。
 
-分块通过二分搜索求每个 Chunk 的最大长度，计算：
+`did` 表示作者，不表示快照新旧或权威性。启动、Background 恢复、活动提示、业务提交、Retry/重建和失败 alarm 均保留完整协调路径；即使同步快照来自本机，也须允许恢复空本机数据或继续中断发布。不保留快照 ID 历史或 payload 缓存。
 
-```text
-UTF8(key).byteLength + UTF8(JSON.stringify(value)).byteLength
-```
+每次 Background 初始化和 runtime.onStartup 都在监听注册后使用统一恢复入口：独立扫描 storage.sync 已有账号与 IndexedDB 待处理事实，交由 Scheduler 合并。扫描只发现 scope，不直接应用扫描内容；未知版本和仅有分块的账号也会被发现。重叠扫描共享进行中的任务，结束即释放；任一读取失败不阻塞另一项或 RPC。
 
-目标每项不超过 7000 bytes，并同时遵守浏览器实际 `QUOTA_BYTES_PER_ITEM`。计算包含完整 key、索引位数与 JSON 引号；正常默认限制下每项严格小于 8192 bytes。Manifest 也独立执行单项限额检查。发布前预估所有账号 Folder key、孤立块和扩展其他 Sync key 的总容量与 item 数量；Folder 总预算 70 KiB，整体遵守浏览器实际额度。
+页面先注册数据变化监听，再识别账号和读取本机投影。初次读取期间的通知按账号合并为一次补读；状态通知仅补读状态，账号切换或停止时清理标记，没有通知不增加完整查询。
 
-Settings 中的容量提示按 Folder 已用字节占 70 KiB 预算的比例计算，达到 80% 时可提示并暂时关闭；这不是浏览器整体同步空间使用率。普通状态查询不扫描所有 Sync key，容量测量由显式请求或同步写入结果更新。
+同账号任务串行，执行期间的请求合并为后续检查。租约繁忙或本机修订竞争返回后续安排，不丢唤醒。缓存、定时器和运行槽必须有上限或结束清理，自身写入通知不能导致反复发布。
 
-还原顺序：校验 Manifest → 按索引读取全部 Chunk → 缺块则等待重试 → 按索引拼接 → 校验字节数及 SHA-256 → Base64 解压 → JSON/schema 校验 → 注入 scope → 校验引用、唯一性及树结构 → 合并本地数据。任何失败都不覆盖本地组织数据。
+Retry 返回本次尝试结果：Browser Storage 接受、失败、冲突或稍后执行，不能只返回“请求已提交”。正常状态安静，错误说明本机保存事实；异步反馈绑定当前账号及面板生命周期。
 
-## 5. 本地恢复与写入
+已有基准但副本缺失时，Retry 只重新检查，不能默认为允许重新发布旧数据。Settings 另提供“重建同步版本”确认入口，捕获账号、本机修订、基准和组织数量。切换账号或关闭面板时丢弃确认；后台以事务再次校验修订与基准。重建不删除本机组织、设置或恢复点，只放弃缺失基准并记录 dirty；配额失败或 worker 重启后仍可继续。发布预检继续保护刚到达的其他版本、不支持的格式及孤立分块；若其他完整版本到达，则按普通同步规则协调或显示冲突。已进入 writing 的发布仍须完成原有精确 payload，不能被重建替换。
 
-`FolderSyncGenerationRow` 保存 `id`、scope、provider、epoch、revision、压缩 `payload`、`payloadHash`、创建时间、状态、`includedOperationIds` 与 `replacedGenerationId`。准备时在同一个 Dexie 事务中捕获业务数据、revision 和待确认 operation。重试不重新生成 payload、ID 或 hash。
+开发日志在读取后记录 manifestKey、本机基准、dirty、修订及待发布阶段；缺失保护分支和发布开始均有独立事件。`read.absent` 只能证明该次查询未读到指定 Manifest，不能单凭 Retry 日志判定此前谁删除了数据或推断清空范围。
 
-写入前检查当前 generation 与预期替换目标一致，持久化替换目标，预检容量后删除旧 active Chunk，再一次 `set()` 写入新 Chunk 与 Manifest。若删除后写入失败，凭本地 writing generation 与替换目标恢复重试同一 generation。只有此次捕获的 operation 被接受；期间新建 operation 保持 pending。
+## 8. 恢复与验证
 
-每个账号的本地 lease 避免同设备并行 job。Browser Sync 没有跨设备 CAS；最后一次读取后仍可能发生远端竞争，后续 storage change、重读与实体合并继续收敛，不能把一次 `set()` 描述为跨设备事务或云端确认。
+本地恢复点以 gzip ArrayBuffer 存入独立 IndexedDB 正文表，hash 校验二进制，payloadBytes 为 byteLength；逻辑预算为 gzip 字节数加持久化元数据 JSON UTF-8 字节数（排除响应用 protectionToken）。恢复点沿用每账号最多 10 份、全扩展 20 MiB 逻辑预算、自动分组、组织内容去重和保护租约。unlimitedStorage 不增加产品预算或 Browser Sync 容量。导入、恢复、删除及同步覆盖的保护失败阻止破坏性操作。
 
-只清理本地仓储明确记录可回收、且当前 Manifest 未引用的 generation，不枚举删除其他设备 generation。无 previous 指针，无成功后确认回读。
+测试覆盖物理删除/重加、旧设备替换、账号隔离、空与缺失、混合/缺块/损坏、冲突选择与保护失败、发布期间新修改、断写重启、配额预检、多余分块清理、有界状态、调度和旧草稿保存。测试和构建不证明云端传播，跨设备到达需两个设备实际读回。
 
-## 6. 备份与验证
+## 9. 上线后的数据保留与格式演进
 
-导出/快照有独立 `FolderExportPayload`：`schemaVersion: 1`、scope、完整 scoped 业务行、简单 settings、settingsVersion、exportedAt。独立文件需要自描述元数据；不含设备收起状态。导出在同一只读事务中捕获业务行与设置版本。恢复组织数据保留当前开关；导入开关作为新的本地设置编辑。
+这是正式产品约束，不能以“本次没有实现迁移”为理由要求用户清空或重建已发布版本产生的数据。当前运行时仅实现格式 4 的校验与未知版本保护，尚不能据此宣称已具备多版本读取、转换和未知字段写回能力；这些能力必须随首次相关结构升级一并交付。
 
-本地恢复点每账号最多 10 份，全扩展共用 20 MiB 逻辑预算。`unlimitedStorage` 已在 Chrome 和 Firefox manifest 中声明为必需权限，不能增加恢复点预算或 Browser Sync 配额；`navigator.storage.estimate()` 只作诊断，实际写入错误单独处理。
+### 9.1 新版本读取既有数据
 
-测试覆盖多块还原、字节限制、损坏与缺块、设置独立应用/写入、较新开关保留、旧确认不清除新 pending、本地收起状态、generation 重试与配额预检。真实跨设备传播时间由浏览器决定，单元测试不证明云端传播。
+- 新版本必须读取并无损升级所有已发布格式，包括用户跳过多个插件版本、长期离线后重新启用的情况。读取器、转换链和对应样本须保留；不能只接受当前 schemaVersion，或因版本较旧就当成不存在、空数据或损坏数据。
+- Key 和账号归属长期稳定。schemaVersion 是格式兼容性标识，不随插件发布次数自动递增；纯 UI、运行时或非持久实现调整不改变格式版本。
+- 新增持久字段须定义缺失值的语义与默认值。只有既有读取器能够安全读取并写回时，才可视为同版本兼容新增；当前 strict schema 不自动提供此保证。字段改名、删除、类型、压缩编码或组织语义变化须有明确的格式版本与无损转换路径。
+- 约束覆盖本机 IndexedDB、Browser Sync、导出备份、恢复点、持久待发布快照和冲突候选。不能只升级主数据，却让旧备份无法导入或让未完成的后台工作无法恢复。
+
+### 9.2 多设备版本不一致
+
+- 旧客户端遇到无法理解的新格式时，保留两端数据和本机未提交修改，暂停发布并提示升级；无需承诺旧 UI 理解未来功能，但不能静默清空、降级或覆盖新格式。
+- 完整快照发布必须防止未知字段丢失。仅将 Zod 改为忽略未知字段不构成兼容；只有能够无损保留未知内容并维持其语义时才允许写回，否则阻止该客户端发布。
+- 错误分类区分需要转换的已发布旧格式、需要升级读取器的未来格式和实际损坏。已发布旧格式缺少转换支持属于发布缺陷，不能只显示“请升级”后结束。
+
+### 9.3 转换、切换与失败
+
+- 先读取和验证原格式，在原始数据仍可恢复时完成转换，再校验账号、ID、关系、排序及业务语义；不得仅修改版本号冒充格式转换。
+- 转换成功后按修订检查和原子事务切换本机数据。同步发布继续执行容量预检、snapshotId/分块一致性和中断恢复；不能假定多 key 写入在云端原子完成。
+- 待发布快照和冲突候选按捕获时的格式解释。尤其 writing 阶段不能重新编码后冒用旧 snapshotId，或直接给旧 payload 标上新格式版本；升级须保留原始发布事实并明确其继续、转换或冲突路径。
+- 转换失败、空间不足、worker 中断或存在并发编辑时，保留原始数据及未提交修改，允许恢复或重试；不得回退到清空数据。保护沿用有数量和容量上限的本机恢复机制，不引入永久云端多代快照。
+
+### 9.4 每次格式升级的发布验收
+
+必须用历次已发布格式的固定样本验证读取和转换，覆盖跳版本升级、旧备份/恢复点、离线未提交修改及 writing 阶段升级。用新旧客户端组合验证未来格式不会被旧客户端覆盖，以及无损写回不会丢失未知字段。注入转换失败、配额不足、执行中断和修订竞争，确认原数据仍可恢复。未通过这些检查的结构变更不得发布。

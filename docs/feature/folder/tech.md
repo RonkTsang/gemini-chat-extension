@@ -1,6 +1,8 @@
 # Folders 技术设计
 
-> 实现基线：Folder Repository、Dexie、同步调度和恢复点由扩展后台持有，页面通过 Folder RPC 交互；Browser Sync V3 是当前唯一跨设备 provider。Dexie schema 为 v12，Google Drive 尚未实现。文中的 Drive provider、Bootstrap 和 provider 切换章节均为未来方案，不属于当前代码能力。后台 RPC 细节见 [Background 数据架构](./background-data-architecture.md)，同步格式见 [Browser Sync V3](./browser-sync-data-architecture.md)。
+> 实现基线：Folder Repository、Dexie、同步调度和恢复点由扩展后台持有，页面通过 Folder RPC 交互；Browser Sync V4 是当前唯一跨设备 provider。Dexie 表定义以 `src/data/db.ts` 为准，Google Drive 尚未实现。文中的 Drive provider、Bootstrap 和 provider 切换章节均为未来方案，不属于当前代码能力。后台 RPC 细节见 [Background 数据架构](./background-data-architecture.md)，同步格式见 [Browser Sync V4](./browser-sync-data-architecture.md)。
+
+> 提交后任务首版已实现，见 [本地事务与提交后任务方案](./post-commit-task-architecture.md)：事务原子更新 Recovery pending，返回提交结果；普通回复、自动 Recovery 和 SYNC 独立推进。自动化验证及双平台构建通过，真实页面新版加载尚待验证。
 
 ## 目标与边界
 
@@ -212,120 +214,41 @@ GPK 菜单项必须在 `pointerdown` 与 `click` 阶段阻止原生菜单的默�
 
 ### 目标与边界
 
-Folders 数据模块采用本地优先模型：扩展 origin 的 Dexie/IndexedDB 是当前设备的工作数据和离线数据源；当前通过 `browser.storage.sync` 在浏览器管理的设备间传播压缩后的 Folder 数据。GPK 只能确认本机 Browser Storage 写入结果，不能确认云端传播。Google Drive 尚未实现。持久化模型支持多层级 Folder 父子关系，但当前 UI 只开放根 Folder。
+Folders 数据模块采用本地优先模型：扩展 origin 的 Dexie/IndexedDB 是当前设备的工作数据和离线数据源；当前通过 `browser.storage.sync` 在浏览器管理的设备间传播当前有效组织与同步设置的完整快照，接收时整体替换。GPK 只能确认本机 Browser Storage 写入结果，不能确认云端传播。Google Drive 尚未实现。持久化模型支持多层级 Folder 父子关系，但当前 UI 只开放根 Folder。
 
 数据模块只保存 Folder、Chat 归属关系、必要的 Chat 标题缓存、功能设置、同步元数据和恢复快照；不读取或保存 Gemini 聊天正文。所有公开查询和写入必须显式传入 `accountScopeId`，repository 不提供跨账号的无范围读取接口。
 
 数据模块分为：
 
-1. **数据面**：Chat 引用、Folder、成员关系、设置、删除标记和待同步操作。
-2. **控制面**：同步 provider、权威 epoch、数据格式版本、修订号、设备进度和 provider 迁移状态。
+1. **数据面**：当前有效的 Chat 引用、Folder、成员关系和设置。
+2. **控制面**：数据格式版本、本机修订、同步基准、dirty、每账号一份待发布快照和冲突候选，以及重试和容量事实。
 
 控制面不得混入业务数据；Drive token、原始邮箱和运行时错误不得写入 `browser.storage.sync`、手动导出或自动备份。
 
 ### 领域与本地表结构
 
-```ts
-export type FolderVersionStamp = string // Hybrid Logical Clock + deviceId
-export type FolderOrderKey = string
-export type FolderPresetColorKey = 'neutral' | 'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'purple' | 'pink'
-export type FolderColorValue = FolderPresetColorKey | `#${string}`
+精确类型以 `src/domain/folder/types.ts` 为准：
 
-// IndexedDB 不索引 null，根层级使用不会与真实 Folder ID 冲突的固定哨兵值。
-export const ROOT_FOLDER_ID = '__root__' as const
-export type FolderParentId = string | typeof ROOT_FOLDER_ID
+- Folder 保存 ID、scope、父节点、名称、图标、颜色、普通顺序和创建/更新时间。
+- Membership 保存 ID、scope、Folder/Chat ID、普通顺序、可选置顶顺序和创建/更新时间。
+- Chat reference 以账号和 Chat ID 唯一保存标题缓存及创建/更新时间，不保存 Gemini 正文。
+- Settings 保存两个同步开关与本机 `collapsedFolderIds`；同步开关的修改推进账号修订和 dirty，本机展开/收起不触发同步。
+- Sync state 保存 `baseSnapshotId`、`localDataRevision`、dirty、错误、重试和容量。发布和冲突表均以账号为唯一 key，每账号最多一行。
 
-export interface FolderRow {
-  id: string
-  accountScopeId: string
-  parentFolderId: FolderParentId
-  name: string
-  iconKey: string
-  colorValue: FolderColorValue
-  orderKey: FolderOrderKey
-  createdAt: string
-  updatedAt: string
-  versionStamp: FolderVersionStamp
-  fieldVersions: {
-    name: FolderVersionStamp
-    iconKey: FolderVersionStamp
-    colorValue: FolderVersionStamp
-    position: FolderVersionStamp // parentFolderId + orderKey 作为一个原子位置字段
-  }
-  deletedAt?: string
-  deleteVersionStamp?: FolderVersionStamp
-}
+不保留行级或字段级 HLC 合并版本、删除标记、永久 Outbox 或已完成发布历史。删除子树或成员关系时物理移除记录，并清理没有其他 membership 引用的 Chat reference。
 
-export interface FolderMembershipRow {
-  id: string
-  accountScopeId: string
-  folderId: string
-  chatId: string
-  orderKey: FolderOrderKey
-  createdAt: string
-  updatedAt: string
-  versionStamp: FolderVersionStamp
-  positionVersionStamp: FolderVersionStamp
-  pinnedOrderKey?: FolderOrderKey
-  pinVersionStamp?: FolderVersionStamp
-  deletedAt?: string
-  deleteVersionStamp?: FolderVersionStamp
-}
+Folder 采用邻接表，根节点使用 `ROOT_FOLDER_ID = '__root__'`，非根父节点必须属于相同账号。技术安全上限为 `MAX_FOLDER_DEPTH = 32`，写入、导入和同步验证统一约束。当前 UI 仅开放根 Folder。
 
-export interface ChatReferenceRow {
-  accountScopeId: string
-  chatId: string
-  cachedTitle: string
-  createdAt: string
-  updatedAt: string
-  titleVersionStamp: FolderVersionStamp
-}
+`iconKey` 使用现有图标目录；自定义 `colorValue` 必须规范化为不透明六位 Hex。Membership 不复制标题，Chat reference 供同 Chat 的多个 Folder 关系复用。一个 Chat 在同一 Folder 只能有一个 membership，跨 Folder 可以重复加入。
 
-export interface FolderSettingsRow {
-  accountScopeId: string
-  enabled: boolean
-  hideOrganizedChats: boolean
-  collapsedFolderIds: string[]
-  updatedAt: string
-  settingsVersion: FolderVersionStamp
-  settingsPending: boolean
-}
-```
-
-`iconKey` 的本地新建/编辑命令只接受选择器目录中的 30 个稳定语义 key。`colorValue` 的自定义值必须在 repository 边界规范化并验证为不透明六位 Hex，任何导入或同步值都必须经颜色 resolver 后才能用于 CSS。外观字段不需要独立数据表或索引，会随 `FolderRow` 一并进入恢复点、导入导出和同步业务数据。
-
-编辑 Folder 时 runtime 必须发送差异 patch：只改变名称时不得推进 `iconKey` 或 `colorValue` 的字段版本。同步合并继续对名称、图标、颜色和位置分别执行基于 HLC 的字段级 LWW。
-
-Folder 采用邻接表持久化：`parentFolderId = ROOT_FOLDER_ID` 表示根 Folder，否则必须指向同一 `accountScopeId` 下存在且未删除的 Folder。数据表不保存递归 `children[]`；UI 查询当前账号的 Folder 和成员关系后，通过 `parentFolderId`/`folderId` 构建只读树投影。schema 不写死为两层或三层，技术安全上限统一为 `MAX_FOLDER_DEPTH = 32`（根 Folder 深度为 `1`）；遍历使用可防护的迭代算法，导入、同步和 repository 写入使用同一上限，避免恶意或损坏数据造成无限递归。
-
-Folder 与成员关系使用软删除字段保留 tombstone；正常业务查询必须过滤 `deletedAt`，同步和恢复流程可以读取 tombstone。成员关系以 `[accountScopeId+folderId+chatId]` 作为唯一约束，保证一个 Chat 可加入多个 Folder、但不会在同一 Folder 内重复。
-
-`FolderMembershipRow` 只描述 Folder 与 Chat 的关系，包括归属、同层位置和关系版本；不得复制 Chat 标题等实体属性。`ChatReferenceRow` 以 `[accountScopeId+chatId]` 唯一保存必要的标题缓存，供同一 Chat 的全部 Folder membership 以及后续 Tags 等组织能力复用。`cachedTitle` 仅用于 GPK UI 展示，不是 Gemini Chat 的权威标题；检测到 Gemini 标题变化时只更新一条 Chat reference。
-
-同一父 Folder 下的子 Folder 与 Chat membership 共用普通 `orderKey` 排序空间；同一 Folder 内的已置顶 Chat 使用独立 `pinnedOrderKey`，展示和分页时先置顶组再普通组，组内按对应顺序键与实体 ID 的 ASCII 顺序稳定排序。根层级只包含 Folder，不包含 membership。
-
-建议的 Dexie 索引至少包括：
-
-```text
-folders
-  &[accountScopeId+id]
-  [accountScopeId+parentFolderId+orderKey]
-
-folder_memberships
-  &[accountScopeId+id]
-  &[accountScopeId+folderId+chatId]
-  [accountScopeId+folderId+orderKey]
-
-chat_references
-  &[accountScopeId+chatId]
-```
+普通顺序使用固定宽度 Base62 `orderKey`，置顶使用独立 `pinnedOrderKey`。展示和分页先置顶后普通，组内按对应 key 和实体 ID 的 ASCII 顺序排序。数据库索引以 `src/data/db.ts` 为准。
 
 ### 多层级树约束
 
 1. 新建子 Folder、移动 Folder 和导入数据必须验证父节点属于同一 `accountScopeId`。
 2. Folder 不能以自身或任一后代作为父节点；移动前沿目标父节点的祖先链向上检查，发现当前 Folder 即拒绝事务。
-3. `parentFolderId` 与 `orderKey` 是一个原子位置；跨层移动必须在同一事务和同一 operation 中一起更新。
-4. 删除 Folder 固定采用子树删除：在同一事务中为目标 Folder、全部后代及子树内 membership 写入 tombstone；不提升子节点，也不删除 Gemini Chat。仍被子树外 membership 引用的 Chat reference 必须保留；无任何有效 membership 的 reference 只作为可回收缓存处理。repository 提交后不得产生可见孤儿节点。
+3. `parentFolderId` 与 `orderKey` 是一个原子位置；跨层移动必须在同一事务中一起更新。
+4. 删除 Folder 固定采用子树删除：在同一事务中实际删除目标 Folder、全部后代及子树内 membership；不提升子节点，也不删除 Gemini Chat。仍被子树外 membership 引用的 Chat reference 必须保留；没有其他 membership 引用的 reference 同时删除。repository 提交后不得产生可见孤儿节点。
 5. 导入和同步边界必须拒绝重复 ID、跨账号父节点、自引用、循环引用和无法修复的孤儿；不能只依赖 UI 防止非法树。
 6. 展开/收起状态以 Folder ID 保存；删除或恢复子树后清理无效的 `collapsedFolderIds` 投影，不将 UI 状态作为树结构权威。
 
@@ -346,7 +269,7 @@ export interface FolderTreeNode {
 }
 ```
 
-`entries` 将子 Folder 与 Chat membership 放在同一个有序集合中，以保留混合拖拽顺序，并通过 `chatId` 关联唯一的 Chat reference。投影器先按 ID 建立索引，再按 `parentFolderId` 分组挂载子树，复杂度保持为 `O(folders + memberships + chatReferences)`；禁止为每个 Folder 或 membership 单独查询一次数据库。每条未删除的 membership 必须解析到同账号 Chat reference；投影失败时返回结构化错误，不得静默复制标题、放置孤儿节点或混用其他账号缓存。
+`entries` 将子 Folder 与 Chat membership 放在同一个有序集合中，以保留混合拖拽顺序，并通过 `chatId` 关联唯一的 Chat reference。投影器先按 ID 建立索引，再按 `parentFolderId` 分组挂载子树，复杂度保持为 `O(folders + memberships + chatReferences)`；禁止为每个 Folder 或 membership 单独查询一次数据库。每条 membership 必须解析到同账号 Chat reference；投影失败时返回结构化错误，不得静默复制标题、放置孤儿节点或混用其他账号缓存。
 
 ### OrderKey 生成与排序协议
 
@@ -366,38 +289,19 @@ export function rebalanceOrderKeys(ids: readonly string[]): Map<string, string>
 | 追加末尾 | 当前末项 | `null` |
 | 插入或移动到两项之间 | 前一项 | 后一项 |
 
-生成结果必须满足 `previous < newKey < next`；缺少一侧边界时生成小于首项或大于末项的键。新建、单项拖拽和跨层移动通常只更新目标实体的 `orderKey`，不重写其他兄弟节点。两个设备修改同一实体位置时比较 `position`/`positionVersionStamp`，较新的 Hybrid Logical Clock 胜出；同 stamp 时以 `deviceId` 确定结果。
+生成结果必须满足 `previous < newKey < next`；缺少一侧边界时生成小于首项或大于末项的键。新建、单项拖拽和跨层移动通常只更新目标实体的 `orderKey`，不重写其他兄弟节点。跨设备不逐项合并位置；收到的完整快照整体替换顺序，检测到本机未发布修改分叉时由用户选择一份完整状态。
 
 同一组输入必须在所有支持的浏览器上生成相同结果；编码字母表、边界行为或比较规则发生不兼容变化时需更新 Browser Sync 协议版本，不能只发布本地实现变更。
 
-当两键之间没有可用的 32 位 Base62 值时，Repository 对当前兄弟节点调用 `rebalanceOrderKeys` 并写入 `order.rebalance` operation，再完成插入或移动；普通拖拽通常只改动目标实体的顺序键。
+当两键之间没有可用的 32 位 Base62 值时，Repository 对当前兄弟节点调用 `rebalanceOrderKeys` 并在同一事务中完成重平衡和插入或移动；普通拖拽通常只改动目标实体的顺序键。
 
-Dexie 增加以下辅助表：
+### 本地事务与同步状态
 
-当前源码以 `src/domain/folder/types.ts` 为准：
+业务事务同时修改组织或同步设置、账号修订和 dirty；组织变更还标记 Recovery pending。事务提交后通过普通分发函数独立唤醒 Sync 与 Recovery，不等待同步或普通自动点完成后再回复用户。local-view 修改只保存本机偏好。
 
-- `FolderOperationRow` 保存 `id`、`opId`、`accountScopeId`、`deviceId`、`baseRevision`、`operationType`、`entityId`、`versionStamp`、`payload`、`createdAt` 和 `state`。类型预留 `confirmed-by-remote-provider` 给未来远端 provider；当前 Browser Sync 只使用 `pending` 与 `accepted-by-browser-storage`，后者仅表示本机 Browser Storage 接受写入。
-- `FolderSyncStateRow` 保存账号范围、当前 revision、Browser Sync 写入时间、retry、容量测量与警告；不保存 Drive file ID、云端确认时间或云端 revision。
-- `FolderSnapshotRow` 保存压缩组织数据、校验 hash、原因、时间及保护租约；`FolderRecoveryStateRow` 单独记录自动恢复点分组和告警。字段精确定义见源码，数据边界见 [Background 数据架构](./background-data-architecture.md)。
+每账号持久化一份待发布 payload，可在重启及写入中断后复用同一 snapshotId。发布完成按捕获修订确认 dirty，期间的新组织和设置修改保留待发布。每账号最多一份冲突候选，不保存永久 operation 或 generation 历史。
 
-`deviceId` 为当前扩展安装实例生成，只保存在 `storage.local`，不能同步到其他设备。所有持久化输入和远端 payload 在 repository/provider 边界使用 zod 校验；无效数据不得部分写入业务表。
-
-### 本地写入事务与 Outbox
-
-组织数据写入在同一个 Dexie 事务中更新业务表和 pending `FolderOperationRow`；设置的 `enabled` 与 `hideOrganizedChats` 以独立的 `settingsPending`/`settingsVersion` 同步，设备本地的 `collapsedFolderIds` 不生成业务 operation：
-
-```text
-用户操作
-  → 校验 accountScopeId 与输入
-  → Dexie transaction
-      ├── 更新 ChatReference / Folder / Membership
-      └── 写入 pending operation（设置另走 settingsPending）
-  → 本地 UI 成功
-  → Background SyncScheduler 调度 Coordinator
-  → 本机 browser.storage.sync 接受写入后标记 operation
-```
-
-后台脚本中断、离线或 provider 失败只影响上传进度，不回滚已完成的本地用户操作。未确认 operation 必须持久化并在扩展重启、网络恢复、页面重新获得焦点或用户手动重试时继续处理。
+保护恢复点仍在删除、导入、恢复及同步覆盖之前执行；保护失败不进行对应破坏性动作。完整架构见 [Background 数据架构](./background-data-architecture.md) 与 [提交后任务](./post-commit-task-architecture.md)。
 
 多层级结构只能通过 repository 的领域方法修改，UI 不得直接更新 `parentFolderId` 或 `orderKey`。当前主要方法包括：
 
@@ -411,11 +315,11 @@ removeMembership(accountScopeId, folderId, chatId)
 upsertChatReference(accountScopeId, chatId, title)
 ```
 
-`upsertMembership` 在同一事务中维护 Chat reference 和 membership。每个位置使用相邻实体 ID 表达 `{ beforeId?, afterId? }`，repository 在事务内读取当前兄弟节点并调用 `keyBetween`；UI 不直接计算或提交任意 `orderKey`。这样可以防止陈旧 UI 使用过期相邻 key，同时把循环检测、账号验证、树更新和 outbox 写入保持在同一事务边界。
+`upsertMembership` 在同一事务中维护 Chat reference 和 membership。每个位置使用相邻实体 ID 表达 `{ beforeId?, afterId? }`，repository 在事务内读取当前兄弟节点并调用 `keyBetween`；UI 不直接计算或提交任意 `orderKey`。这样可以防止陈旧 UI 使用过期相邻 key，同时把循环检测、账号验证、树更新、账号修订与 dirty 保持在同一事务边界。
 
 ### 未来 provider 迁移的 Bootstrap 控制面
 
-当前 Browser Sync V3 不使用 Bootstrap。若未来增加 Google Drive 或 provider 切换，再按 `accountScopeId` 设计独立控制面，避免使用跨账号的全局单值：
+当前 Browser Sync V4 不使用 Bootstrap。若未来增加 Google Drive 或 provider 切换，再按 `accountScopeId` 设计独立控制面，避免使用跨账号的全局单值：
 
 ```ts
 export interface FolderSyncBootstrapV1 {
@@ -444,18 +348,19 @@ Bootstrap 只用于快速确定 provider 和阻止旧 provider 继续写入。`d
 
 以下状态是每台设备独有的进度，不得写入 Bootstrap：`lastAppliedRevision`、pending operation 数量、Drive 文件版本、Drive changes page token、重试时间和最近错误。OAuth access token 或 refresh token 由 provider 的认证层管理，不进入 Sync、Dexie 业务表、备份或导出。
 
-### Browser Sync V3 数据结构与版本
+### Browser Sync V4 数据结构与版本
 
-当前实现以 [Browser Sync 数据协议 V3](./browser-sync-data-architecture.md) 为准：一个 Manifest 加编号 Chunk，无 Envelope，无多重 hash，无设置 payload。
+完整契约见 [Browser Sync 完整快照协议 V4](./browser-sync-data-architecture.md)。
 
-- Manifest 保存 schemaVersion、accountScopeId、generationId、dataRevision、authorityEpoch、chunkCount、payloadBytes、payloadHash、settings 与 settingsVersion。
-- Chunk 只包含压缩 FolderSyncData，行级 accountScopeId 由 Manifest 注入。
-- 两个开关是 Manifest 中的简单 settings 属性，整体 HLC 版本合并；单独修改只写 Manifest。
-- collapsedFolderIds 为本设备 UI 状态，不跨设备同步或进入备份，不创建 operation/dataRevision。
-- 本地持久化 generation 支持离线修改、中断恢复与重试；Browser Storage 接受不代表远端设备确认。
-- 只支持 V3，不迁移未发布的旧协议或旧 Folder 试验数据；Dexie v11 清理 Folder 试验表，当前 schema v12 增加 `folder_recovery_states`，远端使用 `folders:v3` key。
+- 每账号固定 Manifest 和编号 Chunk key，Chunk 包含 snapshotId 与压缩片段；所有块齐全、同属一份快照、通过字节数/hash/schema/树与引用校验后才应用。
+- Manifest 包含协议、账号、snapshotId、baseSnapshotId、分块数量、字节数/hash 及完整同步设置。
+- clean 本机自动接收不同完整快照；dirty 且存储仍是基准时发布；dirty 遇到不同快照则持久冲突，选择整份本机或同步版本。
+- 组织与同步设置原子接收；本地收起状态保留有效 Folder ID。缺块、损坏或已有基准而 Manifest 消失都不清空本机，也不自动发布旧数据覆盖异常副本。
+- 固定分块覆盖节省空间，发布中断期间同步区可能暂时不可读；本机持久数据和待发布内容用于恢复。
+- 全部账号 Folder key 共用 70 KiB，预检包含 key/envelope/Manifest/尾块及其他扩展数据，并遵守实际浏览器配额。
+- Folder 尚未上线，本次不迁移未发布实验数据。上线后所有已发布格式须可被新版无损读取和升级，并保护新旧设备混用、备份/恢复点及未完成任务的数据；参见 [格式演进约束](./browser-sync-data-architecture.md#9-上线后的数据保留与格式演进)。Browser Storage 接受写入不代表云端确认。
 
-以下 Drive、Bootstrap 和权威切换章节属于后续规划，不是当前 Browser Sync 的实现契约；Drive 接入时需基于 V3 重新制定传输格式。
+以下 Drive 与权威切换章节仅为后续规划，不是当前 Browser Sync 契约，接入时须另行批准协议、冲突与容量规则。
 
 ### Google Drive provider
 
@@ -473,26 +378,13 @@ Drive 保存完整压缩 Envelope，不受 Browser Sync 单项限制。为避免
 
 当 Drive 中存在多个文件时，保存 Drive Changes API 的 page token 增量获取变化；page token 只属于当前设备和当前授权账号，保存在本地同步状态。实现参考：<https://developers.google.com/workspace/drive/api/guides/manage-changes>。
 
-### 冲突合并规则
+### Browser Sync 冲突处理
 
-上传前必须确认当前远端 revision 与本地 operation 的 `baseRevision`。若远端已前进，先拉取并合并，再生成新的 `dataRevision`；不能直接用本地完整快照覆盖远端。
+本机记录工作数据所基于的快照 ID 与 dirty，不使用时间大小判断跨设备先后。收到不同快照且本机没有未发布修改时，保护旧组织后原子替换；本机有修改则暂停自动覆盖。
 
-| 冲突类型 | P0 规则 |
-| --- | --- |
-| 同一 Chat 标题缓存不同 | `titleVersionStamp` 较新者胜出；标题变化只更新唯一 Chat reference，不修改 memberships |
-| 不同 Folder 的创建或修改 | 直接合并 |
-| 不同 Chat 的归属变化 | 直接合并 |
-| 同一 Folder 的名称、图标或颜色 | 对应 `fieldVersions` 较新者胜出；并列时由 `deviceId` 确定 |
-| 同一成员关系同时加入和移出 | `versionStamp` 较新者胜出；同 stamp 时删除胜出 |
-| 两个设备在同一间隙插入不同实体 | 两个实体都保留；按 `(orderKey, entityId)` 确定稳定顺序 |
-| 同一 Folder 被并发移动或排序 | 将 `parentFolderId + orderKey` 作为原子位置，`fieldVersions.position` 较新者胜出；同 stamp 时由 `deviceId` 确定 |
-| 同一 membership 被并发移动或排序 | `positionVersionStamp` 较新者胜出；同 stamp 时由 `deviceId` 确定 |
-| 重平衡与普通插入并发 | 先合并普通实体操作，再基于最新兄弟集合重新生成重平衡，不采用旧的完整 ID 数组 |
-| Folder 被移动到自身或后代 | 视为非法 operation 并拒绝，不进入业务投影 |
-| Folder 删除与旧设备更新 | tombstone 胜出，旧更新不得复活 Folder |
-| 父 Folder 子树删除与后代旧移动 | 子树 tombstone 胜出，旧设备不得把后代移动到根层级使其复活 |
+Settings 的“使用同步版本”和“使用此设备版本”均绑定本机修订及候选快照 ID。执行前重读和校验；版本变化要求重新评估，丢弃任一组织版本前保存有上限的保护点。选择同步版本原子替换；选择本机版本以当前同步快照为基准新发布。
 
-本地只上传明确记录的 pending operations，不根据整份旧本地快照反向推导“新增”，避免长期离线设备重新上线后复活已删除数据。合并完成后必须再次校验账号、父节点存在性和无环约束，再生成 UI 树；非法远端 operation 保留诊断信息但不得部分应用。tombstone 在 P0 不因普通同步自动清理；后续若压缩 tombstone，必须先设计设备水位与过旧客户端强制全量 rebase。
+没有本机修改的长期离线设备只接收完整状态，不根据旧记录推导新增或重新上传。浏览器没有跨设备 CAS，尚未到达的其他设备修改可能无法立即发现，不能宣称保留所有并行更改。不同快照不执行实体并集。
 
 ### Browser Sync 切换至 Drive
 
@@ -512,12 +404,14 @@ Drive 保存完整压缩 Envelope，不受 Browser Sync 单项限制。为避免
 
 本地快照保存在扩展 origin 的 Dexie，不占用 Browser Sync 配额，策略如下：
 
-- 每个 `accountScopeId` 最多 10 份，无时间过期。所有账号的快照合计共用 20 MiB 预算；预算统计压缩 payload 与元数据的序列化 UTF-8 字节数，不声称等于 IndexedDB 的实际磁盘占用。
-- 首次结构变更立即生成自动快照。与上一操作间隔不超过 60 秒且当前组未满 5 分钟时，只更新当前组的自动点。`folder_recovery_states` 持久保存组 ID、开始时间、最后操作时间与失败状态；不依赖 Service Worker 内存或防抖定时器。旧组、手动点和保护点不被分组合并覆盖。
+- SYNC、快照与导出共用唯一的 `FolderOrganizationData` 类型、schema、账号转换和编码实现，核心只包含无行级 `accountScopeId` 的 `folders`、`memberships`、`chatReferences`，保留置顶、排序、版本与删除标记。快照只压缩这份核心数据；账号、数据 revision、时间、原因、哈希和保护租约保存在 `FolderSnapshotRow` 外层，不包含 settings 或导出元数据。
+- 压缩使用原生 `CompressionStream('gzip')` / `DecompressionStream('gzip')`。恢复点 schemaVersion 1 的正文为 ArrayBuffer，contentHash 校验 gzip 二进制，payloadBytes 为二进制 byteLength；Browser Sync v4 正文为 gzip 的 Base64，payloadBytes/hash 校验传输字符串。共享 stableStringify，JSON 导出仍不压缩。压缩、解压与 hash 均在 IndexedDB 事务外；流接口缺失应报错，不将环境能力缺失标为快照损坏。Folder 未发布，本次直接定义最终格式，不保留 lz-string 兼容或开发数据迁移。
+- 每个 `accountScopeId` 最多 10 份，无时间过期。所有账号的快照合计共用 20 MiB 预算；预算统计 gzip 二进制正文的 byteLength 加持久化元数据的 JSON UTF-8 字节数（仅排除响应用 protectionToken），不声称等于 IndexedDB 的实际磁盘占用。
+- 结构变更在事务中持久化自动恢复需求，提交后由独立 RecoveryRunner 读取最新状态并保存，普通命令不等待它。与上次自动保存间隔不超过 60 秒且当前组未满 5 分钟时，只更新当前组的自动点。`folder_recovery_states` 持久保存组 ID、开始时间、最后保存时间、pendingRevision 与失败状态；不依赖 Service Worker 内存或防抖定时器。旧组、手动点和保护点不被分组合并覆盖。
 - 手动创建及删除、导入、恢复前的保护点结束当前自动组。`organizationHash` 只包含可恢复的 Folder、membership、排序、置顶和标题内容，忽略时间戳、版本戳、导出时间和界面偏好。相同组织复用已有压缩 payload，累计 `reasons` 并更新 `updatedAt`；`contentHash` 继续独立校验完整 payload。
 - 数量淘汰优先保留最近 3 个手动／保护点，其余名额按最新保存时间补齐。容量淘汰先删除最旧普通点，再删除最旧重要点；重要点不是永久固定版本。单份快照超过预算时不静默跳过保护，返回可操作错误并提示先导出备份。
 - 操作执行期间为保护点和恢复目标登记独立保护租约。正常完成或失败后释放；后台／页面消失时租约最长 15 分钟后失效。租约只保护恢复点，不代表已经批准继续破坏性操作。同一内容被多个操作复用时，一个操作释放租约不得解除其他操作的保护。启动时及写入时清理数量／容量超限历史。
-- 删除、导入和恢复必须先成功写入保护点。Folders 内触发的 Gemini 聊天删除也先保存 Folder 组织保护点，再调用 Gemini，成功后更新本地归属；该快照不能恢复 Gemini 聊天本身。普通自动快照失败时保留已完成业务事务和 Outbox，并记录恢复告警。
+- 删除、导入和恢复必须先成功写入保护点。Folders 内触发的 Gemini 聊天删除也先保存 Folder 组织保护点，再调用 Gemini，成功后更新本地归属；该快照不能恢复 Gemini 聊天本身。普通自动快照失败时保留已完成业务事务与 dirty/待发布内容，并记录恢复告警。
 
 容量检测只在后台／扩展页面使用 `navigator.storage.estimate()`，不能在 Gemini content script 中测量。写入前预留 `max(1 MiB, 本次快照序列化字节数 × 3)`，覆盖索引、编码及操作记录的额外开销。测量缺失时不假设配额为零，仍尝试写入并处理真实错误。估算不足时先回收未被租约锁定的历史并重新测量；实际 `QuotaExceededError` 同样回收并只重试一次。自动恢复点合并失败不会删除原有组快照。
 
@@ -529,17 +423,21 @@ Drive 保存完整压缩 Envelope，不受 Browser Sync 单项限制。为避免
 手动导出是独立的可读版本化 JSON，不直接导出 provider Chunk。当前结构为：
 
 ```ts
+export interface FolderOrganizationData {
+  folders: Omit<FolderRow, 'accountScopeId'>[]
+  memberships: Omit<FolderMembershipRow, 'accountScopeId'>[]
+  chatReferences: Omit<ChatReferenceRow, 'accountScopeId'>[]
+}
+
 export interface FolderExportPayload {
   schemaVersion: 1
   exportedAt: string
   accountScopeId: string
-  folders: FolderRow[]
-  memberships: FolderMembershipRow[]
-  chatReferences: ChatReferenceRow[]
-  settings: { enabled: boolean; hideOrganizedChats: boolean }
-  settingsVersion: string
+  data: FolderOrganizationData
 }
 ```
+
+导出不压缩，当前账号在同一只读事务中读取三类业务记录。导入和恢复从外层 scope 为记录补回 `accountScopeId`，校验关系完整性后写入，并保留当前 settings；还会检查全局记录 ID，防止覆盖其他账号已有记录。Folder 尚未上线，本次直接调整实验格式；正式发布后的备份和快照 payload 必须保留版本读取及转换能力，不能因主数据格式升级而失效。
 
 导入顺序为：解析文件 → zod 校验 → 校验 schema 和 `accountScopeId` → 校验 Chat reference 与 membership 引用完整性 → 校验父节点、无环、深度和 `orderKey` → 展示覆盖确认 → 创建 `before-import` 快照 → Dexie 事务写入 → 生成新的同步 revision。普通导入只允许同一 `accountScopeId`；不得导入 OAuth token、deviceId、provider 状态或运行时错误。导入文件中的顺序键必须通过协议校验，不能接受任意超长或非 ASCII 字符串。
 
@@ -549,14 +447,14 @@ export interface FolderExportPayload {
 
 1. 当前身份不可用或不唯一、且没有有效手动选择或最近账号时，清空内存投影和订阅，不读取、展示或写入任何账号数据；持久化数据保持不变。手动选择与相同邮箱的自动身份共用 Folder 数据及 Browser Sync，原生 Recents 隐藏按当前 scope 设置执行；手动选择不验证 Gemini 登录身份。
 2. provider 拉取、解压、hash 或 schema 校验失败时继续使用最后一个已验证的本地投影，并显示可重试错误；不得用空数组覆盖本地或云端。
-3. Sync 配额、Drive 授权或网络失败时，本地写入和 outbox 保持可用；恢复后继续同步。
-4. 每个 repository 方法测试缺失 `accountScopeId`、跨账号 ID、Chat reference upsert、标题只更新一次、重复成员关系、跨层移动、移动到自身或后代、子树删除、软删除和事务回滚。
+3. Sync 配额、Drive 授权或网络失败时，本地写入与 dirty/待发布内容保持可用；恢复后继续同步。
+4. 每个 repository 方法测试缺失 `accountScopeId`、跨账号 ID、Chat reference upsert、标题只更新一次、重复成员关系、跨层移动、移动到自身或后代、子树物理删除、无人引用缓存清理和事务回滚。
 5. tree projection 测试根节点、多层嵌套、Folder/Chat 混合排序、一个 Chat 的多个 membership 解析到同一 reference、缺失或跨账号 Chat reference、深度边界、重复 ID、孤儿和循环。
 6. order key 测试空列表、头部、尾部、中间插入、批量生成、并列稳定排序、长 key 重平衡和跨浏览器固定测试向量。
 7. codec 测试单 Chunk、多 Chunk、缺 Chunk、乱序 Chunk、错误 hash、旧 schema 和压缩失败。
-8. Browser Sync provider 测试 generation 写入中断后的本地恢复、Manifest 竞争、峰值配额不足和本机数据保留。
+8. Browser Sync provider 测试 固定分块写入中断后的本地恢复、Manifest 竞争、配额不足和本机数据保留。
 9. Drive provider 测试账号不匹配、文件重新发现、File.version 未变化、revision 分叉、changes page token 和授权失效。
-10. 同步集成测试至少覆盖：两设备离线创建、同 Folder 并发编辑、两个设备在同一间隙插入、同节点并发跨层移动、子树删除与旧移动冲突、删除不复活、Browser Sync → Drive 成功迁移和迁移中断回滚。
+10. 当前同步集成测试覆盖：旧 clean 设备替换且不重新发布、账号隔离、dirty 分叉与两种选择、保护失败、发布期间新修改、空与缺失、混合分块、断写重启和有界清理。Drive 接入后的验收另行制定。
 
 ### Folders 验收
 

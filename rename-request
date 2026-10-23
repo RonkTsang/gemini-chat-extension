@@ -1,0 +1,51 @@
+
+```
+fetch("https://gemini.google.com/_/BardChatUi/data/batchexecute?rpcids=MUAZcd&source-path=%2Fapp%2Fe314bf90da4c7254&bl=boq_assistant-bard-web-server_20260929.03_p0&f.sid=2563430111772390029&hl=en&_reqid=4259453&rt=c", {
+  "headers": {
+    "accept": "*/*",
+    "accept-language": "zh-CN,zh;q=0.9,en;q=0.8",
+    "cache-control": "no-cache",
+    "content-type": "application/x-www-form-urlencoded;charset=UTF-8",
+    "pragma": "no-cache",
+    "priority": "u=1, i",
+    "sec-ch-ua": "\"Chromium\";v=\"152\", \"Not?A_Brand\";v=\"24\", \"Google Chrome\";v=\"152\"",
+    "sec-ch-ua-arch": "\"arm\"",
+    "sec-ch-ua-bitness": "\"64\"",
+    "sec-ch-ua-form-factors": "\"Desktop\"",
+    "sec-ch-ua-full-version": "\"152.0.7977.82\"",
+    "sec-ch-ua-full-version-list": "\"Chromium\";v=\"152.0.7977.82\", \"Not?A_Brand\";v=\"24.0.0.0\", \"Google Chrome\";v=\"152.0.7977.82\"",
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-model": "\"\"",
+    "sec-ch-ua-platform": "\"macOS\"",
+    "sec-ch-ua-platform-version": "\"15.7.7\"",
+    "sec-ch-ua-wow64": "?0",
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "same-origin",
+    "x-browser-channel": "stable",
+    "x-browser-copyright": "Copyright 2026 Google LLC. All Rights Reserved.",
+    "x-browser-validation": "JGnecAx+EmaIJynx6ue6HnuD44A=",
+    "x-browser-year": "2026",
+    "x-client-data": "CKmdygEIlaHLAQiGoM0BCJfilDAYq9+UMBiy4JQw",
+    "x-goog-ext-525001261-jspb": "[1,null,null,null,null,null,null,null,[4,5,6,8,16],null,null,null,null,null,1,2,\"E59D4CD7-77CD-432A-8F3F-A6204FCBC9E1\",null,null,[[3,635100000],[1790929965,587000000]]]",
+    "x-goog-ext-73010989-jspb": "[0]",
+    "x-same-domain": "1"
+  },
+  "referrer": "https://gemini.google.com/",
+  "body": "f.req=%5B%5B%5B%22MUAZcd%22%2C%22%5Bnull%2C%5B%5B%5C%22title%5C%22%5D%5D%2C%5B%5C%22c_e314bf90da4c7254%5C%22%2C%5C%22TP-Link%20password%5C%22%5D%5D%22%2Cnull%2C%22generic%22%5D%5D%5D&at=AIaPT3MrHWtgWM0DDH0_86qwKzX4%3A1790929854555&",
+  "method": "POST",
+  "mode": "cors",
+  "credentials": "include"
+});
+```
+
+response:
+```
+)]}'
+
+211
+[["wrb.fr","MUAZcd","[null,[\"c_e314bf90da4c7254\",\"TP-Link password\",null,null,null,[1790769743,423304000],null,null,null,2]]",null,null,null,"generic"],["di",259],["af.httprm",259,"2101339866136749116",1]]
+25
+[["e",4,null,null,247]]
+
+```

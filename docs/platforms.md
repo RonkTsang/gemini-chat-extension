@@ -9,6 +9,8 @@ This project builds separate Chrome and Firefox extension variants with WXT. Kee
 
 ## Request Interception
 
+- Folder New Chat uses the same MAIN-world `StreamGenerate` XHR observer on Chrome and Firefox, started by the shared `library.content.ts` bootstrap. It claims an explicitly armed page-local intent, reads incremental response metadata, and sends only request identity, conversation ID, and title to the content script. The reusable wire parsers live in `src/utils/streamGenerate.ts`; Folder ownership and persistence stay in the content/background data flow.
+
 - Chrome and Firefox use `src/entrypoints/library.content.ts` with `world: 'MAIN'` and `runAt: 'document_start'` to capture new Library GraphQL Fetch responses through the same monitor. Firefox's minimum version is 140, which supports MAIN-world content scripts.
 - Shared Fetch subscription, response cloning, optional observation of native body reads, error isolation and patch cleanup live in `src/utils/fetchInterceptor.ts`; feature monitors provide request matching and response processing. Native body reads are observed on matching response instances, without changing Fetch or body-reader promises. Library uses page reads as a second capture source when cancellation interrupts the clone, with each request dispatched once. Bytes retained from an interrupted stream are accepted only if they form a complete JSON response and pass the same media schema.
 - Legacy Library interception remains platform-specific: Chrome uses `src/entrypoints/xhr.content.tsx` with `include: ['chrome']`, `world: 'MAIN'`, and `runAt: 'document_start'`; Firefox uses `src/entrypoints/background/firefox.ts` with `webRequest` and `filterResponseData` for the legacy `batchexecute` endpoint only.
