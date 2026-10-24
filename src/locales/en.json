@@ -76,7 +76,27 @@
   },
   "quickFollow": {
     "more": "More",
-    "moreAriaLabel": "Show more prompts"
+    "moreAriaLabel": "Show more prompts",
+    "multiSelection": {
+      "selectedText": "Selected text",
+      "userComment": "User comment",
+      "editComment": "Edit comment",
+      "commentPlaceholder": "Add a comment…",
+      "add": "Add",
+      "send": "Send",
+      "addToDraft": "Add to draft",
+      "sendSeparately": "Send separately",
+      "selectionNumber": "Selection $1",
+      "addFailed": "Couldn’t add this selection",
+      "maxSelections": "You can add up to 10 selections",
+      "removeSelection": "Remove selection",
+      "updateFailed": "Couldn’t update this draft",
+      "sendFailed": "Couldn’t send. Your draft has been kept.",
+      "sendUnknown": "Submission could not be confirmed. Your draft has been kept.",
+      "restoreDraft": "Restore draft",
+      "restoreFailed": "Couldn’t restore the draft. Clear the input and try again.",
+      "unsupportedDraft": "This draft cannot be safely set aside. Send or remove attachments and formatted content first."
+    }
   },
   "settings": {
     "quickFollow": {

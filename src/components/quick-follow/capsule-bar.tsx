@@ -1,14 +1,18 @@
 import {
   Box,
+  Button,
   Container,
+  Popover,
+  Portal,
   Stack
 } from '@chakra-ui/react'
-import { useMemo, useRef, useEffect } from 'react'
+import { useMemo, useRef, useEffect, useState } from 'react'
 
 import type { QuickFollowPrompt } from '@/domain/quick-follow/types'
 import { getIconDefinition } from './icons'
 import { ActionButton } from './action-button'
 import { MAX_QUICK_FOLLOW_UP_SHOW_ITEMS } from '@/common/config'
+import { t } from '@/utils/i18n'
 
 export interface CapsuleBarProps {
   askLabel: React.ReactNode
@@ -17,6 +21,9 @@ export interface CapsuleBarProps {
   prompts: QuickFollowPrompt[]
   orderedIds: string[]
   onRunPrompt: (prompt: QuickFollowPrompt) => void
+  hasDraftCards?: boolean
+  onAddPromptToDraft?: (prompt: QuickFollowPrompt) => void
+  onSendPromptSeparately?: (prompt: QuickFollowPrompt) => void
   tooltipPlacement?: 'top' | 'bottom' | 'left' | 'right'
 }
 
@@ -50,10 +57,14 @@ export function CapsuleBar({
   prompts,
   orderedIds,
   onRunPrompt,
+  hasDraftCards = false,
+  onAddPromptToDraft,
+  onSendPromptSeparately,
   tooltipPlacement = 'top'
 }: CapsuleBarProps) {
   const orderedPrompts = useMemo(() => sortPrompts(prompts, orderedIds), [prompts, orderedIds])
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const [openPromptId, setOpenPromptId] = useState<string | null>(null)
 
   const shouldShowDivider = orderedPrompts.length > 0
 
@@ -131,14 +142,44 @@ export function CapsuleBar({
             const { Icon: PromptIcon } = getIconDefinition(prompt.iconKey)
             const tooltip = prompt.name || prompt.template
             return (
-              <ActionButton
-                key={prompt.id}
-                icon={<PromptIcon />}
-                tooltip={tooltip}
-                tooltipPositioning={{ placement: tooltipPlacement }}
-                onClick={() => onRunPrompt(prompt)}
-                boxProps={{ flexShrink: 0 }}
-              />
+              hasDraftCards && onAddPromptToDraft && onSendPromptSeparately ? (
+                <Popover.Root
+                  key={prompt.id}
+                  open={openPromptId === prompt.id}
+                  onOpenChange={details => setOpenPromptId(details.open ? prompt.id : null)}
+                  positioning={{ placement: 'bottom-start', gutter: 8 }}
+                >
+                  <Popover.Trigger asChild>
+                    <ActionButton
+                      icon={<PromptIcon />}
+                      boxProps={{ flexShrink: 0, title: tooltip, 'aria-label': tooltip }}
+                    />
+                  </Popover.Trigger>
+                  <Portal>
+                    <Popover.Positioner>
+                      <Popover.Content data-quick-follow-popover="" bg="tocBg" borderColor="tocHoverBg" width="max-content" p={1}>
+                        <Stack gap={1}>
+                          <Button type="button" variant="ghost" justifyContent="flex-start" onClick={() => { setOpenPromptId(null); onAddPromptToDraft(prompt) }}>
+                            {t('quickFollow.multiSelection.addToDraft')}
+                          </Button>
+                          <Button type="button" variant="ghost" justifyContent="flex-start" onClick={() => { setOpenPromptId(null); onSendPromptSeparately(prompt) }}>
+                            {t('quickFollow.multiSelection.sendSeparately')}
+                          </Button>
+                        </Stack>
+                      </Popover.Content>
+                    </Popover.Positioner>
+                  </Portal>
+                </Popover.Root>
+              ) : (
+                <ActionButton
+                  key={prompt.id}
+                  icon={<PromptIcon />}
+                  tooltip={tooltip}
+                  tooltipPositioning={{ placement: tooltipPlacement }}
+                  onClick={() => onRunPrompt(prompt)}
+                  boxProps={{ flexShrink: 0, 'aria-label': tooltip }}
+                />
+              )
             )
           })}
         </Box>

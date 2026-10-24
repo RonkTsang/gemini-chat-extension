@@ -76,7 +76,27 @@
   },
   "quickFollow": {
     "more": "もっと見る",
-    "moreAriaLabel": "さらにプロンプトを表示"
+    "moreAriaLabel": "さらにプロンプトを表示",
+    "multiSelection": {
+      "selectedText": "選択したテキスト",
+      "userComment": "ユーザーコメント",
+      "editComment": "コメントを編集",
+      "commentPlaceholder": "コメントを追加…",
+      "add": "追加",
+      "send": "送信",
+      "addToDraft": "下書きに追加",
+      "sendSeparately": "別々に送信",
+      "selectionNumber": "選択範囲 $1",
+      "addFailed": "選択範囲を追加できませんでした",
+      "maxSelections": "選択範囲は最大10件まで追加できます",
+      "removeSelection": "選択範囲を削除",
+      "updateFailed": "下書きを更新できませんでした",
+      "sendFailed": "送信できませんでした。下書きは保持されています。",
+      "sendUnknown": "送信を確認できませんでした。下書きは保持されています。",
+      "restoreDraft": "下書きを復元",
+      "restoreFailed": "下書きを復元できませんでした。入力欄を空にして、もう一度お試しください。",
+      "unsupportedDraft": "この下書きは安全に退避できません。添付ファイルや書式付きコンテンツを送信または削除してください。"
+    }
   },
   "settings": {
     "quickFollow": {

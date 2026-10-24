@@ -76,7 +76,27 @@
   },
   "quickFollow": {
     "more": "Mehr",
-    "moreAriaLabel": "Weitere Prompts anzeigen"
+    "moreAriaLabel": "Weitere Prompts anzeigen",
+    "multiSelection": {
+      "selectedText": "Ausgewählter Text",
+      "userComment": "Nutzerkommentar",
+      "editComment": "Kommentar bearbeiten",
+      "commentPlaceholder": "Kommentar hinzufügen…",
+      "add": "Hinzufügen",
+      "send": "Senden",
+      "addToDraft": "Zum Entwurf hinzufügen",
+      "sendSeparately": "Separat senden",
+      "selectionNumber": "Auswahl $1",
+      "addFailed": "Auswahl konnte nicht hinzugefügt werden",
+      "maxSelections": "Du kannst bis zu 10 Auswahlen hinzufügen",
+      "removeSelection": "Auswahl entfernen",
+      "updateFailed": "Entwurf konnte nicht aktualisiert werden",
+      "sendFailed": "Senden fehlgeschlagen. Dein Entwurf wurde beibehalten.",
+      "sendUnknown": "Der Versandstatus ist unklar. Dein Entwurf wurde beibehalten.",
+      "restoreDraft": "Entwurf wiederherstellen",
+      "restoreFailed": "Entwurf konnte nicht wiederhergestellt werden. Leere das Eingabefeld und versuche es erneut.",
+      "unsupportedDraft": "Dieser Entwurf kann nicht sicher beiseitegelegt werden. Sende oder entferne zuerst Anhänge und formatierte Inhalte."
+    }
   },
   "settings": {
     "quickFollow": {

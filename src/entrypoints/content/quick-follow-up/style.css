@@ -1,0 +1,375 @@
+:root {
+  --gpk-follow-card-bg: #fff;
+  --gpk-follow-card-fg: #242424;
+  --gpk-follow-card-hover: #f1f1f1;
+}
+
+body.dark-theme {
+  --gpk-follow-card-bg: #292a2d;
+  --gpk-follow-card-fg: #e3e3e3;
+  --gpk-follow-card-hover: #343538;
+}
+
+.gpk-follow-source-marker {
+  position: fixed;
+  z-index: 1;
+  display: flex;
+  transform: translateY(-100%);
+}
+
+.gpk-follow-source-marker-button {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50% 50% 50% 4px;
+  background: var(--theme-500, var(--gem-sys-color--primary, #1a73e8));
+  color: #fff;
+  font: 600 13px/1 "Google Sans Flex", "Google Sans Text", "Google Sans", Arial, sans-serif;
+  cursor: pointer;
+  user-select: none;
+  transform-origin: bottom left;
+  transition: transform 140ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+body.dark-theme .gpk-follow-source-marker-button {
+  border: 1px #ffffff96 solid;
+}
+
+.gpk-follow-source-marker-button:focus-visible {
+  outline: 2px solid var(--theme-500, var(--gem-sys-color--primary, #1a73e8));
+  outline-offset: 3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .gpk-follow-source-marker-button:hover:not(:disabled) {
+    transform: scale(1.08);
+  }
+}
+
+.gpk-follow-source-marker-button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.gpk-follow-source-marker-button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gpk-follow-source-marker-button,
+  .gpk-follow-source-marker-button:hover:not(:disabled),
+  .gpk-follow-source-marker-button:active:not(:disabled) {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* Keep the carousel inside the native editor host without widening the input row. */
+.single-line-format:has(rich-textarea > .gpk-follow-draft-cards:not(:empty)),
+.text-input-field-main-area:has(rich-textarea > .gpk-follow-draft-cards:not(:empty)),
+.text-input-field_textarea-inner:has(rich-textarea > .gpk-follow-draft-cards:not(:empty)),
+.textarea-wrapper:has(rich-textarea > .gpk-follow-draft-cards:not(:empty)),
+rich-textarea:has(> .gpk-follow-draft-cards:not(:empty)) {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+rich-textarea:has(> .gpk-follow-draft-cards:not(:empty)) {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.gpk-follow-draft-cards,
+.gpk-follow-history-cards {
+  box-sizing: border-box;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px;
+  scrollbar-width: thin;
+  text-align: left;
+  font: 400 12px/18px "Google Sans Flex", "Google Sans Text", "Google Sans", Arial, sans-serif;
+}
+
+.gpk-follow-draft-cards {
+  margin-left: -10px;
+  padding-right: 10px;
+}
+
+.gpk-follow-draft-cards:empty {
+  display: none;
+}
+
+.gpk-follow-card {
+  position: relative;
+  box-sizing: border-box;
+  flex: 0 0 160px;
+  width: 160px;
+  height: 120px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid rgba(128, 128, 128, .22);
+  border-radius: 16px;
+  background: var(--gpk-follow-card-bg, #fff);
+  color: var(--gpk-follow-card-fg, #242424);
+  text-align: left;
+  font: inherit;
+  letter-spacing: normal;
+  white-space: normal;
+  transition: background-color .16s ease, border-color .16s ease;
+}
+
+.gpk-follow-card:hover,
+.gpk-follow-card:focus-within {
+  background: var(--gpk-follow-card-hover, #f1f1f1);
+  border-color: rgba(128, 128, 128, .36);
+}
+
+body.dark-theme .gpk-follow-card,
+body.dark-theme .gpk-follow-history-request {
+  --gpk-follow-card-bg: #292a2d;
+  --gpk-follow-card-fg: #e3e3e3;
+  --gpk-follow-card-hover: #343538;
+}
+
+.gpk-follow-card-heading {
+  margin: 0;
+  font: inherit;
+}
+
+body.dark-theme .gpk-follow-card-label {
+  color: #b6b6b6;
+}
+
+.gpk-follow-card-preview {
+  height: calc(100% - 22px);
+  min-width: 0;
+  overflow: hidden;
+  cursor: default;
+}
+
+.gpk-follow-card-preview:focus-visible,
+.gpk-follow-card-action:focus-visible {
+  outline: 2px solid var(--theme-500, #1a73e8);
+  outline-offset: 2px;
+}
+
+.gpk-follow-card-label {
+  margin: 0 0 3px;
+  color: #777;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.gpk-follow-card-selected,
+.gpk-follow-card-comment {
+  display: -webkit-box;
+  overflow: hidden;
+  text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+}
+
+.gpk-follow-card-selected {
+  -webkit-line-clamp: 3;
+  line-height: 18px;
+  max-height: 54px;
+}
+
+.gpk-follow-card-has-comment .gpk-follow-card-selected {
+  -webkit-line-clamp: 1;
+  max-height: 18px;
+}
+
+.gpk-follow-card-comment-label {
+  margin-top: 6px;
+}
+
+.gpk-follow-card .gpk-follow-card-comment-label {
+  margin: 10px 0 2px;
+  font-size: 11px;
+  line-height: 14px;
+}
+
+.gpk-follow-card-comment {
+  -webkit-line-clamp: 2;
+  line-height: 16px;
+  max-height: 32px;
+}
+
+.gpk-follow-card-footer {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  left: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: inherit;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.gpk-follow-card-actions {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .12s ease;
+}
+
+.gpk-follow-card:hover .gpk-follow-card-actions,
+.gpk-follow-card:focus-within .gpk-follow-card-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.gpk-follow-card-action {
+  box-sizing: border-box;
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--gpk-follow-card-bg, #fff);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.gpk-follow-card-action-remove {
+  background: #171717;
+  color: #fff;
+}
+
+.gpk-follow-card-action:hover {
+  filter: brightness(.9);
+}
+
+.gpk-follow-card-caption-button {
+  width: auto;
+  height: 18px;
+  gap: 6px;
+  border-radius: 3px;
+  background: transparent;
+  text-align: left;
+}
+
+.gpk-follow-card-disabled .gpk-follow-card-actions {
+  opacity: .45;
+  pointer-events: auto;
+}
+
+.gpk-follow-card-action:disabled {
+  cursor: not-allowed;
+}
+
+.gpk-follow-card-actions svg {
+  width: 13px;
+  height: 13px;
+}
+
+.gpk-follow-card-footer svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.gpk-follow-card svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.gpk-follow-card-readonly .gpk-follow-card-preview {
+  overflow: hidden;
+}
+
+.gpk-follow-full-content {
+  box-sizing: border-box;
+  max-height: min(50vh, 360px);
+  overflow: auto;
+  padding: 2px 4px;
+  color: inherit;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font: inherit;
+}
+
+.gpk-follow-full-text {
+  margin: 0 0 10px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
+.gpk-follow-history {
+  margin: 0 0 6px;
+  color: var(--gpk-follow-card-fg, inherit);
+}
+
+/* Native text folding must not cut through a rendered selection card. */
+user-query[data-gpk-follow-history='true'] .query-text {
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+user-query[data-gpk-follow-history='true'] [data-test-id='luminous-expand-button'],
+user-query[data-gpk-follow-history='true'] .luminous-expand-fade {
+  display: none !important;
+}
+
+.gpk-follow-history-cards {
+  display: flex;
+  flex-flow: row wrap;
+  gap: 8px;
+  overflow: visible;
+  padding: 2px 0 7px;
+}
+
+.gpk-follow-history-request {
+  color: inherit;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.tippy-box[data-theme~='gpk-follow'] {
+  max-width: min(460px, calc(100vw - 24px)) !important;
+  border-radius: 14px;
+  background: var(--gpk-follow-card-bg, #fff);
+  color: var(--gpk-follow-card-fg, #242424);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .2);
+  text-align: left;
+  font: 400 13px/1.5 "Google Sans Flex", "Google Sans Text", "Google Sans", Arial, sans-serif;
+}
+
+.tippy-box[data-theme~='gpk-follow'] .tippy-content {
+  padding: 12px 14px;
+}
+
+.tippy-box[data-theme~='gpk-follow'] .tippy-arrow {
+  color: var(--gpk-follow-card-bg, #fff);
+}
+

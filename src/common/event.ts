@@ -28,12 +28,6 @@ export const GEM_DEV_EVENTS = {
   DEV_BULK_DELETE_FORCE_FAILURE_CHANGE: 'gem-dev:bulk-delete-force-failure-change',
 } as const
 
-export const EVENTS = {
-  QUICK_FOLLOW_UP_SHOW: 'quick-follow-up:show',
-  QUICK_FOLLOW_UP_HIDE: 'quick-follow-up:hide',
-  QUICK_FOLLOW_UP_ADD_QUOTE: 'quick-follow-up:addQuote',
-} as const;
-
 export type ThemeBloomState =
   | 'idle'
   | 'eligible-drag'
@@ -81,21 +75,6 @@ export interface AppEvents {
   // Stuff Page
   'stuff-media:data-received': StuffMediaDataEvent;
   'library-media:data-received': LibraryMediaDataEvent;
-
-  // Quick Follow Up
-  'quick-follow-up:show': {
-    text: string;
-    event: {
-      rangeRect: DOMRect;
-      clientX: number;
-      clientY: number;
-    };
-  };
-  'quick-follow-up:hide': undefined;
-
-  'quick-follow-up:addQuote': {
-    text: string;
-  };
 
   // settings panel
   'settings:open': {

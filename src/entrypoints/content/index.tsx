@@ -165,6 +165,7 @@ export default defineContentScript({
       .then(() => initThemeBackground())
 
     // 6. Finally create the UI
+    let cleanupOverlay: (() => void) | undefined
     const ui = createIntegratedUi(ctx, {
       position: 'modal',
       anchor: 'body',
@@ -178,7 +179,13 @@ export default defineContentScript({
         anchor.appendChild(ui)
       },
       onMount: (container) => {
-        renderOverlay(container)
+        cleanupOverlay?.()
+        cleanupOverlay = renderOverlay(container)
+        return cleanupOverlay
+      },
+      onRemove: (cleanup) => {
+        cleanup?.()
+        if (cleanupOverlay === cleanup) cleanupOverlay = undefined
       },
     });
 
@@ -222,6 +229,8 @@ export default defineContentScript({
     const topBarCustomization = createTopBarCustomizationController()
     await topBarCustomization.start()
     ctx.onInvalidated(() => {
+      cleanupOverlay?.()
+      cleanupOverlay = undefined
       stuffPageModule.stop()
       if (import.meta.env.DEV) {
         window.removeEventListener(

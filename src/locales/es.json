@@ -76,7 +76,27 @@
   },
   "quickFollow": {
     "more": "Más",
-    "moreAriaLabel": "Mostrar más prompts"
+    "moreAriaLabel": "Mostrar más prompts",
+    "multiSelection": {
+      "selectedText": "Texto seleccionado",
+      "userComment": "Comentario del usuario",
+      "editComment": "Editar comentario",
+      "commentPlaceholder": "Añade un comentario…",
+      "add": "Añadir",
+      "send": "Enviar",
+      "addToDraft": "Añadir al borrador",
+      "sendSeparately": "Enviar por separado",
+      "selectionNumber": "Selección $1",
+      "addFailed": "No se pudo añadir esta selección",
+      "maxSelections": "Puedes añadir hasta 10 selecciones",
+      "removeSelection": "Quitar selección",
+      "updateFailed": "No se pudo actualizar el borrador",
+      "sendFailed": "No se pudo enviar. Se conservó el borrador.",
+      "sendUnknown": "No se pudo confirmar el envío. Se conservó el borrador.",
+      "restoreDraft": "Restaurar borrador",
+      "restoreFailed": "No se pudo restaurar el borrador. Borra el campo de entrada e inténtalo de nuevo.",
+      "unsupportedDraft": "No se puede apartar este borrador de forma segura. Envía o quita primero los archivos adjuntos y el contenido con formato."
+    }
   },
   "settings": {
     "quickFollow": {

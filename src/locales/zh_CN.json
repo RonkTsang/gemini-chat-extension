@@ -76,7 +76,27 @@
   },
   "quickFollow": {
     "more": "更多",
-    "moreAriaLabel": "显示更多提示"
+    "moreAriaLabel": "显示更多提示",
+    "multiSelection": {
+      "selectedText": "已选文本",
+      "userComment": "用户评论",
+      "editComment": "编辑评论",
+      "commentPlaceholder": "添加评论…",
+      "add": "添加",
+      "send": "发送",
+      "addToDraft": "添加到草稿",
+      "sendSeparately": "分别发送",
+      "selectionNumber": "选区 $1",
+      "addFailed": "无法添加此选区",
+      "maxSelections": "最多可添加 10 个选区",
+      "removeSelection": "移除此选区",
+      "updateFailed": "无法更新草稿",
+      "sendFailed": "发送失败。草稿已保留。",
+      "sendUnknown": "无法确认是否发送成功。草稿已保留。",
+      "restoreDraft": "恢复草稿",
+      "restoreFailed": "无法恢复草稿。请清空输入框后重试。",
+      "unsupportedDraft": "无法安全暂存此草稿。请先发送或移除附件和带格式的内容。"
+    }
   },
   "settings": {
     "quickFollow": {
