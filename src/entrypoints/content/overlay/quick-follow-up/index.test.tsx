@@ -76,6 +76,50 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
+it('dismisses a capsule without reopening it on the same outside mouseup, and allows a fresh selection', async () => {
+  const source = document.getElementById('source')!
+  const selectSource = () => {
+    const range = document.createRange()
+    range.selectNodeContents(source)
+    window.getSelection()?.removeAllRanges()
+    window.getSelection()?.addRange(range)
+  }
+  selectSource()
+  await act(async () => { source.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, clientX: 200, clientY: 150 })) })
+  expect(container.querySelector('[data-quick-follow="capsule-root"]')).not.toBeNull()
+
+  // A blank click inside message-content can leave the old range available at mouseup.
+  act(() => source.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })))
+  expect(container.querySelector('[data-quick-follow="capsule-root"]')).toBeNull()
+  await act(async () => { source.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, clientX: 400, clientY: 250 })) })
+  expect(container.querySelector('[data-quick-follow="capsule-root"]')).toBeNull()
+  expect(window.getSelection()?.toString()).toBe('')
+
+  act(() => source.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })))
+  selectSource()
+  await act(async () => { source.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, clientX: 200, clientY: 150 })) })
+  expect(container.querySelector('[data-quick-follow="capsule-root"]')).not.toBeNull()
+
+  act(() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })))
+  expect(container.querySelector('[data-quick-follow="capsule-root"]')).toBeNull()
+  expect(window.getSelection()?.toString()).toBe('')
+})
+
+it('keeps the selection when pressing inside the capsule so Ask can add the quote', async () => {
+  const source = document.getElementById('source')!
+  const range = document.createRange()
+  range.selectNodeContents(source)
+  window.getSelection()?.removeAllRanges()
+  window.getSelection()?.addRange(range)
+  await act(async () => { source.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, clientX: 200, clientY: 150 })) })
+  const ask = container.querySelector<HTMLButtonElement>('[data-test-ask]')!
+  act(() => ask.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })))
+  expect(window.getSelection()?.toString()).toBe('quoted source')
+  act(() => ask.click())
+  expect(container.querySelector('[data-quick-follow-comment]')).not.toBeNull()
+  expect(document.querySelectorAll('.gpk-follow-card')).toHaveLength(1)
+})
+
 it('gives the comment overlay priority and restores the marker until its selection is removed', async () => {
   const source = document.getElementById('source')!
   const range = document.createRange()

@@ -984,7 +984,11 @@ export function createFollowUpController(
     return sendFollowUp()
   }
 
-  const dismiss = () => setUI({ mode: 'closed' })
+  const dismiss = () => {
+    // Outside pointerdown runs before mouseup, which must not recapture the dismissed range.
+    if (currentUI.mode === 'capsule') window.getSelection()?.removeAllRanges()
+    setUI({ mode: 'closed' })
+  }
 
   const previewSelectionSource = (id: string | null): void => {
     // Marker unmount/leave must not clear the highlight owned by an open editor.
