@@ -13,7 +13,7 @@ const item = (id: string, comment = 'First comment'): SelectionItem => ({
   comment,
 })
 
-const historyFixture = readFileSync(resolve(process.cwd(), 'docs/dom/quick-follow-up-history.html'), 'utf8')
+const historyFixture = readFileSync(resolve(process.cwd(), 'src/entrypoints/content/quick-follow-up/__fixtures__/history.html'), 'utf8')
 
 function makeQuery(raw: string): HTMLElement {
   const query = document.createElement('user-query')
@@ -72,12 +72,12 @@ describe('quick follow-up cards', () => {
     const dispose = renderHistory(query, '')
 
     expect([...query.querySelectorAll('.gpk-follow-card-selected')].map(node => node.textContent))
-      .toEqual(['免费额度有限', '多端同步偶尔失效'])
+      .toEqual(['sample source alpha', 'sample source beta'])
     expect([...query.querySelectorAll('.gpk-follow-card-comment')].map(node => node.textContent))
-      .toEqual(['浏览器 sync 同步还是自建云？', '有多少，给我原话'])
+      .toEqual(['Compare the two sample sources.', 'Give an example comment.'])
     expect(query.querySelector('.gpk-follow-history-request')).toBeNull()
     expect(getOutlineSummary(query, '')).toEqual({
-      questionText: '浏览器 sync 同步还是自建云？', quoteText: '免费额度有限', selectionCount: 2,
+      questionText: 'Compare the two sample sources.', quoteText: 'sample source alpha', selectionCount: 2,
     })
     expect(readRawQuery(query)).toBe(raw)
     dispose()
