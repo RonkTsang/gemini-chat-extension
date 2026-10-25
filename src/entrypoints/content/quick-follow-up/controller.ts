@@ -18,7 +18,6 @@ import {
   captureEditorDraft,
   getConversationScope,
   isReadyToSubmit,
-  supportsPlainTextSend,
   listUserQueries,
   queriesAffectedBy,
   removedUserQueries,
@@ -91,7 +90,6 @@ type DraftBackup = {
   submitted: boolean
   cleared: boolean
   raw?: string
-  restoreAfterSubmit: boolean
 }
 
 type PendingFollowUp = Pick<Attempt, 'scope' | 'raw' | 'baselineQueries'> & {
@@ -358,23 +356,13 @@ export function createFollowUpController(
     binding.editor.contentEditable = 'true'
   }
 
-  const verifyAndRestoreBackup = (explicitRestore = false): boolean => {
+  const verifyAndRestoreBackup = (): boolean => {
     if (!backup || !attempt || attempt.kind !== 'custom') return false
     if (!backup.submitted || !backup.cleared || getConversationScope() !== backup.scope) return false
-    if (!backup.restoreAfterSubmit && !explicitRestore) {
-      const currentBinding = resolveCurrentBinding()
-      if (currentBinding) currentBinding.editor.contentEditable = 'true'
-      items = []
-      backup = null
-      clearAttempt()
-      syncCards()
-      return true
-    }
     const currentBinding = resolveCurrentBinding()
     if (!enabled || !currentBinding || readRequest(currentBinding.editor) !== '') return false
     currentBinding.editor.contentEditable = 'true'
     if (!restoreEditorDraft(currentBinding.editor, backup.editorState)) return false
-    if (!writePrefix(currentBinding.editor, backup.items) || readRequest(currentBinding.editor) !== backup.editorState.request) return false
     items = copyItems(backup.items)
     backup = null
     clearAttempt()
@@ -387,7 +375,7 @@ export function createFollowUpController(
       const currentBinding = resolveCurrentBinding()
       if (currentBinding && readRequest(currentBinding.editor) === '') backup.cleared = true
     }
-    if (verifyAndRestoreBackup(true)) return
+    if (verifyAndRestoreBackup()) return
     notice('quickFollow.multiSelection.restoreFailed', {
       label: t('quickFollow.multiSelection.restoreDraft'),
       onClick: retryRestoreDraft,
@@ -525,7 +513,6 @@ export function createFollowUpController(
     if (!currentBinding || !isAttemptScopeActive(backup.scope) || attempt.submitted || readRequest(currentBinding.editor) !== attempt.raw) return false
     if (!replaceRequestText(currentBinding.editor, '')
       || !restoreEditorDraft(currentBinding.editor, backup.editorState)) return false
-    if (!writePrefix(currentBinding.editor, backup.items)) return false
     currentBinding.editor.contentEditable = 'true'
     items = copyItems(backup.items)
     syncCards()
@@ -540,9 +527,8 @@ export function createFollowUpController(
     request: string,
     editorState: EditorSnapshot,
     priorItems: SelectionItem[],
-    restoreAfterSubmit: boolean,
   ): Promise<boolean> => {
-    backup = { scope, items: copyItems(priorItems), editorState, submitted: false, cleared: false, raw: request, restoreAfterSubmit }
+    backup = { scope, items: copyItems(priorItems), editorState, submitted: false, cleared: false, raw: request }
     currentBinding.editor.contentEditable = 'false'
     const state = startAttempt('custom', request, [], currentBinding)
     state.clearObserver = observeSubmissionClearTransition(currentBinding.editor, request, () => {
@@ -583,15 +569,11 @@ export function createFollowUpController(
   const sendPromptSeparately = async (prompt: QuickFollowPrompt, candidate: Candidate): Promise<boolean> => {
     if (attempt || backup || !binding || candidate.scope !== currentScope || !enabled) return false
     const currentBinding = resolveCurrentBinding()
-    if (!currentBinding || !supportsPlainTextSend(currentBinding)) {
-      notice('quickFollow.multiSelection.unsupportedDraft')
+    if (!currentBinding) {
+      notice('quickFollow.multiSelection.sendFailed')
       return false
     }
     const editorState = captureEditorDraft(currentBinding.editor)
-    if (!editorState) {
-      notice('quickFollow.multiSelection.unsupportedDraft')
-      return false
-    }
     const snapshot = copyItems(items)
     const scope = currentScope
     const request = expandPrompt(prompt, candidate)
@@ -600,7 +582,7 @@ export function createFollowUpController(
       writePrefix(currentBinding.editor, snapshot)
       return false
     }
-    return submitCustomRequest(currentBinding, scope, request, editorState, snapshot, true)
+    return submitCustomRequest(currentBinding, scope, request, editorState, snapshot)
   }
 
   const waitUntilReady = (currentBinding: InputBinding, scope: string, state: Attempt): Promise<boolean> => {
@@ -646,17 +628,17 @@ export function createFollowUpController(
   const runPrompt = async (prompt: QuickFollowPrompt, candidate: Candidate): Promise<boolean> => {
     if (items.length || candidate.scope !== currentScope || !enabled || attempt || backup) return false
     const currentBinding = resolveCurrentBinding()
-    if (!currentBinding || !supportsPlainTextSend(currentBinding)) {
-      notice('quickFollow.multiSelection.unsupportedDraft')
+    if (!currentBinding) {
+      notice('quickFollow.multiSelection.sendFailed')
       return false
     }
     const editorState = captureEditorDraft(currentBinding.editor)
     const request = expandPrompt(prompt, candidate)
-    if (!editorState || !replaceRequestText(currentBinding.editor, request)) {
-      notice('quickFollow.multiSelection.unsupportedDraft')
+    if (!replaceRequestText(currentBinding.editor, request)) {
+      notice('quickFollow.multiSelection.sendFailed')
       return false
     }
-    return submitCustomRequest(currentBinding, currentScope, request, editorState, [], false)
+    return submitCustomRequest(currentBinding, currentScope, request, editorState, [])
   }
 
   function handleNativeSendIntent(event: Event): void {

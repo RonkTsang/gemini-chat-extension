@@ -14,7 +14,7 @@ export type Candidate = {
   scope: string
 }
 
-export type EditorSnapshot = { request: string; selectionStart: number; selectionEnd: number }
+export type EditorSnapshot = { content: Node[] }
 
 const INPUT_SELECTOR = 'rich-textarea .ql-editor.textarea.new-input-ui[contenteditable]'
 const SEND_SELECTOR = '[data-node-type="input-area"] .send-button-container .send-button'
@@ -61,41 +61,6 @@ export function isReadyToSubmit(binding: InputBinding): boolean {
     && button.getAttribute('aria-disabled') !== 'true'
     && interactive?.getAttribute('aria-disabled') !== 'true'
     && !(interactive instanceof HTMLButtonElement && interactive.disabled)
-}
-
-export function supportsPlainTextSend(binding: InputBinding): boolean {
-  const inputContainers = binding.chatWindow.querySelectorAll<HTMLElement>('input-container')
-  const areas = binding.chatWindow.querySelectorAll<HTMLElement>('[data-node-type="input-area"]')
-  if (inputContainers.length !== 1 || areas.length !== 1) return false
-  const inputContainer = inputContainers[0]
-  const area = areas[0]
-  if (!inputContainer.contains(area) || !area.contains(binding.editor)
-    || (binding.sendButton && !area.contains(binding.sendButton))) return false
-  if (area.querySelector('input[type="file"], textarea')) return false
-  if ([...area.querySelectorAll<HTMLElement>('[contenteditable]')]
-    .some(element => element !== binding.editor && !binding.editor.contains(element))) return false
-
-  // The observed input fixture only has these native control tags outside the editor.
-  // Gemini can add upload surfaces beside the editor; fail closed when their structure
-  // is not represented by the fixture instead of sending a request with unknown payload.
-  const observedTags = new Set([
-    'input-container', 'input-area-v2', 'div', 'rich-textarea', 'at-mentions-menu', 'mat-menu',
-    'toolbox-drawer', 'svg', 'span', 'speech-dictation-mic-button', 'button', 'mat-icon',
-  ])
-  const payloadAttribute = /(?:attachment|upload|file|image|media|blob|payload)/i
-  for (const element of [...inputContainer.querySelectorAll<HTMLElement>('*')]) {
-    if (binding.editor.contains(element) || element.closest('.gpk-follow-draft-cards')) continue
-    const tagName = element.localName.toLowerCase()
-    if (!observedTags.has(tagName) || /^(?:img|video|audio|object|embed|iframe|canvas)$/.test(tagName)) return false
-    if (tagName.includes('-') && !observedTags.has(tagName)) return false
-    if (element.hasAttribute('contenteditable') || element.matches('input, textarea, select')) return false
-    for (const attribute of [...element.attributes]) {
-      if (payloadAttribute.test(attribute.name) || payloadAttribute.test(attribute.value)) return false
-    }
-    const nodeType = element.getAttribute('data-node-type')
-    if (nodeType && !['input-area', 'speech_dictation_mic_button', 'send'].includes(nodeType)) return false
-  }
-  return true
 }
 
 function isOwnedNode(node: Node): boolean {
@@ -194,91 +159,32 @@ export function appendRequestText(editor: HTMLElement, text: string): boolean {
   return readRequest(editor) === next
 }
 
-export function captureEditorDraft(editor: HTMLElement): EditorSnapshot | null {
-  const request = readRequest(editor)
-  if (request === null) return null
-  const selection = window.getSelection()
-  if (selection?.rangeCount && editor.contains(selection.anchorNode) && editor.contains(selection.focusNode)) {
-    if (!selection.isCollapsed) return null
-    const paragraphs = [...editor.children].filter((child): child is HTMLElement => !isOwnedNode(child))
-    let offset = 0
-    for (let index = 0; index < paragraphs.length; index++) {
-      const paragraph = paragraphs[index]
-      if (paragraph.contains(selection.anchorNode)) {
-        const caret = document.createRange()
-        caret.selectNodeContents(paragraph)
-        caret.setEnd(selection.anchorNode!, selection.anchorOffset)
-        offset += caret.toString().length
-        return { request, selectionStart: offset, selectionEnd: offset }
-      }
-      offset += (paragraph.textContent?.length ?? 0) + (index < paragraphs.length - 1 ? 1 : 0)
-    }
-    return null
+export function captureEditorDraft(editor: HTMLElement): EditorSnapshot {
+  return {
+    content: [...editor.childNodes].map(node => node.cloneNode(true)),
   }
-  return { request, selectionStart: request.length, selectionEnd: request.length }
 }
 
 export function restoreEditorDraft(editor: HTMLElement, snapshot: EditorSnapshot): boolean {
   if (readRequest(editor) !== '') return false
-  const fragment = document.createDocumentFragment()
-  snapshot.request.split('\n').forEach(line => {
-    const paragraph = document.createElement('p')
-    paragraph.textContent = line
-    fragment.append(paragraph)
-  })
-  const emptyPlaceholder = [...editor.children].filter(child => !isOwnedNode(child))
-  if (emptyPlaceholder.length === 1 && emptyPlaceholder[0].tagName === 'P'
-    && emptyPlaceholder[0].textContent === ''
-    && (emptyPlaceholder[0].children.length === 0 || (emptyPlaceholder[0].children.length === 1
-      && emptyPlaceholder[0].firstElementChild?.tagName === 'BR'))) emptyPlaceholder[0].remove()
-  editor.append(fragment)
-  editor.dispatchEvent(new Event('input', { bubbles: true }))
-  if (readRequest(editor) !== snapshot.request) return false
-  placeCaretAtRequestOffset(editor, snapshot.selectionEnd)
+  replaceEditorContent(editor, snapshot.content.map(node => node.cloneNode(true)))
   return true
 }
 
+function replaceEditorContent(editor: HTMLElement, content: Node[]): void {
+  editor.replaceChildren(...content)
+  editor.dispatchEvent(new Event('input', { bubbles: true }))
+}
+
 export function replaceRequestText(editor: HTMLElement, text: string): boolean {
-  if (readRequest(editor) === null) return false
-  const existing = [...editor.children].filter(child => !isOwnedNode(child))
-  existing.forEach(node => node.remove())
   const fragment = document.createDocumentFragment()
   text.split('\n').forEach(line => {
     const paragraph = document.createElement('p')
     paragraph.textContent = line
     fragment.append(paragraph)
   })
-  editor.append(fragment)
-  editor.dispatchEvent(new Event('input', { bubbles: true }))
+  replaceEditorContent(editor, [...editor.childNodes].filter(isOwnedNode).concat([...fragment.childNodes]))
   return readRequest(editor) === text
-}
-
-function placeCaretAtRequestOffset(editor: HTMLElement, offset: number): void {
-  const paragraphs = [...editor.children].filter((child): child is HTMLElement => !isOwnedNode(child))
-  const selection = window.getSelection()
-  if (!selection) return
-  let remaining = Math.max(0, offset)
-  for (const paragraph of paragraphs) {
-    const textNode = paragraph.firstChild
-    const length = paragraph.textContent?.length ?? 0
-    if (remaining <= length && textNode?.nodeType === Node.TEXT_NODE) {
-      const range = document.createRange()
-      range.setStart(textNode, Math.min(remaining, textNode.textContent?.length ?? 0))
-      range.collapse(true)
-      selection.removeAllRanges()
-      selection.addRange(range)
-      return
-    }
-    remaining -= length + 1
-  }
-  const last = paragraphs.at(-1)
-  if (last) {
-    const range = document.createRange()
-    range.selectNodeContents(last)
-    range.collapse(false)
-    selection.removeAllRanges()
-    selection.addRange(range)
-  }
 }
 
 export function observeSubmissionClearTransition(

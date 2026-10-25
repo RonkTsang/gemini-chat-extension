@@ -36,10 +36,11 @@ vi.mock('wxt/browser', () => ({ browser: mockBrowser }))
 
 import { QUICK_FOLLOW_PLACEHOLDER } from '@/domain/quick-follow/types'
 import { createFollowUpController } from './controller'
-import { readRequest, replaceRequestText, resolveInput, supportsPlainTextSend } from './dom'
+import { readRequest, replaceRequestText, resolveInput } from './dom'
 import { serializeMessage } from './protocol'
 
 const fixture = readFileSync(resolve(process.cwd(), 'docs/dom/input.html'), 'utf8')
+const currentFixture = readFileSync(resolve(process.cwd(), 'docs/dom/input-2026-10-24.html'), 'utf8')
 const prompt = { id: 'prompt', template: `Look at ${QUICK_FOLLOW_PLACEHOLDER}`, iconKey: 'sparkles' as const, enabled: true, createdAt: '', updatedAt: '' }
 
 function removeSubmitButton(): void {
@@ -90,6 +91,99 @@ describe('Follow-up controller recovery', () => {
     vi.restoreAllMocks()
   })
 
+  it.each([false, true])('sends a custom prompt from the current empty composer (draft cards: %s)', async withCards => {
+    const nativeSend = document.querySelector('.send-button.submit')!.closest('.send-button-container')!.cloneNode(true)
+    document.body.innerHTML = currentFixture
+    window.getSelection()?.removeAllRanges()
+    const chat = document.querySelector<HTMLElement>('chat-window')!
+    const editor = chat.querySelector<HTMLElement>('.ql-editor')!
+    const candidate = {
+      text: 'quoted source', scope: 'conversation-1', position: { clientX: 40, clientY: 50 },
+      anchor: {
+        quoteId: 'quote-id', conversationId: 'conversation-1', sourceMessageId: 'message-id',
+        selectedText: 'quoted source', startOffset: 0, endOffset: 13, prefix: '', suffix: '',
+      },
+    }
+    const sent: string[] = []
+    const controller = createFollowUpController(vi.fn())
+    controller.start()
+    if (withCards) expect(controller.add(candidate)).toBe('quote-id')
+    editor.addEventListener('input', () => {
+      if (readRequest(editor) !== 'Look at quoted source') return
+      chat.querySelector('[data-node-type="input-area"]')!.append(nativeSend)
+    }, { once: true })
+    nativeSend.addEventListener('click', () => {
+      sent.push(readRequest(editor) ?? '')
+      addSubmittedQuery(chat, sent[sent.length - 1])
+      clearEditor(editor)
+    })
+
+    try {
+      const result = withCards
+        ? controller.sendPromptSeparately(prompt, candidate)
+        : controller.runPrompt(prompt, candidate)
+      await expect(result).resolves.toBe(true)
+      await flushObservers()
+      expect(sent).toEqual(['Look at quoted source'])
+      expect(readRequest(editor)).toBe('')
+      expect(controller.hasDraftCards()).toBe(withCards)
+      expect(controller.isBusy()).toBe(false)
+    } finally {
+      controller.stop()
+    }
+  })
+
+  it.each([
+    { withCards: false, fails: false },
+    { withCards: true, fails: false },
+    { withCards: false, fails: true },
+    { withCards: true, fails: true },
+  ])('restores formatted content after a custom send: %j', async ({ withCards, fails }) => {
+    removeStopButton()
+    const chat = document.querySelector<HTMLElement>('chat-window')!
+    const editor = chat.querySelector<HTMLElement>('.ql-editor')!
+    const sendButton = chat.querySelector<HTMLButtonElement>('.send-button.submit')!
+    const candidate = {
+      text: 'quoted source', scope: 'conversation-1', position: { clientX: 40, clientY: 50 },
+      anchor: {
+        quoteId: 'quote-id', conversationId: 'conversation-1', sourceMessageId: 'message-id',
+        selectedText: 'quoted source', startOffset: 0, endOffset: 13, prefix: '', suffix: '',
+      },
+    }
+    const controller = createFollowUpController(vi.fn())
+    controller.start()
+    if (withCards) expect(controller.add(candidate)).toBe('quote-id')
+    editor.querySelector('p:not([data-gpk-follow-prefix]):not([data-gpk-follow-sentinel])')!
+      .innerHTML = '<strong>formatted draft</strong> with <em>emphasis</em>'
+    const original = editor.innerHTML
+    // Neighboring Gemini controls do not determine whether editor content can be restored.
+    const neighboringControl = document.createElement('div')
+    neighboringControl.dataset.uploadControl = 'available'
+    chat.querySelector('input-container')!.append(neighboringControl)
+    const send = vi.spyOn(sendButton, 'click').mockImplementation(() => {
+      expect(readRequest(editor)).toBe('Look at quoted source')
+      expect(editor.querySelector('[data-gpk-follow-prefix]')).toBeNull()
+      if (fails) throw new Error('native send failed')
+      addSubmittedQuery(chat, readRequest(editor)!)
+      clearEditor(editor)
+    })
+
+    try {
+      const result = withCards
+        ? controller.sendPromptSeparately(prompt, candidate)
+        : controller.runPrompt(prompt, candidate)
+      await expect(result).resolves.toBe(!fails)
+      await flushObservers()
+      expect(send).toHaveBeenCalledTimes(1)
+      expect(editor.innerHTML).toBe(original)
+      expect(editor.contentEditable).toBe('true')
+      expect(controller.hasDraftCards()).toBe(withCards)
+      expect(controller.isBusy()).toBe(false)
+    } finally {
+      controller.stop()
+    }
+  })
+
   it('keeps the no-card prompt one-click while waiting for native Send readiness and exact confirmation', async () => {
     removeSubmitButton()
     const chat = document.querySelector<HTMLElement>('chat-window')!
@@ -130,7 +224,7 @@ describe('Follow-up controller recovery', () => {
     expect(send).toHaveBeenCalledTimes(1)
     expect(chat.querySelectorAll('user-query').item(chat.querySelectorAll('user-query').length - 1)
       ?.querySelector('.query-text')?.textContent).toBe('Look at quoted source')
-    expect(readRequest(editor)).toBe('')
+    expect(readRequest(editor)).toBe('my unsent draft\nline-2')
     expect(editor.querySelector('[data-gpk-follow-prefix]')).toBeNull()
     controller.stop()
   })
@@ -150,7 +244,6 @@ describe('Follow-up controller recovery', () => {
     })
     const controller = createFollowUpController(vi.fn())
     controller.start()
-    expect(supportsPlainTextSend(resolveInput(chat)!)).toBe(true)
     await flushObservers()
     const candidate = {
       text: 'quoted source', scope: 'conversation-1', position: { clientX: 40, clientY: 50 },
@@ -161,7 +254,6 @@ describe('Follow-up controller recovery', () => {
     }
     const id = controller.add(candidate)
     expect(id).toBe('quote-id')
-    expect(supportsPlainTextSend(resolveInput(chat)!)).toBe(true)
     const success = await controller.sendPromptSeparately(
       prompt,
       candidate,
@@ -174,22 +266,6 @@ describe('Follow-up controller recovery', () => {
     expect(editor.querySelector('[data-gpk-follow-prefix]')?.textContent).toContain('quoted source')
     expect(editor.querySelectorAll('[data-gpk-follow-sentinel]')).toHaveLength(1)
     controller.stop()
-  })
-
-  it('rejects unobserved payload surfaces in the outer input container before single-send', () => {
-    const chat = document.querySelector<HTMLElement>('chat-window')!
-    removeStopButton()
-    const binding = resolveInput(chat)!
-    expect(supportsPlainTextSend(binding)).toBe(true)
-
-    const attachment = document.createElement('gemini-file-attachment')
-    document.querySelector('input-container')!.append(attachment)
-    expect(supportsPlainTextSend(binding)).toBe(false)
-    attachment.remove()
-
-    const image = document.createElement('img')
-    document.querySelector('input-container')!.append(image)
-    expect(supportsPlainTextSend(binding)).toBe(false)
   })
 
   it('allows an explicit native-button retry after an unknown submission without auto-resending', async () => {

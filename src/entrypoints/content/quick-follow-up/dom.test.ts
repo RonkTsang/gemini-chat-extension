@@ -25,6 +25,7 @@ import {
 import { serializePrefix, type SelectionItem } from './protocol'
 
 const inputFixture = readFileSync(resolve(process.cwd(), 'docs/dom/input.html'), 'utf8')
+const currentInputFixture = readFileSync(resolve(process.cwd(), 'docs/dom/input-2026-10-24.html'), 'utf8')
 
 const selections: SelectionItem[] = [
   { id: 'selection-a', revision: 1, selectedText: 'first source', comment: 'first comment' },
@@ -52,6 +53,47 @@ describe('Follow-up editor DOM adapter', () => {
     expect(binding?.editor.matches('.ql-editor.textarea.new-input-ui[contenteditable="true"]')).toBe(true)
     expect(binding?.sendButton!.getAttribute('aria-label')).toBe('Send message')
     expect(isReadyToSubmit(binding!)).toBe(true)
+  })
+
+  it('captures and restores the current empty composer without inspecting surrounding controls', () => {
+    document.body.innerHTML = currentInputFixture
+    const binding = resolveInput()!
+    const original = binding.editor.innerHTML
+    const snapshot = captureEditorDraft(binding.editor)
+
+    replaceRequestText(binding.editor, 'custom prompt')
+    replaceRequestText(binding.editor, '')
+    expect(restoreEditorDraft(binding.editor, snapshot)).toBe(true)
+    expect(binding.editor.innerHTML).toBe(original)
+  })
+
+  it('restores formatted content and selected text from an independent snapshot', () => {
+    removeStopButton()
+    const { editor } = resolveInput()!
+    editor.innerHTML = '<p><strong>formatted</strong> draft</p><p><br></p><p>last line</p>'
+    const original = editor.innerHTML
+    const range = document.createRange()
+    range.selectNodeContents(editor.querySelector('strong')!)
+    window.getSelection()!.removeAllRanges()
+    window.getSelection()!.addRange(range)
+    const snapshot = captureEditorDraft(editor)
+    editor.querySelector('strong')!.textContent = 'changed after capture'
+
+    expect(replaceRequestText(editor, 'custom prompt')).toBe(true)
+    expect(replaceRequestText(editor, '')).toBe(true)
+    expect(restoreEditorDraft(editor, snapshot)).toBe(true)
+    expect(editor.innerHTML).toBe(original)
+  })
+
+  it('does not overwrite a new plain or formatted draft during restoration', () => {
+    removeStopButton()
+    const { editor } = resolveInput()!
+    const snapshot = captureEditorDraft(editor)
+    for (const html of ['<p>new draft</p>', '<p><strong>new draft</strong></p>']) {
+      editor.innerHTML = html
+      expect(restoreEditorDraft(editor, snapshot)).toBe(false)
+      expect(editor.innerHTML).toBe(html)
+    }
   })
 
   it('resolves the unique Stop button but does not treat it as ready to submit', () => {
@@ -111,7 +153,7 @@ describe('Follow-up editor DOM adapter', () => {
     expect(input).not.toHaveBeenCalled()
   })
 
-  it('appends multiline request text after an empty placeholder and restores the caret', () => {
+  it('appends multiline request text after an empty placeholder and restores the content', () => {
     removeStopButton()
     const binding = resolveInput()!
     binding.editor.replaceChildren(Object.assign(document.createElement('p'), { innerHTML: '<br>' }))
@@ -130,11 +172,9 @@ describe('Follow-up editor DOM adapter', () => {
     selection.addRange(range)
 
     const snapshot = captureEditorDraft(binding.editor)
-    expect(snapshot).toEqual({ request: 'added one\nadded two', selectionStart: 3, selectionEnd: 3 })
     expect(replaceRequestText(binding.editor, '')).toBe(true)
     expect(restoreEditorDraft(binding.editor, snapshot!)).toBe(true)
-    expect(readRequest(binding.editor)).toBe(snapshot?.request)
-    expect(window.getSelection()?.anchorOffset).toBe(3)
+    expect(readRequest(binding.editor)).toBe('added one\nadded two')
   })
 
   it('rejects rich editor content without changing it or inserting Follow-up nodes', () => {
