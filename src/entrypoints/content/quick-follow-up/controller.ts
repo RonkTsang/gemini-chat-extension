@@ -903,13 +903,15 @@ export function createFollowUpController(
     if (!enabled || !isCurrentBinding(binding) || attempt || backup) return false
     const item = items.find(selection => selection.id === id)
     if (!item) return false
-    if (!item.anchor || !jumpToQuoteAnchor(item.anchor, 'instant')) {
+    let position = item.anchor ? readQuoteAnchorPosition(item.anchor) : null
+    if (!position && item.anchor && jumpToQuoteAnchor(item.anchor, 'instant')) {
+      position = readQuoteAnchorPosition(item.anchor)
+    }
+    if (!position || !item.anchor) {
       logDevEvent('warn', '[QuickFollowUp]', 'comment.edit.rejected', { reason: 'source_unavailable' })
       notice('quickFollow.multiSelection.updateFailed')
       return false
     }
-    const position = readQuoteAnchorPosition(item.anchor)
-    if (!position) return false
     closeActiveFollowUpPopovers()
     setUI({ mode: 'comment', selectionId: id, selectionText: item.selectedText,
       commentDraft: effectiveComment(item), position, sourceAnchor: item.anchor })

@@ -4,7 +4,7 @@ import { FiTrash2 } from 'react-icons/fi'
 
 import { Tooltip } from '@/components/ui/tooltip'
 import { t } from '@/utils/i18n'
-import { readQuoteAnchorPosition } from '../../quick-follow-up/dom'
+import { readQuoteAnchorPosition, type QuoteCommentPosition } from '../../quick-follow-up/dom'
 import type { QuoteAnchor } from '../../quick-follow-up/protocol'
 
 export interface QuickCommentProps {
@@ -39,20 +39,24 @@ export function QuickComment({ selectionText, value, position, sourceAnchor, onC
   const [viewport, setViewport] = useState(() => ({ width: window.innerWidth, height: window.innerHeight }))
   const [layout, setLayout] = useState({ multiline: false, textHeight: LINE_HEIGHT, capped: false })
   const [sendModifierPressed, setSendModifierPressed] = useState(false)
-  const [anchorPosition, setAnchorPosition] = useState(position)
+  const [anchorPosition, setAnchorPosition] = useState<QuoteCommentPosition>(position)
   const maxWidth = editing ? 360 : WIDTH
   const width = Math.min(maxWidth, viewport.width - MARGIN * 2)
+  const anchorBottom = anchorPosition.bottom ?? anchorPosition.clientY
   const spaceAbove = anchorPosition.clientY - 14 - MARGIN
-  const spaceBelow = viewport.height - anchorPosition.clientY - 18 - MARGIN
-  // Keep the attachment edge stable while typing, rather than flipping on each height change.
-  const above = spaceAbove >= 160 || spaceAbove >= spaceBelow
+  const spaceBelow = viewport.height - anchorBottom - 18 - MARGIN
+  // Choose an edge using the minimum editor size, then cap growth on that side.
+  const preferredHeight = editing
+    ? LINE_HEIGHT + BUTTON_GAP + BUTTON_SIZE + MULTILINE_PADDING_BLOCK * 2 + 2
+    : BUTTON_SIZE + SINGLE_LINE_PADDING_BLOCK * 2 + 2
+  const above = spaceAbove >= preferredHeight || spaceAbove >= spaceBelow
   const paddingBlock = layout.multiline ? MULTILINE_PADDING_BLOCK : SINGLE_LINE_PADDING_BLOCK
   const minHeight = BUTTON_SIZE + paddingBlock * 2 + 2
   const availableHeight = Math.max(minHeight, Math.min(viewport.height * 0.58, above ? spaceAbove : spaceBelow))
   const bodyHeight = layout.multiline ? layout.textHeight + BUTTON_GAP + BUTTON_SIZE : BUTTON_SIZE
   const placement = {
     left: Math.max(MARGIN, Math.min(anchorPosition.clientX - width / 2, viewport.width - width - MARGIN)),
-    top: above ? Math.max(MARGIN + minHeight, anchorPosition.clientY - 14) : Math.max(MARGIN, anchorPosition.clientY + 18),
+    top: above ? Math.max(MARGIN + minHeight, anchorPosition.clientY - 14) : Math.max(MARGIN, anchorBottom + 18),
     width,
     transform: above ? 'translateY(-100%)' : undefined,
   }
@@ -77,6 +81,7 @@ export function QuickComment({ selectionText, value, position, sourceAnchor, onC
         return
       }
       setAnchorPosition(previous => previous.clientX === nextPosition.clientX && previous.clientY === nextPosition.clientY
+        && previous.bottom === nextPosition.bottom
         ? previous : nextPosition)
     }
     const onResize = () => {

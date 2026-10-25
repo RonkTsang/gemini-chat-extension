@@ -121,4 +121,25 @@ describe('QuickComment editing', () => {
     expect(readQuoteAnchorPosition).not.toHaveBeenCalled()
   })
 
+  it('attaches below the end of a multiline selection when there is no room above', () => {
+    vi.mocked(readQuoteAnchorPosition).mockReturnValue({ clientX: 300, clientY: 40, bottom: 180 })
+    renderEditor()
+    const panel = container.querySelector<HTMLElement>('[data-quick-follow-comment]')!
+    expect(panel.style.left).toBe('120px')
+    expect(panel.style.top).toBe('198px')
+    expect(panel.style.transform).toBe('')
+
+    vi.mocked(readQuoteAnchorPosition).mockReturnValue({ clientX: 300, clientY: 40, bottom: 220 })
+    act(() => document.dispatchEvent(new Event('scroll')))
+    expect(panel.style.top).toBe('238px')
+  })
+
+  it('uses the space above a selection when the editor fits without scrolling', () => {
+    vi.mocked(readQuoteAnchorPosition).mockReturnValue({ clientX: 300, clientY: 130, bottom: 200 })
+    renderEditor()
+    const panel = container.querySelector<HTMLElement>('[data-quick-follow-comment]')!
+    expect(panel.style.top).toBe('116px')
+    expect(panel.style.transform).toBe('translateY(-100%)')
+  })
+
 })

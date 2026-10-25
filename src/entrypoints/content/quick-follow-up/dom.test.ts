@@ -13,6 +13,7 @@ import {
   readRawQuery,
   readRequest,
   readQuoteAnchorEndPosition,
+  readQuoteAnchorPosition,
   observeQuoteAnchorLayout,
   resolveQueryText,
   replaceRequestText,
@@ -233,6 +234,7 @@ describe('Follow-up editor DOM adapter', () => {
       return Object.assign(rects, { item: (index: number) => rects[index] ?? null })
     })
     expect(readQuoteAnchorEndPosition(candidate.anchor)).toEqual({ clientX: 60, clientY: 80 })
+    expect(readQuoteAnchorPosition(candidate.anchor)).toEqual({ clientX: 70, clientY: 50, bottom: 100 })
     expect(source.innerHTML).toBe(original)
 
     const scroller = document.createElement('div')
@@ -241,9 +243,38 @@ describe('Follow-up editor DOM adapter', () => {
     scroller.append(source)
     vi.spyOn(scroller, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 120, 400, 200))
     expect(readQuoteAnchorEndPosition(candidate.anchor)).toBeNull()
+    expect(readQuoteAnchorPosition(candidate.anchor)).toBeNull()
+    vi.mocked(scroller.getBoundingClientRect).mockReturnValue(new DOMRect(0, 75, 400, 200))
+    expect(readQuoteAnchorPosition(candidate.anchor)).toEqual({ clientX: 40, clientY: 80, bottom: 100 })
     scroller.style.overflowY = 'visible'
     source.remove()
     expect(readQuoteAnchorEndPosition(candidate.anchor)).toBeNull()
+  })
+
+  it('starts a quote at its own text node instead of the end of the preceding paragraph', () => {
+    const source = document.createElement('message-content')
+    source.innerHTML = '<p>The most useful shortcuts for daily research include:</p>'
+      + '<ul><li><strong>New Chat / Focus Prompt:</strong> Start fresh research threads.</li></ul>'
+    document.querySelector('chat-window')!.append(source)
+    const selectedText = source.querySelector('strong')!.firstChild!
+    const selection = document.createRange()
+    selection.selectNodeContents(selectedText)
+    const candidate = captureCandidate(selection, source, { clientX: 200, clientY: 300 })!
+    const selectedRect = new DOMRect(100, 300, 200, 20)
+    const previousParagraphCaret = new DOMRect(400, 230, 0, 20)
+    const readRects = vi.spyOn(Range.prototype, 'getClientRects').mockImplementation(function (this: Range) {
+      const rects = this.startContainer === selectedText
+        ? [selectedRect] : [previousParagraphCaret, selectedRect]
+      return Object.assign(rects, { item: (index: number) => rects[index] ?? null })
+    })
+
+    expect(readQuoteAnchorPosition(candidate.anchor)).toEqual({ clientX: 200, clientY: 300, bottom: 320 })
+    expect(readRects.mock.instances[0]).toMatchObject({
+      startContainer: selectedText,
+      startOffset: 0,
+      endContainer: selectedText,
+      endOffset: selectedText.textContent!.length,
+    })
   })
 
   it('coalesces layout events and cancels pending work when markers unmount', () => {

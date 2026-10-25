@@ -408,10 +408,10 @@ describe('Follow-up lifecycle regressions', () => {
       const savedPrefix = editor.innerHTML
 
       document.querySelector<HTMLButtonElement>(action)!.click()
-      expect(scroll).toHaveBeenCalledWith({ behavior: 'instant', block: 'center' })
+      expect(scroll).not.toHaveBeenCalled()
       expect(change).toHaveBeenLastCalledWith(expect.objectContaining({
         mode: 'comment', commentDraft: 'saved comment',
-        position: { clientX: 160, clientY: 160 }, sourceAnchor: candidate('a').anchor,
+        position: { clientX: 160, clientY: 160, bottom: 180 }, sourceAnchor: candidate('a').anchor,
       }))
       expect(controller.changeQuickComment('a', 'discarded edit')).toBe(true)
       expect(editor.innerHTML).toBe(savedPrefix)
@@ -428,6 +428,32 @@ describe('Follow-up lifecycle regressions', () => {
       expect(readRequest(editor)).toBe('line-1\nline-2')
     }
   )
+
+  it('scrolls back to an offscreen source before opening its comment', () => {
+    const change = vi.fn()
+    controller.stop()
+    controller = createFollowUpController(change)
+    controller.start()
+    controller.add(candidate('a'))
+    controller.addComment('a')
+    const source = mountSource('a')
+    const offscreen = new DOMRect(120, -200, 80, 20)
+    vi.mocked(Range.prototype.getClientRects).mockReturnValue(Object.assign([offscreen], {
+      item: (index: number) => index === 0 ? offscreen : null,
+    }))
+    const scroll = vi.spyOn(source, 'scrollIntoView').mockImplementation(() => {
+      const visible = new DOMRect(120, 160, 80, 20)
+      vi.mocked(Range.prototype.getClientRects).mockReturnValue(Object.assign([visible], {
+        item: (index: number) => index === 0 ? visible : null,
+      }))
+    })
+    expect(controller.openQuickComment('a')).toBe(true)
+    expect(scroll).toHaveBeenCalledOnce()
+    expect(scroll).toHaveBeenCalledWith({ behavior: 'instant', block: 'center' })
+    expect(change).toHaveBeenLastCalledWith(expect.objectContaining({
+      mode: 'comment', position: { clientX: 160, clientY: 160, bottom: 180 },
+    }))
+  })
 
   it('reports an unavailable quote source instead of opening an editor beside the card', () => {
     controller.add(candidate('missing'))

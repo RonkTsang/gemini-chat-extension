@@ -408,11 +408,36 @@ function resolveQuoteAnchorRange(anchor: QuoteAnchor): Range | null {
   return source ? resolveAnchorRange(source, anchor) : null
 }
 
-export function readQuoteAnchorPosition(anchor: QuoteAnchor): Candidate['position'] | null {
+export type QuoteCommentPosition = Candidate['position'] & { bottom?: number }
+
+export function readQuoteAnchorPosition(anchor: QuoteAnchor): QuoteCommentPosition | null {
   const range = resolveQuoteAnchorRange(anchor)
   if (!range) return null
-  const rect = range.getClientRects()[0] ?? range.getBoundingClientRect()
-  return { clientX: rect.left + rect.width / 2, clientY: rect.top }
+  const viewport = { left: 0, top: 0, right: window.innerWidth, bottom: window.innerHeight }
+  for (let element = range.commonAncestorContainer instanceof Element
+    ? range.commonAncestorContainer : range.commonAncestorContainer.parentElement; element; element = element.parentElement) {
+    const style = getComputedStyle(element)
+    const bounds = element.getBoundingClientRect()
+    if (/^(auto|scroll|hidden|clip)$/.test(style.overflowX)) {
+      viewport.left = Math.max(viewport.left, bounds.left)
+      viewport.right = Math.min(viewport.right, bounds.right)
+    }
+    if (/^(auto|scroll|hidden|clip)$/.test(style.overflowY)) {
+      viewport.top = Math.max(viewport.top, bounds.top)
+      viewport.bottom = Math.min(viewport.bottom, bounds.bottom)
+    }
+  }
+  const rects = [...range.getClientRects()].filter(rect => rect.width > 0 && rect.height > 0
+    && rect.bottom > viewport.top && rect.top < viewport.bottom
+    && rect.right > viewport.left && rect.left < viewport.right)
+  if (!rects.length) return null
+  const left = Math.max(viewport.left, Math.min(...rects.map(rect => rect.left)))
+  const right = Math.min(viewport.right, Math.max(...rects.map(rect => rect.right)))
+  return {
+    clientX: (left + right) / 2,
+    clientY: Math.max(viewport.top, Math.min(...rects.map(rect => rect.top))),
+    bottom: Math.min(viewport.bottom, Math.max(...rects.map(rect => rect.bottom))),
+  }
 }
 
 export function readQuoteAnchorEndPosition(anchor: QuoteAnchor): Candidate['position'] | null {
@@ -546,7 +571,9 @@ function rangeFromTextOffsets(root: Element, start: number, end: number): Range 
   while (walker.nextNode()) {
     const node = walker.currentNode as Text
     const length = node.textContent?.length ?? 0
-    if (!startNode && start <= cursor + length) {
+    // A start on a text boundary belongs to the next node; the previous node's
+    // trailing caret can add an unrelated line to the range's layout rectangles.
+    if (!startNode && start < cursor + length) {
       startNode = node
       startOffset = Math.max(0, start - cursor)
     }
