@@ -87,6 +87,11 @@ Verifies all locale files against English base.
 - Any background `Map`, `Set`, cache, queue, timer, or per-tab/per-window state must have a cleanup path, max size, TTL, or be derivable from browser state.
 - Prefer structured IDs and browser APIs over long-lived background lookup tables for routing or recovery.
 
+### Logging
+
+1. Use `console.log` or `console.info` directly, or reuse the existing helpers in [`src/utils/devLogger.ts`](src/utils/devLogger.ts): `logDevMessage`, `logDevEvent`, and `logDevError`. Keep routine logging simple.
+2. Debug logs must not intrude into production code logic. Remove temporary logs before release or isolate diagnostics with `import.meta.env.DEV` or the existing dev logger. Keep log-only computation, state, IDs, timers, and callbacks out of production execution, and do not change business control flow for logging. Production builds strip direct `console.log` and `console.info` calls in project source; log-only work outside those calls must still be removed or guarded.
+
 ---
 
 ## Architecture Conventions

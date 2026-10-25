@@ -17,6 +17,39 @@ const repository = (budgetBytes?: number) => new FolderRepositoryImpl({ getDevic
 beforeEach(async () => { await resetStorage(); clearRecoveryFailure(scopeA); clearRecoveryFailure(scopeB) })
 
 describe('Folder local organization', () => {
+  it('promotes a chat in every containing folder within its pin group and preserves other accounts', async () => {
+    const repo = repository(); const queries = new FolderQueryService()
+    const first = (await repo.createFolder(scopeA, { name: 'First' })).data.id
+    const second = (await repo.createFolder(scopeA, { name: 'Second' })).data.id
+    const foreign = (await repo.createFolder(scopeB, { name: 'Foreign' })).data.id
+    for (const [scope, folderId] of [[scopeA, first], [scopeA, second], [scopeB, foreign]]) {
+      for (const chatId of ['abc123', 'def456', 'fed321']) await repo.upsertMembership(scope, { folderId, chatId })
+    }
+    await repo.setMembershipPinned(scopeA, first, 'fed321', true)
+    const pinned = await repo.setMembershipPinned(scopeA, second, 'abc123', true)
+    await repo.setMembershipPinned(scopeA, second, 'def456', true)
+    const foreignBefore = await repo.listMemberships(scopeB)
+    const changed = await repo.promoteChat(scopeA, 'abc123')
+    expect(changed.data.sort()).toEqual([first, second].sort())
+    expect(changed.commit.effect).toBe('organization')
+    expect(changed.commit.affected).toEqual({ folderIds: changed.data })
+    const pageOne = await queries.listFolderChats(scopeA, first, undefined, 1)
+    expect(pageOne.items.map((row) => row.chatId)).toEqual(['fed321'])
+    expect((await queries.listFolderChats(scopeA, first, pageOne.nextCursor, 10)).items.map((row) => row.chatId)).toEqual(['abc123', 'def456'])
+    expect((await queries.listFolderChats(scopeA, second, undefined, 10)).items.map((row) => row.chatId)).toEqual(['abc123', 'def456', 'fed321'])
+    expect((await repo.listMemberships(scopeA)).find((row) => row.folderId === second && row.chatId === 'abc123')?.orderKey).toBe(pinned.data.orderKey)
+    expect(await repo.listMemberships(scopeB)).toEqual(foreignBefore)
+    const before = await repo.listMemberships(scopeA)
+    const revision = (await repo.getSyncState(scopeA))!.localDataRevision
+    for (const chatId of ['abc123', 'fed321', 'missing']) {
+      const unchanged = await repo.promoteChat(scopeA, chatId)
+      expect(unchanged.data).toEqual([])
+      expect(unchanged.commit.effect).toBeUndefined()
+      expect(unchanged.commit.dataRevision).toBe(revision)
+    }
+    expect(await repo.listMemberships(scopeA)).toEqual(before)
+  })
+
   it('physically deletes subtrees and relationships, prunes unused references, and can re-add the same chat', async () => {
     const repo = repository()
     const root = await repo.createFolder(scopeA, { name: 'Root' })

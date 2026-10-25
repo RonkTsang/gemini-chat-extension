@@ -21,7 +21,7 @@ export default defineConfig({
       },
       plugins: [
         svgr() as unknown as WxtVitePlugin,
-        configEnv.mode === 'production' ? removeConsole({ includes: ['log'] }) as unknown as WxtVitePlugin : undefined,
+        configEnv.mode === 'production' ? removeConsole({ includes: ['log', 'info'] }) as unknown as WxtVitePlugin : undefined,
         process.env.ANALYZE === 'true' ? visualizer({
           open: true,
           filename: '.output/stats.html',

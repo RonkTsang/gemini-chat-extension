@@ -15,7 +15,7 @@ import { browser, type Browser } from 'wxt/browser'
 
 const mutatingMethods = new Set<FolderRpcEnvelope['method']>([
   'createFolder', 'createFolderAndAddChat', 'updateFolder', 'moveFolder', 'deleteFolder',
-  'addMembership', 'moveMembership', 'setMembershipPinned', 'removeMembership', 'removeChatAfterGeminiDelete',
+  'addMembership', 'moveMembership', 'setMembershipPinned', 'promoteChat', 'removeMembership', 'removeChatAfterGeminiDelete',
   'updateChatTitle',
   'updateSettings', 'createSnapshot', 'importBackup', 'restoreSnapshot',
 ])

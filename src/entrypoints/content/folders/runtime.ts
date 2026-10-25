@@ -23,6 +23,9 @@ import { tt } from '@/utils/i18n'
 import { deleteGeminiChat } from './native-chat-delete'
 import { browser } from 'wxt/browser'
 import { eventBus } from '@/utils/eventbus'
+import { GEM_EXT_EVENTS } from '@/common/event'
+import { streamGenerateActivitySchema } from '@/utils/streamGenerateProtocol'
+import { getAccountPath } from './new-chat.dom'
 import { folderBackgroundClient, type BrowserSyncStatusProjection } from './client'
 import {
   createFolderTraceId,
@@ -133,6 +136,15 @@ export class FolderRuntime {
     this.requestBrowserSync(undefined, true)
   }
 
+  private readonly handleChatActivity = (event: Event): void => {
+    const parsed = streamGenerateActivitySchema.safeParse((event as CustomEvent<unknown>).detail)
+    if (!parsed.success || parsed.data.accountPath !== getAccountPath()
+      || this.state.identity.status !== 'available' || !this.state.projection?.settings.enabled) return
+    const chatId = parsed.data.conversationId.slice(2)
+    void this.command('promoteChat', { chatId })
+      .catch((error: unknown) => console.warn('[Folders] Could not move the active chat to the front', error))
+  }
+
   getSnapshot = (): FolderRuntimeState => this.state
 
   subscribe = (listener: Listener): (() => void) => {
@@ -150,6 +162,7 @@ export class FolderRuntime {
       browser.runtime.onMessage.addListener(this.handleBackgroundMessage)
       window.addEventListener('focus', this.handleSyncSignal)
       window.addEventListener('online', this.handleSyncSignal)
+      window.addEventListener(GEM_EXT_EVENTS.STREAM_GENERATE_ACTIVITY, this.handleChatActivity)
       this.invalidationListenerStarted = true
     }
     await geminiIdentityService.start()
@@ -187,6 +200,7 @@ export class FolderRuntime {
       browser.runtime.onMessage.removeListener(this.handleBackgroundMessage)
       window.removeEventListener('focus', this.handleSyncSignal)
       window.removeEventListener('online', this.handleSyncSignal)
+      window.removeEventListener(GEM_EXT_EVENTS.STREAM_GENERATE_ACTIVITY, this.handleChatActivity)
       this.invalidationListenerStarted = false
     }
     this.state = { identity: { status: 'unavailable', reason: 'surface-not-ready' } }
@@ -400,6 +414,7 @@ export class FolderRuntime {
       ? await folderBackgroundClient.request<T>(accountScopeId, this.identitySource(), method, params, traceId)
       : await folderBackgroundClient.request<T>(accountScopeId, this.identitySource(), method, params)
     if (!isCurrentAccount()) throw new Error('The Gemini account changed during this action')
+    if (method === 'promoteChat' && Array.isArray(result.data) && result.data.length === 0) return result.data
     await this.applyChange(accountScopeId, result.change, 'command', method === 'updateChatTitle' ? { reference: result.data as ChatReferenceRow } : undefined)
     if (!isCurrentAccount()) throw new Error('The Gemini account changed during this action')
     return result.data

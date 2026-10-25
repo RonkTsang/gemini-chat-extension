@@ -1,13 +1,15 @@
 import { GEM_EXT_EVENTS } from '@/common/event'
 import { xhrInterceptor } from '@/utils/xhrInterceptor'
+import { fetchInterceptor } from '@/utils/fetchInterceptor'
 import { isStreamGenerateUrl, parseStreamGenerateRequest, StreamGenerateDecoder } from '@/utils/streamGenerate'
 import type { StreamGenerateObservation } from '@/utils/streamGenerateProtocol'
 
 const REQUEST_TIMEOUT_MS = 120_000
 const INTENT_TIMEOUT_MS = 30 * 60_000
 
-/** Observe only the request claimed by an explicitly armed, page-local token. */
+/** Observe existing-chat sends and explicitly claimed new-chat responses. */
 export function startStreamGenerateMonitor(): () => void {
+  let active = true
   let armed: { token: string; accountPath: string; expiresAt: number } | undefined
   const requests = new Map<string, {
     token: string
@@ -50,25 +52,49 @@ export function startStreamGenerateMonitor(): () => void {
       for (const [id, request] of requests) if (request.token === command.token) release(id)
     }
   }
+  const observeRequest = (request: { requestId?: string; method: string; url: string; body?: unknown }): void => {
+    if (!active) return
+    if (document.querySelector('chat-window')?.classList.contains('is-temporary-chat')) return
+    if (request.method.toUpperCase() !== 'POST' || !isStreamGenerateUrl(request.url)) return
+    const requestPath = new URL(request.url, location.origin).pathname.match(/^\/u\/\d+(?=\/)/u)?.[0] ?? ''
+    const parsedRequest = parseStreamGenerateRequest(request.body)
+    const accountPath = location.pathname.match(/^\/u\/\d+(?=\/|$)/u)?.[0] ?? ''
+    if (requestPath !== accountPath || !parsedRequest) return
+    if (parsedRequest.conversationId) {
+      window.dispatchEvent(new CustomEvent(GEM_EXT_EVENTS.STREAM_GENERATE_ACTIVITY, {
+        detail: { accountPath, conversationId: parsedRequest.conversationId },
+      }))
+      return
+    }
+    // New-chat response capture requires an XHR request identity.
+    const requestId = request.requestId
+    if (!requestId || !armed || Date.now() >= armed.expiresAt || requests.size >= 4 || armed.accountPath !== accountPath
+      || location.pathname !== `${accountPath}/app`) return
+    const token = armed.token
+    armed = undefined
+    const timer = setTimeout(() => {
+      emit({ token, requestId, phase: 'finished' })
+      release(requestId)
+    }, REQUEST_TIMEOUT_MS)
+    requests.set(requestId, { token, decoder: new StreamGenerateDecoder(), timer })
+    emit({ token, requestId, phase: 'started', ...(parsedRequest.prompt ? { prompt: parsedRequest.prompt } : {}) })
+  }
+  const unregisterFetch = fetchInterceptor.intercept({
+    matches: (request) => isStreamGenerateUrl(request.url),
+    onRequest: (request, input, init) => {
+      if (init?.body !== undefined || !(input instanceof Request)) {
+        observeRequest({ ...request, body: init?.body })
+        return
+      }
+      void input.clone().text()
+        .then((body) => observeRequest({ ...request, body }))
+        .catch((error: unknown) => console.warn('[StreamGenerate] Request body observation failed', error))
+    },
+    onError: (error) => console.warn('[StreamGenerate] Observation failed', error),
+  })
   const unregister = xhrInterceptor.intercept({
     urlPattern: /\/StreamGenerate(?:\?|$)/u,
-    onRequestSnapshot: (request) => {
-      if (!armed || Date.now() >= armed.expiresAt || requests.size >= 4) return
-      if (window.location.pathname !== `${armed.accountPath}/app`
-        || document.querySelector('chat-window')?.classList.contains('is-temporary-chat')) return
-      if (request.method.toUpperCase() !== 'POST' || !isStreamGenerateUrl(request.url)) return
-      const requestPath = new URL(request.url, location.origin).pathname.match(/^\/u\/\d+(?=\/)/u)?.[0] ?? ''
-      const parsedRequest = parseStreamGenerateRequest(request.body)
-      if (requestPath !== armed.accountPath || !parsedRequest?.isNewConversation) return
-      const token = armed.token
-      armed = undefined
-      const timer = setTimeout(() => {
-        emit({ token, requestId: request.requestId, phase: 'finished' })
-        release(request.requestId)
-      }, REQUEST_TIMEOUT_MS)
-      requests.set(request.requestId, { token, decoder: new StreamGenerateDecoder(), timer })
-      emit({ token, requestId: request.requestId, phase: 'started', ...(parsedRequest.prompt ? { prompt: parsedRequest.prompt } : {}) })
-    },
+    onRequestSnapshot: observeRequest,
     onProgress: (chunk, request) => capture(request.requestId, chunk),
     onSettled: (request) => {
       const captured = requests.get(request.requestId)
@@ -81,9 +107,11 @@ export function startStreamGenerateMonitor(): () => void {
   })
   window.addEventListener(GEM_EXT_EVENTS.STREAM_GENERATE_CONTROL, control)
   const stop = () => {
+    active = false
     armed = undefined
     for (const id of requests.keys()) release(id)
     unregister()
+    unregisterFetch()
     window.removeEventListener(GEM_EXT_EVENTS.STREAM_GENERATE_CONTROL, control)
     window.removeEventListener('pagehide', stop)
   }

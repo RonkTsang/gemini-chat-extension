@@ -79,6 +79,9 @@ export class FolderCommandService {
         result = await repository.moveMembership(request.accountScopeId, input.folderId, input.chatId, input.targetFolderId, input)
         break
       }
+      case 'promoteChat':
+        result = await repository.promoteChat(request.accountScopeId, (params as { chatId: string }).chatId)
+        break
       case 'setMembershipPinned': {
         const input = params as { folderId: string; chatId: string; pinned: boolean }
         result = await repository.setMembershipPinned(request.accountScopeId, input.folderId, input.chatId, input.pinned)

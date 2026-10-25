@@ -132,6 +132,7 @@ export interface FolderRepository {
   deleteFolder(accountScopeId: string, folderId: string): Promise<FolderMutationResult<void>>
   upsertMembership(accountScopeId: string, input: FolderMembershipInput): Promise<FolderMutationResult<FolderMembershipRow>>
   moveMembership(accountScopeId: string, folderId: string, chatId: string, targetFolderId: string, position?: FolderPosition): Promise<FolderMutationResult<FolderMembershipRow>>
+  promoteChat(accountScopeId: string, chatId: string): Promise<FolderMutationResult<string[]>>
   setMembershipPinned(accountScopeId: string, folderId: string, chatId: string, pinned: boolean): Promise<FolderMutationResult<FolderMembershipRow>>
   removeMembership(accountScopeId: string, folderId: string, chatId: string): Promise<FolderMutationResult<void>>
   upsertChatReference(accountScopeId: string, chatId: string, cachedTitle: string, expectedTitle?: string, expectedRevision?: string): Promise<FolderMutationResult<ChatReferenceRow>>
@@ -712,6 +713,31 @@ export class FolderRepositoryImpl implements FolderRepository {
       await this.markOrganizationChanged(accountScopeId, deviceId)
       return result
     })
+  }
+
+  async promoteChat(accountScopeId: string, chatId: string): Promise<FolderMutationResult<string[]>> {
+    requireScope(accountScopeId)
+    const deviceId = await this.preheatDevice()
+    const result = await runFolderMutation('promoteChat', accountScopeId, [db.folders, db.folder_memberships], async () => {
+      const memberships = await db.folder_memberships.where('[accountScopeId+chatId]').equals([accountScopeId, chatId]).toArray()
+      const folderIds: string[] = []
+      for (const row of memberships) {
+        const folder = await db.folders.get(row.folderId)
+        if (!folder || folder.accountScopeId !== accountScopeId) continue
+        const pinned = Boolean(row.pinnedOrderKey)
+        const first = await db.folder_memberships.where('[accountScopeId+folderId+displayOrderKey+id]')
+          .between([accountScopeId, row.folderId, pinned ? '0' : '1'], [accountScopeId, row.folderId, pinned ? '1' : '2'], false, false).first()
+        if (!first || first.id === row.id) continue
+        const orderKey = await this.resolveMembershipOrderKey(accountScopeId, row.folderId, { beforeId: first.id }, row.id, pinned, true)
+        await db.folder_memberships.put(indexMembership({
+          ...row, ...(pinned ? { pinnedOrderKey: orderKey } : { orderKey }), updatedAt: now(),
+        }))
+        folderIds.push(row.folderId)
+      }
+      if (folderIds.length) await this.markOrganizationChanged(accountScopeId, deviceId)
+      return folderIds
+    })
+    return { ...result, commit: { ...result.commit, affected: result.data.length > 1000 ? { all: true } : { folderIds: result.data } } }
   }
 
   async setMembershipPinned(accountScopeId: string, folderId: string, chatId: string, pinned: boolean): Promise<FolderMutationResult<FolderMembershipRow>> {

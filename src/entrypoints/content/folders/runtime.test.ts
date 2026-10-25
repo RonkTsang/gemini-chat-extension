@@ -24,6 +24,7 @@ vi.mock('./native-chat-delete', () => ({ deleteGeminiChat: state.deleteNative })
 vi.mock('@/utils/i18n', () => ({ tt: (_key: string, fallback: string) => fallback }))
 
 import { FolderRuntime } from './runtime'
+import { GEM_EXT_EVENTS } from '@/common/event'
 import type { FolderChange } from '@/domain/folder/changes'
 import type { ChatReferenceRow, FolderProjection, FolderSettingsRow } from '@/domain/folder/types'
 
@@ -37,6 +38,7 @@ beforeEach(() => {
 
 describe('FolderRuntime background boundary', () => {
   beforeEach(() => {
+    window.history.replaceState({}, '', '/app')
     state.confirmEmail.mockReset()
     state.identityListener = undefined
     state.messageListener = undefined
@@ -46,6 +48,58 @@ describe('FolderRuntime background boundary', () => {
     state.getSyncStatus.mockReset().mockResolvedValue({ mode: 'browser-sync', state: 'accepted-by-browser-storage' })
     state.request.mockReset().mockResolvedValue({ data: undefined, dataRevision: 'revision-1' })
     state.deleteNative.mockReset().mockResolvedValue(undefined)
+  })
+
+  it('promotes stream activity without reloading an unchanged projection and removes its listener on stop', async () => {
+    const runtime = new FolderRuntime()
+    await runtime.start()
+    state.request.mockClear().mockResolvedValue({ data: [], dataRevision: 'revision-1' })
+    const activity = () => window.dispatchEvent(new CustomEvent(GEM_EXT_EVENTS.STREAM_GENERATE_ACTIVITY, {
+      detail: { accountPath: '', conversationId: 'c_abc123' },
+    }))
+    activity()
+    await vi.waitFor(() => expect(state.request).toHaveBeenCalledExactlyOnceWith('account-scope-0001', 'observed', 'promoteChat', { chatId: 'abc123' }))
+    expect(state.getProjection).toHaveBeenCalledTimes(1)
+    expect(state.getChangedProjection).not.toHaveBeenCalled()
+    runtime.stop()
+    activity()
+    expect(state.request).toHaveBeenCalledTimes(1)
+  })
+
+  it('refreshes only affected folder ranges after chat activity changes their order', async () => {
+    const runtime = new FolderRuntime()
+    await runtime.start()
+    const change = { accountScopeId: 'account-scope-0001', requestId: 'activity', baseRevision: 'revision-1', dataRevision: 'revision-2', affected: { folderIds: ['folder-1'] } }
+    state.request.mockClear().mockResolvedValue({ data: ['folder-1'], dataRevision: 'revision-2', change })
+    window.dispatchEvent(new CustomEvent(GEM_EXT_EVENTS.STREAM_GENERATE_ACTIVITY, {
+      detail: { accountPath: '', conversationId: 'c_abc123' },
+    }))
+    await vi.waitFor(() => expect(runtime.getSnapshot().projection?.dataRevision).toBe('revision-2'))
+    expect(state.getChangedProjection).toHaveBeenCalledWith(state.projection, change, 'observed', undefined)
+    expect(state.getProjection).toHaveBeenCalledTimes(1)
+    runtime.stop()
+  })
+
+  it('ignores stream activity for another account path, invalid IDs and disabled folders', async () => {
+    window.history.replaceState({}, '', '/u/2/app/abc123')
+    const runtime = new FolderRuntime()
+    await runtime.start()
+    state.request.mockClear()
+    for (const detail of [
+      { accountPath: '/u/3', conversationId: 'c_abc123' },
+      { accountPath: '/u/2', conversationId: 'bad-id' },
+      { conversationId: 'c_abc123' },
+    ]) window.dispatchEvent(new CustomEvent(GEM_EXT_EVENTS.STREAM_GENERATE_ACTIVITY, { detail }))
+    expect(state.request).not.toHaveBeenCalled()
+    runtime.stop()
+    state.getProjection.mockResolvedValueOnce({ ...state.projection, settings: { ...state.projection.settings, enabled: false } })
+    await runtime.start()
+    state.request.mockClear()
+    window.dispatchEvent(new CustomEvent(GEM_EXT_EVENTS.STREAM_GENERATE_ACTIVITY, {
+      detail: { accountPath: '/u/2', conversationId: 'c_abc123' },
+    }))
+    expect(state.request).not.toHaveBeenCalled()
+    runtime.stop()
   })
 
   it('listens before the first projection read and coalesces recovery notifications received during that read', async () => {

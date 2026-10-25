@@ -7,9 +7,10 @@ export interface FetchRequestSnapshot {
 
 export interface FetchInterceptorConfig {
   matches: (request: FetchRequestSnapshot) => boolean
-  onRequest?: (request: FetchRequestSnapshot) => void
+  /** Runs before native Fetch so observers can clone Request bodies safely. */
+  onRequest?: (request: FetchRequestSnapshot, input: RequestInfo | URL, init?: RequestInit) => void
   /** Each subscriber owns a clone; the page's response remains untouched. */
-  onResponse: (response: Response, request: FetchRequestSnapshot) => void | Promise<void>
+  onResponse?: (response: Response, request: FetchRequestSnapshot) => void | Promise<void>
   /** Optional fallback using the page's own successful body read. */
   onConsumedBody?: (text: string, response: Response, request: FetchRequestSnapshot, source: ResponseBodySource) => void | Promise<void>
   onBodyRead?: (request: FetchRequestSnapshot, source: ResponseBodySource) => void
@@ -58,8 +59,7 @@ export class FetchInterceptor {
     const state = { active: true }
     const interceptor = this
     const monitoredFetch: typeof fetch = function (this: Window, input, init) {
-      const promise = originalFetch.call(this, input, init)
-      if (!state.active) return promise
+      if (!state.active) return originalFetch.call(this, input, init)
 
       const subscribers: Registration[] = []
       let request: FetchRequestSnapshot
@@ -73,7 +73,7 @@ export class FetchInterceptor {
         for (const registration of interceptor.registrations) {
           interceptor.reportError(registration, error)
         }
-        return promise
+        return originalFetch.call(this, input, init)
       }
 
       for (const registration of interceptor.registrations) {
@@ -83,21 +83,22 @@ export class FetchInterceptor {
           interceptor.reportError(registration, error)
         }
       }
-      if (!subscribers.length) return promise
+      if (!subscribers.length) return originalFetch.call(this, input, init)
 
       for (const registration of subscribers) {
         if (!registration.active || !state.active) continue
         try {
-          registration.config.onRequest?.(request)
+          registration.config.onRequest?.(request, input, init)
         } catch (error) {
           interceptor.reportError(registration, error)
         }
       }
 
+      const promise = originalFetch.call(this, input, init)
       void promise.then((response) => {
         if (!state.active) return
         for (const registration of subscribers) {
-          if (!registration.active) continue
+          if (!registration.active || !registration.config.onResponse) continue
           try {
             const result = registration.config.onResponse(response.clone(), request)
             void Promise.resolve(result).catch((error: unknown) => {

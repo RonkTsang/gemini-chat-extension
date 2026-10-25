@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const state = vi.hoisted(() => ({ upsertChatReference: vi.fn(), setMembershipPinned: vi.fn(), requestRun: vi.fn(), retry: vi.fn(async () => ({ outcome: 'accepted-by-browser-storage' })), recoveryRun: vi.fn(), revision: vi.fn(async () => 'local-revision') }))
-vi.mock('@/data/repositories/folderRepository', () => ({ folderRepository: { upsertChatReference: state.upsertChatReference, setMembershipPinned: state.setMembershipPinned } }))
+const state = vi.hoisted(() => ({ upsertChatReference: vi.fn(), setMembershipPinned: vi.fn(), promoteChat: vi.fn(), requestRun: vi.fn(), retry: vi.fn(async () => ({ outcome: 'accepted-by-browser-storage' })), recoveryRun: vi.fn(), revision: vi.fn(async () => 'local-revision') }))
+vi.mock('@/data/repositories/folderRepository', () => ({ folderRepository: { upsertChatReference: state.upsertChatReference, setMembershipPinned: state.setMembershipPinned, promoteChat: state.promoteChat } }))
 
 import { FolderCommandService } from './command-service'
 import { folderRpcParams } from '@/domain/folder/rpc'
@@ -11,6 +11,24 @@ import type { FolderSyncScheduler } from '@/services/folder-sync/scheduler'
 
 describe('Folder title command', () => {
   beforeEach(() => vi.clearAllMocks())
+
+  it('schedules one sync and recovery wake for promoted folders, and none for an unchanged order', async () => {
+    const service = new FolderCommandService({ requestRun: state.requestRun } as unknown as FolderSyncScheduler,
+      { revision: state.revision } as unknown as FolderQueryService, { requestRun: state.recoveryRun } as unknown as FolderRecoveryRunner)
+    const request = { namespace: 'folders' as const, protocolVersion: 1 as const, requestId: 'activity', accountScopeId: 'account-scope-0001',
+      identitySource: 'observed' as const, method: 'promoteChat' as const, params: { chatId: 'abc123' } }
+    const affected = { folderIds: ['first', 'second'] }
+    state.promoteChat.mockResolvedValueOnce({ data: affected.folderIds, commit: { accountScopeId: request.accountScopeId, dataRevision: 'changed', effect: 'organization', affected } })
+    expect((await service.execute(request)).commit.affected).toEqual(affected)
+    expect(state.promoteChat).toHaveBeenCalledExactlyOnceWith(request.accountScopeId, 'abc123')
+    expect(state.requestRun).toHaveBeenCalledExactlyOnceWith(request.accountScopeId, 'local-changes-committed')
+    expect(state.recoveryRun).toHaveBeenCalledExactlyOnceWith(request.accountScopeId)
+    state.promoteChat.mockResolvedValueOnce({ data: [], commit: { accountScopeId: request.accountScopeId, dataRevision: 'changed', affected: { folderIds: [] } } })
+    await service.execute(request)
+    expect(state.requestRun).toHaveBeenCalledTimes(1)
+    expect(state.recoveryRun).toHaveBeenCalledTimes(1)
+    expect(folderRpcParams.promoteChat.safeParse({ chatId: '../bad' }).success).toBe(false)
+  })
 
   it.each(['observed', 'manual-confirmed'] as const)('persists a folder pin and schedules sync for either identity source (%s)', async (identitySource) => {
     const membership = { folderId: 'folder-1', chatId: 'chat-1', pinnedOrderKey: 'key' }

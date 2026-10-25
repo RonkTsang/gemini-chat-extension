@@ -24,7 +24,7 @@ export const folderRpcMethodSchema = z.enum([
   'resolveChatMemberships', 'getFolderDeleteImpact', 'getSettings', 'getSyncStatus', 'getFolderSummaries', 'getChatReferences',
   'listSnapshots', 'getRestoreImpact', 'createFolder', 'createFolderAndAddChat',
   'updateFolder', 'moveFolder', 'deleteFolder', 'addMembership', 'moveMembership',
-  'setMembershipPinned', 'removeMembership', 'removeChatAfterGeminiDelete', 'updateChatTitle', 'updateSettings', 'createSnapshot',
+  'setMembershipPinned', 'promoteChat', 'removeMembership', 'removeChatAfterGeminiDelete', 'updateChatTitle', 'updateSettings', 'createSnapshot',
   'importBackup', 'restoreSnapshot', 'exportBackup', 'retrySync', 'activityHint',
   'dismissCapacityNotice',
   'measureBrowserSyncUsage', 'resolveSyncConflict', 'recreateSyncReplica',
@@ -91,6 +91,7 @@ export const folderRpcParams = {
   moveMembership: z.object({ folderId: z.string().min(1), targetFolderId: z.string().min(1), chatId: z.string().min(1), expectedRevision: z.string().min(1).optional() }).merge(positionSchema),
   removeMembership: z.object({ folderId: z.string().min(1), chatId: z.string().min(1) }),
   setMembershipPinned: z.object({ folderId: z.string().min(1), chatId: z.string().min(1), pinned: z.boolean() }),
+  promoteChat: z.object({ chatId: z.string().regex(/^[a-f0-9]+$/u) }),
   removeChatAfterGeminiDelete: z.object({ chatId: z.string().min(1), deletionReceipt: z.string().min(1).max(512), protectionSnapshotId: z.string().min(1).optional() }),
   updateChatTitle: z.object({
     chatId: z.string().regex(/^(?:c_)?[a-z0-9]+$/i),

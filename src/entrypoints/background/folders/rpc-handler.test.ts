@@ -66,6 +66,20 @@ describe('Folders usage RPC', () => {
     expect(state.revision).not.toHaveBeenCalled()
   })
 
+  it('broadcasts changed chat order to other tabs but leaves unchanged order quiet', async () => {
+    const handler = createFolderRpcHandler(scheduler)
+    const commit = { accountScopeId: scope, baseRevision: 'previous-revision', dataRevision: 'local-revision',
+      effect: 'organization', affected: { folderIds: ['folder-1'] } }
+    state.execute.mockResolvedValueOnce({ data: ['folder-1'], commit })
+    await expect(handler(request('promoteChat', { chatId: 'abc123' }), sender)).resolves.toMatchObject({
+      ok: true, change: { affected: commit.affected },
+    })
+    expect(state.invalidation).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ affected: commit.affected }), { excludeTabId: 1 })
+    state.execute.mockResolvedValueOnce({ data: [], commit: { ...commit, effect: undefined, affected: { folderIds: [] } } })
+    await handler(request('promoteChat', { chatId: 'abc123' }), sender)
+    expect(state.invalidation).toHaveBeenCalledTimes(1)
+  })
+
   it.each([
     ['createFolder', { name: 'Unsaved folder' }, 'FOLDER_SAVE_FAILED'],
     ['createSnapshot', {}, 'MANUAL_SNAPSHOT_FAILED'],
