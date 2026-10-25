@@ -111,6 +111,32 @@ describe('quick follow-up cards', () => {
     expect(readRawQuery(query)).toBe(raw)
   })
 
+  it.each([1, 2])('renders %i cards without a request separator after trailing empty rows are removed', count => {
+    const selections = Array.from({ length: count }, (_, index) => item(String(index)))
+    const raw = serializeMessage(selections, '').replace(/\n+$/, '')
+    const query = makeQuery(raw)
+    const dispose = renderHistory(query, '')
+    expect(query.querySelectorAll('.gpk-follow-card')).toHaveLength(count)
+    expect([...query.querySelectorAll('.gpk-follow-card-comment')].map(node => node.textContent))
+      .toEqual(selections.map(item => item.comment))
+    expect(query.querySelector('.gpk-follow-history-request')).toBeNull()
+    expect(getOutlineSummary(query, '').selectionCount).toBe(count)
+    expect(readRawQuery(query)).toBe(raw)
+    dispose()
+    expect(readRawQuery(query)).toBe(raw)
+  })
+
+  it('does not display a comment label for whitespace left by native hidden-node paragraph boundaries', () => {
+    const raw = serializeMessage([item('empty', '\n\n')], 'request')
+    const query = makeQuery(raw)
+    const dispose = renderHistory(query, '')
+    expect(query.querySelector('.gpk-follow-card-comment-label')).toBeNull()
+    expect(query.querySelector('.gpk-follow-card-has-comment')).toBeNull()
+    expect(query.querySelector('.gpk-follow-history-request')?.textContent).toBe('request')
+    expect(readRawQuery(query)).toBe(raw)
+    dispose()
+  })
+
   it('restores reused history nodes when Gemini replaces a quote with an ordinary message', () => {
     const query = makeQuery('Referring to this in particular: old quote\n---------\nquestion')
     const dispose = renderHistory(query, '特指这段内容')

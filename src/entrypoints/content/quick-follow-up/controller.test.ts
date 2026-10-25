@@ -153,7 +153,7 @@ describe('Follow-up controller recovery', () => {
     const controller = createFollowUpController(vi.fn())
     controller.start()
     if (withCards) expect(controller.add(candidate)).toBe('quote-id')
-    editor.querySelector('p:not([data-gpk-follow-prefix]):not([data-gpk-follow-sentinel])')!
+    editor.querySelector('p:not([data-gpk-follow-prefix]):not([data-gpk-follow-sentinel]):not([data-gpk-follow-request])')!
       .innerHTML = '<strong>formatted draft</strong> with <em>emphasis</em>'
     const original = editor.innerHTML
     // Neighboring Gemini controls do not determine whether editor content can be restored.

@@ -227,8 +227,9 @@ function buildCard(item: Pick<SelectionItem, 'id' | 'selectedText' | 'comment' |
   preview.append(selected)
 
   const comment = 'commentDraft' in item ? effectiveComment(item) : item.comment
-  root.classList.toggle('gpk-follow-card-has-comment', Boolean(comment))
-  if (comment) {
+  const hasComment = Boolean(comment.trim())
+  root.classList.toggle('gpk-follow-card-has-comment', hasComment)
+  if (hasComment) {
     const commentLabel = document.createElement('div')
     commentLabel.className = 'gpk-follow-card-label gpk-follow-card-comment-label'
     commentLabel.textContent = t(`${I18N}.userComment`)
@@ -253,7 +254,7 @@ function buildCard(item: Pick<SelectionItem, 'id' | 'selectedText' | 'comment' |
   commentButton.appendChild(heading)
   footer.appendChild(commentButton)
   let editButton: HTMLButtonElement | undefined
-  if (comment) {
+  if (hasComment) {
     editButton = makeIconButton('edit', t(`${I18N}.editComment`))
     actions.appendChild(editButton)
   }
@@ -274,7 +275,7 @@ function createFullContent(item: { selectedText: string; comment?: string; comme
   selected.textContent = item.selectedText
   content.append(selectedLabel, selected)
   const comment = item.commentDraft ?? item.comment ?? ''
-  if (comment) {
+  if (comment.trim()) {
     const commentLabel = document.createElement('div')
     commentLabel.className = 'gpk-follow-card-label gpk-follow-card-comment-label'
     commentLabel.textContent = t(`${I18N}.userComment`)

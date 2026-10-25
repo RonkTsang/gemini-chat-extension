@@ -25,16 +25,17 @@ describe('Follow-up text protocol', () => {
   it('serializes the latest unsaved Quick Comment into one prefix', () => {
     const selections = [item('a', 'source', 'saved', 'draft')]
     const prefix = serializePrefix(selections)
-    expect(prefix).toContain('\n\ndraft\n\n## My request:\n')
+    expect(prefix).toContain('\n\ndraft\n\n')
+    expect(prefix).not.toContain('## My request:')
     expect(serializePrefix(selections)).toBe(prefix)
-    expect(parseDisplayMessage(`${prefix}request`)?.selections[0]?.comment).toBe('draft')
+    expect(parseDisplayMessage(serializeMessage(selections, 'request'))?.selections[0]?.comment).toBe('draft')
   })
 
   it('rejects malformed or incomplete messages without guessing', () => {
     const valid = serializeMessage([item('a', 'source', '')], '')
     expect(parseDisplayMessage(valid.replace('Selection 1', 'Selection 2'))).toBeNull()
     expect(parseDisplayMessage(valid.replace('> source', 'source'))).toBeNull()
-    expect(parseDisplayMessage(valid.replace('## My request:', '## Request:'))).toBeNull()
+    expect(parseDisplayMessage(`${valid}## Selection 9`)).toBeNull()
     expect(parseDisplayMessage('ordinary message')).toBeNull()
   })
 
@@ -88,14 +89,45 @@ describe('Follow-up text protocol', () => {
 
   it.each([1, 2])('accepts %i selections with an empty request when Gemini omits the final newline', count => {
     const selections = Array.from({ length: count }, (_, index) => item(`${index}`, `source ${index}`, `comment ${index}`))
-    const raw = serializePrefix(selections).slice(0, -1)
+    const raw = `${serializePrefix(selections)}## My request:`
     expect(parseDisplayMessage(raw)).toEqual({
       selections: selections.map(({ selectedText, comment }) => ({ selectedText, comment })),
       request: '',
       format: 'multi-selection',
     })
-    expect(parseDisplayMessage(raw.replace('## My request:', ''))).toBeNull()
-    expect(parseDisplayMessage(`${raw}inline request`)).toBeNull()
+    expect(parseDisplayMessage(raw.replace('## My request:', ''))?.request).toBe('')
+    expect(parseDisplayMessage(`${raw}inline request`)?.request).toBe('')
+    expect(parseDisplayMessage(`${raw}inline request`)?.selections.at(-1)?.comment)
+      .toBe(`comment ${count - 1}\n\n## My request:inline request`)
+  })
+
+  it.each(['', ' \t\n\n', '\r\n \r\n'])('omits the request heading for an empty body %j', request => {
+    const selections = [item('a', 'source', 'comment\n\n')]
+    const raw = serializeMessage(selections, request)
+    expect(raw).toBe(serializePrefix(selections))
+    expect(raw).not.toContain('## My request:')
+    expect(parseDisplayMessage(raw)).toEqual({
+      selections: [{ selectedText: 'source', comment: 'comment\n\n' }],
+      request: '', format: 'multi-selection',
+    })
+  })
+
+  it('adds exactly one newline after the heading and preserves the request body', () => {
+    const selections = [item('a', 'source', '')]
+    expect(serializeMessage(selections, '  request\n\nnext'))
+      .toBe(`${serializePrefix(selections)}## My request:\n  request\n\nnext`)
+    expect(serializeMessage([], 'ordinary request')).toBe('ordinary request')
+  })
+
+  it.each([1, 2])('parses %i selections without a request heading after Gemini trims trailing newlines', count => {
+    for (const comment of ['', 'last comment', '## My request:\n\\literal']) {
+      const selections = Array.from({ length: count }, (_, index) => item(`${index}`, `source ${index}`, comment))
+      const raw = serializeMessage(selections, '').replace(/\n+$/, '')
+      expect(parseDisplayMessage(raw)).toEqual({
+        selections: selections.map(({ selectedText, comment }) => ({ selectedText, comment })),
+        request: '', format: 'multi-selection',
+      })
+    }
   })
 
   it('preserves large request bodies', () => {

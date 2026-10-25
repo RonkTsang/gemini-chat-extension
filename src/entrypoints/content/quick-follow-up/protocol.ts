@@ -75,11 +75,13 @@ export function serializePrefix(items: readonly SelectionItem[]): string {
     return `## Selection ${index + 1}\n${quoteText(normalizeLineEndings(item.selectedText))}\n\n${comment}\n\n`
   }).join('')
 
-  return `${SELECTION_HEADER}${blocks}${REQUEST_HEADER}\n`
+  return `${SELECTION_HEADER}${blocks}`
 }
 
 export function serializeMessage(items: readonly SelectionItem[], request: string): string {
-  return `${serializePrefix(items)}${normalizeLineEndings(request)}`
+  const body = normalizeLineEndings(request)
+  if (!items.length) return body
+  return `${serializePrefix(items)}${body.trim() ? `${REQUEST_HEADER}\n${body}` : ''}`
 }
 
 function parseMultiSelectionMessage(raw: string): ParsedMessage | null {
@@ -97,7 +99,13 @@ function parseMultiSelectionMessage(raw: string): ParsedMessage | null {
       quotedLines.push(lines[cursor] === '>' ? '' : lines[cursor].slice(2))
       cursor += 1
     }
-    if (quotedLines.length === 0 || lines[cursor] !== '') return null
+    if (quotedLines.length === 0) return null
+    // Gemini can omit all trailing empty paragraphs in a quote-only message.
+    if (cursor === lines.length) {
+      selections.push({ selectedText: quotedLines.join('\n'), comment: '' })
+      break
+    }
+    if (lines[cursor] !== '') return null
     cursor += 1
 
     const commentLines: string[] = []
@@ -105,9 +113,14 @@ function parseMultiSelectionMessage(raw: string): ParsedMessage | null {
       commentLines.push(lines[cursor])
       cursor += 1
     }
-    // Each block has exactly two framing newlines after the comment.
-    if (commentLines.length === 0 || commentLines.at(-1) !== '') return null
-    commentLines.pop()
+    if (cursor === lines.length) {
+      // At EOF the split includes the terminal empty line as well as the block separator.
+      // Accept persisted messages whose trailing framing newlines Gemini removed.
+      for (let count = 0; count < 2 && commentLines.at(-1) === ''; count += 1) commentLines.pop()
+    } else {
+      if (commentLines.length === 0 || commentLines.at(-1) !== '') return null
+      commentLines.pop()
+    }
 
     selections.push({
       selectedText: quotedLines.join('\n'),
@@ -115,8 +128,8 @@ function parseMultiSelectionMessage(raw: string): ParsedMessage | null {
     })
   }
 
-  // Gemini omits the final empty paragraph when a message only contains selection comments.
-  if (selections.length === 0 || lines[cursor] !== REQUEST_HEADER) return null
+  if (selections.length === 0) return null
+  if (cursor !== lines.length && lines[cursor] !== REQUEST_HEADER) return null
   return {
     selections,
     request: lines.slice(cursor + 1).join('\n'),

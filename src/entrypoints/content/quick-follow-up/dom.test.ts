@@ -21,6 +21,7 @@ import {
   resolveNativeSubmitButton,
   inputStructureChanged,
   restoreEditorDraft,
+  syncRequestHeading,
   writePrefix,
 } from './dom'
 import { serializePrefix, type SelectionItem } from './protocol'
@@ -150,8 +151,37 @@ describe('Follow-up editor DOM adapter', () => {
     expect(writePrefix(binding.editor, [])).toBe(true)
     expect(readRequest(binding.editor)).toBe(originalRequest)
     expect(binding.editor.querySelector('[data-gpk-follow-prefix]')).toBeNull()
+    expect(binding.editor.querySelector('[data-gpk-follow-request]')).toBeNull()
     expect(binding.editor.querySelectorAll('[data-gpk-follow-sentinel]')).toHaveLength(0)
     expect(input).not.toHaveBeenCalled()
+  })
+
+  it('adds a separate heading only for nonblank request text without changing native paragraphs or sentinels', () => {
+    removeStopButton()
+    const { editor } = resolveInput()!
+    replaceRequestText(editor, '')
+    writePrefix(editor, selections)
+    const sentinel = editor.querySelector('[data-gpk-follow-sentinel]')
+    const paragraph = editor.lastElementChild!
+    expect(editor.querySelector('[data-gpk-follow-request]')).toBeNull()
+
+    for (const text of ['request', '', ' \t', '  new request']) {
+      paragraph.textContent = text
+      syncRequestHeading(editor, true)
+      expect(readRequest(editor)).toBe(text)
+      expect(editor.querySelector('[data-gpk-follow-sentinel]')).toBe(sentinel)
+      const heading = editor.querySelector('[data-gpk-follow-request]')
+      expect(Boolean(heading)).toBe(Boolean(text.trim()))
+      if (heading) {
+        expect(heading.textContent).toBe('## My request:')
+        expect(heading.nextSibling).toBe(paragraph)
+        expect(heading.previousSibling?.nodeType).toBe(Node.ELEMENT_NODE)
+        expect((heading.previousSibling as Element).hasAttribute('data-gpk-follow-sentinel')).toBe(true)
+      }
+    }
+    writePrefix(editor, [])
+    expect(editor.children).toHaveLength(1)
+    expect(editor.firstElementChild).toBe(paragraph)
   })
 
   it('appends multiline request text after an empty placeholder and restores the content', () => {

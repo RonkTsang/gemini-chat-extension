@@ -44,6 +44,7 @@ import {
   resolveNativeSubmitButton,
   restoreEditorDraft,
   writePrefix,
+  syncRequestHeading,
   type Candidate,
   type EditorSnapshot,
   type InputBinding,
@@ -132,6 +133,7 @@ export function createFollowUpController(
   let bodyObserver: MutationObserver | null = null
   let chatObserver: MutationObserver | null = null
   let editorObserver: MutationObserver | null = null
+  let editorInputCleanup: (() => void) | null = null
   let settingsUnsubscribe: (() => void) | null = null
   let attempt: Attempt | null = null
   // Retain only the most recent cleared send for delayed source-anchor attachment.
@@ -194,6 +196,7 @@ export function createFollowUpController(
       return
     }
     editorObserver?.disconnect()
+    editorInputCleanup?.()
     cards?.destroy()
     binding = nextBinding
     cards = mountDraftCards(nextBinding.editor, {
@@ -210,8 +213,25 @@ export function createFollowUpController(
     }
     if (backup && attempt?.kind === 'custom' && attempt.phase === 'waiting'
       && attempt.scope === currentScope && backup.scope === currentScope) nextBinding.editor.contentEditable = 'false'
+    let composing = false
+    const syncHeading = () => {
+      if (!composing && enabled && isCurrentBinding(binding) && !attempt && !backup) {
+        syncRequestHeading(binding.editor, items.length > 0)
+      }
+    }
+    const onCompositionStart = () => { composing = true }
+    const onCompositionEnd = () => { composing = false; syncHeading() }
+    nextBinding.editor.addEventListener('input', syncHeading)
+    nextBinding.editor.addEventListener('compositionstart', onCompositionStart)
+    nextBinding.editor.addEventListener('compositionend', onCompositionEnd)
+    editorInputCleanup = () => {
+      nextBinding.editor.removeEventListener('input', syncHeading)
+      nextBinding.editor.removeEventListener('compositionstart', onCompositionStart)
+      nextBinding.editor.removeEventListener('compositionend', onCompositionEnd)
+    }
     editorObserver = new MutationObserver(records => {
-      if (!enabled || !isCurrentBinding(binding) || attempt) return
+      if (!enabled || !isCurrentBinding(binding) || attempt || backup || composing) return
+      syncHeading()
       const removedIds = removedSentinelIds(records)
       if (!removedIds.length) return
       const liveIds = new Set(currentSentinelIds(binding.editor))
@@ -222,7 +242,7 @@ export function createFollowUpController(
       syncCards()
       if (!writePrefix(binding.editor, items)) dismissNotice('quickFollow.multiSelection.updateFailed')
     })
-    editorObserver.observe(nextBinding.editor, { childList: true, subtree: true })
+    editorObserver.observe(nextBinding.editor, { childList: true, characterData: true, subtree: true })
   }
 
   const renderQuery = (query: Element) => {
@@ -293,6 +313,8 @@ export function createFollowUpController(
     }
     chatObserver?.disconnect()
     editorObserver?.disconnect()
+    editorInputCleanup?.()
+    editorInputCleanup = null
     attempt?.clearObserver?.()
     if (attempt) attempt.clearObserver = undefined
     if (backup && binding?.editor.contentEditable === 'false') binding.editor.contentEditable = 'true'

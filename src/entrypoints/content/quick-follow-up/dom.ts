@@ -1,4 +1,4 @@
-import { serializePrefix, type QuoteAnchor, type SelectionItem } from './protocol'
+import { REQUEST_HEADER, serializePrefix, type QuoteAnchor, type SelectionItem } from './protocol'
 
 export type InputBinding = {
   chatWindow: HTMLElement
@@ -65,6 +65,7 @@ export function isReadyToSubmit(binding: InputBinding): boolean {
 
 function isOwnedNode(node: Node): boolean {
   return node instanceof Element && (node.hasAttribute('data-gpk-follow-prefix')
+    || node.hasAttribute('data-gpk-follow-request')
     || node.hasAttribute('data-gpk-follow-sentinel'))
 }
 
@@ -90,7 +91,7 @@ export function readRequest(editor: HTMLElement): string | null {
   return readPlainEditorChildren(editor)
 }
 
-function makeHiddenNode(text: string, attribute: 'data-gpk-follow-prefix' | 'data-gpk-follow-sentinel'): HTMLParagraphElement {
+function makeHiddenNode(text: string, attribute: 'data-gpk-follow-prefix' | 'data-gpk-follow-request' | 'data-gpk-follow-sentinel'): HTMLParagraphElement {
   const node = document.createElement('p')
   node.setAttribute(attribute, '')
   node.contentEditable = 'false'
@@ -102,6 +103,20 @@ function makeHiddenNode(text: string, attribute: 'data-gpk-follow-prefix' | 'dat
   return node
 }
 
+export function syncRequestHeading(editor: HTMLElement, hasSelections: boolean): void {
+  const heading = [...editor.children].find(node => node.hasAttribute('data-gpk-follow-request'))
+  const request = readRequest(editor)
+  if (!hasSelections || request !== null && !request.trim()) {
+    heading?.remove()
+    return
+  }
+  if (request === null) return
+  // The paragraph boundary supplies the single newline before the visible request.
+  const node = heading ?? makeHiddenNode(REQUEST_HEADER, 'data-gpk-follow-request')
+  const firstRequestNode = [...editor.children].find(child => !isOwnedNode(child)) ?? null
+  if (node.nextSibling !== firstRequestNode || node.parentNode !== editor) editor.insertBefore(node, firstRequestNode)
+}
+
 export function writePrefix(editor: HTMLElement, items: readonly SelectionItem[]): boolean {
   const request = readRequest(editor)
   const existingPrefix = [...editor.children].find(node => node.hasAttribute('data-gpk-follow-prefix')) as HTMLElement | undefined
@@ -111,6 +126,7 @@ export function writePrefix(editor: HTMLElement, items: readonly SelectionItem[]
   if (!items.length) {
     existingPrefix?.remove()
     existingSentinels.forEach(node => node.remove())
+    syncRequestHeading(editor, false)
     return request === null || readRequest(editor) === request
   }
   if (request === null) return false
@@ -129,7 +145,8 @@ export function writePrefix(editor: HTMLElement, items: readonly SelectionItem[]
     sentinel.setAttribute('data-gpk-follow-sentinel', item.id)
     existingSentinels.set(item.id, sentinel)
   }
-  const firstRequestNode = [...editor.children].find(child => !isOwnedNode(child)) ?? null
+  syncRequestHeading(editor, true)
+  const firstRequestNode = [...editor.children].find(child => child.hasAttribute('data-gpk-follow-request') || !isOwnedNode(child)) ?? null
   let nextNode: Node | null = firstRequestNode
   for (const item of [...items].reverse()) {
     const sentinel = existingSentinels.get(item.id)
@@ -152,8 +169,8 @@ export function appendRequestText(editor: HTMLElement, text: string): boolean {
     fragment.append(paragraph)
   })
   if (!original && nodes.length === 1 && nodes[0].tagName === 'P'
-    && nodes[0].textContent === '' && nodes[0].children.length === 1
-    && nodes[0].firstElementChild?.tagName === 'BR') nodes[0].remove()
+    && nodes[0].textContent === '' && (nodes[0].childNodes.length === 0
+      || nodes[0].childNodes.length === 1 && nodes[0].firstChild instanceof HTMLBRElement)) nodes[0].remove()
   editor.append(fragment)
   editor.dispatchEvent(new Event('input', { bubbles: true }))
   return readRequest(editor) === next

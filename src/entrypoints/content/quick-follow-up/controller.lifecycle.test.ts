@@ -26,7 +26,7 @@ import { eventBus } from '@/utils/eventbus'
 import { toaster } from '@/components/ui/toaster'
 import type { QuickFollowPrompt } from '@/domain/quick-follow/types'
 import { createFollowUpController } from './controller'
-import { readRequest, replaceRequestText, resolveInput, type Candidate } from './dom'
+import { appendRequestText, readRequest, replaceRequestText, resolveInput, type Candidate } from './dom'
 import { serializeMessage } from './protocol'
 
 const fixture = readFileSync(resolve(process.cwd(), 'docs/dom/input.html'), 'utf8')
@@ -283,11 +283,54 @@ describe('Follow-up lifecycle regressions', () => {
     expect(readRequest(binding.editor)).toBe('line-1\nline-2')
   })
 
+  it('syncs the request heading on typing, clearing, undo, and programmatic appends while preserving cards', async () => {
+    const { editor } = resolveInput()!
+    replaceRequestText(editor, '')
+    controller.add(candidate('a'))
+    const sentinel = editor.querySelector('[data-gpk-follow-sentinel]')!
+    const paragraph = editor.lastElementChild!
+    expect(editor.querySelector('[data-gpk-follow-request]')).toBeNull()
+
+    for (const text of ['typed request', '', ' \t', 'restored by undo']) {
+      paragraph.textContent = text
+      editor.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'historyUndo' }))
+      expect(Boolean(editor.querySelector('[data-gpk-follow-request]'))).toBe(Boolean(text.trim()))
+      await flushMutations()
+      expect(controller.hasDraftCards()).toBe(true)
+      expect(editor.querySelector('[data-gpk-follow-sentinel]')).toBe(sentinel)
+      expect(readRequest(editor)).toBe(text)
+    }
+    replaceRequestText(editor, '')
+    expect(appendRequestText(editor, 'appended request')).toBe(true)
+    expect(editor.querySelector('[data-gpk-follow-request]')?.textContent).toBe('## My request:')
+    controller.stop()
+    expect(editor.querySelector('[data-gpk-follow-request]')).toBeNull()
+    expect(readRequest(editor)).toBe('appended request')
+  })
+
+  it('waits for composition to end and observes text mutations without input events', async () => {
+    const { editor } = resolveInput()!
+    replaceRequestText(editor, '')
+    controller.add(candidate('a'))
+    const paragraph = editor.lastElementChild!
+    editor.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }))
+    paragraph.textContent = '输入中'
+    editor.dispatchEvent(new InputEvent('input', { bubbles: true, isComposing: true }))
+    await flushMutations()
+    expect(editor.querySelector('[data-gpk-follow-request]')).toBeNull()
+    editor.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true }))
+    expect(editor.querySelector('[data-gpk-follow-request]')).not.toBeNull()
+    paragraph.firstChild!.textContent = ''
+    await flushMutations()
+    expect(editor.querySelector('[data-gpk-follow-request]')).toBeNull()
+    expect(controller.hasDraftCards()).toBe(true)
+  })
+
   it.each(['clear-first', 'query-first'])('clears draft cards on the native editor clear regardless of query timing: %s', async order => {
     const binding = resolveInput()!
     controller.add(candidate('a'))
     controller.changeQuickComment('a', 'pending comment')
-    const raw = binding.editor.querySelector('[data-gpk-follow-prefix]')!.textContent + readRequest(binding.editor)!
+    const raw = serializeMessage([{ id: 'a', revision: 1, selectedText: 'source a', comment: 'pending comment' }], readRequest(binding.editor)!)
     binding.sendButton!.click()
     if (order === 'clear-first') clearNativeInput(binding.editor)
     else addQuery(raw)
@@ -306,7 +349,7 @@ describe('Follow-up lifecycle regressions', () => {
     const binding = resolveInput()!
     expect(replaceRequestText(binding.editor, request)).toBe(true)
     controller.add(candidate('a'))
-    const raw = binding.editor.querySelector('[data-gpk-follow-prefix]')!.textContent + request
+    const raw = serializeMessage([{ id: 'a', revision: 1, selectedText: 'source a', comment: '' }], request)
     binding.sendButton!.click()
     addQuery(raw.split('\n').map(line => line ? ` ${line} ` : '').join('\n'))
     clearNativeInput(binding.editor)
@@ -337,7 +380,8 @@ describe('Follow-up lifecycle regressions', () => {
   it('removes its hidden nodes on stop even after native content becomes rich text', async () => {
     const binding = resolveInput()!
     controller.add(candidate('a'))
-    const paragraph = [...binding.editor.children].find(node => !node.hasAttribute('data-gpk-follow-prefix') && !node.hasAttribute('data-gpk-follow-sentinel'))!
+    const paragraph = [...binding.editor.children].find(node => !node.hasAttribute('data-gpk-follow-prefix')
+      && !node.hasAttribute('data-gpk-follow-sentinel') && !node.hasAttribute('data-gpk-follow-request'))!
     const strong = document.createElement('strong')
     strong.textContent = 'formatted'
     paragraph.append(strong)
@@ -476,7 +520,7 @@ describe('Follow-up lifecycle regressions', () => {
     controller.openQuickComment('a')
     controller.changeQuickComment('a', '')
     const editor = resolveInput()!.editor
-    const paragraph = editor.querySelector('p:not([data-gpk-follow-prefix]):not([data-gpk-follow-sentinel])')!
+    const paragraph = editor.querySelector('p:not([data-gpk-follow-prefix]):not([data-gpk-follow-sentinel]):not([data-gpk-follow-request])')!
     const original = paragraph.innerHTML
     paragraph.appendChild(document.createElement('img'))
     change.mockClear()
