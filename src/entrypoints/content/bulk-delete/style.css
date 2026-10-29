@@ -18,6 +18,7 @@
 .gpk-bulk-delete-entry-button {
   width: 32px;
   height: 32px;
+  margin-top: -1px;
   border: 0;
   border-radius: 999px;
   background: transparent;
