@@ -21,7 +21,7 @@
   border: 0;
   border-radius: 999px;
   background: transparent;
-  color: var(--mat-sys-on-surface-variant, currentColor);
+  color: var(--lumi-sys-color--on-surface-variant);
   display: inline-flex;
   align-items: center;
   justify-content: center;
