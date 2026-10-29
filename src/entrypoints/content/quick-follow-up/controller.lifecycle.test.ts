@@ -26,7 +26,7 @@ import { eventBus } from '@/utils/eventbus'
 import { toaster } from '@/components/ui/toaster'
 import type { QuickFollowPrompt } from '@/domain/quick-follow/types'
 import { createFollowUpController } from './controller'
-import { appendRequestText, readRequest, replaceRequestText, resolveInput, type Candidate } from './dom'
+import { appendRequestText, getConversationScope, readRequest, replaceRequestText, resolveInput, type Candidate } from './dom'
 import { serializeMessage } from './protocol'
 
 const fixture = readFileSync(resolve(process.cwd(), 'docs/dom/input.html'), 'utf8')
@@ -115,6 +115,134 @@ afterEach(() => {
 })
 
 describe('Follow-up lifecycle regressions', () => {
+  it('hides native Ask menus only while enabled and cleans up on stop', () => {
+    const nativeStyle = document.createElement('style')
+    nativeStyle.textContent = 'highlight-to-ask-menu { display: flex; }'
+    document.head.prepend(nativeStyle)
+    try {
+      const menu = document.createElement('highlight-to-ask-menu')
+      document.body.append(menu)
+      expect(getComputedStyle(menu).display).toBe('none')
+
+      setEnabled(false)
+      expect(getComputedStyle(menu).display).toBe('flex')
+      setEnabled(true)
+      const replacement = menu.cloneNode() as HTMLElement
+      menu.replaceWith(replacement)
+      expect(getComputedStyle(replacement).display).toBe('none')
+      expect(document.querySelectorAll('style[data-gpk-follow-native-ask]')).toHaveLength(1)
+
+      controller.stop()
+      expect(getComputedStyle(replacement).display).toBe('flex')
+      setEnabled(false)
+      controller.start()
+      expect(getComputedStyle(replacement).display).toBe('flex')
+      setEnabled(true)
+      expect(getComputedStyle(replacement).display).toBe('none')
+    } finally {
+      nativeStyle.remove()
+    }
+  })
+
+  it('edits and clears drafts even when submit controls are ambiguous', async () => {
+    const binding = resolveInput()!
+    binding.sendButton!.parentElement!.append(binding.sendButton!.cloneNode(true))
+    expect(resolveInput()).toBeNull()
+    expect(controller.add(candidate('a'))).toBe('a')
+    expect(controller.changeQuickComment('a', 'latest comment')).toBe(true)
+    expect(controller.add(candidate('b'))).toBe('b')
+    expect(controller.remove('b')).toBe(true)
+    clearNativeInput(binding.editor)
+    await flushMutations()
+    expect(controller.hasDraftCards()).toBe(false)
+    expect(document.querySelector('.gpk-follow-card')).toBeNull()
+  })
+
+  it('never locks ordinary cards after Stop, Enter, or an unconfirmed native send', async () => {
+    vi.useFakeTimers()
+    const binding = resolveInput()!
+    controller.add(candidate('a'))
+    binding.sendButton!.classList.replace('submit', 'stop')
+    const stop = new MouseEvent('click', { bubbles: true, cancelable: true })
+    binding.sendButton!.dispatchEvent(stop)
+    expect(stop.defaultPrevented).toBe(false)
+    const enter = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })
+    binding.editor.dispatchEvent(enter)
+    expect(enter.defaultPrevented).toBe(false)
+    expect(controller.changeQuickComment('a', 'after stop')).toBe(true)
+    binding.sendButton!.classList.replace('stop', 'submit')
+    binding.sendButton!.click()
+    await vi.advanceTimersByTimeAsync(15_001)
+    expect(controller.isBusy()).toBe(false)
+    expect(controller.changeQuickComment('a', 'corrected')).toBe(true)
+    expect(replaceRequestText(binding.editor, 'corrected request')).toBe(true)
+    const retry = new MouseEvent('click', { bubbles: true, cancelable: true })
+    binding.sendButton!.dispatchEvent(retry)
+    expect(retry.defaultPrevented).toBe(false)
+    expect(controller.remove('a')).toBe(true)
+  })
+
+  it('does not delete a sentinel that moves within the same mutation batch', async () => {
+    const { editor } = resolveInput()!
+    controller.add(candidate('a'))
+    const sentinel = editor.querySelector('[data-gpk-follow-sentinel]')!
+    sentinel.remove()
+    editor.append(sentinel)
+    await flushMutations()
+    expect(controller.hasDraftCards()).toBe(true)
+    expect(controller.changeQuickComment('a', 'still editable')).toBe(true)
+  })
+
+  it('rebinds a replaced editor without treating detachment as a submitted draft', async () => {
+    const { editor } = resolveInput()!
+    controller.add(candidate('a'))
+    const replacement = editor.cloneNode(false) as HTMLElement
+    replacement.innerHTML = '<p>replacement request</p>'
+    editor.replaceWith(replacement)
+    await flushMutations()
+    expect(controller.hasDraftCards()).toBe(true)
+    expect(replacement.querySelector('[data-gpk-follow-sentinel="a"]')).not.toBeNull()
+    clearNativeInput(editor)
+    await flushMutations()
+    expect(controller.hasDraftCards()).toBe(true)
+    expect(readRequest(replacement)).toBe('replacement request')
+    clearNativeInput(replacement)
+    await flushMutations()
+    expect(controller.hasDraftCards()).toBe(false)
+  })
+
+  it('coalesces extension send actions while waiting and allows edits to cancel them', async () => {
+    const binding = resolveInput()!
+    controller.add(candidate('a'))
+    const container = binding.sendButton!.closest('.send-button-container')!
+    const parent = container.parentElement!
+    const clicks = vi.fn()
+    binding.sendButton!.addEventListener('click', clicks)
+    container.remove()
+    const pending = controller.requestSend()
+    await expect(controller.requestSend()).resolves.toBe(false)
+    expect(controller.changeQuickComment('a', 'changed during readiness wait')).toBe(true)
+    parent.append(container)
+    await expect(pending).resolves.toBe(false)
+    expect(clicks).not.toHaveBeenCalled()
+    await expect(controller.requestSend()).resolves.toBe(true)
+    expect(clicks).toHaveBeenCalledTimes(1)
+    expect(controller.isBusy()).toBe(false)
+  })
+
+  it('cleans ordinary cards without a send event or parseable history', async () => {
+    const { editor } = resolveInput()!
+    controller.add(candidate('a'))
+    addQuery('a different native message format')
+    const paragraph = document.createElement('p')
+    paragraph.textContent = 'next draft'
+    editor.replaceChildren(paragraph)
+    await flushMutations()
+    expect(controller.hasDraftCards()).toBe(false)
+    expect(readRequest(editor)).toBe('next draft')
+    expect(controller.add(candidate('b'))).toBe('b')
+  })
+
   it('publishes source selections in card order and removes the open comment when its native sentinel disappears', async () => {
     controller.stop()
     const change = vi.fn()
@@ -548,6 +676,45 @@ describe('Follow-up lifecycle regressions', () => {
     binding.sendButton!.removeEventListener('click', submit)
   })
 
+  it.each([
+    ['/app', false],
+    ['/u/1/app', false],
+    ['/u/1/app', true],
+  ] as const)('clears old quotes on a chat switch under %s (absolute URL: %s)', async (route, absoluteUrl) => {
+    controller.stop()
+    const originalPath = `${route}/chat-a`
+    const nextPath = `${route}/chat-b`
+    window.history.replaceState({}, '', originalPath)
+    controller = createFollowUpController(vi.fn())
+    controller.start()
+    const source = candidate('a')
+    source.scope = getConversationScope()
+    source.anchor.conversationId = source.scope
+    expect(controller.add(source)).toBe('a')
+    const { editor } = resolveInput()!
+    expect(editor.querySelector('[data-gpk-follow-prefix]')).not.toBeNull()
+
+    window.history.replaceState({}, '', nextPath)
+    eventBus.emitSync('chatchange', {
+      originalUrl: absoluteUrl ? `https://gemini.google.com${originalPath}` : originalPath,
+      currentUrl: absoluteUrl ? `https://gemini.google.com${nextPath}` : nextPath,
+      isFromNewChat: false, timestamp: Date.now(),
+    })
+    const replacement = editor.cloneNode(false) as HTMLElement
+    replacement.innerHTML = '<p>chat B request</p>'
+    editor.replaceWith(replacement)
+    await flushMutations()
+
+    expect(controller.hasDraftCards()).toBe(false)
+    expect(replacement.querySelector('[data-gpk-follow-prefix]')).toBeNull()
+    expect(replacement.querySelector('[data-gpk-follow-sentinel]')).toBeNull()
+    expect(readRequest(replacement)).toBe('chat B request')
+    const nextSource = candidate('b')
+    nextSource.scope = getConversationScope()
+    nextSource.anchor.conversationId = nextSource.scope
+    expect(controller.add(nextSource)).toBe('b')
+  })
+
   it('does not block native sends in another conversation while retaining a separate-send backup', async () => {
     const binding = resolveInput()!
     controller.add(candidate('a'))
@@ -571,6 +738,66 @@ describe('Follow-up lifecycle regressions', () => {
     expect(binding.editor.contentEditable).toBe('true')
     expect(binding.editor.querySelector('[data-gpk-follow-prefix]')).toBeNull()
     expect(readRequest(binding.editor)).toBe('new conversation request')
+  })
+
+  it('restores a separate-send draft when Gemini replaces the editor with an empty one', async () => {
+    const binding = resolveInput()!
+    controller.add(candidate('a'))
+    const prompt: QuickFollowPrompt = {
+      id: 'p', template: 'Separate request', iconKey: 'sparkles', enabled: true,
+      createdAt: '', updatedAt: '',
+    }
+    expect(await controller.sendPromptSeparately(prompt, candidate('b'))).toBe(true)
+    const replacement = binding.editor.cloneNode(false) as HTMLElement
+    replacement.innerHTML = '<p><br></p>'
+    binding.editor.replaceWith(replacement)
+    await flushMutations()
+    expect(readRequest(replacement)).toBe('line-1\nline-2')
+    expect(controller.hasDraftCards()).toBe(true)
+    expect(replacement.contentEditable).toBe('true')
+    expect(controller.remove('a')).toBe(true)
+  })
+
+  it('restores a separate-send draft on a native clear without an input event', async () => {
+    const { editor } = resolveInput()!
+    controller.add(candidate('a'))
+    const prompt: QuickFollowPrompt = {
+      id: 'p', template: 'Separate request', iconKey: 'sparkles', enabled: true,
+      createdAt: '', updatedAt: '',
+    }
+    expect(await controller.sendPromptSeparately(prompt, candidate('b'))).toBe(true)
+    editor.innerHTML = '<p></p>'
+    await flushMutations()
+    expect(readRequest(editor)).toBe('line-1\nline-2')
+    expect(controller.hasDraftCards()).toBe(true)
+  })
+
+  it.each([false, true])('restores across new-chat URL assignment (clear first: %s)', async clearFirst => {
+    controller.stop()
+    window.history.replaceState({}, '', '/app')
+    controller = createFollowUpController(vi.fn())
+    controller.start()
+    const { editor } = resolveInput()!
+    const source = candidate('a')
+    source.scope = 'new-chat'
+    source.anchor.conversationId = 'new-chat'
+    controller.add(source)
+    const prompt: QuickFollowPrompt = {
+      id: 'p', template: 'Separate request', iconKey: 'sparkles', enabled: true,
+      createdAt: '', updatedAt: '',
+    }
+    expect(await controller.sendPromptSeparately(prompt, source)).toBe(true)
+    window.history.replaceState({}, '', '/app/created-chat')
+    if (clearFirst) clearNativeInput(editor)
+    eventBus.emitSync('chatchange', {
+      originalUrl: 'https://gemini.google.com/app', currentUrl: 'https://gemini.google.com/app/created-chat',
+      isFromNewChat: true, timestamp: Date.now(),
+    })
+    if (!clearFirst) clearNativeInput(editor)
+    await flushMutations()
+    expect(readRequest(editor)).toBe('line-1\nline-2')
+    expect(controller.hasDraftCards()).toBe(true)
+    expect(controller.remove('a')).toBe(true)
   })
 
   it('restores editable card actions after a successful separate send', async () => {

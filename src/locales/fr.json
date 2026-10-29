@@ -102,6 +102,7 @@
     "quickFollow": {
       "title": "Relance rapide",
       "enable": "Activer la Relance rapide",
+      "enableDescription": "Lorsque la relance rapide est activée, le bouton « Demander » de Gemini est masqué. Désactivez-la pour l’afficher à nouveau.",
       "customPrompts": {
         "title": "Gestion des compétences",
         "description": "Les $1 premières compétences sont épinglées, faites défiler horizontalement pour en voir plus",

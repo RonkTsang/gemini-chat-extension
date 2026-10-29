@@ -102,6 +102,7 @@
     "quickFollow": {
       "title": "Seguimento rápido",
       "enable": "Ativar Seguimento rápido",
+      "enableDescription": "Quando o Seguimento rápido está ativado, o botão Perguntar integrado do Gemini fica oculto. Desative-o para exibir o botão novamente.",
       "customPrompts": {
         "title": "Gestão de habilidades",
         "description": "As primeiras $1 habilidades estão fixadas, role horizontalmente para ver mais",

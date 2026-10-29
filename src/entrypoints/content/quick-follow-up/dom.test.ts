@@ -7,6 +7,7 @@ import {
   attachSelectionAnchors,
   captureEditorDraft,
   captureCandidate,
+  getConversationScope,
   hasQuoteAnchor,
   isReadyToSubmit,
   readQueryLines,
@@ -19,7 +20,7 @@ import {
   replaceRequestText,
   resolveInput,
   resolveNativeSubmitButton,
-  inputStructureChanged,
+  editorStructureChanged,
   restoreEditorDraft,
   syncRequestHeading,
   writePrefix,
@@ -43,6 +44,19 @@ describe('Follow-up editor DOM adapter', () => {
   afterEach(() => {
     document.body.replaceChildren()
     vi.restoreAllMocks()
+  })
+
+  it.each([
+    ['/app/chat-a', 'chat-a'],
+    ['/u/1/app/chat-a', 'chat-a'],
+    ['/u/12/app/chat-b?mode=test#response', 'chat-b'],
+    ['https://gemini.google.com/app/chat-a?mode=test', 'chat-a'],
+    ['https://gemini.google.com/u/1/app/chat-b#response', 'chat-b'],
+    ['/app', 'new-chat'],
+    ['/u/1/app', 'new-chat'],
+    ['/u/invalid/app/chat-a', 'new-chat'],
+  ])('resolves conversation scope from %s', (url, scope) => {
+    expect(getConversationScope(url)).toBe(scope)
   })
 
   it('resolves the unique editor and active Send button from the Gemini fixture', () => {
@@ -116,13 +130,13 @@ describe('Follow-up editor DOM adapter', () => {
     expect(resolveNativeSubmitButton(binding)).toBeNull()
   })
 
-  it('reconciles native send controls when only the button subtree changes', () => {
+  it('does not rebind the draft editor when only send controls change', () => {
     removeStopButton()
     const container = document.querySelector('.send-button-container')!
     const observer = new MutationObserver(() => undefined)
     observer.observe(container, { childList: true })
     container.replaceChildren()
-    expect(inputStructureChanged(observer.takeRecords())).toBe(true)
+    expect(editorStructureChanged(observer.takeRecords())).toBe(false)
     observer.disconnect()
   })
 

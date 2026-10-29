@@ -102,6 +102,7 @@
     "quickFollow": {
       "title": "クイック追問",
       "enable": "クイック追問を有効にする",
+      "enableDescription": "有効にすると、Gemini 標準の「質問」ボタンが非表示になります。無効にすると再び表示されます。",
       "customPrompts": {
         "title": "スキル管理",
         "description": "最初の $1 つのスキルが固定されています。横にスクロールしてさらに表示できます",

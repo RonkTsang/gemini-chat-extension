@@ -10,35 +10,33 @@ import { i18nCache } from '@/utils/i18nCache'
 import { eventBus } from '@/utils/eventbus'
 import { logDevEvent } from '@/utils/devLogger'
 import { browser } from 'wxt/browser'
+import { createHistoryAnchorTracker } from './history-anchors'
 import { closeActiveFollowUpPopovers, mountDraftCards, renderHistory, restoreHistory } from './cards'
 import {
   appendRequestText,
-  baselineQueries,
   captureCandidate,
   captureEditorDraft,
+  hasEditorDraft,
+  hideNativeAskMenu,
   getConversationScope,
   isReadyToSubmit,
   listUserQueries,
   queriesAffectedBy,
   removedUserQueries,
   chatWindowAddedOrRemoved,
-  inputStructureChanged,
+  editorStructureChanged,
   currentSentinelIds,
-  removedSentinelIds,
   findCurrentChatWindow,
-  findNewMatchingQuery,
-  attachSelectionAnchors,
   jumpToQuoteAnchor,
   highlightQuoteAnchor,
   readQuoteAnchorPosition,
   jumpToQuoteSource,
   clearQuoteHighlight,
   observeSubmissionClearTransition,
-  observeFollowUpClearTransition,
-  readRawQuery,
   readRequest,
   replaceRequestText,
   resolveInput,
+  resolveEditor,
   resolveInputContainer,
   resolveMessageContent,
   resolveNativeSubmitButton,
@@ -47,21 +45,17 @@ import {
   syncRequestHeading,
   type Candidate,
   type EditorSnapshot,
-  type InputBinding,
+  type EditorBinding,
 } from './dom'
-import { effectiveComment, MAX_SELECTIONS, serializeMessage, serializePrefix, type SelectionItem, type QuoteAnchor } from './protocol'
+import { effectiveComment, MAX_SELECTIONS, type SelectionItem, type QuoteAnchor } from './protocol'
 
 const NOTICE_KEYS = [
   'quickFollow.multiSelection.addFailed',
   'quickFollow.multiSelection.maxSelections',
   'quickFollow.multiSelection.updateFailed',
   'quickFollow.multiSelection.sendFailed',
-  'quickFollow.multiSelection.sendUnknown',
-  'quickFollow.multiSelection.restoreDraft',
-  'quickFollow.multiSelection.restoreFailed',
   'quickFollow.multiSelection.unsupportedDraft',
 ] as const
-const SEND_CONFIRMATION_TIMEOUT_MS = 15_000
 
 export type FollowUpUI =
   | { mode: 'closed' }
@@ -70,32 +64,14 @@ export type FollowUpUI =
 
 export type FollowUpController = ReturnType<typeof createFollowUpController>
 
-type Attempt = {
-  kind: 'follow-up' | 'custom'
-  scope: string
-  raw: string
-  versions: Array<{ id: string; revision: number }>
-  baselineQueries: WeakSet<Element>
-  phase: 'waiting' | 'unknown'
-  timer: ReturnType<typeof setTimeout>
-  clearObserver?: () => void
-  submitted: boolean
-  cleared: boolean
-  requestText: string
-}
-
 type DraftBackup = {
   scope: string
   items: SelectionItem[]
   editorState: EditorSnapshot
-  submitted: boolean
+  editor: HTMLElement
+  request: string
   cleared: boolean
-  raw?: string
-}
-
-type PendingFollowUp = Pick<Attempt, 'scope' | 'raw' | 'baselineQueries'> & {
-  items: SelectionItem[]
-  expiresAt: number
+  clearObserver?: () => void
 }
 
 function copyItems(items: readonly SelectionItem[]): SelectionItem[] {
@@ -110,15 +86,6 @@ function notice(key: string, action?: { label: string; onClick: () => void }): v
   toaster.create({ type: 'error', title: t(key), action })
 }
 
-function isNativeSendIntent(event: Event, binding: InputBinding): boolean {
-  if (event.type === 'keydown') {
-    const keyboard = event as KeyboardEvent
-    return keyboard.target === binding.editor && keyboard.key === 'Enter'
-      && !keyboard.shiftKey && !keyboard.isComposing && !keyboard.defaultPrevented
-  }
-  return event.type === 'click' && event.composedPath().some(node => node === binding.sendButton)
-}
-
 export function createFollowUpController(
   onUIChange: (ui: FollowUpUI) => void,
   onSelectionsChange: (items: readonly SelectionItem[]) => void = () => undefined,
@@ -128,21 +95,20 @@ export function createFollowUpController(
   let items: SelectionItem[] = []
   let currentUI: FollowUpUI = { mode: 'closed' }
   let chatWindow: HTMLElement | null = null
-  let binding: InputBinding | null = null
+  let binding: EditorBinding | null = null
   let cards: ReturnType<typeof mountDraftCards> | null = null
   let bodyObserver: MutationObserver | null = null
   let chatObserver: MutationObserver | null = null
   let editorObserver: MutationObserver | null = null
   let editorInputCleanup: (() => void) | null = null
   let settingsUnsubscribe: (() => void) | null = null
-  let attempt: Attempt | null = null
-  // Retain only the most recent cleared send for delayed source-anchor attachment.
-  let pendingFollowUp: PendingFollowUp | null = null
+  let restoreNativeAskMenu: (() => void) | null = null
+  let promptSend: object | null = null
+  let followUpSend: object | null = null
+  const historyAnchors = createHistoryAnchorTracker()
   let backup: DraftBackup | null = null
-  let ownSendInProgress = false
   const cancelReadinessWaits = new Set<() => void>()
   let currentScope = getConversationScope()
-  let pendingNewChatScope: string | null = null
   let historyDisposers = new Map<Element, () => void>()
 
   const setUI = (ui: FollowUpUI) => {
@@ -160,6 +126,7 @@ export function createFollowUpController(
   }
 
   const syncCards = () => {
+    historyAnchors.update(items, chatWindow, currentScope)
     cards?.render(items)
     cards?.setDisabled(isBusy())
     const commentId = currentUI.mode === 'comment' ? currentUI.selectionId : null
@@ -169,28 +136,21 @@ export function createFollowUpController(
     onSelectionsChange(chatWindow ? copyItems(items) : [])
   }
 
-  const clearAttempt = () => {
-    if (!attempt) return
-    clearTimeout(attempt.timer)
-    attempt.clearObserver?.()
-    attempt = null
-    pendingNewChatScope = null
-    cards?.setDisabled(isBusy())
-    onSelectionsChange(chatWindow ? copyItems(items) : [])
+  const clearBackup = () => {
+    backup?.clearObserver?.()
+    backup = null
   }
 
   const dismissNotice = (key: string) => notice(key)
 
-  const resolveCurrentBinding = (): InputBinding | null => chatWindow ? resolveInput(chatWindow) : null
-  const isAttemptScopeActive = (scope: string): boolean => currentScope === scope
-    || (scope === 'new-chat' && pendingNewChatScope === currentScope)
-  const isCurrentBinding = (candidate: InputBinding | null): candidate is InputBinding => {
+  const resolveCurrentBinding = (): EditorBinding | null => chatWindow ? resolveEditor(chatWindow) : null
+  const isCurrentBinding = (candidate: EditorBinding | null): candidate is EditorBinding => {
     if (!candidate || !candidate.editor.isConnected || !candidate.chatWindow.isConnected) return false
     const live = resolveCurrentBinding()
     return live?.editor === candidate.editor && live.richTextarea === candidate.richTextarea
   }
 
-  const mountEditor = (nextBinding: InputBinding) => {
+  const mountEditor = (nextBinding: EditorBinding) => {
     if (binding?.editor === nextBinding.editor) {
       binding = nextBinding
       return
@@ -208,50 +168,45 @@ export function createFollowUpController(
       },
     })
     syncCards()
-    if (enabled && items.length && !attempt && !backup && !writePrefix(nextBinding.editor, items)) {
+    if (enabled && items.length && !writePrefix(nextBinding.editor, items)) {
       dismissNotice('quickFollow.multiSelection.updateFailed')
     }
-    if (backup && attempt?.kind === 'custom' && attempt.phase === 'waiting'
-      && attempt.scope === currentScope && backup.scope === currentScope) nextBinding.editor.contentEditable = 'false'
+    if (backup?.scope === currentScope && backup.editor !== nextBinding.editor) {
+      backup.clearObserver?.()
+      backup.editor = nextBinding.editor
+      backup.cleared ||= readRequest(nextBinding.editor) === ''
+      if (!restoreBackup()) observeBackupClear(backup)
+    }
     let composing = false
-    const syncHeading = () => {
-      if (!composing && enabled && isCurrentBinding(binding) && !attempt && !backup) {
-        syncRequestHeading(binding.editor, items.length > 0)
+    const reconcileDraft = () => {
+      if (!enabled || !isCurrentBinding(nextBinding) || composing) return
+      const liveIds = new Set(currentSentinelIds(nextBinding.editor))
+      const next = items.filter(item => liveIds.has(item.id))
+      if (next.length !== items.length) {
+        historyAnchors.retire()
+        items = next
+        syncCards()
+        if (!writePrefix(nextBinding.editor, items)) dismissNotice('quickFollow.multiSelection.updateFailed')
+      } else {
+        syncRequestHeading(nextBinding.editor, items.length > 0)
       }
     }
     const onCompositionStart = () => { composing = true }
-    const onCompositionEnd = () => { composing = false; syncHeading() }
-    nextBinding.editor.addEventListener('input', syncHeading)
+    const onCompositionEnd = () => { composing = false; reconcileDraft() }
+    nextBinding.editor.addEventListener('input', reconcileDraft)
     nextBinding.editor.addEventListener('compositionstart', onCompositionStart)
     nextBinding.editor.addEventListener('compositionend', onCompositionEnd)
     editorInputCleanup = () => {
-      nextBinding.editor.removeEventListener('input', syncHeading)
+      nextBinding.editor.removeEventListener('input', reconcileDraft)
       nextBinding.editor.removeEventListener('compositionstart', onCompositionStart)
       nextBinding.editor.removeEventListener('compositionend', onCompositionEnd)
     }
-    editorObserver = new MutationObserver(records => {
-      if (!enabled || !isCurrentBinding(binding) || attempt || backup || composing) return
-      syncHeading()
-      const removedIds = removedSentinelIds(records)
-      if (!removedIds.length) return
-      const liveIds = new Set(currentSentinelIds(binding.editor))
-      const missing = removedIds.filter(id => items.some(item => item.id === id) && !liveIds.has(id))
-      if (!missing.length) return
-      const removed = new Set(missing)
-      items = items.filter(item => !removed.has(item.id))
-      syncCards()
-      if (!writePrefix(binding.editor, items)) dismissNotice('quickFollow.multiSelection.updateFailed')
-    })
+    editorObserver = new MutationObserver(reconcileDraft)
     editorObserver.observe(nextBinding.editor, { childList: true, characterData: true, subtree: true })
   }
 
   const renderQuery = (query: Element) => {
-    if (pendingFollowUp && pendingFollowUp.expiresAt <= Date.now()) pendingFollowUp = null
-    if (pendingFollowUp && query.isConnected && pendingFollowUp.scope === currentScope
-      && !pendingFollowUp.baselineQueries.has(query) && readRawQuery(query) === pendingFollowUp.raw) {
-      attachSelectionAnchors(query, pendingFollowUp.items.map(item => item.anchor))
-      pendingFollowUp = null
-    }
+    historyAnchors.link(query, currentScope)
     const dispose = renderHistory(query, i18nCache.get('regardingThis'), { onJumpToSource: jumpToQuoteSource })
     historyDisposers.set(query, dispose)
   }
@@ -264,7 +219,6 @@ export function createFollowUpController(
     }
     for (const query of queriesAffectedBy(records, chatWindow)) {
       renderQuery(query)
-      if (attempt && query.isConnected && !attempt.baselineQueries.has(query)) confirmAttempt(query)
     }
   }
 
@@ -279,11 +233,9 @@ export function createFollowUpController(
     chatWindow = nextWindow
     binding = null
     chatWindow.addEventListener('mouseup', handleMouseUp)
-    chatWindow.addEventListener('click', handleNativeSendIntent, true)
-    chatWindow.addEventListener('keydown', handleNativeSendIntent, true)
     chatObserver = new MutationObserver(records => {
       reconcileAffectedQueries(records)
-      if (!inputStructureChanged(records)) return
+      if (!editorStructureChanged(records)) return
       const nextBinding = resolveCurrentBinding()
       if (nextBinding) {
         if (binding?.editor !== nextBinding.editor) cancelReadinessWaits.forEach(cancel => cancel())
@@ -296,28 +248,19 @@ export function createFollowUpController(
     const nextBinding = resolveCurrentBinding()
     if (nextBinding) mountEditor(nextBinding)
     listUserQueries(chatWindow).forEach(renderQuery)
-    if (attempt) {
-      for (const query of listUserQueries(chatWindow)) {
-        if (!attempt.baselineQueries.has(query)) confirmAttempt(query)
-      }
-    }
   }
 
   const detachChatWindow = () => {
     cancelReadinessWaits.forEach(cancel => cancel())
-    if (binding && (!attempt || attempt.kind === 'custom')) writePrefix(binding.editor, [])
+    if (binding) writePrefix(binding.editor, [])
     if (chatWindow) {
       chatWindow.removeEventListener('mouseup', handleMouseUp)
-      chatWindow.removeEventListener('click', handleNativeSendIntent, true)
-      chatWindow.removeEventListener('keydown', handleNativeSendIntent, true)
     }
     chatObserver?.disconnect()
     editorObserver?.disconnect()
     editorInputCleanup?.()
     editorInputCleanup = null
-    attempt?.clearObserver?.()
-    if (attempt) attempt.clearObserver = undefined
-    if (backup && binding?.editor.contentEditable === 'false') binding.editor.contentEditable = 'true'
+    backup?.clearObserver?.()
     chatObserver = null
     editorObserver = null
     cards?.destroy()
@@ -330,190 +273,61 @@ export function createFollowUpController(
     clearQuoteHighlight()
   }
 
-  const clearDraft = (clearEditorPrefix: boolean) => {
+  const restoreBackup = (): boolean => {
+    const state = backup
+    if (!state?.cleared || !started || !enabled || state.scope !== currentScope
+      || getConversationScope() !== state.scope) return false
     const currentBinding = resolveCurrentBinding()
-    if (clearEditorPrefix && currentBinding) writePrefix(currentBinding.editor, [])
-    items = []
-    syncCards()
-    setUI({ mode: 'closed' })
-  }
-
-  const startAttempt = (kind: Attempt['kind'], raw: string, versions: Attempt['versions'], currentBinding: InputBinding): Attempt => {
-    clearAttempt()
-    const state: Attempt = {
-      kind,
-      scope: currentScope,
-      raw,
-      versions,
-      baselineQueries: baselineQueries(currentBinding.chatWindow),
-      phase: 'waiting',
-      timer: setTimeout(() => {
-        if (attempt !== state) return
-        state.phase = 'unknown'
-        if (state.kind === 'custom' && backup) {
-          backup.submitted = state.submitted
-          backup.cleared = state.cleared
-          unlockCustomEditor(state.scope)
-          notice('quickFollow.multiSelection.sendUnknown', {
-            label: t('quickFollow.multiSelection.restoreDraft'),
-            onClick: retryRestoreDraft,
-          })
-        } else {
-          notice('quickFollow.multiSelection.sendUnknown')
-        }
-      }, SEND_CONFIRMATION_TIMEOUT_MS),
-      requestText: readRequest(currentBinding.editor) ?? '',
-      submitted: false,
-      cleared: false,
+    if (currentBinding?.editor !== state.editor || readRequest(state.editor) !== '') return false
+    const previous = items
+    items = copyItems(state.items)
+    if (!restoreEditorDraft(state.editor, state.editorState)) {
+      items = previous
+      return false
     }
-    attempt = state
-    cards?.setDisabled(isBusy())
-    onSelectionsChange(chatWindow ? copyItems(items) : [])
-    return state
-  }
-
-  const unlockCustomEditor = (scope = currentScope) => {
-    if (!isAttemptScopeActive(scope)) return
-    if (!binding?.editor.isConnected) return
-    binding.editor.contentEditable = 'true'
-  }
-
-  const verifyAndRestoreBackup = (): boolean => {
-    if (!backup || !attempt || attempt.kind !== 'custom') return false
-    if (!backup.submitted || !backup.cleared || getConversationScope() !== backup.scope) return false
-    const currentBinding = resolveCurrentBinding()
-    if (!enabled || !currentBinding || readRequest(currentBinding.editor) !== '') return false
-    currentBinding.editor.contentEditable = 'true'
-    if (!restoreEditorDraft(currentBinding.editor, backup.editorState)) return false
-    items = copyItems(backup.items)
-    backup = null
-    clearAttempt()
+    clearBackup()
     syncCards()
     return true
   }
 
-  function retryRestoreDraft(): void {
-    if (backup && attempt?.submitted && getConversationScope() === backup.scope) {
-      const currentBinding = resolveCurrentBinding()
-      if (currentBinding && readRequest(currentBinding.editor) === '') backup.cleared = true
-    }
-    if (verifyAndRestoreBackup()) return
-    notice('quickFollow.multiSelection.restoreFailed', {
-      label: t('quickFollow.multiSelection.restoreDraft'),
-      onClick: retryRestoreDraft,
-    })
-  }
-
-  const finishFollowUpAttempt = (state: Attempt) => {
-    if (attempt !== state || !state.cleared || state.kind !== 'follow-up') return
-    const acknowledged = new Set(state.versions.map(version => `${version.id}:${version.revision}`))
-    const sentItems = items.filter(item => acknowledged.has(`${item.id}:${item.revision}`))
-    if (!state.submitted) {
-      const scope = state.scope === 'new-chat' ? pendingNewChatScope ?? state.scope : state.scope
-      pendingFollowUp = {
-        scope,
-        raw: state.raw,
-        baselineQueries: state.baselineQueries,
-        items: copyItems(sentItems),
-        expiresAt: Date.now() + SEND_CONFIRMATION_TIMEOUT_MS,
-      }
-      if (pendingFollowUp.scope !== state.scope) {
-        pendingFollowUp.items.forEach(item => {
-          if (item.anchor) item.anchor.conversationId = scope
-        })
-      }
-    }
-    items = items.filter(item => !acknowledged.has(`${item.id}:${item.revision}`))
-    const currentBinding = resolveCurrentBinding()
-    if (currentBinding && !writePrefix(currentBinding.editor, items)) dismissNotice('quickFollow.multiSelection.updateFailed')
-    clearAttempt()
-    syncCards()
-    if (currentUI.mode === 'comment') setUI({ mode: 'closed' })
-  }
-
-  const confirmAttempt = (query: Element) => {
-    if (!attempt) return
-    const currentAttempt = attempt
-    if (pendingNewChatScope && currentAttempt.scope === 'new-chat'
-      && currentScope === pendingNewChatScope && query.isConnected
-      && readRawQuery(query) === currentAttempt.raw) {
-      currentAttempt.scope = pendingNewChatScope
-      const migratedScope = pendingNewChatScope
-      items = items.map(item => item.anchor?.conversationId === 'new-chat'
-        ? { ...item, anchor: { ...item.anchor, conversationId: migratedScope } }
-        : item)
-      if (backup?.scope === 'new-chat') {
-        backup.scope = migratedScope
-        backup.items = backup.items.map(item => item.anchor?.conversationId === 'new-chat'
-          ? { ...item, anchor: { ...item.anchor, conversationId: migratedScope } }
-          : item)
-      }
-      pendingNewChatScope = null
-    }
-    if (currentAttempt.scope !== currentScope || readRawQuery(query) !== currentAttempt.raw) return
-    currentAttempt.submitted = true
-    if (currentAttempt.kind === 'custom') {
-      if (backup) backup.submitted = true
-      verifyAndRestoreBackup()
-      if (!backup && currentAttempt.cleared) clearAttempt()
-      return
-    }
-    const sentItems = currentAttempt.versions.map(version => items.find(item => item.id === version.id
-      && item.revision === version.revision))
-    attachSelectionAnchors(query, sentItems.map(item => item?.anchor))
-    renderQuery(query)
-    finishFollowUpAttempt(currentAttempt)
-  }
-
-  const prepareFollowUpAttempt = (): Attempt | null => {
-    if (!isCurrentBinding(binding) || !items.length || attempt || !enabled) return null
-    const request = readRequest(binding.editor)
-    if (request === null) return null
-    const committed = items.map(item => {
-      if (item.commentDraft === undefined) return item
-      return { ...item, comment: item.commentDraft, commentDraft: undefined, revision: item.revision + 1 }
-    })
-    if (!writePrefix(binding.editor, committed)) {
-      dismissNotice('quickFollow.multiSelection.updateFailed')
-      return null
-    }
-    items = committed
-    syncCards()
-    binding.editor.dispatchEvent(new Event('input', { bubbles: true }))
-    const raw = serializeMessage(items, request)
-    const state = startAttempt('follow-up', raw, items.map(({ id, revision }) => ({ id, revision })), binding)
-    state.requestText = request
-    state.clearObserver = observeFollowUpClearTransition(binding.editor, state.versions.map(version => version.id), () => {
-      if (attempt !== state) return
+  const observeBackupClear = (state: DraftBackup | null) => {
+    if (!state || state.cleared) return
+    state.clearObserver?.()
+    state.clearObserver = observeSubmissionClearTransition(state.editor, state.request, () => {
+      if (backup !== state) return
       state.cleared = true
-      finishFollowUpAttempt(state)
+      restoreBackup()
     })
-    return state
   }
 
   const sendFollowUp = async (): Promise<boolean> => {
     const currentBinding = resolveCurrentBinding()
-    if (!currentBinding || !items.length || !enabled) return false
-    binding = currentBinding
-    const prepared = prepareFollowUpAttempt()
-    if (!prepared) return false
+    if (!started || !enabled || !currentBinding || !items.length || promptSend || followUpSend) return false
+    const request = readRequest(currentBinding.editor)
+    if (request === null || !writePrefix(currentBinding.editor, items)) {
+      notice('quickFollow.multiSelection.updateFailed')
+      return false
+    }
+    const scope = currentScope
+    const draft = items
+    const operation = {}
+    followUpSend = operation
+    const valid = () => followUpSend === operation && currentScope === scope && !isBusy()
+      && items === draft && readRequest(currentBinding.editor) === request
     closeActiveFollowUpPopovers()
-    const ready = await waitUntilReady(currentBinding, prepared.scope, prepared)
-    if (!ready || attempt !== prepared || !isAttemptScopeActive(prepared.scope)) {
-      if (attempt === prepared) clearAttempt()
-      notice('quickFollow.multiSelection.sendFailed')
-      return false
+    try {
+      currentBinding.editor.dispatchEvent(new Event('input', { bubbles: true }))
+      const ready = await waitUntilReady(currentBinding, valid)
+      if (!ready || !valid() || !isCurrentBinding(currentBinding)) {
+        if (started && enabled && currentScope === scope) notice('quickFollow.multiSelection.sendFailed')
+        return false
+      }
+      const result = sendMessage(currentBinding.chatWindow)
+      if (!result.success) notice('quickFollow.multiSelection.sendFailed')
+      return result.success
+    } finally {
+      if (followUpSend === operation) followUpSend = null
     }
-    ownSendInProgress = true
-    let result: ReturnType<typeof sendMessage>
-    try { result = sendMessage(currentBinding.chatWindow) }
-    finally { ownSendInProgress = false }
-    if (!result.success) {
-      clearAttempt()
-      notice('quickFollow.multiSelection.sendFailed')
-      return false
-    }
-    return true
   }
 
   const sendMessage = (chat: HTMLElement) => {
@@ -529,86 +343,76 @@ export function createFollowUpController(
     }
   }
 
-  const tryRestoreKnownFailure = (): boolean => {
-    if (!backup || !attempt) return false
-    const currentBinding = resolveCurrentBinding()
-    if (!currentBinding || !isAttemptScopeActive(backup.scope) || attempt.submitted || readRequest(currentBinding.editor) !== attempt.raw) return false
-    if (!replaceRequestText(currentBinding.editor, '')
-      || !restoreEditorDraft(currentBinding.editor, backup.editorState)) return false
-    currentBinding.editor.contentEditable = 'true'
-    items = copyItems(backup.items)
-    syncCards()
-    backup = null
-    clearAttempt()
-    return true
+  const restoreAfterSendFailure = (state: DraftBackup | null) => {
+    if (!state || backup !== state || state.scope !== currentScope || items.length
+      || resolveCurrentBinding()?.editor !== state.editor || readRequest(state.editor) !== state.request) return
+    state.clearObserver?.()
+    if (!replaceRequestText(state.editor, '')) return
+    state.cleared = true
+    restoreBackup()
   }
 
-  const submitCustomRequest = async (
-    currentBinding: InputBinding,
-    scope: string,
-    request: string,
-    editorState: EditorSnapshot,
-    priorItems: SelectionItem[],
-  ): Promise<boolean> => {
-    backup = { scope, items: copyItems(priorItems), editorState, submitted: false, cleared: false, raw: request }
-    currentBinding.editor.contentEditable = 'false'
-    const state = startAttempt('custom', request, [], currentBinding)
-    state.clearObserver = observeSubmissionClearTransition(currentBinding.editor, request, () => {
-      if (attempt !== state) return
-      state.cleared = true
-      if (backup) {
-        backup.cleared = true
-        verifyAndRestoreBackup()
-      } else if (state.submitted) clearAttempt()
-    })
-    setUI({ mode: 'closed' })
-    closeActiveFollowUpPopovers()
-    const ready = await waitUntilReady(currentBinding, scope, state)
-    const liveBinding = resolveCurrentBinding()
-    if (!ready || attempt !== state || !enabled || !isAttemptScopeActive(scope)
-      || liveBinding?.editor !== currentBinding.editor || readRequest(currentBinding.editor) !== request) {
-      if (liveBinding?.editor === currentBinding.editor && isAttemptScopeActive(scope)
-        && !state.submitted && readRequest(currentBinding.editor) === request) {
-        currentBinding.editor.contentEditable = 'true'
-        tryRestoreKnownFailure()
-      }
-      if (attempt === state) retryRestoreDraft()
-      notice('quickFollow.multiSelection.sendFailed')
-      return false
-    }
-    ownSendInProgress = true
-    let result: ReturnType<typeof sendMessage>
-    try { result = sendMessage(currentBinding.chatWindow) }
-    finally { ownSendInProgress = false }
-    if (!result.success) {
-      if (!tryRestoreKnownFailure()) retryRestoreDraft()
-      notice('quickFollow.multiSelection.sendFailed')
-      return false
-    }
-    return true
-  }
-
-  const sendPromptSeparately = async (prompt: QuickFollowPrompt, candidate: Candidate): Promise<boolean> => {
-    if (attempt || backup || !binding || candidate.scope !== currentScope || !enabled) return false
+  const sendCustomPrompt = async (prompt: QuickFollowPrompt, candidate: Candidate): Promise<boolean> => {
+    if (!started || !enabled || promptSend || followUpSend || candidate.scope !== currentScope) return false
     const currentBinding = resolveCurrentBinding()
     if (!currentBinding) {
       notice('quickFollow.multiSelection.sendFailed')
       return false
     }
-    const editorState = captureEditorDraft(currentBinding.editor)
-    const snapshot = copyItems(items)
+    const { editor } = currentBinding
     const scope = currentScope
     const request = expandPrompt(prompt, candidate)
-    if (!writePrefix(currentBinding.editor, [])) return false
-    if (!replaceRequestText(currentBinding.editor, request)) {
-      writePrefix(currentBinding.editor, snapshot)
-      return false
+    // Replacing an unsent shortcut keeps the original draft in the single backup slot.
+    const previous = backup?.scope === scope && backup.editor === editor && !backup.cleared
+      && readRequest(editor) === backup.request && !items.length ? backup : null
+    const state: DraftBackup | null = previous ?? (items.length || hasEditorDraft(editor) ? {
+      scope, items: copyItems(items), editorState: captureEditorDraft(editor),
+      editor, request, cleared: false,
+    } : null)
+    clearBackup()
+    backup = state
+    if (state) state.request = request
+    items = []
+    syncCards()
+    const operation = {}
+    promptSend = operation
+    const valid = () => promptSend === operation && currentScope === scope && !items.length
+      && readRequest(editor) === request
+    try {
+      if (!writePrefix(editor, []) || !replaceRequestText(editor, request)) {
+        notice('quickFollow.multiSelection.sendFailed')
+        return false
+      }
+      observeBackupClear(state)
+      setUI({ mode: 'closed' })
+      closeActiveFollowUpPopovers()
+      const ready = await waitUntilReady(currentBinding, valid)
+      if (!ready || !valid()) {
+        restoreAfterSendFailure(state)
+        if (started && enabled && currentScope === scope) notice('quickFollow.multiSelection.sendFailed')
+        return false
+      }
+      const result = sendMessage(currentBinding.chatWindow)
+      if (!result.success) {
+        restoreAfterSendFailure(state)
+        notice('quickFollow.multiSelection.sendFailed')
+      }
+      return result.success
+    } finally {
+      if (promptSend === operation) promptSend = null
     }
-    return submitCustomRequest(currentBinding, scope, request, editorState, snapshot)
   }
 
-  const waitUntilReady = (currentBinding: InputBinding, scope: string, state: Attempt): Promise<boolean> => {
-    if (isReadyToSubmit(currentBinding)) return Promise.resolve(true)
+  const sendPromptSeparately = (prompt: QuickFollowPrompt, candidate: Candidate): Promise<boolean> =>
+    sendCustomPrompt(prompt, candidate)
+
+  const waitUntilReady = (currentBinding: EditorBinding, valid: () => boolean): Promise<boolean> => {
+    const ready = () => {
+      const live = resolveInput(currentBinding.chatWindow)
+      return live?.editor === currentBinding.editor && isReadyToSubmit(live)
+    }
+    if (!started || !enabled || !valid() || !isCurrentBinding(currentBinding)) return Promise.resolve(false)
+    if (ready()) return Promise.resolve(true)
     return new Promise(resolve => {
       let finished = false
       const observer = new MutationObserver(check)
@@ -623,13 +427,11 @@ export function createFollowUpController(
         resolve(ready)
       }
       function check() {
-        const latest = resolveCurrentBinding()
-        if (!started || !enabled || attempt !== state || !isAttemptScopeActive(scope)
-          || latest?.editor !== currentBinding.editor || readRequest(currentBinding.editor) !== state.requestText) {
+        if (!started || !enabled || !valid() || !isCurrentBinding(currentBinding)) {
           finish(false)
           return
         }
-        if (isReadyToSubmit(latest)) finish(true)
+        if (ready()) finish(true)
       }
       cancelReadinessWaits.add(cancel)
       const inputContainer = resolveInputContainer(currentBinding.chatWindow)
@@ -639,6 +441,7 @@ export function createFollowUpController(
       }
       observer.observe(inputContainer, {
         childList: true,
+        characterData: true,
         subtree: true,
         attributes: true,
         attributeFilter: ['class', 'aria-disabled', 'disabled'],
@@ -647,62 +450,8 @@ export function createFollowUpController(
     })
   }
 
-  const runPrompt = async (prompt: QuickFollowPrompt, candidate: Candidate): Promise<boolean> => {
-    if (items.length || candidate.scope !== currentScope || !enabled || attempt || backup) return false
-    const currentBinding = resolveCurrentBinding()
-    if (!currentBinding) {
-      notice('quickFollow.multiSelection.sendFailed')
-      return false
-    }
-    const editorState = captureEditorDraft(currentBinding.editor)
-    const request = expandPrompt(prompt, candidate)
-    if (!replaceRequestText(currentBinding.editor, request)) {
-      notice('quickFollow.multiSelection.sendFailed')
-      return false
-    }
-    return submitCustomRequest(currentBinding, currentScope, request, editorState, [])
-  }
-
-  function handleNativeSendIntent(event: Event): void {
-    const liveBinding = resolveCurrentBinding()
-    if (liveBinding && binding?.editor === liveBinding.editor) binding = liveBinding
-    if (ownSendInProgress || !isCurrentBinding(binding) || !isNativeSendIntent(event, binding)) return
-    if (attempt?.kind === 'custom' && backup && currentScope === attempt.scope) {
-      event.preventDefault()
-      event.stopImmediatePropagation()
-      return
-    }
-    if (!items.length) return
-    if (attempt?.phase === 'waiting') {
-      event.preventDefault()
-      event.stopImmediatePropagation()
-      return
-    }
-    if (attempt?.phase === 'unknown') {
-      const unresolved = attempt
-      const matching = findNewMatchingQuery(binding.chatWindow, unresolved.baselineQueries, unresolved.raw)
-      if (matching) {
-        confirmAttempt(matching)
-        event.preventDefault()
-        event.stopImmediatePropagation()
-        return
-      }
-      if (attempt !== unresolved || unresolved.cleared || currentScope !== unresolved.scope
-        || readRequest(binding.editor) !== unresolved.requestText || !isReadyToSubmit(binding)) {
-        event.preventDefault()
-        event.stopImmediatePropagation()
-        return
-      }
-      clearAttempt()
-    }
-    const prepared = prepareFollowUpAttempt()
-    if (!prepared) {
-      event.preventDefault()
-      event.stopImmediatePropagation()
-      notice('quickFollow.multiSelection.updateFailed')
-      return
-    }
-  }
+  const runPrompt = (prompt: QuickFollowPrompt, candidate: Candidate): Promise<boolean> =>
+    items.length ? Promise.resolve(false) : sendCustomPrompt(prompt, candidate)
 
   function handleMouseUp(event: MouseEvent): void {
     if (!enabled || !chatWindow) return
@@ -721,32 +470,33 @@ export function createFollowUpController(
   }
 
   const onChatChange = (event: AppEvents['chatchange']) => {
-    const nextScope = event.currentUrl.match(/^https?:\/\/[^/]+\/app\/([^/?#]+)/)?.[1]
-      ?? event.currentUrl.match(/^\/app\/([^/?#]+)/)?.[1]
-      ?? 'new-chat'
+    const nextScope = getConversationScope(event.currentUrl)
     if (nextScope === currentScope) return
-    if (pendingFollowUp?.scope === 'new-chat' && currentScope === 'new-chat' && event.isFromNewChat) {
-      pendingFollowUp.scope = nextScope
-      pendingFollowUp.items.forEach(item => {
-        if (item.anchor) item.anchor.conversationId = nextScope
-      })
-    } else pendingFollowUp = null
-    if (pendingNewChatScope && pendingNewChatScope !== nextScope) {
-      pendingNewChatScope = null
-    }
-    if (attempt && attempt.scope === 'new-chat' && event.isFromNewChat && currentScope === 'new-chat') {
+    if (currentScope === 'new-chat' && event.isFromNewChat) {
+      historyAnchors.retire()
+      historyAnchors.migrate(currentScope, nextScope, chatWindow)
+    } else historyAnchors.clear()
+    cancelReadinessWaits.forEach(cancel => cancel())
+    backup?.clearObserver?.()
+    if (backup?.scope === 'new-chat' && currentScope === 'new-chat' && event.isFromNewChat) {
+      backup.scope = nextScope
+      backup.items = backup.items.map(item => item.anchor?.conversationId === 'new-chat'
+        ? { ...item, anchor: { ...item.anchor, conversationId: nextScope } } : item)
       currentScope = nextScope
-      pendingNewChatScope = nextScope
+      restoreBackup()
+      observeBackupClear(backup)
       return
     }
-    cancelReadinessWaits.forEach(cancel => cancel())
-    if (backup && binding) binding.editor.contentEditable = 'true'
-    if (!backup) clearAttempt()
-    items = backup?.scope === nextScope ? copyItems(backup.items) : []
-    syncCards()
+    items = []
     if (currentBindingSafe()) writePrefix(currentBindingSafe()!.editor, [])
-    if (attempt && attempt.kind === 'follow-up') clearAttempt()
     currentScope = nextScope
+    syncCards()
+    if (backup?.scope === nextScope) {
+      const currentBinding = resolveCurrentBinding()
+      if (currentBinding) backup.editor = currentBinding.editor
+      restoreBackup()
+      observeBackupClear(backup)
+    }
     setUI({ mode: 'closed' })
   }
 
@@ -760,19 +510,21 @@ export function createFollowUpController(
 
   const handleEnabledChanged = (nextEnabled: boolean) => {
     enabled = nextEnabled
+    restoreNativeAskMenu?.()
+    restoreNativeAskMenu = enabled ? hideNativeAskMenu() : null
     if (enabled) {
       bindBodyObserver()
       return
     }
-    pendingFollowUp = null
+    historyAnchors.clear()
+    followUpSend = null
+    promptSend = null
     bodyObserver?.disconnect()
     bodyObserver = null
     cancelReadinessWaits.forEach(cancel => cancel())
     if (binding) writePrefix(binding.editor, [])
-    if (backup && binding) binding.editor.contentEditable = 'true'
     restoreHistoryForChat()
-    clearAttempt()
-    backup = null
+    clearBackup()
     items = []
     syncCards()
     setUI({ mode: 'closed' })
@@ -797,8 +549,6 @@ export function createFollowUpController(
     reconcile()
   }
 
-  const retryDraftRecovery = () => retryRestoreDraft()
-
   const start = () => {
     if (started) return
     started = true
@@ -809,24 +559,25 @@ export function createFollowUpController(
     browser.storage.onChanged.addListener(onQuickFollowStorageChanged)
     quickFollowStore.getState().hydrate().catch(error => console.warn('Failed to hydrate Follow-up settings:', error))
     eventBus.on('chatchange', onChatChange)
-    if (enabled) bindBodyObserver()
+    handleEnabledChanged(quickFollowStore.getState().settings.enabled)
   }
 
   const stop = () => {
     if (!started) return
     started = false
-    pendingFollowUp = null
+    restoreNativeAskMenu?.()
+    restoreNativeAskMenu = null
+    historyAnchors.clear()
+    followUpSend = null
+    promptSend = null
     cancelReadinessWaits.forEach(cancel => cancel())
     if (binding) writePrefix(binding.editor, [])
-    if (backup && binding) binding.editor.contentEditable = 'true'
     clearQuoteHighlight()
     restoreHistoryForChat()
     bodyObserver?.disconnect()
     bodyObserver = null
     detachChatWindow()
-    clearAttempt()
-    pendingNewChatScope = null
-    backup = null
+    clearBackup()
     settingsUnsubscribe?.()
     settingsUnsubscribe = null
     browser.storage.onChanged.removeListener(onQuickFollowStorageChanged)
@@ -845,7 +596,6 @@ export function createFollowUpController(
     }
     if (!enabled) return reject('disabled')
     if (candidate.scope !== currentScope) return reject('scope_changed')
-    if (attempt || backup) return reject('busy')
     const liveBinding = resolveCurrentBinding()
     if (!liveBinding || !isCurrentBinding(liveBinding)) return reject('input_unavailable')
     mountEditor(liveBinding)
@@ -876,7 +626,7 @@ export function createFollowUpController(
   }
 
   const update = (id: string, next: (item: SelectionItem) => SelectionItem): boolean => {
-    if (!isCurrentBinding(binding) || attempt || backup) return false
+    if (!isCurrentBinding(binding)) return false
     const index = items.findIndex(item => item.id === id)
     if (index < 0) return false
     const previous = items
@@ -894,7 +644,7 @@ export function createFollowUpController(
   const changeQuickComment = (id: string, value: string) => {
     // Existing comments stay unchanged in the card and submission prefix until Save.
     if (currentUI.mode === 'comment' && currentUI.selectionId === id && currentUI.sourceAnchor) {
-      if (!isCurrentBinding(binding) || attempt || backup || !items.some(item => item.id === id)) return false
+      if (!isCurrentBinding(binding) || !items.some(item => item.id === id)) return false
       setUI({ ...currentUI, commentDraft: value })
       return true
     }
@@ -922,7 +672,7 @@ export function createFollowUpController(
   }
 
   const openQuickComment = (id: string): boolean => {
-    if (!enabled || !isCurrentBinding(binding) || attempt || backup) return false
+    if (!enabled || !isCurrentBinding(binding)) return false
     const item = items.find(selection => selection.id === id)
     if (!item) return false
     let position = item.anchor ? readQuoteAnchorPosition(item.anchor) : null
@@ -952,7 +702,7 @@ export function createFollowUpController(
   }
 
   const remove = (id: string): boolean => {
-    if (!isCurrentBinding(binding) || attempt || backup) return false
+    if (!isCurrentBinding(binding)) return false
     const previous = items
     const next = items.filter(item => item.id !== id)
     if (next.length === previous.length) return false
@@ -968,27 +718,14 @@ export function createFollowUpController(
   }
 
   const appendPrompt = (prompt: QuickFollowPrompt, candidate: Candidate): boolean => {
-    if (!isCurrentBinding(binding) || candidate.scope !== currentScope || attempt || backup) return false
+    if (!isCurrentBinding(binding) || candidate.scope !== currentScope) return false
     const expanded = expandPrompt(prompt, candidate)
     const success = appendRequestText(binding.editor, expanded)
     if (!success) notice('quickFollow.multiSelection.unsupportedDraft')
     return success
   }
 
-  const requestSend = (): Promise<boolean> => {
-    if (attempt?.phase === 'unknown' && attempt.kind === 'follow-up') {
-      const unresolved = attempt
-      if (!isCurrentBinding(binding) || currentScope !== unresolved.scope || unresolved.cleared) return Promise.resolve(false)
-      const matching = findNewMatchingQuery(binding.chatWindow, unresolved.baselineQueries, unresolved.raw)
-      if (matching) {
-        confirmAttempt(matching)
-        return Promise.resolve(false)
-      }
-      if (readRequest(binding.editor) !== unresolved.requestText || !isReadyToSubmit(binding)) return Promise.resolve(false)
-      clearAttempt()
-    }
-    return sendFollowUp()
-  }
+  const requestSend = (): Promise<boolean> => sendFollowUp()
 
   const dismiss = () => {
     // Outside pointerdown runs before mouseup, which must not recapture the dismissed range.
@@ -1004,7 +741,7 @@ export function createFollowUpController(
     else clearQuoteHighlight()
   }
 
-  const isBusy = () => !!attempt || !!backup
+  const isBusy = () => false
   const hasDraftCards = () => items.length > 0
 
   return {
@@ -1020,7 +757,6 @@ export function createFollowUpController(
     sendPromptSeparately,
     runPrompt,
     requestSend,
-    retryDraftRecovery,
     dismiss,
     previewSelectionSource,
     hasDraftCards,

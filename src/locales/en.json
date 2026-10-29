@@ -102,6 +102,7 @@
     "quickFollow": {
       "title": "Quick Follow-up",
       "enable": "Enable Quick Follow-up",
+      "enableDescription": "When enabled, Quick Follow-up hides Gemini’s built-in Ask button. Turn it off to show the button again.",
       "customPrompts": {
         "title": "Skill Management",
         "description": "The first $1 skills are pinned, scroll horizontally to view more",

@@ -102,6 +102,7 @@
     "quickFollow": {
       "title": "빠른 후속 질문",
       "enable": "빠른 후속 질문 활성화",
+      "enableDescription": "빠른 후속 질문을 켜면 Gemini 기본 질문 버튼이 숨겨집니다. 끄면 다시 표시됩니다.",
       "customPrompts": {
         "title": "스킬 관리",
         "description": "처음 $1개의 스킬이 고정되어 있습니다. 가로로 스크롤하여 더 많이 볼 수 있습니다",

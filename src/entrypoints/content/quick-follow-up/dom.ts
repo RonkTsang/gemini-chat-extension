@@ -1,9 +1,13 @@
+import { extractGeminiAccountRoutePrefix } from '@/utils/geminiAccountRoute'
 import { REQUEST_HEADER, serializePrefix, type QuoteAnchor, type SelectionItem } from './protocol'
 
-export type InputBinding = {
+export type EditorBinding = {
   chatWindow: HTMLElement
   richTextarea: HTMLElement
   editor: HTMLElement
+}
+
+export type InputBinding = EditorBinding & {
   sendButton: HTMLElement | null
 }
 
@@ -20,20 +24,37 @@ const INPUT_SELECTOR = 'rich-textarea .ql-editor.textarea.new-input-ui[contented
 const SEND_SELECTOR = '[data-node-type="input-area"] .send-button-container .send-button'
 const QUOTE_CONTEXT_LENGTH = 48
 
-export function getConversationScope(locationPath = window.location.pathname): string {
-  return locationPath.match(/^\/app\/([^/?#]+)/)?.[1] ?? 'new-chat'
+export function hideNativeAskMenu(): () => void {
+  const style = document.createElement('style')
+  style.setAttribute('data-gpk-follow-native-ask', '')
+  style.textContent = 'highlight-to-ask-menu { display: none !important; }'
+  document.head.append(style)
+  return () => style.remove()
 }
 
-export function resolveInput(chatWindow: Element | null = document.querySelector('chat-window')): InputBinding | null {
+export function getConversationScope(locationPath = window.location.pathname): string {
+  const pathname = new URL(locationPath, window.location.origin).pathname
+  const accountPrefix = extractGeminiAccountRoutePrefix(pathname)
+  return pathname.slice(accountPrefix.length).match(/^\/app\/([^/]+)/)?.[1] ?? 'new-chat'
+}
+
+export function resolveEditor(chatWindow: Element | null = document.querySelector('chat-window')): EditorBinding | null {
   if (!(chatWindow instanceof HTMLElement)) return null
   const editors = chatWindow.querySelectorAll<HTMLElement>(INPUT_SELECTOR)
-  const buttons = chatWindow.querySelectorAll<HTMLElement>(SEND_SELECTOR)
-  if (editors.length !== 1 || buttons.length > 1) return null
+  if (editors.length !== 1) return null
 
   const editor = editors[0]
   const richTextarea = editor.closest<HTMLElement>('rich-textarea')
   if (!richTextarea) return null
-  return { chatWindow, richTextarea, editor, sendButton: buttons[0] ?? null }
+  return { chatWindow, richTextarea, editor }
+}
+
+export function resolveInput(chatWindow: Element | null = document.querySelector('chat-window')): InputBinding | null {
+  const binding = resolveEditor(chatWindow)
+  if (!binding) return null
+  const buttons = binding.chatWindow.querySelectorAll<HTMLElement>(SEND_SELECTOR)
+  if (buttons.length > 1) return null
+  return { ...binding, sendButton: buttons[0] ?? null }
 }
 
 export function resolveInputContainer(chatWindow: Element): HTMLElement | null {
@@ -89,6 +110,11 @@ function readPlainEditorChildren(editor: HTMLElement): string | null {
 
 export function readRequest(editor: HTMLElement): string | null {
   return readPlainEditorChildren(editor)
+}
+
+export function hasEditorDraft(editor: HTMLElement): boolean {
+  const request = readRequest(editor)
+  return request === null || request.trim().length > 0
 }
 
 function makeHiddenNode(text: string, attribute: 'data-gpk-follow-prefix' | 'data-gpk-follow-request' | 'data-gpk-follow-sentinel'): HTMLParagraphElement {
@@ -229,33 +255,6 @@ export function observeSubmissionClearTransition(
   }
 }
 
-export function observeFollowUpClearTransition(
-  editor: HTMLElement,
-  selectionIds: readonly string[],
-  onClearTransition: () => void,
-): () => void {
-  const hasSubmittedMarkers = () => editor.hasAttribute('data-gpk-follow-prefix')
-    || editor.querySelector('[data-gpk-follow-prefix]') !== null
-    || selectionIds.some(id => [...editor.querySelectorAll<HTMLElement>('[data-gpk-follow-sentinel]')]
-      .some(node => node.getAttribute('data-gpk-follow-sentinel') === id))
-  const hadMarkers = hasSubmittedMarkers()
-  if (!hadMarkers) return () => undefined
-  const checkTransition = () => {
-    if (hasSubmittedMarkers()) return
-    observer.disconnect()
-    editor.removeEventListener('input', checkTransition)
-    onClearTransition()
-  }
-  const observer = new MutationObserver(checkTransition)
-  observer.observe(editor, { childList: true, subtree: true, attributes: true,
-    attributeFilter: ['data-gpk-follow-prefix', 'data-gpk-follow-sentinel'] })
-  editor.addEventListener('input', checkTransition)
-  return () => {
-    observer.disconnect()
-    editor.removeEventListener('input', checkTransition)
-  }
-}
-
 export function captureCandidate(range: Range, messageContent: Element, position: Candidate['position']): Candidate | null {
   if (!messageContent.contains(range.startContainer) || !messageContent.contains(range.endContainer)) return null
   const text = range.toString()
@@ -352,8 +351,8 @@ export function chatWindowAddedOrRemoved(records: readonly MutationRecord[]): bo
     node instanceof Element && (node.matches('chat-window') || node.querySelector('chat-window'))))
 }
 
-export function inputStructureChanged(records: readonly MutationRecord[]): boolean {
-  const selector = 'rich-textarea, .ql-editor.textarea.new-input-ui[contenteditable], [data-node-type="input-area"], .send-button-container, .send-button'
+export function editorStructureChanged(records: readonly MutationRecord[]): boolean {
+  const selector = 'rich-textarea, .ql-editor.textarea.new-input-ui[contenteditable]'
   const isInput = (element: Element) => element.matches(selector) || !!element.querySelector(selector)
   return records.some(record => {
     if (record.type !== 'childList') return false
@@ -363,26 +362,10 @@ export function inputStructureChanged(records: readonly MutationRecord[]): boole
   })
 }
 
-export function findQueryBySentinel(editor: Element, id: string): Element | null {
-  const matches = [...editor.querySelectorAll('[data-gpk-follow-sentinel]')]
-    .filter(node => node.getAttribute('data-gpk-follow-sentinel') === id)
-  return matches.length === 1 ? matches[0] : null
-}
-
 export function currentSentinelIds(editor: Element): string[] {
   return [...editor.querySelectorAll('[data-gpk-follow-sentinel]')]
     .map(node => node.getAttribute('data-gpk-follow-sentinel'))
     .filter((id): id is string => !!id)
-}
-
-export function removedSentinelIds(records: readonly MutationRecord[]): string[] {
-  const ids = new Set<string>()
-  for (const record of records) for (const node of record.removedNodes) {
-    if (!(node instanceof Element) || !node.hasAttribute('data-gpk-follow-sentinel')) continue
-    const id = node.getAttribute('data-gpk-follow-sentinel')
-    if (id) ids.add(id)
-  }
-  return [...ids]
 }
 
 export function findCurrentChatWindow(): HTMLElement | null {
@@ -635,12 +618,6 @@ export function resolveQueryText(userQuery: Element): HTMLElement | null {
 
 export function readQueryLines(userQuery: Element): HTMLElement[] {
   return [...(resolveQueryText(userQuery)?.querySelectorAll<HTMLElement>('p.query-text-line') ?? [])]
-}
-
-export function findNewMatchingQuery(chatWindow: Element, baseline: WeakSet<Element>, raw: string): Element | null {
-  const matches = [...chatWindow.querySelectorAll('user-query')]
-    .filter(query => !baseline.has(query) && readRawQuery(query) === raw)
-  return matches.length === 1 ? matches[0] : null
 }
 
 export function baselineQueries(chatWindow: Element): WeakSet<Element> {

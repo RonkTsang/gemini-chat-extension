@@ -102,6 +102,7 @@
     "quickFollow": {
       "title": "快速追问",
       "enable": "启用 Quick Follow-up",
+      "enableDescription": "开启后将隐藏 Gemini 原生的 Ask 按钮，关闭后恢复显示。",
       "customPrompts": {
         "title": "技能管理",
         "description": "前 $1 个技能固定显示，其余技能可横向滚动查看",

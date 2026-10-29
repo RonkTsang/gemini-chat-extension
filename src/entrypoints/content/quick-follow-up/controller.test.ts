@@ -37,6 +37,7 @@ vi.mock('wxt/browser', () => ({ browser: mockBrowser }))
 import { QUICK_FOLLOW_PLACEHOLDER } from '@/domain/quick-follow/types'
 import { createFollowUpController } from './controller'
 import { readRequest, replaceRequestText, resolveInput } from './dom'
+import * as followUpDom from './dom'
 import { serializeMessage } from './protocol'
 
 const fixture = readFileSync(resolve(process.cwd(), 'docs/dom/input.html'), 'utf8')
@@ -164,7 +165,6 @@ describe('Follow-up controller recovery', () => {
       expect(readRequest(editor)).toBe('Look at quoted source')
       expect(editor.querySelector('[data-gpk-follow-prefix]')).toBeNull()
       if (fails) throw new Error('native send failed')
-      addSubmittedQuery(chat, readRequest(editor)!)
       clearEditor(editor)
     })
 
@@ -184,7 +184,7 @@ describe('Follow-up controller recovery', () => {
     }
   })
 
-  it('keeps the no-card prompt one-click while waiting for native Send readiness and exact confirmation', async () => {
+  it('keeps the no-card prompt one-click while waiting for native Send readiness', async () => {
     removeSubmitButton()
     const chat = document.querySelector<HTMLElement>('chat-window')!
     const editor = chat.querySelector<HTMLElement>('.ql-editor')!
@@ -229,7 +229,7 @@ describe('Follow-up controller recovery', () => {
     controller.stop()
   })
 
-  it('single-sends only the expanded prompt and restores the card plus the original draft after confirmation and clear', async () => {
+  it('single-sends only the expanded prompt and restores the card plus the original draft on editor clear', async () => {
     removeStopButton()
     const chat = document.querySelector<HTMLElement>('chat-window')!
     const editor = chat.querySelector<HTMLElement>('.ql-editor')!
@@ -268,7 +268,7 @@ describe('Follow-up controller recovery', () => {
     controller.stop()
   })
 
-  it('allows an explicit native-button retry after an unknown submission without auto-resending', async () => {
+  it('leaves native retries and draft editing available without tracking submission', async () => {
     vi.useFakeTimers()
     removeStopButton()
     const chat = document.querySelector<HTMLElement>('chat-window')!
@@ -291,19 +291,19 @@ describe('Follow-up controller recovery', () => {
     expect(firstClick.defaultPrevented).toBe(false)
     expect(nativeClick).toHaveBeenCalledTimes(1)
     await vi.advanceTimersByTimeAsync(15_001)
-    expect(controller.isBusy()).toBe(true)
+    expect(controller.isBusy()).toBe(false)
     expect(nativeClick).toHaveBeenCalledTimes(1)
 
     const retryClick = new MouseEvent('click', { bubbles: true, cancelable: true })
     binding.sendButton!.dispatchEvent(retryClick)
     expect(retryClick.defaultPrevented).toBe(false)
     expect(nativeClick).toHaveBeenCalledTimes(2)
-    expect(controller.isBusy()).toBe(true)
+    expect(controller.isBusy()).toBe(false)
     binding.sendButton!.removeEventListener('click', nativeClick)
     controller.stop()
   })
 
-  it('blocks a native retry when its exact query has already appeared but the editor has not cleared', async () => {
+  it('does not use matching history messages to block native retries', async () => {
     vi.useFakeTimers()
     removeStopButton()
     const chat = document.querySelector<HTMLElement>('chat-window')!
@@ -330,10 +330,10 @@ describe('Follow-up controller recovery', () => {
     await Promise.resolve()
     const retryClick = new MouseEvent('click', { bubbles: true, cancelable: true })
     binding.sendButton!.dispatchEvent(retryClick)
-    expect(retryClick.defaultPrevented).toBe(true)
-    expect(nativeClick).toHaveBeenCalledTimes(1)
+    expect(retryClick.defaultPrevented).toBe(false)
+    expect(nativeClick).toHaveBeenCalledTimes(2)
     expect(controller.hasDraftCards()).toBe(true)
-    expect(controller.isBusy()).toBe(true)
+    expect(controller.isBusy()).toBe(false)
     binding.sendButton!.removeEventListener('click', nativeClick)
     controller.stop()
   })
@@ -360,7 +360,7 @@ describe('Follow-up controller recovery', () => {
     binding.sendButton!.addEventListener('click', () => addSubmittedQuery(chat, raw))
     await expect(controller.requestSend()).resolves.toBe(true)
     await flushObservers()
-    expect(controller.isBusy()).toBe(true)
+    expect(controller.isBusy()).toBe(false)
     expect(controller.hasDraftCards()).toBe(true)
 
     editor.replaceChildren()
@@ -397,109 +397,150 @@ describe('Follow-up controller recovery', () => {
     controller.stop()
   })
 
-  it('restores the backup after a late exact confirmation and observed clear', async () => {
+  it('restores on editor clear without matching history or a confirmation timeout', async () => {
     vi.useFakeTimers()
     removeStopButton()
     const chat = document.querySelector<HTMLElement>('chat-window')!
     const editor = chat.querySelector<HTMLElement>('.ql-editor')!
     const original = readRequest(editor)!
-    const sendButton = chat.querySelector<HTMLButtonElement>('.send-button.submit')!
-    let submittedRaw = ''
-    sendButton.addEventListener('click', () => { submittedRaw = readRequest(editor) ?? '' })
     const controller = createFollowUpController(vi.fn())
     controller.start()
     const candidate = {
       text: 'quoted source', scope: 'conversation-1', position: { clientX: 40, clientY: 50 },
-      anchor: {
-        quoteId: 'quote-id', conversationId: 'conversation-1', sourceMessageId: 'message-id',
-        selectedText: 'quoted source', startOffset: 0, endOffset: 13, prefix: '', suffix: '',
-      },
+      anchor: { quoteId: 'quote-id', conversationId: 'conversation-1', sourceMessageId: 'message-id',
+        selectedText: 'quoted source', startOffset: 0, endOffset: 13, prefix: '', suffix: '' },
     }
-    controller.add(candidate)
-    await expect(controller.sendPromptSeparately(prompt, candidate)).resolves.toBe(true)
-    await vi.advanceTimersByTimeAsync(15_001)
-    expect(editor.contentEditable).toBe('true')
-    addSubmittedQuery(chat, submittedRaw)
-    clearEditor(editor)
-    await Promise.resolve()
-    await Promise.resolve()
-    expect(readRequest(editor)).toBe(original)
-    expect(editor.querySelector('[data-gpk-follow-prefix]')?.textContent).toContain('quoted source')
-    expect(controller.hasDraftCards()).toBe(true)
-
-    controller.stop()
+    try {
+      controller.add(candidate)
+      await expect(controller.sendPromptSeparately(prompt, candidate)).resolves.toBe(true)
+      expect(editor.contentEditable).toBe('true')
+      expect(controller.hasDraftCards()).toBe(false)
+      expect(controller.isBusy()).toBe(false)
+      await vi.advanceTimersByTimeAsync(15_001)
+      addSubmittedQuery(chat, 'a different native message format')
+      await Promise.resolve()
+      expect(readRequest(editor)).toBe('Look at quoted source')
+      clearEditor(editor)
+      expect(readRequest(editor)).toBe(original)
+      expect(controller.hasDraftCards()).toBe(true)
+    } finally {
+      controller.stop()
+    }
   })
 
-  it('does not overwrite a new draft after a custom send times out without exact confirmation', async () => {
-    vi.useFakeTimers()
+  it('keeps native sends and editing available and does not overwrite a changed request', async () => {
     removeStopButton()
     const chat = document.querySelector<HTMLElement>('chat-window')!
     const editor = chat.querySelector<HTMLElement>('.ql-editor')!
     const sendButton = chat.querySelector<HTMLButtonElement>('.send-button.submit')!
-    sendButton.addEventListener('click', vi.fn())
     const controller = createFollowUpController(vi.fn())
     controller.start()
     const candidate = {
       text: 'quoted source', scope: 'conversation-1', position: { clientX: 40, clientY: 50 },
-      anchor: {
-        quoteId: 'quote-id', conversationId: 'conversation-1', sourceMessageId: 'message-id',
-        selectedText: 'quoted source', startOffset: 0, endOffset: 13, prefix: '', suffix: '',
-      },
+      anchor: { quoteId: 'quote-id', conversationId: 'conversation-1', sourceMessageId: 'message-id',
+        selectedText: 'quoted source', startOffset: 0, endOffset: 13, prefix: '', suffix: '' },
     }
-    controller.add(candidate)
-    await expect(controller.sendPromptSeparately(prompt, candidate)).resolves.toBe(true)
-    await vi.advanceTimersByTimeAsync(15_001)
-    const userText = 'new text typed after the uncertain send'
-    const { replaceRequestText: replace } = await import('./dom')
-    expect(replace(editor, userText)).toBe(true)
-    controller.retryDraftRecovery()
-    expect(readRequest(editor)).toBe(userText)
-    expect(editor.contentEditable).toBe('true')
-    controller.stop()
+    try {
+      controller.add(candidate)
+      await expect(controller.sendPromptSeparately(prompt, candidate)).resolves.toBe(true)
+      const click = new MouseEvent('click', { bubbles: true, cancelable: true })
+      sendButton.dispatchEvent(click)
+      expect(click.defaultPrevented).toBe(false)
+      const enter = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })
+      editor.dispatchEvent(enter)
+      expect(enter.defaultPrevented).toBe(false)
+      expect(editor.contentEditable).toBe('true')
+      expect(replaceRequestText(editor, 'new user draft')).toBe(true)
+      await flushObservers()
+      expect(readRequest(editor)).toBe('new user draft')
+      clearEditor(editor)
+      await flushObservers()
+      expect(readRequest(editor)).toBe('')
+      expect(controller.isBusy()).toBe(false)
+    } finally {
+      controller.stop()
+    }
   })
 
-  it('keeps a new-chat send pending through the early URL transition until its exact query appears', async () => {
-    window.history.replaceState({}, '', '/app')
-    removeSubmitButton()
-    const chat = document.querySelector<HTMLElement>('chat-window')!
-    const editor = chat.querySelector<HTMLElement>('.ql-editor')!
-    const stopButton = chat.querySelector<HTMLButtonElement>('.send-button.stop')!
+  it.each(['<p></p>', '<p><br></p>', '<p> </p><p></p>'])(
+    'sends from an empty composer without capturing or observing a backup: %s', async html => {
+      removeStopButton()
+      const editor = document.querySelector<HTMLElement>('.ql-editor')!
+      editor.innerHTML = html
+      const capture = vi.spyOn(followUpDom, 'captureEditorDraft')
+      const observe = vi.spyOn(followUpDom, 'observeSubmissionClearTransition')
+      const controller = createFollowUpController(vi.fn())
+      controller.start()
+      try {
+        await expect(controller.runPrompt(prompt, {
+          text: 'source', scope: 'conversation-1', position: { clientX: 40, clientY: 50 },
+          anchor: { quoteId: 'q', conversationId: 'conversation-1', sourceMessageId: 'm',
+            selectedText: 'source', startOffset: 0, endOffset: 6, prefix: '', suffix: '' },
+        })).resolves.toBe(true)
+        expect(capture).not.toHaveBeenCalled()
+        expect(observe).not.toHaveBeenCalled()
+        expect(editor.contentEditable).toBe('true')
+        expect(controller.isBusy()).toBe(false)
+        clearEditor(editor)
+        await flushObservers()
+        expect(readRequest(editor)).toBe('')
+      } finally {
+        controller.stop()
+      }
+    }
+  )
+
+  it('keeps the original draft when replacing an uncleared shortcut with another shortcut', async () => {
+    removeStopButton()
+    const editor = document.querySelector<HTMLElement>('.ql-editor')!
+    const original = readRequest(editor)
     const controller = createFollowUpController(vi.fn())
     controller.start()
     const candidate = {
-      text: 'quoted source', scope: 'new-chat', position: { clientX: 40, clientY: 50 },
-      anchor: {
-        quoteId: 'quote-id', conversationId: 'new-chat', sourceMessageId: 'message-id',
-        selectedText: 'quoted source', startOffset: 0, endOffset: 13, prefix: '', suffix: '',
-      },
+      text: 'source', scope: 'conversation-1', position: { clientX: 40, clientY: 50 },
+      anchor: { quoteId: 'q', conversationId: 'conversation-1', sourceMessageId: 'm',
+        selectedText: 'source', startOffset: 0, endOffset: 6, prefix: '', suffix: '' },
     }
-    controller.add(candidate)
-    const send = vi.fn(() => {
-      const raw = serializeMessage([{
-        id: 'quote-id', revision: 2, selectedText: 'quoted source', comment: '',
-        anchor: candidate.anchor,
-      }], readRequest(editor) ?? '')
-      addSubmittedQuery(chat, raw)
+    try {
+      await expect(controller.runPrompt(prompt, candidate)).resolves.toBe(true)
+      await expect(controller.runPrompt({ ...prompt, template: 'Second shortcut' }, candidate)).resolves.toBe(true)
+      expect(readRequest(editor)).toBe('Second shortcut')
       clearEditor(editor)
+      await flushObservers()
+      expect(readRequest(editor)).toBe(original)
+    } finally {
+      controller.stop()
+    }
+  })
+
+  it('cancels a queued extension send when the URL changes before clicking', async () => {
+    window.history.replaceState({}, '', '/app')
+    removeSubmitButton()
+    const chat = document.querySelector<HTMLElement>('chat-window')!
+    const stopButton = chat.querySelector<HTMLButtonElement>('.send-button.stop')!
+    const controller = createFollowUpController(vi.fn())
+    controller.start()
+    controller.add({
+      text: 'quoted source', scope: 'new-chat', position: { clientX: 40, clientY: 50 },
+      anchor: { quoteId: 'q', conversationId: 'new-chat', sourceMessageId: 'm',
+        selectedText: 'quoted source', startOffset: 0, endOffset: 13, prefix: '', suffix: '' },
     })
+    const send = vi.fn()
     stopButton.addEventListener('click', send)
-    const pending = controller.requestSend()
-    await flushObservers()
-    window.history.replaceState({}, '', '/app/created-chat')
-    mockEventBus.emitSync('chatchange', {
-      originalUrl: 'https://gemini.google.com/app',
-      currentUrl: 'https://gemini.google.com/app/created-chat',
-      isFromNewChat: true, timestamp: Date.now(),
-    })
-    expect(controller.hasDraftCards()).toBe(true)
-    stopButton.classList.remove('stop')
-    stopButton.classList.add('submit')
-    stopButton.setAttribute('aria-label', 'Send message')
-    await flushObservers()
-    await expect(pending).resolves.toBe(true)
-    await flushObservers()
-    expect(send).toHaveBeenCalledTimes(1)
-    expect(controller.hasDraftCards()).toBe(false)
-    controller.stop()
+    try {
+      const pending = controller.requestSend()
+      window.history.replaceState({}, '', '/app/another-chat')
+      mockEventBus.emitSync('chatchange', {
+        originalUrl: 'https://gemini.google.com/app',
+        currentUrl: 'https://gemini.google.com/app/another-chat',
+        isFromNewChat: true, timestamp: Date.now(),
+      })
+      stopButton.classList.replace('stop', 'submit')
+      await expect(pending).resolves.toBe(false)
+      expect(send).not.toHaveBeenCalled()
+      expect(controller.hasDraftCards()).toBe(false)
+    } finally {
+      controller.stop()
+    }
   })
 })

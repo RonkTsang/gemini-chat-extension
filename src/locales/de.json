@@ -102,6 +102,7 @@
     "quickFollow": {
       "title": "Schnelle Rückfrage",
       "enable": "Schnelle Rückfrage aktivieren",
+      "enableDescription": "Wenn die schnelle Rückfrage aktiviert ist, wird Geminis integrierte Schaltfläche „Fragen“ ausgeblendet. Deaktivieren Sie die Funktion, um sie wieder anzuzeigen.",
       "customPrompts": {
         "title": "Skill-Management",
         "description": "Die ersten $1 Skills sind angeheftet, scrollen Sie horizontal für weitere",
