@@ -1,3 +1,12 @@
+## [0.12.7](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.12.6...v0.12.7) (2026-10-30)
+
+
+### Bug Fixes
+
+* **bulk-delete:** adjust margin-top for entry button to improve alignment ([873d1aa](https://github.com/RonkTsang/gemini-chat-extension/commit/873d1aa19d907163ec04f79345c4d26014396c45))
+* **bulk-delete:** update button text color variable for consistency ([250d41b](https://github.com/RonkTsang/gemini-chat-extension/commit/250d41be28ee81f271a59257f9cc1e83f87e124b))
+* **library:** restore new-tab buttons across Library versions ([c2fb5d4](https://github.com/RonkTsang/gemini-chat-extension/commit/c2fb5d43610a61800cb5f412469f06ff62b644b9))
+
 ## [0.12.6](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.12.5...v0.12.6) (2026-10-08)
 
 
