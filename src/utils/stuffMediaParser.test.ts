@@ -24,6 +24,7 @@ import {
   filterMediaItemsAudio,
   STUFF_REQUEST_TYPES,
   isStuffMediaSourcePath,
+  isStuffMediaRequestUrl,
 } from './stuffMediaParser';
 import fs from 'fs';
 import path from 'path';
@@ -36,11 +37,19 @@ const __dirname = path.dirname(__filename);
 // Read test sample data
 const SAMPLE_RESPONSE_PATH = path.resolve(__dirname, '../../test/samples/media-response.txt');
 const sampleResponse = fs.readFileSync(SAMPLE_RESPONSE_PATH, 'utf-8');
-const LIBRARY_REQUEST_PATH = path.resolve(__dirname, '../../.original/library/request.md');
-const libraryRequestMarkdown = fs.readFileSync(LIBRARY_REQUEST_PATH, 'utf-8');
-const libraryResponse = libraryRequestMarkdown.match(/```([\s\S]*?)```/)?.[1]?.trim() ?? '';
+// Library also uses a single newline after the XSSI prefix.
+const libraryResponse = sampleResponse.replace(/^(\)\]\}')\n\n/, '$1\n');
 
 describe('stuffMediaParser', () => {
+  it('matches legacy Library URLs with account prefixes and reordered parameters', () => {
+    expect(isStuffMediaRequestUrl('/u/0/_/BardChatUi/data/batchexecute?source-path=%2Fu%2F0%2Flibrary&rpcids=jGArJ')).toBe(true);
+    expect(isStuffMediaRequestUrl('/_/BardChatUi/data/batchexecute?rpcids=jGArJ&source-path=%2Flibrary')).toBe(true);
+    expect(isStuffMediaRequestUrl('https://example.com/_/BardChatUi/data/batchexecute?rpcids=jGArJ&source-path=%2Flibrary')).toBe(false);
+    expect(isStuffMediaRequestUrl('/u/0/_/BardChatUi/data/batchexecuteOther?rpcids=jGArJ&source-path=%2Fu%2F0%2Flibrary')).toBe(false);
+    expect(isStuffMediaSourcePath('/u/1/library')).toBe(true);
+    expect(isStuffMediaSourcePath('/u/1extra/library')).toBe(false);
+    expect(isStuffMediaSourcePath('/u/0/library/other')).toBe(false);
+  });
   // ==================== Request Type Identification ====================
   describe('identifyStuffRequestType', () => {
     it('should identify Media type requests', () => {
@@ -194,16 +203,16 @@ describe('stuffMediaParser', () => {
       expect(titleItems[0].title).toBe('Why Warren Buffett Bought SIRI XM Despite Huge Losses');
     });
 
-    it('should parse current Library media response data', () => {
+    it('should parse Library media responses with a single XSSI newline', () => {
       const result = parseMediaResponse(libraryResponse);
 
       expect(result).not.toBeNull();
       expect(result?.totalCount).toBeGreaterThan(0);
 
       const firstItem = result!.items[0];
-      expect(firstItem.conversationId).toBe('c_9f13b6112bdb41cf');
-      expect(firstItem.responseId).toBe('r_bcb2eed9c92e4379');
-      expect(firstItem.timestamp).toBe(1781941629);
+      expect(firstItem.conversationId).toBe('c_96480b882e7bb164');
+      expect(firstItem.responseId).toBe('r_54bdc43ff50972bf');
+      expect(firstItem.timestamp).toBe(1768396706);
       expect(firstItem.thumbnailUrl).toContain('https://lh3.googleusercontent.com/');
     });
 

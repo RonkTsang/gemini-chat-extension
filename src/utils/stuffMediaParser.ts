@@ -8,6 +8,8 @@
  * - Request type array: [1,1,1,0,0,0,1] (Media)
  */
 
+import { extractGeminiAccountRoutePrefix } from './geminiAccountRoute';
+
 // ==================== Type Definitions ====================
 
 /**
@@ -33,7 +35,7 @@ export const STUFF_REQUEST_TYPES = {
 
 export const STUFF_MEDIA_SOURCE_PATHS = ['/library'] as const;
 
-export type StuffMediaSourcePath = typeof STUFF_MEDIA_SOURCE_PATHS[number];
+export type StuffMediaSourcePath = '/library' | `/u/${number}/library`;
 
 /**
  * Stuff request parameters structure
@@ -140,7 +142,22 @@ export function identifyStuffRequestType(typeArray: number[]): 'media' | 'docs' 
 }
 
 export function isStuffMediaSourcePath(sourcePath: string | null): sourcePath is StuffMediaSourcePath {
-  return STUFF_MEDIA_SOURCE_PATHS.includes(sourcePath as StuffMediaSourcePath);
+  if (!sourcePath) return false;
+  return sourcePath.slice(extractGeminiAccountRoutePrefix(sourcePath).length) === '/library';
+}
+
+/** Match the observed legacy Library RPC independently of query parameter order. */
+export function isStuffMediaRequestUrl(url: string, baseUrl = 'https://gemini.google.com'): boolean {
+  try {
+    const parsed = new URL(url, baseUrl);
+    const pathname = parsed.pathname.slice(extractGeminiAccountRoutePrefix(parsed.pathname).length);
+    return parsed.origin === 'https://gemini.google.com'
+      && pathname === '/_/BardChatUi/data/batchexecute'
+      && parsed.searchParams.get('rpcids') === 'jGArJ'
+      && isStuffMediaSourcePath(parsed.searchParams.get('source-path'));
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -152,22 +169,7 @@ export function isStuffMediaSourcePath(sourcePath: string | null): sourcePath is
  */
 export function isStuffMediaRequest(url: string, formData: Record<string, string>): boolean {
   try {
-    // 1. Check URL
-    if (!url.includes('/_/BardChatUi/data/batchexecute')) {
-      return false;
-    }
-
-    const urlObj = new URL(url);
-
-    // 2. Check rpcids
-    if (urlObj.searchParams.get('rpcids') !== 'jGArJ') {
-      return false;
-    }
-
-    // 3. Check source-path
-    if (!isStuffMediaSourcePath(urlObj.searchParams.get('source-path'))) {
-      return false;
-    }
+    if (!isStuffMediaRequestUrl(url)) return false;
 
     // 4. Parse f.req and check type array
     const params = parseRequestParams(formData['f.req']);

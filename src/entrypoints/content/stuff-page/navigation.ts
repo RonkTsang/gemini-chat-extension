@@ -8,6 +8,7 @@ import { browser } from 'wxt/browser'
 import { MediaItemStatus } from '@/utils/stuffMediaParser'
 import { OPEN_IN_NEW_TAB_MESSAGE } from '@/types/runtime-messages'
 import { stuffDataCache } from './dataCache'
+import { extractGeminiAccountRoutePrefix } from '@/utils/geminiAccountRoute'
 
 /**
  * Extracted Media Info from jslog
@@ -128,7 +129,8 @@ export function resolveOpenInNewTabUrl(cardElement: Element): string | null {
       return null
     }
 
-    return new URL(`/app/${conversationId}#${responseId}`, window.location.origin).href
+    const accountRoutePrefix = extractGeminiAccountRoutePrefix(window.location.pathname)
+    return new URL(`${accountRoutePrefix}/app/${conversationId}#${responseId}`, window.location.origin).href
   } catch (error) {
     console.error('[Navigation] Error resolving new-tab URL:', error)
     return null

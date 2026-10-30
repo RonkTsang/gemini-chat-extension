@@ -4,8 +4,10 @@ import { LibraryMediaCache } from '@/utils/library/mediaCache'
 import { isLibraryMediaRequest, inspectLibraryMediaResponse, MAX_LIBRARY_RESPONSE_BYTES } from '@/utils/library/mediaParser'
 import { logLibraryTrace } from '@/utils/library/logger'
 import { startLibraryPreloadMonitor } from './library-preload'
+import { startLegacyLibraryFetchMonitor } from './library-legacy-fetch'
 
 export function startLibraryMonitor(): () => void {
+  const stopLegacy = startLegacyLibraryFetchMonitor()
   const replayCache = new LibraryMediaCache(500, 60_000)
   const capturedRequests = new WeakSet<FetchRequestSnapshot>()
   let active = true
@@ -86,6 +88,7 @@ export function startLibraryMonitor(): () => void {
     active = false
     logLibraryTrace('main:monitor-stop', () => ({}))
     unregister()
+    stopLegacy()
     stopPreload()
     window.removeEventListener(GEM_EXT_EVENTS.LIBRARY_MEDIA_REQUEST, replay)
     replayCache.clear()

@@ -1,5 +1,5 @@
 import { browser } from 'wxt/browser'
-import { isStuffMediaSourcePath, parseMediaResponse } from '@/utils/stuffMediaParser'
+import { isStuffMediaRequestUrl, parseMediaResponse } from '@/utils/stuffMediaParser'
 import {
   FIREFOX_GET_INSTANCE_ID_MESSAGE,
   OPEN_IN_NEW_TAB_MESSAGE,
@@ -33,14 +33,7 @@ type StreamFilter = {
 }
 
 function shouldTrackByUrl(url: string): boolean {
-  try {
-    const urlObj = new URL(url)
-    return urlObj.pathname === '/_/BardChatUi/data/batchexecute'
-      && urlObj.searchParams.get('rpcids') === 'jGArJ'
-      && isStuffMediaSourcePath(urlObj.searchParams.get('source-path'))
-  } catch {
-    return false
-  }
+  return isStuffMediaRequestUrl(url)
 }
 
 function createRequestMonitor() {

@@ -51,6 +51,13 @@ describe('resolveOpenInNewTabUrl', () => {
     expect(resolveOpenInNewTabUrl(card)).toBe(`${window.location.origin}/app/abc123#def456`)
   })
 
+  it('keeps the current account prefix when opening a legacy card', () => {
+    window.history.replaceState(null, '', '/u/0/library')
+    stuffDataCache.addItems([createMediaItem()])
+    expect(resolveOpenInNewTabUrl(createCard('299880;data:[1,[1781940312,603866744]]')))
+      .toBe(`${window.location.origin}/u/0/app/abc123#def456`)
+  })
+
   it('returns null when timestamp data is missing from cache', () => {
     const card = createCard('299880;data:[1,[1781940312,603866744]]')
 

@@ -77,6 +77,41 @@ describe('Library HTML preload', () => {
     expect(capture).toHaveBeenCalledTimes(1)
   })
 
+  it('assembles interleaved Relay streams split across scripts and later DOM mutations', async () => {
+    const packet = preload.events[0].chunk!
+    appendScript(JSON.stringify({ events: [{ id: 'overview:0', kind: 'chunk', chunk: packet.slice(0, -1) }] }))
+    appendScript(JSON.stringify({ events: [{ id: 'other:0', kind: 'chunk', chunk: '[{}]' }] }))
+    const capture = vi.fn()
+    stop = startLibraryPreloadMonitor(capture)
+    expect(capture).not.toHaveBeenCalled()
+    appendScript(JSON.stringify({ events: [
+      { id: 'overview:0', kind: 'chunk', chunk: ']' },
+      { id: 'overview:0', kind: 'complete' },
+      { id: 'other:0', kind: 'complete' },
+    ] }))
+    await vi.waitFor(() => expect(capture).toHaveBeenCalledTimes(2))
+    expect(capture.mock.calls[0][0]).toBe(packet)
+    expect(parseLibraryMediaResponse(capture.mock.calls[0][0])).toHaveLength(2)
+    expect(capture.mock.calls[1][0]).toBe('[{}]')
+    document.dispatchEvent(new Event('DOMContentLoaded'))
+    expect(capture).toHaveBeenCalledTimes(2)
+  })
+
+  it('bounds the combined preload buffer and discards an oversized stream until completion', () => {
+    const chunk = 'x'.repeat(MAX_LIBRARY_RESPONSE_BYTES / 2)
+    for (let index = 0; index < 3; index++) {
+      appendScript(JSON.stringify({ events: [{ id: 'overview:0', kind: 'chunk', chunk }] }))
+    }
+    appendScript(JSON.stringify({ events: [
+      { id: 'overview:0', kind: 'chunk', chunk: ']' },
+      { id: 'overview:0', kind: 'complete' },
+    ] }))
+    const capture = vi.fn()
+    stop = startLibraryPreloadMonitor(capture)
+    document.dispatchEvent(new Event('DOMContentLoaded'))
+    expect(capture).not.toHaveBeenCalled()
+  })
+
   it('performs a final scan then disconnects at DOMContentLoaded', async () => {
     const capture = vi.fn()
     stop = startLibraryPreloadMonitor(capture)

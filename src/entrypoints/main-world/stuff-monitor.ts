@@ -8,14 +8,10 @@
  */
 
 import { xhrInterceptor, type XHRRequestSnapshot } from '@/utils/xhrInterceptor'
-import { parseMediaResponse } from '@/utils/stuffMediaParser'
+import { isStuffMediaRequestUrl, isStuffMediaSourcePath, parseMediaResponse } from '@/utils/stuffMediaParser'
 import { GEM_EXT_EVENTS } from '@/common/event'
 
-const STUFF_MEDIA_BATCH_URL_PATTERN = /\/_\/BardChatUi\/data\/batchexecute\?.*rpcids=jGArJ.*source-path=%2Flibrary/
-
-function isSupportedStuffPagePath(pathname: string): boolean {
-  return pathname === '/library' || pathname.startsWith('/library/')
-}
+const STUFF_MEDIA_BATCH_URL_PATTERN = /\/_\/BardChatUi\/data\/batchexecute\?/
 
 /**
  * Start monitoring Stuff Media API requests
@@ -35,6 +31,7 @@ export function startStuffMonitor(): void {
       urlPattern: STUFF_MEDIA_BATCH_URL_PATTERN,
 
       onResponse: (url: string, responseText: string, status: number, requestSnapshot: XHRRequestSnapshot) => {
+        if (!isStuffMediaRequestUrl(requestSnapshot.url) || status < 200 || status >= 300) return
         try {
           // url: "/_/BardChatUi/data/batchexecute?rpcids=jGArJ&source-path=%2Flibrary&bl=boq_assistant-bard-web-server_20260625.12_p1&f.sid=8667359588762092056&hl=en&_reqid=7860267&rt=c"
           const requestURL = new URL(requestSnapshot.url, window.location.origin)
@@ -99,7 +96,7 @@ export function startStuffMonitor(): void {
   const checkUrl = () => {
     const pathname = window.location.pathname
     // Match the Gemini library media pages.
-    const isStuffPage = isSupportedStuffPagePath(pathname)
+    const isStuffPage = isStuffMediaSourcePath(pathname)
 
     if (isStuffPage) {
       console.log('[StuffMonitor Main World] Supported library page detected:', pathname)
