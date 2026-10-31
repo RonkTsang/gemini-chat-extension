@@ -585,10 +585,10 @@
   "whatsnew": {
     "title": "Novedades",
     "releaseNotes": "Notas de la versión",
-    "themeBloom": {
-      "title": "La transformación más divertida de Gemini",
-      "description": "Suelta una imagen favorita para crear al instante un tema de Gemini a juego: una forma fácil y divertida de hacer que cada conversación se sienta tuya.",
-      "action": "Probar Theme Bloom"
+    "multiAsk": {
+      "title": "Llega Multi-Ask para Gemini",
+      "description": "Sigue leyendo sin tener que recordar tus preguntas. Anótalas mientras avanzas y hazlas juntas con el contexto adecuado.",
+      "action": "Ver la guía"
     }
   }
 }

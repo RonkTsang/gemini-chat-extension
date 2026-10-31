@@ -5,6 +5,7 @@
 
 import { EXTERNAL_LINKS } from '@/common/config'
 import type { NavigationSection } from '@/components/setting-panel/config'
+import multiAskImagePath from '@/assets/whatsnew/multi-ask.webp'
 
 export interface SettingPanelPromoAction {
   action: 'setting-panel'
@@ -49,14 +50,15 @@ export interface ReleaseNote {
  */
 export const CURRENT_RELEASE_NOTES: ReleaseNote[] = [
   {
-    titleKey: 'whatsnew.themeBloom.title',
-    descriptionKey: 'whatsnew.themeBloom.description',
-    actionLabelKey: 'whatsnew.themeBloom.action',
+    titleKey: 'whatsnew.multiAsk.title',
+    descriptionKey: 'whatsnew.multiAsk.description',
+    actionLabelKey: 'whatsnew.multiAsk.action',
+    promoImagePath: multiAskImagePath,
     promoAction: {
       action: 'external-link',
       params: {
-        url: EXTERNAL_LINKS.THEME_BLOOM_GUIDE,
+        url: EXTERNAL_LINKS.QUICK_FOLLOW_UP_GUIDE,
       },
-    }
-  }
+    },
+  },
 ]

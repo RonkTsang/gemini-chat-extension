@@ -581,10 +581,10 @@
   "whatsnew": {
     "title": "What's New",
     "releaseNotes": "Release notes",
-    "themeBloom": {
-      "title": "The Most Playful Gemini Makeover",
-      "description": "Drag your favorite image into Gemini to instantly create a matching theme—an easy, playful way to make every conversation feel like yours.",
-      "action": "Try Theme Bloom"
+    "multiAsk": {
+      "title": "Multi-Ask for Gemini Is Here",
+      "description": "Keep reading without forgetting what you wanted to ask. Capture questions along the way, then ask them together with the right context.",
+      "action": "View Usage Guide"
     }
   }
 }

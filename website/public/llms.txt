@@ -1,6 +1,6 @@
 # Gemini Power Kit
 
-> Gemini Power Kit is a browser extension for Google Gemini. It adds Chat Outline navigation, Quick Follow-up quote-and-reply actions, Chain Prompt automation, custom Gem avatars, tab title sync, reply-completion notifications, open-in-new-tab workflows, and theme customization.
+> Gemini Power Kit is a browser extension for Google Gemini. It adds Chat Outline navigation, Quick Follow-up for collecting questions as you read and asking them together with quoted text, Chain Prompt automation, custom Gem avatars, tab title sync, reply-completion notifications, open-in-new-tab workflows, and theme customization.
 
 This website documents the public product, installation flow, feature behavior, troubleshooting guidance, release notes, and privacy policy for Gemini Power Kit. English pages are the canonical documentation set, with Chinese pages available under `/zh-cn/`.
 
@@ -25,13 +25,13 @@ This website documents the public product, installation flow, feature behavior, 
 
 - [Delete Multiple Gemini Chats at Once](https://gpk.ronktsang.com/tips/delete-multiple-gemini-chats/): Select chats individually or choose a recent batch, exclude pinned chats from quick selection, review the count, and confirm deletion.
 - [Get Notified When Gemini Finishes](https://gpk.ronktsang.com/tips/get-notified-when-gemini-finishes/): Set up Gemini reply and Deep Research desktop notifications, add an optional Chromium notification sound, and troubleshoot missing completion alerts.
-- [Quote a Gemini Response and Ask a Follow-up](https://gpk.ronktsang.com/tips/ask-follow-up-about-gemini-response/): Select text in a Gemini response, choose Ask Gemini to quote and reply manually, or run a saved follow-up prompt with automatic sending.
+- [How to Use Ask Gemini to Reply to Selected Text](https://gpk.ronktsang.com/tips/ask-follow-up-about-gemini-response/): Keep reading without forgetting questions: note them beside the text, edit them if needed, and ask them together with each passage attached.
 - [Make Gemini Chat Wider](https://gpk.ronktsang.com/tips/make-gemini-chat-wider/): Use Chat layout to increase Gemini chat width or use the full available page width for code and tables, adjust input width independently, and restore defaults.
 
 ## Features
 
 - [Chat Outline](https://gpk.ronktsang.com/features/chat-outline/): Navigate long Gemini conversations and jump between key sections.
-- [Quick Follow-up](https://gpk.ronktsang.com/features/quick-follow-up/): Ask contextual follow-up questions from selected text and saved prompts.
+- [Quick Follow-up](https://gpk.ronktsang.com/features/quick-follow-up/): Note questions beside a long Gemini answer as you read, then ask them together without remembering every question or finding the passages again. Includes illustrated steps for up to 10 references, sending, and editing.
 - [Chain Prompt](https://gpk.ronktsang.com/features/chain-prompt/): Build reusable multi-step Gemini prompt workflows.
 - [Open in New Tab](https://gpk.ronktsang.com/features/stuff-open-new-tab/): Open Gemini Library items in new tabs without interrupting the current page.
 - [Tab Title Sync](https://gpk.ronktsang.com/features/tab-title-sync/): Sync browser tab titles with Gemini conversation titles.
@@ -64,7 +64,7 @@ This website documents the public product, installation flow, feature behavior, 
 
 - [Chinese Delete Multiple Gemini Chats at Once](https://gpk.ronktsang.com/zh-cn/tips/delete-multiple-gemini-chats/): Chinese tutorial. Select chats individually or choose a recent batch, exclude pinned chats from quick selection, review the count, and confirm deletion.
 - [Chinese Get Notified When Gemini Finishes](https://gpk.ronktsang.com/zh-cn/tips/get-notified-when-gemini-finishes/): Chinese tutorial. Set up Gemini reply and Deep Research desktop notifications, add an optional Chromium notification sound, and troubleshoot missing completion alerts.
-- [Chinese Quote a Gemini Response and Ask a Follow-up](https://gpk.ronktsang.com/zh-cn/tips/ask-follow-up-about-gemini-response/): Chinese tutorial. Select text in a Gemini response, choose Ask Gemini to quote and reply manually, or run a saved follow-up prompt with automatic sending.
+- [Chinese Ask Gemini Quote Reply Tutorial](https://gpk.ronktsang.com/zh-cn/tips/ask-follow-up-about-gemini-response/): Chinese tutorial. Keep reading without forgetting questions: note them beside the text, edit them if needed, and ask them together with each passage attached.
 - [Chinese Make Gemini Chat Wider](https://gpk.ronktsang.com/zh-cn/tips/make-gemini-chat-wider/): Chinese tutorial. Use Chat layout to increase Gemini chat width or use the full available page width for code and tables, adjust input width independently, and restore defaults.
 
 ## Optional

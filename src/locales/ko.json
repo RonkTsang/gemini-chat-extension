@@ -585,10 +585,10 @@
   "whatsnew": {
     "title": "새로운 기능",
     "releaseNotes": "릴리스 노트",
-    "themeBloom": {
-      "title": "가장 재미있는 Gemini 변신",
-      "description": "좋아하는 이미지를 놓기만 하면 Gemini에 어울리는 테마가 바로 만들어집니다. 모든 대화를 나다운 분위기로 바꾸는 쉽고 재미있는 방법입니다.",
-      "action": "Theme Bloom 사용해 보기"
+    "multiAsk": {
+      "title": "Gemini용 Multi-Ask 출시",
+      "description": "질문을 기억해 두지 않아도 계속 읽을 수 있어요. 읽으며 모아 두었다가 알맞은 맥락과 함께 한 번에 물어보세요.",
+      "action": "사용 가이드 보기"
     }
   }
 }

@@ -1,107 +1,258 @@
 ---
-title: Quick Follow-up for Gemini
-description: "Quick Follow-up for Google Gemini lets you ask contextual follow-up questions from selected text and run saved prompts in one click."
+title: "Quick Follow-up for Gemini: Keep Reading, Ask Together"
+description: "Keep reading Gemini replies without losing your questions. Note them beside the text, then ask together without copying or finding each passage again."
+head:
+  - tag: meta
+    attrs:
+      property: og:image
+      content: "https://gpk.ronktsang.com/og/quick-follow-up.png"
+  - tag: meta
+    attrs:
+      property: og:image:alt
+      content: "Gemini Power Kit reference cards and numbered source markers in Google Gemini"
+  - tag: meta
+    attrs:
+      name: twitter:image
+      content: "https://gpk.ronktsang.com/og/quick-follow-up.png"
+  - tag: meta
+    attrs:
+      name: twitter:image:alt
+      content: "Gemini Power Kit reference cards and numbered source markers in Google Gemini"
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: |
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "Quick Follow-up for Gemini: Keep Reading, Ask Together",
+        "description": "Keep reading Gemini replies without losing your questions. Note them beside the text, then ask together without copying or finding each passage again.",
+        "url": "https://gpk.ronktsang.com/features/quick-follow-up/",
+        "image": "https://gpk.ronktsang.com/og/quick-follow-up.png",
+        "inLanguage": "en",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Gemini Power Kit",
+          "url": "https://gpk.ronktsang.com/"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "Gemini Power Kit",
+          "applicationCategory": "BrowserApplication",
+          "operatingSystem": "Chrome, Firefox, Chromium-based browsers"
+        }
+      }
 ---
 
-import { Image } from 'astro:assets';
-import quickFollowUpDemoGif from '../../../assets/features/quick-follow-up/quick-follow-up.gif';
-import inputUiImg from '../../../assets/features/quick-follow-up/input-ui.png';
+import FocusedScreenshot from '../../../components/FocusedScreenshot.astro';
+import entryDemo from '../../../assets/features/quick-follow-up/quick-follow-up.gif';
 import customPromptImg from '../../../assets/features/quick-follow-up/custom-prompt.png';
+import quickCommentImg from '../../../assets/features/quick-follow-up/instant-comment.jpg';
+import modifierImg from '../../../assets/features/quick-follow-up/quick-comment-send.jpg';
+import multipleCommentsImg from '../../../assets/features/quick-follow-up/multiple-comment-cards.jpg';
+import historyImg from '../../../assets/features/quick-follow-up/sent-follow-up-conversation.jpg';
 
-<img src={quickFollowUpDemoGif.src} alt="Quick Follow-up capsule appears after text selection in Gemini" class="feature-image feature-image-narrow" />
+**Quick Follow-up** lets you jot down a question beside the text, then keep reading. When you're ready, send your questions together with the original passages. You don't have to remember them all, find the text again, or explain which part you mean.
 
-For a short walkthrough with an example question, see [How to Quote a Gemini Response and Ask a Follow-up](/tips/ask-follow-up-about-gemini-response/).
+## 1. Select a Point and Click Ask Gemini
 
-## Overview
+Open [gemini.google.com](https://gemini.google.com) with Gemini Power Kit enabled. Select the passage you want to explore, then click **Ask Gemini** in the floating menu.
 
-Quick Follow-up is a selection-based interaction layer inside the Gemini Power Kit browser extension for Google Gemini. Use this if you want to ask follow-up questions from selected Gemini text, avoid copy-paste, or run saved prompt actions in one click.
+<img src={entryDemo.src} alt="Selecting text in a Gemini answer opens a floating menu with Ask Gemini and saved prompt icons" class="feature-image feature-image-narrow feature-image-full" />
 
-It has two modes:
+*Selection entry — highlight the point you want to discuss, then choose **Ask Gemini**.*
 
-- **Ask Gemini**: attach the selected text as reference context, then you continue writing and send manually.
-- **Saved skills**: write a prompt around the **Selected Text** chip and auto-send it with your current selection in one click.
+## 2. Write Your Question Beside the Passage
 
-## Key Capabilities
+A small comment field opens **beside the selected passage**, and a reference card appears above Gemini's main input. You can ask about that passage immediately, without scrolling down to write your question.
 
-- Continue follow-up questions without copy-pasting selected text.
-- Keep quoted context visible above the input box while writing.
-- Build reusable one-click prompts for translation, explanation, summarization, and other repeated tasks.
-- Reorder prompt icons so frequent actions are always first in the capsule bar.
+Type a question such as “Can you give a concrete example?”. Click the **checkmark** or press **Enter** to add it to the card without sending. Use **Shift+Enter** for a new line.
 
-## Quick Workflow
+<FocusedScreenshot
+  id="instant-comment"
+  src={quickCommentImg}
+  title="Write beside the selected text"
+  alt="The comment field opens beside the passage; the arrow points to the checkmark that adds your comment without sending."
+  caption="Type your question here, then click the checkmark to keep drafting."
+  fullImageLabel="View full screenshot"
+  crop={{ x: 410, y: 315, width: 900, height: 210 }}
+  focus={[{ x: 993, y: 347, width: 290, height: 56 }]}
+  arrows={[{ from: [1245, 478], to: [1251, 407], number: '1' }]}
+/>
 
-### Ask Gemini
 
-1. Select text in any Gemini response.
-2. Click **Ask Gemini** in the capsule.
-3. Confirm quote context appears above the input box.
-4. Type your follow-up question and click **Send**.
-5. If you no longer need the quote context, click the close button on the quote status UI.
+### Hold Command / Ctrl to Switch from Add to Send
 
-<Image
-  src={inputUiImg}
-  alt="Quoted text displayed above the Gemini input box after clicking Ask Gemini"
+The checkmark normally means **Add**. Hold **Command (⌘)** on macOS, or **Ctrl** on Windows/Linux, to change it to an upward **send arrow**. Release the key to return to the checkmark.
+
+While holding that key, click the arrow, or press **⌘+Enter / Ctrl+Enter**, to add the current comment and send the complete draft. This sends **all** references, their comments, and the main request, including references added earlier.
+
+<FocusedScreenshot
+  id="comment-send"
+  src={modifierImg}
+  title="Hold ⌘: the checkmark becomes Send"
+  alt="Close-up of the comment field while Command is held on macOS; the arrow points to the upward send button."
+  caption="Hold Command on macOS, or Ctrl on Windows/Linux, to switch the button to Send."
+  fullImageLabel="View full screenshot"
+  crop={{ x: 410, y: 300, width: 790, height: 190 }}
+  focus={[{ x: 1114, y: 350, width: 38, height: 38 }]}
+  arrows={[{ from: [1174, 455], to: [1140, 393], number: '1' }]}
+/>
+
+
+| While adding a new comment | Action |
+| --- | --- |
+| **Enter** or the checkmark | Add the comment and keep drafting |
+| **Shift+Enter** | Start a new line |
+| **⌘+Enter** / **Ctrl+Enter**, or hold the modifier and click the arrow | Add the comment and send the whole draft |
+
+These shortcuts apply to a **new** comment. When reopening an existing comment, use **Save** to apply the change.
+
+## 3. Collect a Separate Comment for Each Point
+
+Keep reading, select another passage, and click **Ask Gemini** again. Write a question for that passage. Earlier cards, comments, and text in the main input stay in place, so you can collect your questions before sending. You can add up to **10 references**.
+
+<FocusedScreenshot
+  id="multiple-comments"
+  src={multipleCommentsImg}
+  title="A separate question for each passage"
+  alt="Gemini’s complete input box with two outlined reference cards, the bottom toolbar, and the Send button at the lower right."
+  caption="The outlined cards sit inside Gemini’s input, each with its own passage and question. When ready, use Send at the bottom right."
+  fullImageLabel="View full screenshot"
+  crop={{ x: 345, y: 420, width: 880, height: 375 }}
+  focus={[{ x: 381, y: 536, width: 167, height: 128 }, { x: 550, y: 536, width: 168, height: 128 }]}
+  arrows={[{ from: [810, 598], to: [725, 598], number: '1' }]}
+/>
+
+
+When ready, optionally add an overall request in Gemini's main input, such as “Answer each selection separately, with a practical example”. Review the cards, then use Gemini's **Send** button to send the references, comments, and overall request together.
+
+Comments and the overall request can be left empty. Card previews may be shortened to save space; the full selected text and comments are sent.
+
+## 4. Review the References in Your Sent Message
+
+After sending, the selected passages and their comments remain visible as cards in your message, alongside any overall request. You can look back at which question belonged to which passage while reading Gemini's answer.
+
+<FocusedScreenshot
+  id="sent-comments"
+  src={historyImg}
+  title="Your sent message keeps the references"
+  alt="Gemini’s conversation area showing the sent message with two outlined reference cards, the reply below, and the input at the bottom."
+  caption="Your sent message keeps the outlined reference cards at the top. Gemini’s reply appears below, with the input at the bottom."
+  fullImageLabel="View full screenshot"
+  crop={{ x: 345, y: 20, width: 880, height: 781 }}
+  focus={[{ x: 767, y: 90, width: 335, height: 128 }]}
+  arrows={[{ from: [663, 153], to: [758, 153], number: '1' }]}
+/>
+
+
+Sent cards are read-only. The following editing controls apply to cards you are still preparing to send.
+
+## Edit a Pending Comment from Its Card
+
+1. In the main input, hover over a card with a comment and click its **edit icon**. You can also use the card's comment control.
+2. Quick Follow-up returns to the source passage, highlights it, and opens the existing comment nearby.
+3. Change the comment, then click **Save**. The matching card updates, while other cards and the overall request stay in place.
+
+<video
+  controls
+  playsinline
+  preload="none"
+  poster="/videos/quick-follow-up-edit-from-card-poster.jpg"
+  width="1020"
+  height="720"
   class="feature-image feature-image-full"
-/>
+  aria-label="Edit a pending comment from its reference card"
+  aria-describedby="edit-card-caption"
+>
+  <source src="/videos/quick-follow-up-edit-from-card.mp4" type="video/mp4" />
+  <a href="/videos/quick-follow-up-edit-from-card.mp4">Edit a pending comment from its reference card</a>
+</video>
 
-Ask Gemini examples:
+<p id="edit-card-caption"><em>Card editing — use the edit icon, return to the highlighted source, change the comment, and save.</em></p>
 
-- `Compare this point with the previous answer and explain the difference.`
-- `Summarize the quoted paragraph in 3 bullets.`
-- `Rewrite the quoted text in simpler English.`
 
-### Saved Skills
+## Or Click the Numbered Marker Beside the Original Passage
 
-Use a saved skill when your follow-up pattern is repetitive and should run in one click.
+Each pending reference also has a small numbered **marker** beside its source text. The number matches its card, so you can edit a question while reading the answer instead of finding the card first.
 
-<Image
+1. Find the marker beside the passage you want to discuss, such as **1**.
+2. Hover over the marker to highlight the corresponding source passage.
+3. Click the marker to reopen its comment beside the highlighted text.
+4. Change your question and click **Save**. Check that the matching card shows the updated comment.
+
+<video
+  controls
+  playsinline
+  preload="none"
+  poster="/videos/quick-follow-up-edit-from-marker-poster.jpg"
+  width="1020"
+  height="720"
+  class="feature-image feature-image-full"
+  aria-label="Hover over a source marker and click it to edit its comment"
+  aria-describedby="edit-marker-caption"
+>
+  <source src="/videos/quick-follow-up-edit-from-marker.mp4" type="video/mp4" />
+  <a href="/videos/quick-follow-up-edit-from-marker.mp4">Hover over a source marker and click it to edit its comment</a>
+</video>
+
+<p id="edit-marker-caption"><em>Marker editing — hover to highlight the source, click to edit, then save.</em></p>
+
+
+Choose **Cancel**, press **Esc**, or click outside to discard an unsaved edit. Editing a comment does not change the quoted passage. To remove a pending reference and its comment, use the card's **×** button; remaining cards are renumbered and the main request stays in place.
+
+## Save Custom Prompts for Repeated Tasks
+
+A **Custom Prompt** is a reusable instruction with a placeholder for the text you select. In settings, these prompts are managed as **skills**.
+
+1. In Gemini's left navigation, open **Gemini Power Kit**.
+2. Under **Prompt**, choose **Quick Follow-up**.
+3. In **Skill Management**, click **Add Skill** (`+`).
+4. Choose an icon, enter a name of up to 30 characters, and write your **Prompt Content**. Keep the **Selected Text** placeholder in the template; it is replaced with the passage you select.
+5. Click **Save**. Back in the conversation, select text and choose the skill's icon.
+
+<FocusedScreenshot
+  id="create-skill"
   src={customPromptImg}
-  alt="Create Skill modal with Icon and Name plus Prompt Content fields"
-  class="feature-image feature-image-narrow"
+  title="Create a skill with Selected Text"
+  alt="Close-up of the Create Skill dialog showing Icon and Name, Prompt Content, the Selected Text placeholder, and Save."
+  caption="Name the skill and keep Selected Text where the selected passage should appear."
+  fullImageLabel="View full screenshot"
+  crop={{ x: 825, y: 475, width: 1360, height: 760 }}
+  focus={[]}
+  arrows={[]}
 />
 
-Common scenarios:
+For a translation skill, write “Translate [Selected Text] into Japanese and keep the original tone”, using the **Selected Text** placeholder in place of the brackets. For code review, try “Explain [Selected Text] step by step and identify edge cases”.
 
-- Translation to a fixed language.
-- Fixed-format summarization (for example, bullets + action items).
-- Code explanation using a specific style (for example, ELI5).
-- Fact-checking with a defined output structure.
+Use **Add Starter Templates** for **Tell me more**, **Search**, and **ELI5**, or reorder your skills to keep frequent actions first.
 
-#### Add a Skill
+### What Happens When You Click a Skill?
 
-1. Open Gemini Power Kit sidebar.
-2. Go to **Quick Follow-up**.
-3. Turn on **Enable Quick Follow-up**.
-4. In **Skill Management**, click **Add Skill**.
-5. Fill the icon and name. Keep the **Selected Text** chip in **Prompt Content**, write your instruction around it, then click **Save**.
-6. Back in chat, select text and click the new icon to run it.
+| Current draft | Behavior |
+| --- | --- |
+| No reference cards | The expanded prompt sends automatically. |
+| Reference cards already added | Choose **Add to draft** or **Send separately**. |
 
-#### Complete Field Guide
+**Add to draft** appends the expanded prompt to your main request and keeps your cards and comments. It does not send yet.
 
-- **Icon**: visual identifier for fast recognition in capsule bar.
-- **Name**: required, up to 30 characters, used as tooltip label.
-- **Prompt Content**: required. Keep the **Selected Text** chip where the highlighted passage should go. The examples below use `{{SELECT_TEXT}}` to represent this chip.
-- **Placeholder rule**: the **Selected Text** chip represents `{{SELECT_TEXT}}` in the saved template and is replaced by your highlighted text when you run the skill.
-- **Execution behavior**: custom prompt runs and sends automatically after replacement.
+**Send separately** sends only that skill's expanded prompt, setting the reference draft aside and restoring it after Gemini clears the input. If the extension says the draft cannot be safely set aside, send or remove attachments and formatted content before trying again.
 
-Image notes:
+## Turn Quick Follow-up On or Off
 
-- The modal label is **Icon and Name** with an input placeholder like **Enter skill name**.
-- The template field is **Prompt Content**. For example, place “Explain” before the **Selected Text** chip and “in simple terms” after it.
+Quick Follow-up is enabled by default. Open **Gemini Power Kit → Prompt → Quick Follow-up** and change **Enable Quick Follow-up**.
 
-Saved-skill examples:
+While enabled, it hides Gemini's built-in **Ask** button so you can use the extension's selection menu. Turning it off restores Gemini's button.
 
-- `Translate to Japanese and keep tone formal: {{SELECT_TEXT}}`
-- `Explain this code step by step and include time complexity: {{SELECT_TEXT}}`
-- `Extract 5 key points and 3 risks from this text: {{SELECT_TEXT}}`
+## Limits to Keep in Mind
 
-Built-in starter templates:
-
-- **Tell me more**: `Explain {{SELECT_TEXT}} in detail`
-- **Search**: `Search web for latest info on: {{SELECT_TEXT}}`
-- **ELI5**: `Explain {{SELECT_TEXT}} like I'm 5 years old`
+- You can add up to **10 references** per draft. Remove one before adding another.
+- Reference drafts belong to the current conversation. Switching conversations clears them; refreshing the page does not restore them.
+- Returning to a source passage depends on that passage still being available in the current page. Do not rely on source markers surviving a reload.
+- Review the references and comments before sending: they become part of the message Gemini receives.
 
 ## Related Features
 
-- [Chain Prompt](/features/chain-prompt/)
-- [Chat Outline](/features/chat-outline/)
+- [How to use Ask Gemini to reply to selected text](/tips/ask-follow-up-about-gemini-response/) — follow a practical reading workflow, from one question to several.
+- [Chat Outline](/features/chat-outline/) — navigate long conversations.
+- [Chain Prompt](/features/chain-prompt/) — run a reusable sequence of prompts.
