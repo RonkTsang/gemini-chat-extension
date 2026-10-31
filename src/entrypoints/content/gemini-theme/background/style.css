@@ -324,6 +324,10 @@
   box-shadow: inset 0 0 1px 0 #ffffff;
 }
 
+:root[data-gpk-bg-enabled="true"] chat-window input-container {
+  padding-top: 0px !important;
+}
+
 :root[data-gpk-bg-enabled="true"] input-container::before,
 :root[data-gpk-bg-enabled="true"] bard-sidenav-container>bard-sidenav>side-navigation-content>div>div>infinite-scroller .top-gradient,
 :root[data-gpk-bg-enabled="true"] bard-sidenav-container>bard-sidenav>side-navigation-content>div>div>infinite-scroller .bottom-gradient {
