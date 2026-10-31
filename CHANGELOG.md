@@ -1,3 +1,10 @@
+# [0.13.0](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.12.7...v0.13.0) (2026-10-31)
+
+
+### Features
+
+* **quick-follow-up:** add multiple selections and per-selection comments ([#73](https://github.com/RonkTsang/gemini-chat-extension/issues/73)) ([282622d](https://github.com/RonkTsang/gemini-chat-extension/commit/282622dc1a3053235314a84100949f46934d87f7))
+
 ## [0.12.7](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.12.6...v0.12.7) (2026-10-30)
 
 
