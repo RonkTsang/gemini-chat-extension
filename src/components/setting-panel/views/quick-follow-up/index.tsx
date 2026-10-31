@@ -209,13 +209,21 @@ export function QuickFollowSettingsView() {
             {/* Enable Toggle */}
             <Container backgroundColor="gemSurfaceContainer" p={4} borderRadius="2xl">
               <Stack direction="row" align="center" justify="space-between" gap={3}>
-                <Text>{t('settings.quickFollow.enable')}</Text>
+                <Stack gap={1}>
+                  <Text id="quick-follow-enable-label">{t('settings.quickFollow.enable')}</Text>
+                  <Text id="quick-follow-enable-description" fontSize="xs" color="fg.muted">
+                    {t('settings.quickFollow.enableDescription')}
+                  </Text>
+                </Stack>
                 <Switch.Root
                   checked={settings.enabled}
                   onCheckedChange={(details) => void handleToggleEnabled(details.checked)}
                   disabled={isHydrating}
                 >
-                  <Switch.HiddenInput />
+                  <Switch.HiddenInput
+                    aria-labelledby="quick-follow-enable-label"
+                    aria-describedby="quick-follow-enable-description"
+                  />
                   <Switch.Control>
                     <Switch.Thumb />
                   </Switch.Control>

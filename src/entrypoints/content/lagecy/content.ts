@@ -1,15 +1,13 @@
 // @ts-nocheck
 
 import './style.css';
-import { SEPARATOR } from '@/common/const';
 import tippy, { createSingleton } from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 import { eventBus } from '@/utils/eventbus';
-import { type AppEvents, EVENTS } from '@/common/event';
-import { useChainPromptStore } from '@/stores/chainPromptStore'
+import { type AppEvents } from '@/common/event';
 import { browser } from 'wxt/browser';
-import { quickFollowStore } from '@/stores/quickFollowStore'
 import { i18nCache } from '@/utils/i18nCache'
+import { getOutlineSummary } from '../quick-follow-up/cards'
 
 /**
  * i18n keys used by legacy content script features
@@ -45,319 +43,6 @@ requestIdleCallback(() => {
   )
 })
 
-
-let isQuickQuoteEnabled = quickFollowStore.getState().settings.enabled;
-const QUOTE_HIGHLIGHT_NAME = 'gemini-power-kit-quote-highlight'
-const QUOTE_CONTEXT_LENGTH = 48
-const QUOTE_HIGHLIGHT_DURATION = 2000
-
-let pendingQuoteAnchor = null
-let quoteHighlightTimeout = null
-
-function generateQuoteId() {
-  if (globalThis.crypto && typeof globalThis.crypto.randomUUID === 'function') {
-    return globalThis.crypto.randomUUID()
-  }
-
-  return `quote-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
-}
-
-function getConversationId() {
-  const match = window.location.pathname.match(/^\/app\/([^/?#]+)/)
-  return match?.[1] ?? ''
-}
-
-function ensureMessageContentId(messageContent) {
-  if (messageContent.id) return messageContent.id
-
-  if (!messageContent.dataset.gpkQuoteSourceId) {
-    messageContent.dataset.gpkQuoteSourceId = `gpk-message-${generateQuoteId()}`
-  }
-
-  return messageContent.dataset.gpkQuoteSourceId
-}
-
-function clearPendingQuoteAnchor() {
-  pendingQuoteAnchor = null
-}
-
-function clearQuoteHighlight() {
-  if (quoteHighlightTimeout) {
-    clearTimeout(quoteHighlightTimeout)
-    quoteHighlightTimeout = null
-  }
-
-  if (globalThis.CSS?.highlights) {
-    globalThis.CSS.highlights.delete(QUOTE_HIGHLIGHT_NAME)
-  }
-
-  const selection = window.getSelection()
-  selection?.removeAllRanges()
-}
-
-function scheduleQuoteHighlightCleanup() {
-  if (quoteHighlightTimeout) {
-    clearTimeout(quoteHighlightTimeout)
-  }
-
-  quoteHighlightTimeout = setTimeout(() => {
-    clearQuoteHighlight()
-  }, QUOTE_HIGHLIGHT_DURATION)
-}
-
-function serializeQuoteAnchor(range, messageContent, selectedText) {
-  if (!messageContent?.contains(range.commonAncestorContainer)) {
-    return null
-  }
-
-  const rootRange = document.createRange()
-  rootRange.selectNodeContents(messageContent)
-  rootRange.setEnd(range.startContainer, range.startOffset)
-
-  const startOffset = rootRange.toString().length
-  const selectedLength = range.toString().length
-  const endOffset = startOffset + selectedLength
-  const messageText = messageContent.textContent || ''
-
-  return {
-    quoteId: generateQuoteId(),
-    conversationId: getConversationId(),
-    sourceMessageId: ensureMessageContentId(messageContent),
-    selectedText,
-    startOffset,
-    endOffset,
-    prefix: messageText.slice(Math.max(0, startOffset - QUOTE_CONTEXT_LENGTH), startOffset),
-    suffix: messageText.slice(endOffset, endOffset + QUOTE_CONTEXT_LENGTH),
-  }
-}
-
-function createRangeFromOffsets(root, startOffset, endOffset) {
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
-  const range = document.createRange()
-  let currentOffset = 0
-  let startNode = null
-  let endNode = null
-  let startNodeOffset = 0
-  let endNodeOffset = 0
-  let lastTextNode = null
-
-  while (walker.nextNode()) {
-    const node = walker.currentNode
-    const textLength = node.textContent?.length || 0
-    lastTextNode = node
-
-    if (!startNode && startOffset <= currentOffset + textLength) {
-      startNode = node
-      startNodeOffset = Math.max(0, startOffset - currentOffset)
-    }
-
-    if (!endNode && endOffset <= currentOffset + textLength) {
-      endNode = node
-      endNodeOffset = Math.max(0, endOffset - currentOffset)
-      break
-    }
-
-    currentOffset += textLength
-  }
-
-  if (!startNode && lastTextNode) {
-    startNode = lastTextNode
-    startNodeOffset = lastTextNode.textContent?.length || 0
-  }
-
-  if (!endNode && lastTextNode) {
-    endNode = lastTextNode
-    endNodeOffset = lastTextNode.textContent?.length || 0
-  }
-
-  if (!startNode || !endNode) {
-    return null
-  }
-
-  range.setStart(startNode, startNodeOffset)
-  range.setEnd(endNode, endNodeOffset)
-  return range
-}
-
-function findQuoteRangeByText(root, anchor) {
-  const messageText = root.textContent || ''
-  if (!anchor?.selectedText) return null
-
-  let searchIndex = -1
-  let bestScore = -1
-  let fromIndex = 0
-
-  while (fromIndex < messageText.length) {
-    const foundIndex = messageText.indexOf(anchor.selectedText, fromIndex)
-    if (foundIndex === -1) break
-
-    const prefix = messageText.slice(Math.max(0, foundIndex - anchor.prefix.length), foundIndex)
-    const suffix = messageText.slice(foundIndex + anchor.selectedText.length, foundIndex + anchor.selectedText.length + anchor.suffix.length)
-    const score = Number(prefix === anchor.prefix) + Number(suffix === anchor.suffix)
-
-    if (score > bestScore) {
-      bestScore = score
-      searchIndex = foundIndex
-    }
-
-    fromIndex = foundIndex + 1
-  }
-
-  if (searchIndex === -1) {
-    return null
-  }
-
-  return createRangeFromOffsets(
-    root,
-    searchIndex,
-    searchIndex + anchor.selectedText.length,
-  )
-}
-
-function readQuoteAnchorFromDataset(userQueryElement) {
-  const {
-    quoteId,
-    quoteSourceMessageId,
-    quoteConversationId,
-    quoteSelectedText,
-    quoteStartOffset,
-    quoteEndOffset,
-    quotePrefix,
-    quoteSuffix,
-  } = userQueryElement.dataset
-
-  if (!quoteId || !quoteSourceMessageId || !quoteConversationId || !quoteSelectedText) {
-    return null
-  }
-
-  return {
-    quoteId,
-    conversationId: quoteConversationId,
-    sourceMessageId: quoteSourceMessageId,
-    selectedText: quoteSelectedText,
-    startOffset: Number(quoteStartOffset),
-    endOffset: Number(quoteEndOffset),
-    prefix: quotePrefix || '',
-    suffix: quoteSuffix || '',
-  }
-}
-
-function attachQuoteAnchorToQuery(userQueryElement, anchor) {
-  userQueryElement.dataset.quoteId = anchor.quoteId
-  userQueryElement.dataset.quoteSourceMessageId = anchor.sourceMessageId
-  userQueryElement.dataset.quoteConversationId = anchor.conversationId
-  userQueryElement.dataset.quoteSelectedText = anchor.selectedText
-  userQueryElement.dataset.quoteStartOffset = String(anchor.startOffset)
-  userQueryElement.dataset.quoteEndOffset = String(anchor.endOffset)
-  userQueryElement.dataset.quotePrefix = anchor.prefix
-  userQueryElement.dataset.quoteSuffix = anchor.suffix
-}
-
-function resolveQuoteSourceMessage(anchor) {
-  if (!anchor?.sourceMessageId) return null
-
-  return document.getElementById(anchor.sourceMessageId)
-    || document.querySelector(`[data-gpk-quote-source-id="${anchor.sourceMessageId}"]`)
-}
-
-function highlightQuoteRange(range) {
-  clearQuoteHighlight()
-
-  if (globalThis.Highlight && globalThis.CSS?.highlights) {
-    globalThis.CSS.highlights.set(QUOTE_HIGHLIGHT_NAME, new Highlight(range))
-  } else {
-    const selection = window.getSelection()
-    selection?.removeAllRanges()
-    selection?.addRange(range)
-  }
-
-  scheduleQuoteHighlightCleanup()
-}
-
-function jumpToQuoteSource(userQueryElement) {
-  const anchor = readQuoteAnchorFromDataset(userQueryElement)
-  if (!anchor || anchor.conversationId !== getConversationId()) {
-    return
-  }
-
-  const sourceMessage = resolveQuoteSourceMessage(anchor)
-  if (!sourceMessage) {
-    return
-  }
-
-  let range = createRangeFromOffsets(sourceMessage, anchor.startOffset, anchor.endOffset)
-  if (!range || range.toString() !== anchor.selectedText) {
-    range = findQuoteRangeByText(sourceMessage, anchor)
-  }
-
-  sourceMessage.scrollIntoView({ behavior: 'smooth', block: 'center' })
-
-  if (!range) {
-    return
-  }
-
-  const focusTarget = range.startContainer.nodeType === Node.TEXT_NODE
-    ? range.startContainer.parentElement
-    : range.startContainer
-
-  focusTarget?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
-  highlightQuoteRange(range)
-}
-
-function jumpToPendingQuoteSource() {
-  if (!pendingQuoteAnchor || pendingQuoteAnchor.conversationId !== getConversationId()) {
-    return
-  }
-
-  const sourceMessage = resolveQuoteSourceMessage(pendingQuoteAnchor)
-  if (!sourceMessage) {
-    return
-  }
-
-  let range = createRangeFromOffsets(
-    sourceMessage,
-    pendingQuoteAnchor.startOffset,
-    pendingQuoteAnchor.endOffset,
-  )
-
-  if (!range || range.toString() !== pendingQuoteAnchor.selectedText) {
-    range = findQuoteRangeByText(sourceMessage, pendingQuoteAnchor)
-  }
-
-  sourceMessage.scrollIntoView({ behavior: 'smooth', block: 'center' })
-
-  if (!range) {
-    return
-  }
-
-  const focusTarget = range.startContainer.nodeType === Node.TEXT_NODE
-    ? range.startContainer.parentElement
-    : range.startContainer
-
-  focusTarget?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
-  highlightQuoteRange(range)
-}
-
-quickFollowStore.getState().hydrate().catch((error) => {
-  console.error('Failed to hydrate quick follow store:', error)
-})
-
-quickFollowStore.subscribe((state, previousState) => {
-  const prevEnabled = previousState?.settings?.enabled
-  if (prevEnabled === state.settings.enabled) {
-    return
-  }
-
-  isQuickQuoteEnabled = state.settings.enabled
-  const chatWindows = document.querySelectorAll('chat-window')
-  chatWindows.forEach((cw) => {
-    if (isQuickQuoteEnabled) {
-      initializeQuoteFeature(cw)
-    } else {
-      destroyQuoteFeature(cw)
-    }
-  })
-})
 
 function updateTocList(popover, chatWindow) {
   const list = popover.querySelector('ul');
@@ -401,50 +86,14 @@ function updateTocList(popover, chatWindow) {
     const listItem = document.createElement('li');
     const button = document.createElement('button');
     
-    let isQuote = false;
-    let questionText = '';
-    let quoteText = '';
-    let fullTextToDisplay = '';
-
-    // --- Defensive Reading Logic ---
-    // 1. Prioritize the dataset as the source of truth if it exists.
-    if (query.dataset.isQuote === 'true') {
-      isQuote = true;
-      questionText = query.dataset.questionText || '';
-      quoteText = query.dataset.quoteText || '';
-      fullTextToDisplay = questionText;
-    // 2. Fallback: If dataset is not ready, check the raw text content.
-    // This handles the race condition where TOC updates before the transformation runs.
-    } else {
-      // Use p.query-text-line selector to avoid reading hidden accessibility elements
-      // (e.g., cdk-visually-hidden spans like "You said")
-      const textLines = query.querySelectorAll('.query-text p.query-text-line');
-      let currentText = '';
-      
-      if (textLines.length > 0) {
-        // Extract text from all query-text-line elements, skipping hidden elements
-        currentText = Array.from(textLines)
-          .map(line => (line.textContent || '').trim())
-          .join('\n')
-          .trim();
-      } else {
-        // Fallback to innerText if no query-text-line elements found (shouldn't happen in modern DOM)
-        const textEl = query.querySelector('.query-text');
-        currentText = (textEl ? textEl.innerText : query.innerText).trim();
-      }
-      
-      const separatorIndex = currentText.indexOf(SEPARATOR);
-
-      if (currentText.startsWith(regardingThisText) && separatorIndex !== -1) {
-        isQuote = true;
-        const fullQuotePart = currentText.substring(0, separatorIndex).replace(regardingThisText, '').trim();
-        quoteText = fullQuotePart.substring(1); // Remove leading 
-        questionText = currentText.substring(separatorIndex + SEPARATOR.length).trim();
-        fullTextToDisplay = questionText;
-      } else {
-        fullTextToDisplay = currentText;
-      }
-    }
+    const summary = getOutlineSummary(query, regardingThisText);
+    const isQuote = summary.selectionCount > 0;
+    const questionText = summary.questionText;
+    const quoteText = summary.quoteText;
+    const hasQueryTextLines = query.querySelector('.query-text p.query-text-line') !== null;
+    const fullTextToDisplay = hasQueryTextLines
+      ? questionText
+      : (query.querySelector('.query-text')?.innerText || query.innerText || '').trim();
 
     const filePreview = query.querySelector('.new-file-icon, .preview-image');
     
@@ -994,11 +643,6 @@ function findAndInitialize(node) {
       destroyUI(cw);
     }
 
-    if (isQuickQuoteEnabled) {
-      initializeQuoteFeature(cw);
-    } else {
-      destroyQuoteFeature(cw);
-    }
   };
 
   // Case 1: The node itself is a chat-window
@@ -1010,337 +654,6 @@ function findAndInitialize(node) {
   const chatWindows = node.querySelectorAll('chat-window');
   chatWindows.forEach(processChatWindow);
 }
-
-function handleMouseUp(event) {
-
-    if (window.geminiQuoteTooltipDebounce) {
-        clearTimeout(window.geminiQuoteTooltipDebounce);
-    }
-    window.geminiQuoteTooltipDebounce = setTimeout(() => {
-        const selection = window.getSelection();
-        const selectedText = selection.toString().trim();
-
-        const sourceMessage = event.target.closest('message-content');
-
-        if (selectedText && sourceMessage && selection.rangeCount > 0) {
-            if (event.target.closest('#gemini-toc-popover')) {
-                eventBus.emit(EVENTS.QUICK_FOLLOW_UP_HIDE);
-                return;
-            }
-
-            const range = selection.getRangeAt(0);
-            pendingQuoteAnchor = serializeQuoteAnchor(range, sourceMessage, selectedText);
-            const selectionRect = range.getBoundingClientRect();
-            const clampedX = Math.max(selectionRect.left, Math.min(event.clientX, selectionRect.right));
-            const clampedY = Math.max(selectionRect.top, Math.min(event.clientY, selectionRect.bottom));
-
-            const virtualRect = {
-                width: 0, height: 0, top: clampedY, bottom: clampedY, left: clampedX, right: clampedX,
-            };
-
-            eventBus.emit(EVENTS.QUICK_FOLLOW_UP_SHOW, {
-              text: selectedText,
-              event: {
-                rangeRect: selectionRect,
-                clientX: event.clientX,
-                clientY: event.clientY,
-                virtualRect: virtualRect,
-              },
-            });
-        } else {
-            if (!document.getElementById('gemini-quote-ui')) {
-              clearPendingQuoteAnchor();
-            }
-            eventBus.emit(EVENTS.QUICK_FOLLOW_UP_HIDE);
-        }
-    }, 100);
-}
-
-function initializeQuoteFeature(chatWindow) {
-  if (chatWindow._geminiQuoteInitialized) return;
-
-  chatWindow.addEventListener('mouseup', handleMouseUp);
-  chatWindow._geminiQuoteInitialized = true;
-}
-
-function destroyQuoteFeature(chatWindow) {
-    chatWindow.removeEventListener('mouseup', handleMouseUp);
-    chatWindow._geminiQuoteInitialized = false;
-    removeQuoteUI();
-}
-
-function removeQuoteUI(options = {}) {
-  const { keepPendingAnchor = false } = options;
-  const quoteUI = document.getElementById('gemini-quote-ui');
-  if (quoteUI) {
-    if (quoteUI.observer) {
-      quoteUI.observer.disconnect();
-    }
-    quoteUI.remove();
-  }
-  
-  const refText = document.getElementById('gemini-quote-reference-text');
-  if (refText) refText.remove();
-  
-  const separator = document.getElementById('gemini-quote-separator');
-  if (separator) separator.remove();
-
-  const sentinel = document.getElementById('gemini-quote-sentinel');
-  if (sentinel) sentinel.remove();
-
-  if (!keepPendingAnchor) {
-    clearPendingQuoteAnchor();
-  }
-}
-
-function focusEditorWithRetry(editor) {
-  if (!editor) return;
-
-  const placeCaretToEnd = () => {
-    const selection = window.getSelection();
-    if (!selection) return;
-
-    const range = document.createRange();
-    range.selectNodeContents(editor);
-    range.collapse(false);
-    selection.removeAllRanges();
-    selection.addRange(range);
-  };
-
-  const focusOnce = () => {
-    editor.focus();
-    placeCaretToEnd();
-  };
-
-  focusOnce();
-  requestAnimationFrame(focusOnce);
-  setTimeout(focusOnce, 50);
-}
-
-function addQuoteUI(selectedText) {
-  const inputContainer = document.querySelector('chat-window rich-textarea') ?? document.querySelector('rich-textarea');
-  if (!inputContainer) return;
-
-  // --- Truncation Constants ---
-  const MAX_DISPLAY_LENGTH = 150;
-  const DISPLAY_START_SNIPPET = 80;
-  const DISPLAY_END_SNIPPET = 60;
-  const MAX_HIDDEN_LENGTH = 2000;
-  const HIDDEN_START_SNIPPET = 1000;
-  const HIDDEN_END_SNIPPET = 900;
-
-  // --- Robust Cleanup ---
-  removeQuoteUI({ keepPendingAnchor: true });
-
-  // --- Prepare Text Versions ---
-  let displayText = selectedText;
-  if (selectedText.length > MAX_DISPLAY_LENGTH) {
-    const start = selectedText.substring(0, DISPLAY_START_SNIPPET);
-    const end = selectedText.substring(selectedText.length - DISPLAY_END_SNIPPET);
-    displayText = `${start.trim()} ... ${end.trim()}`;
-  }
-  displayText = displayText.replace(/\s+/g, ' ').trim();
-
-  let hiddenText = selectedText;
-  if (selectedText.length > MAX_HIDDEN_LENGTH) {
-    const start = selectedText.substring(0, HIDDEN_START_SNIPPET);
-    const end = selectedText.substring(selectedText.length - HIDDEN_END_SNIPPET);
-    hiddenText = `${start} ... ${end}`;
-  }
-
-  // --- Secure UI Construction ---
-  const quoteUI = document.createElement('div');
-  quoteUI.id = 'gemini-quote-ui';
-  if (pendingQuoteAnchor?.quoteId) {
-    quoteUI.dataset.quoteId = pendingQuoteAnchor.quoteId;
-  }
-  if (pendingQuoteAnchor) {
-    quoteUI.classList.add('is-clickable');
-    quoteUI.onclick = () => {
-      jumpToPendingQuoteSource();
-    }
-  }
-
-  const iconSpan = document.createElement('span');
-  iconSpan.className = 'quote-icon';
-
-  const textSpan = document.createElement('span');
-  textSpan.className = 'quote-text';
-  textSpan.textContent = `"${displayText}"`;
-  textSpan.title = selectedText; // Full text on hover
-
-  const closeButton = document.createElement('button');
-  closeButton.id = 'gemini-quote-close-btn';
-  closeButton.textContent = '\u00d7';
-
-  quoteUI.appendChild(iconSpan);
-  quoteUI.appendChild(textSpan);
-  quoteUI.appendChild(closeButton);
-
-  const qlEditor = inputContainer.querySelector('.ql-editor');
-  if (qlEditor) {
-    inputContainer.insertBefore(quoteUI, qlEditor);
-  }
-
-  // --- Create Hidden Elements ---
-  const referenceText = document.createElement('p');
-  referenceText.id = 'gemini-quote-reference-text';
-  referenceText.style.display = 'none';
-  referenceText.style.userSelect = 'none';
-  referenceText.style.pointerEvents = 'none';
-  referenceText.contentEditable = 'false';
-  const regardingThisText = i18nCache.get(LEGACY_I18N_KEYS.REGARDING_THIS);
-  referenceText.textContent = `${regardingThisText}: ${hiddenText}`;
-  referenceText.appendChild(document.createElement('br'));
-
-  const separator = document.createElement('p');
-  separator.id = 'gemini-quote-separator';
-  separator.style.display = 'none';
-  separator.style.userSelect = 'none';
-  separator.style.pointerEvents = 'none';
-  separator.contentEditable = 'false';
-  separator.innerHTML = SEPARATOR;
-
-  const sentinel = document.createElement('p');
-  sentinel.id = 'gemini-quote-sentinel';
-  sentinel.style.display = 'none';
-  sentinel.style.userSelect = 'none';
-  sentinel.style.pointerEvents = 'none';
-  sentinel.contentEditable = 'false';
-  sentinel.innerHTML = '<br/>';
-  
-  if (qlEditor) {
-    const fragment = document.createDocumentFragment();
-    fragment.appendChild(referenceText);
-    fragment.appendChild(separator);
-    fragment.appendChild(sentinel);
-    qlEditor.prepend(fragment);
-    
-    focusEditorWithRetry(qlEditor);
-
-    const observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        if (Array.from(mutation.removedNodes).includes(sentinel)) {
-          removeQuoteUI({ keepPendingAnchor: true });
-          return;
-        }
-      }
-    });
-
-    observer.observe(qlEditor, { childList: true });
-    quoteUI.observer = observer;
-  }
-
-  closeButton.onclick = (event) => {
-    event.stopPropagation();
-    removeQuoteUI();
-  };
-}
-
-function transformQuoteInHistory(userQueryElement) {
-  const queryTextEl = userQueryElement.querySelector('.query-text');
-  if (!queryTextEl || queryTextEl.dataset.transformed) return;
-
-  const lines = Array.from(queryTextEl.querySelectorAll('p.query-text-line'));
-  if (lines.length < 2) return;
-
-  const regardingThisText = i18nCache.get(LEGACY_I18N_KEYS.REGARDING_THIS);
-
-  // 1. Find the separator line index dynamically
-  const separatorLineIndex = lines.findIndex(line => line.textContent.trim() === SEPARATOR);
-
-  // 2. Validation:
-  // - Separator must exist and not be the first line (need quote) or last line (need question)
-  if (separatorLineIndex <= 0 || separatorLineIndex >= lines.length - 1) return;
-
-  // - First line must start with the prefix
-  const firstLineText = lines[0].textContent.trim();
-  if (!firstLineText.startsWith(regardingThisText + ':')) return;
-
-  // 3. Extract content
-  // Quote part: All lines before separator, minus the prefix
-  // Filter out empty lines to avoid awkward gaps in multiline quotes
-  const fullQuoteTextWithPrefix = lines
-    .slice(0, separatorLineIndex)
-    .map(l => (l.textContent || '').trim())
-    .filter(text => text.length > 0)
-    .join('\n');
-  const prefix = regardingThisText + ':';
-  // Use indexOf to be safe about leading whitespace
-  const prefixStart = fullQuoteTextWithPrefix.indexOf(prefix);
-  // Fallback if not found (shouldn't happen given check above)
-  const quotePart = prefixStart !== -1 
-    ? fullQuoteTextWithPrefix.substring(prefixStart + prefix.length).trim()
-    : fullQuoteTextWithPrefix.replace(prefix, '').trim();
-
-  // Question part: All lines after separator
-  const questionPart = lines.slice(separatorLineIndex + 1).map(l => l.textContent).join('\n').trim();
-
-  // --- Write to dataset for other functions to use ---
-  userQueryElement.dataset.isQuote = 'true';
-  userQueryElement.dataset.quoteText = quotePart;
-  userQueryElement.dataset.questionText = questionPart;
-
-  if (!userQueryElement.dataset.quoteId && pendingQuoteAnchor?.conversationId === getConversationId()) {
-    attachQuoteAnchorToQuery(userQueryElement, pendingQuoteAnchor)
-    clearPendingQuoteAnchor()
-  }
-  
-  // --- Create new UI ---
-  const quoteDisplay = document.createElement('div');
-  quoteDisplay.className = 'gemini-quote-display';
-
-  if (userQueryElement.dataset.quoteId) {
-    quoteDisplay.dataset.quoteId = userQueryElement.dataset.quoteId;
-    quoteDisplay.classList.add('is-clickable');
-    quoteDisplay.onclick = (event) => {
-      event.stopPropagation()
-      jumpToQuoteSource(userQueryElement)
-    }
-  }
-
-  // Create and add the icon to align with gemini-quote-ui
-  const iconSpan = document.createElement('span');
-  iconSpan.className = 'quote-icon';
-  quoteDisplay.appendChild(iconSpan);
-
-  const quoteDisplayText = document.createElement('span');
-  quoteDisplayText.className = 'gemini-quote-display-text';
-  quoteDisplayText.textContent = quotePart;
-  quoteDisplay.title = quotePart; // Full quote on hover
-  
-  quoteDisplay.appendChild(quoteDisplayText);
-
-  // --- Modify existing DOM ---
-  queryTextEl.prepend(quoteDisplay);
-  
-  // Hide all original lines
-  lines.forEach(line => line.style.display = 'none');
-  
-  const newQuestionLine = document.createElement('p');
-  newQuestionLine.className = 'query-text-line';
-  newQuestionLine.textContent = questionPart;
-  queryTextEl.appendChild(newQuestionLine);
-
-  queryTextEl.dataset.transformed = 'true';
-}
-
-function scheduleQuoteHistoryTransform(userQueryElement) {
-  if (!userQueryElement?.matches?.('user-query')) return
-
-  if (!window.geminiQuoteHistoryTransformQueue) {
-    window.geminiQuoteHistoryTransformQueue = new Set()
-  }
-
-  window.geminiQuoteHistoryTransformQueue.add(userQueryElement)
-  clearTimeout(window.geminiQuoteHistoryTransformTimer)
-  window.geminiQuoteHistoryTransformTimer = setTimeout(() => {
-    const queuedUserQueries = Array.from(window.geminiQuoteHistoryTransformQueue || [])
-    window.geminiQuoteHistoryTransformQueue?.clear()
-    queuedUserQueries.forEach(transformQuoteInHistory)
-  }, 50)
-}
-
 
 // --- Main Execution ---
 function safeParseBoolean(value: any): boolean {
@@ -1373,45 +686,18 @@ async function initializeLegacyMainExecution(): Promise<void> {
     // Create a persistent observer to watch for chat-window additions
     const mainObserver = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
-        // Proactive cleanup on chat switch
-        if (mutation.removedNodes.length > 0 && document.getElementById('gemini-quote-sentinel')) {
-          let chatWasCleared = false
-          for (const node of mutation.removedNodes) {
-            if (node.nodeType === 1 && (node.matches('user-query, model-response') || node.querySelector('user-query, model-response'))) {
-              chatWasCleared = true
-              break
-            }
-          }
-          if (chatWasCleared) {
-            removeQuoteUI()
-          }
-        }
-
         for (const addedNode of mutation.addedNodes) {
           if (addedNode.nodeType !== 1) continue
 
           // Initialize main features if a chat-window is added
           findAndInitialize(addedNode)
 
-          // Also, check if a user-query was added or updated to transform it
-          if (addedNode.matches('user-query')) {
-            scheduleQuoteHistoryTransform(addedNode)
-          }
-          addedNode.querySelectorAll('user-query').forEach(scheduleQuoteHistoryTransform)
-
-          const parentUserQuery = addedNode.closest?.('user-query')
-          if (parentUserQuery) {
-            scheduleQuoteHistoryTransform(parentUserQuery)
-          }
         }
       }
     })
 
     // Start by checking if the chat-window is already on the page
     findAndInitialize(document.body)
-    // Also transform any existing user queries on load
-    document.querySelectorAll('user-query').forEach(transformQuoteInHistory)
-
     // Then, observe the entire body for future changes
     mainObserver.observe(document.body, {
       childList: true,
@@ -1440,20 +726,7 @@ browser.storage.onChanged.addListener((changes, namespace) => {
         });
     }
 
-    if (changes.enableQuickQuote) {
-        isQuickQuoteEnabled = safeParseBoolean(changes.enableQuickQuote.newValue);
-        chatWindows.forEach(cw => {
-            if (isQuickQuoteEnabled) {
-                initializeQuoteFeature(cw);
-            } else {
-                destroyQuoteFeature(cw);
-            }
-        });
 
-        quickFollowStore.getState().hydrate().catch((error) => {
-          console.error('Failed to refresh quick follow settings after storage change:', error)
-        })
-    }
 
 });
 
@@ -1484,15 +757,8 @@ function setupChatoutlineOpenEvent() {
   eventBus.on('chatoutline:open', handleChatoutlineOpenEvent);
 }
 
-function setupQuickFollowUpEvent() {
-  eventBus.on(EVENTS.QUICK_FOLLOW_UP_ADD_QUOTE, (data: AppEvents['quick-follow-up:addQuote']) => {
-    addQuoteUI(data.text);
-  });
-}
-
 function setupEventListeners() {
   setupChatoutlineOpenEvent()
-  setupQuickFollowUpEvent()
 }
 
 setupEventListeners()

@@ -1,67 +1,49 @@
-import { Box, Icon, Text } from '@chakra-ui/react'
+import { Button, Icon, Text, type ButtonProps } from '@chakra-ui/react'
 import * as React from 'react'
 
 import { Tooltip, type TooltipProps } from '@/components/ui/tooltip'
 
-export interface ActionButtonProps {
+export interface ActionButtonProps extends Omit<ButtonProps, 'onClick' | 'children'> {
   icon: React.ReactNode
   label?: React.ReactNode
   tooltip?: React.ReactNode
   tooltipPositioning?: TooltipProps['positioning']
-  onClick?: (event?: React.MouseEvent<HTMLDivElement>) => void
-  boxProps?: React.ComponentProps<typeof Box>
+  onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void
+  boxProps?: ButtonProps
 }
 
-export const ActionButton = React.forwardRef<HTMLDivElement, ActionButtonProps>(
+/** A real Chakra button so it can safely serve as a Popover/Tooltip trigger. */
+export const ActionButton = React.forwardRef<HTMLButtonElement, ActionButtonProps>(
   function ActionButton(
-    { icon, label, tooltip, tooltipPositioning, onClick, boxProps },
+    { icon, label, tooltip, tooltipPositioning, onClick, boxProps, ...buttonProps },
     ref
   ) {
-    const { onKeyDown, ...restBoxProps } = boxProps ?? {}
-
-    const handleKeyDown: React.KeyboardEventHandler<HTMLDivElement> = event => {
-      onKeyDown?.(event)
-      if (event.defaultPrevented) {
-        return
-      }
-      if (!onClick) {
-        return
-      }
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault()
-        onClick()
-      }
-    }
-
     const buttonContent = (
-      <Box
+      <Button
         ref={ref}
+        type="button"
+        // Capsule segments use their own hover surface, without the button recipe's rounded corners or sizing.
+        unstyled
+        bg="transparent"
+        borderRadius={0}
+        focusVisibleRing="inside"
         height="100%"
+        minW={label ? undefined : '40px'}
         display="flex"
         alignItems="center"
+        justifyContent="center"
         transition="background-color 0.2s"
         _hover={{ bg: 'tocHoverBg' }}
         cursor="pointer"
         padding="0 12px"
         gap={2}
-        onClick={(event) => {
-          onClick?.(event)
-          return event
-        }}
-        onKeyDown={handleKeyDown}
-        role="button"
-        tabIndex={0}
-        {...restBoxProps}
+        onClick={onClick}
+        {...buttonProps}
+        {...boxProps}
       >
-        <Icon fontSize="md" color="tocText">
-          {icon}
-        </Icon>
-        {label && (
-          <Text width="max-content" fontSize="14px" color="tocText">
-            {label}
-          </Text>
-        )}
-      </Box>
+        <Icon fontSize="md" color="tocText" aria-hidden="true">{icon}</Icon>
+        {label && <Text as="span" width="max-content" fontSize="14px" color="tocText">{label}</Text>}
+      </Button>
     )
 
     if (tooltip) {
@@ -75,4 +57,3 @@ export const ActionButton = React.forwardRef<HTMLDivElement, ActionButtonProps>(
     return buttonContent
   }
 )
-

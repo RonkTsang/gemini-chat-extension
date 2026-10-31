@@ -34,11 +34,20 @@ function App() {
 export const renderOverlay = (container: HTMLElement) => {
   const overlay = document.createElement('div');
   container.append(overlay);
-  createRoot(overlay).render(
+  const root = createRoot(overlay);
+  let mounted = true;
+  root.render(
     <StrictMode>
       <Provider>
         <App />
       </Provider>
     </StrictMode>,
   )
+
+  return () => {
+    if (!mounted) return;
+    mounted = false;
+    root.unmount();
+    overlay.remove();
+  };
 };

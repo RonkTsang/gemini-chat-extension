@@ -76,12 +76,33 @@
   },
   "quickFollow": {
     "more": "更多",
-    "moreAriaLabel": "顯示更多提示"
+    "moreAriaLabel": "顯示更多提示",
+    "multiSelection": {
+      "selectedText": "已選文字",
+      "userComment": "使用者留言",
+      "editComment": "編輯留言",
+      "commentPlaceholder": "新增留言…",
+      "add": "新增",
+      "send": "傳送",
+      "addToDraft": "加入草稿",
+      "sendSeparately": "分別傳送",
+      "selectionNumber": "選取範圍 $1",
+      "addFailed": "無法加入此選取範圍",
+      "maxSelections": "最多可加入 10 個選取範圍",
+      "removeSelection": "移除此選取範圍",
+      "updateFailed": "無法更新草稿",
+      "sendFailed": "無法傳送，草稿已保留。",
+      "sendUnknown": "無法確認是否已傳送，草稿已保留。",
+      "restoreDraft": "還原草稿",
+      "restoreFailed": "無法還原草稿。請清空輸入欄位後再試一次。",
+      "unsupportedDraft": "無法安全暫存此草稿。請先傳送或移除附件及含格式的內容。"
+    }
   },
   "settings": {
     "quickFollow": {
       "title": "快速追問",
       "enable": "啟用 Quick Follow-up",
+      "enableDescription": "開啟後會隱藏 Gemini 原生的 Ask 按鈕，關閉後恢復顯示。",
       "customPrompts": {
         "title": "技能管理",
         "description": "前 $1 個技能固定顯示，其餘技能可橫向捲動查看",

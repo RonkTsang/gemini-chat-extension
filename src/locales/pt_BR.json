@@ -76,12 +76,33 @@
   },
   "quickFollow": {
     "more": "Mais",
-    "moreAriaLabel": "Mostrar mais prompts"
+    "moreAriaLabel": "Mostrar mais prompts",
+    "multiSelection": {
+      "selectedText": "Texto selecionado",
+      "userComment": "Comentário do usuário",
+      "editComment": "Editar comentário",
+      "commentPlaceholder": "Adicionar um comentário…",
+      "add": "Adicionar",
+      "send": "Enviar",
+      "addToDraft": "Adicionar ao rascunho",
+      "sendSeparately": "Enviar separadamente",
+      "selectionNumber": "Seleção $1",
+      "addFailed": "Não foi possível adicionar esta seleção",
+      "maxSelections": "Você pode adicionar até 10 seleções",
+      "removeSelection": "Remover seleção",
+      "updateFailed": "Não foi possível atualizar o rascunho",
+      "sendFailed": "Não foi possível enviar. O rascunho foi mantido.",
+      "sendUnknown": "Não foi possível confirmar o envio. O rascunho foi mantido.",
+      "restoreDraft": "Restaurar rascunho",
+      "restoreFailed": "Não foi possível restaurar o rascunho. Limpe o campo de entrada e tente novamente.",
+      "unsupportedDraft": "Este rascunho não pode ser guardado com segurança. Envie ou remova os anexos e o conteúdo formatado primeiro."
+    }
   },
   "settings": {
     "quickFollow": {
       "title": "Seguimento rápido",
       "enable": "Ativar Seguimento rápido",
+      "enableDescription": "Quando o Seguimento rápido está ativado, o botão Perguntar integrado do Gemini fica oculto. Desative-o para exibir o botão novamente.",
       "customPrompts": {
         "title": "Gestão de habilidades",
         "description": "As primeiras $1 habilidades estão fixadas, role horizontalmente para ver mais",

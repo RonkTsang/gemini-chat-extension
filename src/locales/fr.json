@@ -76,12 +76,33 @@
   },
   "quickFollow": {
     "more": "Plus",
-    "moreAriaLabel": "Afficher plus de prompts"
+    "moreAriaLabel": "Afficher plus de prompts",
+    "multiSelection": {
+      "selectedText": "Texte sélectionné",
+      "userComment": "Commentaire utilisateur",
+      "editComment": "Modifier le commentaire",
+      "commentPlaceholder": "Ajouter un commentaire…",
+      "add": "Ajouter",
+      "send": "Envoyer",
+      "addToDraft": "Ajouter au brouillon",
+      "sendSeparately": "Envoyer séparément",
+      "selectionNumber": "Sélection $1",
+      "addFailed": "Impossible d’ajouter cette sélection",
+      "maxSelections": "Vous pouvez ajouter jusqu’à 10 sélections",
+      "removeSelection": "Supprimer la sélection",
+      "updateFailed": "Impossible de modifier le brouillon",
+      "sendFailed": "Envoi impossible. Votre brouillon a été conservé.",
+      "sendUnknown": "L’envoi n’a pas pu être confirmé. Votre brouillon a été conservé.",
+      "restoreDraft": "Restaurer le brouillon",
+      "restoreFailed": "Impossible de restaurer le brouillon. Effacez le champ de saisie et réessayez.",
+      "unsupportedDraft": "Ce brouillon ne peut pas être mis de côté en toute sécurité. Envoyez ou supprimez d’abord les pièces jointes et le contenu mis en forme."
+    }
   },
   "settings": {
     "quickFollow": {
       "title": "Relance rapide",
       "enable": "Activer la Relance rapide",
+      "enableDescription": "Lorsque la relance rapide est activée, le bouton « Demander » de Gemini est masqué. Désactivez-la pour l’afficher à nouveau.",
       "customPrompts": {
         "title": "Gestion des compétences",
         "description": "Les $1 premières compétences sont épinglées, faites défiler horizontalement pour en voir plus",

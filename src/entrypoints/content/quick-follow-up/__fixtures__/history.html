@@ -1,0 +1,47 @@
+<!-- Synthetic Gemini-shaped test data. Preserve interpolation spaces and comment anchors. -->
+<chat-window>
+  <user-query data-fixture="legacy">
+    <div class="query-text">
+      <h5 class="cdk-visually-hidden">You said Referring to this in particular: old source</h5>
+      <p class="query-text-line"><!----><!----> Referring to this in particular: old source <!----><!----></p>
+      <p class="query-text-line"><!----><!----> --------- <!----><!----></p>
+      <p class="query-text-line"><br><!----><!----><!----><!----></p>
+      <p class="query-text-line"><!----><!----> old question <!----><!----></p>
+    </div>
+  </user-query>
+  <user-query data-fixture="multi-selection">
+    <div class="query-text">
+      <h5 class="cdk-visually-hidden">You said # Selected text:</h5>
+      <p class="query-text-line"><!----><!----> # Selected text: <!----><!----></p>
+      <p class="query-text-line"><br><!----><!----><!----><!----></p>
+      <p class="query-text-line"><!----><!----> ## Selection 1 <!----><!----></p>
+      <p class="query-text-line"><!----><!----> &gt; new source <!----><!----></p>
+      <p class="query-text-line"><br><!----><!----><!----><!----></p>
+      <p class="query-text-line"><br><!----><!----><!----><!----></p>
+      <p class="query-text-line"><br><!----><!----><!----><!----></p>
+      <p class="query-text-line"><!----><!----> ## My request: <!----><!----></p>
+      <p class="query-text-line"><br><!----><!----><!----><!----></p>
+      <p class="query-text-line"><br><!----><!----><!----><!----></p>
+      <p class="query-text-line"><!----><!----> new question <!----><!----></p>
+    </div>
+  </user-query>
+  <!-- The empty-request case intentionally has no paragraph after its request heading. -->
+  <user-query data-fixture="multi-selection-empty-request">
+    <div class="query-text">
+      <h5 class="cdk-visually-hidden">You said # Selected text:</h5>
+      <p class="query-text-line"><!----><!----> # Selected text: <!----><!----></p>
+      <p class="query-text-line"><br><!----><!----><!----><!----></p>
+      <p class="query-text-line"><!----><!----> ## Selection 1 <!----><!----></p>
+      <p class="query-text-line"><!----><!----> &gt; sample source alpha <!----><!----></p>
+      <p class="query-text-line"><br><!----><!----><!----><!----></p>
+      <p class="query-text-line"><!----><!----> Compare the two sample sources. <!----><!----></p>
+      <p class="query-text-line"><br><!----><!----><!----><!----></p>
+      <p class="query-text-line"><!----><!----> ## Selection 2 <!----><!----></p>
+      <p class="query-text-line"><!----><!----> &gt; sample source beta <!----><!----></p>
+      <p class="query-text-line"><br><!----><!----><!----><!----></p>
+      <p class="query-text-line"><!----><!----> Give an example comment. <!----><!----></p>
+      <p class="query-text-line"><br><!----><!----><!----><!----></p>
+      <p class="query-text-line"><!----><!----> ## My request: <!----><!----></p>
+    </div>
+  </user-query>
+</chat-window>
