@@ -1,0 +1,127 @@
+---
+import { getImage } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface Region {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+interface Annotation {
+  from: [number, number];
+  to: [number, number];
+  number?: string;
+}
+
+interface Props {
+  id: string;
+  src: ImageMetadata;
+  alt: string;
+  title: string;
+  caption: string;
+  fullImageLabel: string;
+  crop: Region;
+  focus?: Region[];
+  arrows?: Annotation[];
+}
+
+const {
+  id, src, alt, title, caption, fullImageLabel, crop,
+  focus = [], arrows = [],
+} = Astro.props;
+const fullImage = await getImage({ src, format: 'webp', quality: 90 });
+const arrowId = `${id}-arrow`;
+---
+
+<figure class="focus-figure">
+  <div class="focus-heading">
+    <span class="focus-title">{title}</span>
+    <a href={fullImage.src} target="_blank" rel="noopener" aria-label={`${fullImageLabel} — ${title}`}>
+      {fullImageLabel}<span aria-hidden="true"> ↗</span>
+    </a>
+  </div>
+  <svg
+    class="focus-image"
+    viewBox={`${crop.x} ${crop.y} ${crop.width} ${crop.height}`}
+    width={crop.width}
+    height={crop.height}
+    role="img"
+    aria-labelledby={`${id}-title ${id}-description`}
+  >
+    <title id={`${id}-title`}>{title}</title>
+    <desc id={`${id}-description`}>{alt}</desc>
+    <defs>
+      <marker id={arrowId} markerWidth="16" markerHeight="16" refX="12" refY="8" orient="auto" markerUnits="userSpaceOnUse">
+        <path d="M1 1 L14 8 L1 15 L5 8 Z" fill="#d94020" stroke="white" stroke-width="1.5" />
+      </marker>
+    </defs>
+    <image href={fullImage.src} width={src.width} height={src.height} />
+    {focus.map(region => (
+      <g aria-hidden="true" fill="none">
+        <rect {...region} rx="12" stroke="white" stroke-width="7" />
+        <rect {...region} rx="12" stroke="#d94020" stroke-width="3" />
+      </g>
+    ))}
+    {arrows.map(({ from, to, number }) => (
+      <g aria-hidden="true">
+        <line x1={from[0]} y1={from[1]} x2={to[0]} y2={to[1]} stroke="white" stroke-width="8" stroke-linecap="round" />
+        <line x1={from[0]} y1={from[1]} x2={to[0]} y2={to[1]} stroke="#d94020" stroke-width="4" stroke-linecap="round" marker-end={`url(#${arrowId})`} />
+        {number && <>
+          <circle cx={from[0]} cy={from[1]} r="17" fill="#d94020" stroke="white" stroke-width="3" />
+          <text x={from[0]} y={from[1]} dy=".35em" text-anchor="middle" fill="white" font-family="system-ui, sans-serif" font-size="19" font-weight="700">{number}</text>
+        </>}
+      </g>
+    ))}
+  </svg>
+  <figcaption>{caption}</figcaption>
+</figure>
+
+<style>
+  .focus-figure {
+    margin: 1.5rem 0 2rem;
+    overflow: hidden;
+    border: 1px solid var(--sl-color-hairline-light);
+    border-radius: 0.75rem;
+    background: var(--sl-color-bg-nav);
+  }
+
+  .focus-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.35rem 1rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--sl-color-hairline-light);
+    font-size: 0.875rem;
+  }
+
+  .focus-title {
+    color: var(--sl-color-white);
+    font-weight: 600;
+  }
+
+  .focus-heading a {
+    flex-shrink: 0;
+    font-size: 0.75rem;
+  }
+
+  .focus-image {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 0;
+    background: white;
+  }
+
+  figcaption {
+    margin: 0;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--sl-color-hairline-light);
+    color: var(--sl-color-gray-2);
+    font-size: 0.875rem;
+    line-height: 1.65;
+  }
+</style>

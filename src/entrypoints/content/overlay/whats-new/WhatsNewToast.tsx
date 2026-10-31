@@ -5,7 +5,7 @@
 
 import { Box, Badge, Button, Card, HStack, Portal, Text, VStack, CloseButton, Image } from '@chakra-ui/react'
 import { useState } from 'react'
-import { HiOutlineAdjustments } from 'react-icons/hi'
+import { HiOutlineAdjustments, HiOutlineExternalLink } from 'react-icons/hi'
 import { t } from '@/utils/i18n'
 import { EXTERNAL_LINKS } from '@/common/config'
 import { useEventEmitter } from '@/hooks/useEventBus'
@@ -75,16 +75,19 @@ export function WhatsNewToast({ version, features, onClose }: WhatsNewToastProps
         bottom="4"
         right="4"
         zIndex="banner"
-        maxW="300px"
+        w="360px"
+        maxW="calc(100vw - 32px)"
       >
         <Card.Root
           borderWidth="1px"
           variant="elevated"
           display="flex"
           flexDirection="column"
+          maxH="calc(100dvh - 32px)"
+          overflow="hidden"
         >
           {/* Header */}
-          <Card.Header pt="4" p="3">
+          <Card.Header pt="4" p="3" flexShrink="0">
             <HStack justify="space-between" align="flex-start">
               <HStack gap="2" flex="1">
                 <Text fontWeight="semibold" color="fg">
@@ -99,7 +102,7 @@ export function WhatsNewToast({ version, features, onClose }: WhatsNewToastProps
           </Card.Header>
 
           {/* Body - Feature List */}
-          <Card.Body pt="1" pb="2" overflowY="auto" flex="1">
+          <Card.Body pt="1" pb="2" overflowY="auto" flex="1" minH="0">
             <VStack align="stretch" gap="4">
               {features.map((feature, index) => {
                 const promoImageSrc = feature.promoImagePath
@@ -117,14 +120,18 @@ export function WhatsNewToast({ version, features, onClose }: WhatsNewToastProps
                       {t(feature.titleKey)}
                     </Text>
                     {promoImageSrc && !failedPromoImages.has(promoImageSrc) && (
-                      <Image
-                        src={promoImageSrc}
-                        alt=""
+                      <Box
+                        as={feature.promoAction ? 'button' : 'div'}
+                        display="block"
                         w="100%"
-                        h="60px"
+                        p="0"
+                        border="0"
+                        bg="transparent"
                         borderRadius="md"
-                        objectFit="cover"
                         mb="2"
+                        aria-label={feature.promoAction
+                          ? t(feature.actionLabelKey ?? feature.titleKey)
+                          : undefined}
                         cursor={feature.promoAction ? 'pointer' : 'default'}
                         transition="transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease"
                         _hover={feature.promoAction ? {
@@ -133,17 +140,28 @@ export function WhatsNewToast({ version, features, onClose }: WhatsNewToastProps
                           boxShadow: 'sm',
                         } : undefined}
                         onClick={() => handlePromoActionClick(feature.promoAction)}
-                        onError={(event) => {
-                          const failedSrc = event.currentTarget.currentSrc || event.currentTarget.src
-                          if (!failedSrc) return
-                          setFailedPromoImages((prev) => {
-                            if (prev.has(failedSrc)) return prev
-                            const next = new Set(prev)
-                            next.add(failedSrc)
-                            return next
-                          })
-                        }}
-                      />
+                        _focusVisible={{ outline: '2px solid', outlineColor: 'colorPalette.focusRing', outlineOffset: '2px' }}
+                      >
+                        <Image
+                          src={promoImageSrc}
+                          alt=""
+                          w="100%"
+                          aspectRatio={16 / 9}
+                          objectFit="cover"
+                          objectPosition="center"
+                          borderRadius="md"
+                          onError={(event) => {
+                            const failedSrc = event.currentTarget.currentSrc || event.currentTarget.src
+                            if (!failedSrc) return
+                            setFailedPromoImages((prev) => {
+                              if (prev.has(failedSrc)) return prev
+                              const next = new Set(prev)
+                              next.add(failedSrc)
+                              return next
+                            })
+                          }}
+                        />
+                      </Box>
                     )}
                     <Text fontSize="sm" color="fg.muted" lineHeight="1.6">
                       {t(feature.descriptionKey)}
@@ -155,7 +173,9 @@ export function WhatsNewToast({ version, features, onClose }: WhatsNewToastProps
                         mt="2"
                         onClick={() => handlePromoActionClick(feature.promoAction)}
                       >
-                        <HiOutlineAdjustments />
+                        {feature.promoAction.action === 'external-link'
+                          ? <HiOutlineExternalLink />
+                          : <HiOutlineAdjustments />}
                         {t(feature.actionLabelKey)}
                       </Button>
                     )}
@@ -167,7 +187,7 @@ export function WhatsNewToast({ version, features, onClose }: WhatsNewToastProps
 
 
           {/* Footer */}
-          <Card.Footer p="3" pt="2" justifyContent="flex-end">
+          <Card.Footer p="3" pt="2" justifyContent="flex-end" flexShrink="0">
             <Button
               variant="outline"
               size="2xs"

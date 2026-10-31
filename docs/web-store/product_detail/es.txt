@@ -4,10 +4,10 @@ Gemini Power Kit convierte tu chat con IA en un espacio de trabajo de alto rendi
 Diseñado para quienes necesitan más que una simple conversación, este kit elimina tareas manuales repetitivas y aporta la estructura profesional que necesitas para mantenerte enfocado.
 
 FUNCIONES PRINCIPALES
-⚡ QUICK FOLLOW-UP — SELECCIONA Y PREGUNTA AL INSTANTE
-Elimina la fricción de copiar y pegar. Interactúa con Gemini directamente desde cualquier texto que selecciones.
-  ● Pregunta instantánea: Selecciona cualquier texto y pregunta de inmediato.
-  ● Biblioteca de prompts personalizada: Crea accesos directos como "Resumir" o "Explicar" para ejecutarlos con un clic.
+⚡ SELECT & REPLY
+Sigue leyendo respuestas de Gemini sin olvidar tus preguntas ni volver a buscar cada fragmento.
+  ● Multi-Ask: Añade preguntas a varios fragmentos y envíalas juntas con el texto original.
+  ● Prompts personalizados: Reutiliza instrucciones para resumir, explicar o traducir.
 
 🗂️ CHAT OUTLINE — NO VUELVAS A PERDERTE
 Ve cada prompt, salta a cualquier punto y fija el índice para investigar.

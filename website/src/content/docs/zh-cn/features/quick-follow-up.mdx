@@ -1,105 +1,258 @@
 ---
-title: 快速跟进
-description: Quick Follow-up 帮你在 Gemini 中引用选中的回复继续追问，也可用技能模板执行翻译、解释和总结等重复操作。
+title: "Gemini 划词追问：边读边记下疑问，准备好一起问"
+description: "用划词追问边读 Gemini 长回答边记下疑问，准备好后连同原文一起发送，不用反复翻找原文、重新交代你问的是哪一段。"
+head:
+  - tag: meta
+    attrs:
+      property: og:image
+      content: "https://gpk.ronktsang.com/og/quick-follow-up.png"
+  - tag: meta
+    attrs:
+      property: og:image:alt
+      content: "Gemini Power Kit 在 Gemini 中显示多段引用卡片与原文编号标记"
+  - tag: meta
+    attrs:
+      name: twitter:image
+      content: "https://gpk.ronktsang.com/og/quick-follow-up.png"
+  - tag: meta
+    attrs:
+      name: twitter:image:alt
+      content: "Gemini Power Kit 在 Gemini 中显示多段引用卡片与原文编号标记"
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: |
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "Gemini 划词追问：边读边记下疑问，准备好一起问",
+        "description": "用划词追问边读 Gemini 长回答边记下疑问，准备好后连同原文一起发送，不用反复翻找原文、重新交代你问的是哪一段。",
+        "url": "https://gpk.ronktsang.com/zh-cn/features/quick-follow-up/",
+        "image": "https://gpk.ronktsang.com/og/quick-follow-up.png",
+        "inLanguage": "zh-CN",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Gemini Power Kit",
+          "url": "https://gpk.ronktsang.com/"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "Gemini Power Kit",
+          "applicationCategory": "BrowserApplication",
+          "operatingSystem": "Chrome, Firefox, Chromium-based browsers"
+        }
+      }
 ---
 
-import { Image } from 'astro:assets';
-import quickFollowUpDemoGif from '../../../../assets/features/quick-follow-up/quick-follow-up.gif';
-import inputUiImg from '../../../../assets/features/quick-follow-up/input-ui.png';
+import FocusedScreenshot from '../../../../components/FocusedScreenshot.astro';
+import entryDemo from '../../../../assets/features/quick-follow-up/quick-follow-up.gif';
 import customPromptImg from '../../../../assets/features/quick-follow-up/custom-prompt.png';
+import quickCommentImg from '../../../../assets/features/quick-follow-up/instant-comment.jpg';
+import modifierImg from '../../../../assets/features/quick-follow-up/quick-comment-send.jpg';
+import multipleCommentsImg from '../../../../assets/features/quick-follow-up/multiple-comment-cards.jpg';
+import historyImg from '../../../../assets/features/quick-follow-up/sent-follow-up-conversation.jpg';
 
-想马上试试引用回答内容追问？请看[如何引用 Gemini 回答中的一段文字并继续追问](/zh-cn/tips/ask-follow-up-about-gemini-response/)。
+<strong>划词追问（Quick Follow-up）</strong>让你读到哪里，就在哪里记下问题，再接着读。准备好后，把问题连同原文一起发给 Gemini，不用一直记着，也不用回头翻找、重新解释你问的是哪一段。
 
-<img src={quickFollowUpDemoGif.src} alt="在 Gemini 中选中文本后出现 Quick Follow-up 胶囊菜单" class="feature-image feature-image-narrow" />
+## 1. 选中一个点，点击 Ask Gemini
 
-## 功能概览
+启用 Gemini Power Kit 后，打开 [gemini.google.com](https://gemini.google.com)，在回答中选中需要追问的文字，再点击浮动菜单中的<strong>询问 Gemini（Ask Gemini）</strong>。
 
-Quick Follow-up 是一个“划词即追问”的交互层。你在 Gemini 回复里选中文本后，鼠标附近会出现胶囊操作条。
+<img src={entryDemo.src} alt="在 Gemini 回答中划词后，浮动菜单显示 Ask Gemini 和已保存的提示词图标" class="feature-image feature-image-narrow feature-image-full" />
 
-它包含两种模式：
+*划词入口——选中需要深挖的内容，点击<strong>询问 Gemini</strong>。*
 
-- **询问 Gemini（Ask Gemini）**：把选中文本附加为引用上下文，然后由你继续输入并手动发送。
-- **技能**：把模板中的 `{{SELECT_TEXT}}` 替换为选中文本，并自动发送。
+## 2. 直接在原文旁写下问题
 
-## 你可以做什么
+点击 Ask 后，<strong>所选文字旁边</strong>会打开一个即时评论输入框，Gemini 主输入框上方也会新增一张引用卡片。你可以在阅读位置直接提问，无需先滚动到页面底部。
 
-- 不用复制粘贴也能基于原文快速追问。
-- 在输入框上方保留引用上下文，避免提问时丢失语境。
-- 把高频追问动作固化为一键模板（翻译、解释、总结等）。
-- 调整图标顺序，让高频动作优先出现。
+输入针对这段文字的问题，例如“可以给一个具体例子吗？”。点击<strong>勾号</strong>或按 <strong>Enter</strong>，把评论添加到对应卡片，暂不发送。按 <strong>Shift+Enter</strong> 可以换行。
 
-## 使用方法
+<FocusedScreenshot
+  id="instant-comment"
+  src={quickCommentImg}
+  title="在原文旁写问题，点击勾号添加"
+  alt="局部放大的原文选区与即时评论框，箭头指向用于添加评论的勾号。"
+  caption="在选区旁输入问题，再点击箭头所指的勾号，添加评论而不发送。"
+  fullImageLabel="查看完整截图"
+  crop={{ x: 410, y: 315, width: 900, height: 210 }}
+  focus={[{ x: 993, y: 347, width: 290, height: 56 }]}
+  arrows={[{ from: [1245, 478], to: [1251, 407], number: '1' }]}
+/>
 
-### Ask Gemini
 
-1. 在 Gemini 回复中选中一段文本。
-2. 点击胶囊里的 **询问 Gemini（Ask Gemini）**。
-3. 确认输入框上方出现引用上下文。
-4. 输入你的追问并点击发送。
-5. 若不再需要引用，点击引用状态 UI 的关闭按钮。
+### 按住 Command / Ctrl，从“添加”切换为“发送”
 
-<Image
-  src={inputUiImg}
-  alt="点击 Ask Gemini 后，Gemini 输入框上方显示引用内容"
+默认的勾号表示<strong>添加评论</strong>。在 macOS 按住 <strong>Command（⌘）</strong>，或在 Windows/Linux 按住 <strong>Ctrl</strong>，按钮会变成向上的<strong>发送箭头</strong>；松开后恢复勾号。
+
+保持按住该键并点击箭头，或直接按 <strong>⌘+Enter / Ctrl+Enter</strong>，即可添加当前评论并发送整份草稿。这里会发送<strong>所有引用、各自的评论和主输入框内容</strong>，包括之前添加的卡片。
+
+<FocusedScreenshot
+  id="comment-send"
+  src={modifierImg}
+  title="按住 ⌘，勾号切换为发送箭头"
+  alt="局部放大的评论输入框，箭头指向 macOS 按住 Command 时显示的紫色发送箭头。"
+  caption="箭头所指按钮已切换为发送状态；macOS 按住 Command，Windows/Linux 按住 Ctrl。"
+  fullImageLabel="查看完整截图"
+  crop={{ x: 410, y: 300, width: 790, height: 190 }}
+  focus={[{ x: 1114, y: 350, width: 38, height: 38 }]}
+  arrows={[{ from: [1174, 455], to: [1140, 393], number: '1' }]}
+/>
+
+
+| 新增评论时的操作 | 行为 |
+| --- | --- |
+| <strong>Enter</strong> 或点击勾号 | 添加评论，继续准备草稿 |
+| <strong>Shift+Enter</strong> | 换行 |
+| <strong>⌘+Enter / Ctrl+Enter</strong>，或按住对应键点击发送箭头 | 添加当前评论并发送整份草稿 |
+
+这些快捷键用于<strong>新增评论</strong>。重新打开已有评论时，请使用<strong>保存</strong>提交修改。
+
+## 3. 继续选取其他内容，为每段添加评论
+
+继续阅读，选中另一个需要追问的点，再次点击 <strong>Ask Gemini</strong>，为这段内容填写问题。已有卡片、评论和主输入框中的文字都会保留，让你先逐段收集问题，再一起发送。每份草稿最多添加 <strong>10 段引用</strong>。
+
+<FocusedScreenshot
+  id="multiple-comments"
+  src={multipleCommentsImg}
+  title="两段原文，各自保留一个问题"
+  alt="Gemini 完整输入框中有两张用边框标出的引用卡片，下方保留工具栏和右下角的发送按钮。"
+  caption="两张卡片位于 Gemini 输入框内，分别保留原文和问题；准备好后，用右下角的发送按钮一起发出。"
+  fullImageLabel="查看完整截图"
+  crop={{ x: 345, y: 420, width: 880, height: 375 }}
+  focus={[{ x: 381, y: 536, width: 167, height: 128 }, { x: 550, y: 536, width: 168, height: 128 }]}
+  arrows={[{ from: [810, 598], to: [725, 598], number: '1' }]}
+/>
+
+
+准备好后，可以在 Gemini 主输入框中补充总体要求，例如“请逐段回答，每段给一个实际例子”。检查卡片后点击 Gemini 的<strong>发送</strong>按钮，所有引用、各自的评论和总体要求会一起发出。
+
+每段评论和总体要求都可以留空。卡片会省略较长的预览以节省空间，实际发送时仍包含完整原文和评论。
+
+## 4. 在已发送消息中回看问题与引用
+
+发送后，所选原文和对应评论会保留在消息卡片中，总体要求也会一起展示。阅读 Gemini 的后续回答时，你可以回看每个问题针对的是哪段内容。
+
+<FocusedScreenshot
+  id="sent-comments"
+  src={historyImg}
+  title="发送后，引用和问题仍保留在消息中"
+  alt="Gemini 消息区中，上方的已发送消息包含两张用边框标出的引用卡片，下方是回复和页面底部的输入框。"
+  caption="上方是已发送消息中的引用卡片，下方是 Gemini 的回复，输入框仍在页面底部。"
+  fullImageLabel="查看完整截图"
+  crop={{ x: 345, y: 20, width: 880, height: 781 }}
+  focus={[{ x: 767, y: 90, width: 335, height: 128 }]}
+  arrows={[{ from: [663, 153], to: [758, 153], number: '1' }]}
+/>
+
+
+已发送的卡片为只读。下面的二次编辑入口用于仍在准备、尚未发送的评论。
+
+## 从评论卡片再次打开编辑
+
+1. 在主输入框中，将鼠标移到已有评论的卡片上，点击<strong>编辑图标</strong>；也可以点击卡片的评论入口。
+2. 划词追问会返回原文位置，高亮对应文字，并在附近打开已有评论。
+3. 修改后点击<strong>保存（Save）</strong>。对应卡片会更新，其他卡片和总体要求保留。
+
+<video
+  controls
+  playsinline
+  preload="none"
+  poster="/videos/quick-follow-up-edit-from-card-poster.jpg"
+  width="1020"
+  height="720"
   class="feature-image feature-image-full"
-/>
+  aria-label="从评论卡片唤起二次编辑"
+  aria-describedby="edit-card-caption"
+>
+  <source src="/videos/quick-follow-up-edit-from-card.mp4" type="video/mp4" />
+  <a href="/videos/quick-follow-up-edit-from-card.mp4">从评论卡片唤起二次编辑</a>
+</video>
 
-Ask Gemini 事例：
+<p id="edit-card-caption"><em>卡片编辑——点击编辑入口，返回高亮原文，修改评论后保存。</em></p>
 
-- `请把这段和上一个回答做对比，说明关键差异。`
-- `把引用段落总结为 3 个要点。`
-- `把引用内容改写成更容易理解的版本。`
 
-### 技能
+## 也可以点击原文旁的编号 marker 修改评论
 
-当你需要反复对选中文本执行同一种操作时，可以保存技能并一键执行。
+添加引用后，原文旁会出现一个小型编号标记（<strong>marker</strong>），与卡片中的编号对应。阅读回答时，你可以直接从原文修改问题，无需先找到输入框里的卡片。
 
-<Image
+1. 找到需要修改的原文旁的编号，例如 <strong>1</strong>。
+2. 将鼠标移到 marker 上，高亮对应的原文，确认它关联的是哪段内容。
+3. 点击 marker，在原文旁重新打开这段评论。
+4. 修改问题并点击<strong>保存（Save）</strong>，再检查对应卡片中的评论已更新。
+
+<video
+  controls
+  playsinline
+  preload="none"
+  poster="/videos/quick-follow-up-edit-from-marker-poster.jpg"
+  width="1020"
+  height="720"
+  class="feature-image feature-image-full"
+  aria-label="演示原文 marker 悬停高亮与点击编辑评论"
+  aria-describedby="edit-marker-caption"
+>
+  <source src="/videos/quick-follow-up-edit-from-marker.mp4" type="video/mp4" />
+  <a href="/videos/quick-follow-up-edit-from-marker.mp4">演示原文 marker 悬停高亮与点击编辑评论</a>
+</video>
+
+<p id="edit-marker-caption"><em>marker 编辑——悬停确认对应原文，点击修改评论，再保存。</em></p>
+
+
+点击<strong>取消（Cancel）</strong>、按 <strong>Esc</strong> 或点击外部，可以放弃本次未保存的编辑。修改评论不会改写引用原文。若要移除待发送的引用及其评论，点击卡片上的 <strong>×</strong>；剩余卡片会重新编号，主输入框中的要求会保留。
+
+## 为重复操作保存自定义提示词
+
+<strong>自定义提示词</strong>是一段可重复使用的指令，其中包含代表所选文字的占位符。在设置中，这些提示词以<strong>技能</strong>的形式管理。
+
+1. 在 Gemini 左侧导航中，点击 <strong>Gemini Power Kit</strong>。
+2. 在 <strong>Prompt（提示词）</strong>分组中打开<strong>划词追问</strong>。
+3. 在<strong>技能管理</strong>中点击<strong>添加技能</strong>（`+`）。
+4. 选择图标，填写不超过 30 个字符的名称和<strong>提示词内容</strong>。模板中需保留<strong>选中的文本（Selected Text）</strong>占位符，运行时会替换为你划选的文字。
+5. 点击<strong>保存</strong>。回到对话，选中文字后点击对应技能图标即可使用。
+
+<FocusedScreenshot
+  id="create-skill"
   src={customPromptImg}
-  alt="新建技能弹窗，包含图标和名称、提示词内容字段"
-  class="feature-image feature-image-narrow"
+  title="保留 Selected Text 占位符，保存为技能"
+  alt="局部放大的新建技能弹窗，包含图标和名称、提示词内容、Selected Text 占位符与保存按钮。"
+  caption="给技能命名，并在需要插入原文的位置保留 Selected Text 占位符。"
+  fullImageLabel="查看完整截图"
+  crop={{ x: 825, y: 475, width: 1360, height: 760 }}
+  focus={[]}
+  arrows={[]}
 />
 
-常见场景：
+例如，翻译技能可以写“将 [Selected Text] 翻译成日语，保留原文语气”，用<strong>选中的文本</strong>占位符替代方括号部分。代码审阅技能可以写“逐步解释 [Selected Text]，并指出边界情况”。
 
-- 固定语言翻译。
-- 固定格式总结（例如：要点 + 行动项）。
-- 固定风格代码解释（例如：ELI5）。
-- 固定结构的事实核查。
+也可以点击<strong>一键添加常用模板</strong>，加入 <strong>Tell me more</strong>、<strong>Search</strong> 和 <strong>ELI5</strong>，并调整技能顺序，把常用操作排在前面。
 
-#### 添加方式
+### 点击技能后会发生什么
 
-1. 打开 Gemini Power Kit 侧边栏，进入 **快速追问**。
-2. 开启 **启用 Quick Follow-up**。
-3. 在 **技能管理**中选择 **添加技能**。
-4. 填写图标和名称，以及提示词内容，然后点击 **保存**。
-5. 回到对话，划词后点击新图标即可执行。
+| 当前草稿 | 行为 |
+| --- | --- |
+| 没有引用卡片 | 展开提示词后自动发送。 |
+| 已有引用卡片 | 选择<strong>添加到草稿（Add to draft）</strong>或<strong>分别发送（Send separately）</strong>。 |
 
-#### 完整填写指南
+<strong>添加到草稿</strong>：把替换好选中文字的完整提示词追加到主输入框末尾，保留已有卡片和评论，暂不发送。
 
-- **Icon（图标）**：用于在胶囊中快速识别动作。
-- **Name（名称）**：必填，最多 30 字符，用作 tooltip 文案。
-- **提示词内容**：填写要重复使用的指令。创建技能时，编辑器会自带不可删除的 **选中的文本** 标签；在标签前后填写指令即可。
-- **选中文本标签**：示例中的 `{{SELECT_TEXT}}` 用来表示编辑器已提供的标签，用户无需手动输入该占位符。
-- **执行行为**：运行时会将当前选中的文本填入该标签；点击技能图标后会自动发送完整提示词。
+<strong>分别发送</strong>：只发送本次技能展开后的提示词，暂存原来的引用草稿，并在 Gemini 清空输入框后恢复。如果扩展提示无法安全暂存草稿，请先发送或移除附件和带格式的内容，再重试。
 
-技能提示词示例：
+## 开启或关闭划词追问
 
-- `将以下内容翻译成日语并保持正式语气：{{SELECT_TEXT}}`
-- `按步骤解释这段代码，并给出时间复杂度：{{SELECT_TEXT}}`
-- `从这段内容提取 5 个关键点和 3 个风险：{{SELECT_TEXT}}`
+划词追问默认开启。在 <strong>Gemini Power Kit → Prompt（提示词）→ 划词追问</strong>中切换<strong>启用划词追问</strong>。
 
-内置模板：
+开启时会隐藏 Gemini 原生的 <strong>Ask</strong> 按钮，供你使用扩展的划词菜单；关闭后会恢复 Gemini 原生按钮。
 
-- **Tell me more**：`Explain {{SELECT_TEXT}} in detail`
-- **Search**：`Search web for latest info on: {{SELECT_TEXT}}`
-- **ELI5**：`Explain {{SELECT_TEXT}} like I'm 5 years old`
+## 使用限制
+
+- 每份草稿最多添加 <strong>10 段引用</strong>。达到上限后，先移除一段再添加。
+- 引用草稿只属于当前会话。切换会话会清理引用草稿，刷新页面也不会恢复。
+- 回到原文需要对应文字仍在当前页面中可用，请勿依赖刷新后仍能使用来源编号跳转。
+- 发送前检查引用和评论：它们会成为实际发给 Gemini 的消息内容。
 
 ## 相关功能
 
-- [链式提示词](/zh-cn/features/chain-prompt/)
-- [对话大纲](/zh-cn/features/chat-outline/)
-
-## 技巧教程
-
-- [如何引用 Gemini 回答中的一段文字并继续追问](/zh-cn/tips/ask-follow-up-about-gemini-response/)
+- [如何用 Ask Gemini 对选中文字继续追问](/zh-cn/tips/ask-follow-up-about-gemini-response/)——从一个阅读场景开始，逐段添加问题。
+- [对话大纲](/zh-cn/features/chat-outline/)——在长对话中定位内容。
+- [链式提示词](/zh-cn/features/chain-prompt/)——运行可重复使用的多步提示词流程。

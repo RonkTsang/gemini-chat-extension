@@ -61,7 +61,7 @@ export default defineConfig({
 					translations: { 'zh-CN': '功能特性' },
 					items: [
 						{ label: 'Chat Outline', translations: { 'zh-CN': '对话大纲' }, slug: 'features/chat-outline' },
-						{ label: 'Quick Follow-up', translations: { 'zh-CN': '快速跟进' }, slug: 'features/quick-follow-up' },
+						{ label: 'Quick Follow-up', translations: { 'zh-CN': '划词追问' }, slug: 'features/quick-follow-up' },
 						{ label: 'Chain Prompt', translations: { 'zh-CN': '链式提示词' }, slug: 'features/chain-prompt' },
 						{ label: 'Open in New Tab', translations: { 'zh-CN': '新标签页打开' }, slug: 'features/stuff-open-new-tab' },
 						{ label: 'Tab Title Sync', translations: { 'zh-CN': '标签页标题同步' }, slug: 'features/tab-title-sync' },
@@ -79,7 +79,7 @@ export default defineConfig({
 					items: [
 						{ label: 'Browse Tutorials', translations: { 'zh-CN': '浏览教程' }, slug: 'tips' },
 						{ label: 'Chat Outline', translations: { 'zh-CN': '对话大纲' }, slug: 'tips/find-earlier-gemini-prompts' },
-						{ label: 'Quote & Reply in Gemini', translations: { 'zh-CN': '引用回答并追问' }, slug: 'tips/ask-follow-up-about-gemini-response' },
+						{ label: 'Ask Gemini: Quote & Reply', translations: { 'zh-CN': '如何用 Ask Gemini 划词追问' }, slug: 'tips/ask-follow-up-about-gemini-response' },
 						{ label: 'Get Completion Alerts', translations: { 'zh-CN': '接收回复完成通知' }, slug: 'tips/get-notified-when-gemini-finishes' },
 						{ label: 'Delete Multiple Chats', translations: { 'zh-CN': '批量清理对话' }, slug: 'tips/delete-multiple-gemini-chats' },
 						{

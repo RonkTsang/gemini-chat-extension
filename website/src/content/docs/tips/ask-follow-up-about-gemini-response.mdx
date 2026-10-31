@@ -1,23 +1,23 @@
 ---
-title: How to Quote a Gemini Response and Ask a Follow-up
-description: "Quote selected text in a Gemini response, choose Ask Gemini, and write a focused follow-up. Reuse saved prompts with Gemini Power Kit's Quick Follow-up."
+title: "How to Use Ask Gemini Without Interrupting Your Reading"
+description: "Use Ask Gemini to note questions as you read, then ask them together with the original text. Follow the steps without losing your place in a long answer."
 head:
   - tag: meta
     attrs:
       property: og:image
-      content: https://gpk.ronktsang.com/og/quick-follow-up.png
+      content: "https://gpk.ronktsang.com/og/quick-follow-up.png"
   - tag: meta
     attrs:
       property: og:image:alt
-      content: Quick Follow-up menu beside selected text in a Gemini response
+      content: "Selected passages and quote reply cards in Google Gemini"
   - tag: meta
     attrs:
       name: twitter:image
-      content: https://gpk.ronktsang.com/og/quick-follow-up.png
+      content: "https://gpk.ronktsang.com/og/quick-follow-up.png"
   - tag: meta
     attrs:
       name: twitter:image:alt
-      content: Quick Follow-up menu beside selected text in a Gemini response
+      content: "Selected passages and quote reply cards in Google Gemini"
   - tag: script
     attrs:
       type: application/ld+json
@@ -25,11 +25,12 @@ head:
       {
         "@context": "https://schema.org",
         "@type": "TechArticle",
-        "headline": "How to Quote a Gemini Response and Ask a Follow-up",
-        "description": "Quote selected text in a Gemini response, choose Ask Gemini, and write a focused follow-up. Reuse saved prompts with Gemini Power Kit's Quick Follow-up.",
+        "headline": "How to Use Ask Gemini Without Interrupting Your Reading",
+        "description": "Use Ask Gemini to note questions as you read, then ask them together with the original text. Follow the steps without losing your place in a long answer.",
         "url": "https://gpk.ronktsang.com/tips/ask-follow-up-about-gemini-response/",
         "image": "https://gpk.ronktsang.com/og/quick-follow-up.png",
         "inLanguage": "en",
+        "dateModified": "2026-10-31",
         "isPartOf": {
           "@type": "WebSite",
           "name": "Gemini Power Kit",
@@ -44,58 +45,140 @@ head:
       }
 ---
 
-import { Image } from 'astro:assets';
-import { LinkButton, Steps } from '@astrojs/starlight/components';
-import quickFollowDemo from '../../../assets/features/quick-follow-up/quick-follow-up.gif';
-import quotedInput from '../../../assets/features/quick-follow-up/input-ui.png';
+import { LinkButton } from '@astrojs/starlight/components';
+import FocusedScreenshot from '../../../components/FocusedScreenshot.astro';
+import entryDemo from '../../../assets/features/quick-follow-up/quick-follow-up.gif';
+import quickCommentImg from '../../../assets/features/quick-follow-up/instant-comment.jpg';
+import multipleCommentsImg from '../../../assets/features/quick-follow-up/multiple-comment-cards.jpg';
+import historyImg from '../../../assets/features/quick-follow-up/sent-follow-up-conversation.jpg';
 
-Want to ask a follow-up about one sentence in a long Gemini answer? **Quick Follow-up** in Gemini Power Kit lets you quote selected text and reply to that passage without copying and pasting. Highlight the words, choose **Ask Gemini**, and write your question with the quote visible above the prompt box.
+Reading a long Gemini answer? Write down questions beside the text and keep going. **Quick Follow-up** keeps each question with its passage, so you can ask them together when you're ready, without having to find the text again.
 
-Install the free Gemini Power Kit extension first, then open [Gemini](https://gemini.google.com). If Gemini was already open when you installed it, refresh that tab before you try.
+[Install Gemini Power Kit](/guide/install/) first, then refresh your Gemini tab.
 
 <div class="sl-flex" style="flex-wrap: wrap; gap: 0.75rem; margin-block: 1.25rem;">
-  <LinkButton href="https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn" icon="external">Add to Chrome — Free</LinkButton>
-  <LinkButton href="https://addons.mozilla.org/en-US/firefox/addon/gemini-power-kit/" variant="secondary" icon="external">Get for Firefox</LinkButton>
+  <LinkButton href="https://chromewebstore.google.com/detail/ihakfpnmefdkllhkecanagmienfnmojn" icon="external">Install for Chrome</LinkButton>
+  <LinkButton href="https://addons.mozilla.org/en-US/firefox/addon/gemini-power-kit/" variant="secondary" icon="external">Install for Firefox</LinkButton>
 </div>
 
-## Select text and choose Ask Gemini
+## How do I reply to selected text in a Gemini answer?
 
-<Steps>
-1. **Select the words you mean in a Gemini response.** Highlight a sentence or paragraph in the answer. The Quick Follow-up capsule appears beside the selection.
-2. **Choose Ask Gemini.** Gemini Power Kit places your selection in a quote chip above the prompt box and focuses the box for your question.
-3. **Check the quote and type your question.** For example, after selecting a sentence about a project's timeline, ask: “What assumption makes this timeline realistic?” You can also ask how the selected point compares with another option in the answer.
-4. **Send your question.** Ask Gemini prepares the quoted context, but you decide what to write and when to send it.
-</Steps>
+Suppose Gemini suggests attaching a new habit to an existing routine. You want help remembering that specific habit:
 
-<img src={quickFollowDemo.src} width={quickFollowDemo.width} height={quickFollowDemo.height} loading="lazy" decoding="async" alt="Text highlighted in a Gemini response and the Quick Follow-up capsule appearing beside it with Ask Gemini and saved prompt icons" class="feature-image feature-image-full" />
+1. **Select the sentence you want to discuss.** The floating selection menu appears beside the text.
+2. **Click Ask Gemini.** A small comment field opens near the passage, and a numbered reference card appears above the main input.
+3. **Write a focused question.** For example: “How can I make this habit easier to remember?” Click the checkmark or press **Enter** to add the comment and keep drafting. **Shift+Enter** starts a new line.
+4. **Send when ready.** Use Gemini's main **Send** button. The selected text and your comment are included together; you can also add an overall request in the main input.
 
-*Entry: select text in Gemini's reply, then choose Ask Gemini from the capsule beside your selection.*
+<img src={entryDemo.src} width={entryDemo.width} height={entryDemo.height} loading="lazy" decoding="async" alt="Select text in a Gemini answer to reveal the Ask Gemini button beside the passage" class="feature-image feature-image-narrow feature-image-full" />
 
-<Image src={quotedInput} alt="Selected words shown in a quote chip above the Gemini prompt box, with a close button at the right" class="feature-image feature-image-full" />
+*Start here: highlight the sentence, then click Ask Gemini.*
 
-*Result: the quote chip shows which part of the answer your next question refers to.*
+<FocusedScreenshot
+  id="instant-comment"
+  src={quickCommentImg}
+  title="Write beside the selected text"
+  alt="The comment field opens beside the passage; the arrow points to the checkmark that adds your comment without sending."
+  caption="Type your question here, then click the checkmark to keep drafting."
+  fullImageLabel="View full screenshot"
+  crop={{ x: 410, y: 315, width: 900, height: 210 }}
+  focus={[{ x: 993, y: 347, width: 290, height: 56 }]}
+  arrows={[{ from: [1245, 478], to: [1251, 407], number: '1' }]}
+/>
 
-If you selected the wrong passage, click the quote chip's **×** before sending, then select the text you want to discuss.
+If you have finished collecting questions, hold **Command** on macOS or **Ctrl** on Windows/Linux to change the comment checkmark to a send arrow. Click that arrow while holding the key, or press **⌘+Enter / Ctrl+Enter**, to add the current comment and send the **whole draft**, including earlier references.
 
-## Reuse follow-up prompts with saved skills
+## How do I ask about multiple parts of one Gemini reply?
 
-When you often ask for the same treatment of selected text, add a reusable action. Open Gemini Power Kit’s puzzle-piece entry at the bottom of Gemini’s sidebar, go to **Quick Follow-up**, and make sure **Enable Quick Follow-up** is on. Under **Skill Management**, choose **Add Skill**. Give it an icon and name. In **Prompt Content**, keep the **Selected Text** chip in place, write “Explain” before it and “step by step” after it, then save the skill.
+Keep reading and note the next question beside its passage. Earlier questions stay in the draft, so you don't have to keep them in your head or stop to send each one.
 
-Now select text in a Gemini response and choose that skill's icon in the capsule. The selected words fill the placeholder, and the completed prompt **sends automatically**. Use **Ask Gemini** when you want to write or revise the question before sending; choose a saved skill when its wording is already right for the task. The capsule can scroll horizontally to reveal more saved icons.
+In the morning-routine example, you might collect:
 
-If the capsule does not appear after you select response text, check **Quick Follow-up → Enable Quick Follow-up** in Gemini Power Kit settings. For more on editing and ordering skills, see the [Quick Follow-up feature guide](/features/quick-follow-up/).
+| Selected point | Question to add beside it |
+| --- | --- |
+| Attach a new habit to an existing routine | “How can I make this habit easier to remember?” |
+| Keep your phone out of the bedroom | “What can I do instead of checking my phone?” |
 
-## Questions about quoting Gemini responses
+<FocusedScreenshot
+  id="multiple-comments"
+  src={multipleCommentsImg}
+  title="A separate question for each passage"
+  alt="Gemini’s complete input box with two outlined reference cards, the bottom toolbar, and the Send button at the lower right."
+  caption="The outlined cards sit inside Gemini’s input, each with its own passage and question. When ready, use Send at the bottom right."
+  fullImageLabel="View full screenshot"
+  crop={{ x: 345, y: 420, width: 880, height: 375 }}
+  focus={[{ x: 381, y: 536, width: 167, height: 128 }, { x: 550, y: 536, width: 168, height: 128 }]}
+  arrows={[{ from: [810, 598], to: [725, 598], number: '1' }]}
+/>
 
-### How do I quote only part of a Gemini response?
+Optionally add “Give me one practical action for each point” in the main input, then send. You can collect up to **10 references** per draft. Each comment and the overall request are optional.
 
-Highlight just the sentence or paragraph you want to discuss, then choose **Ask Gemini**. Select a focused passage: long quote previews are shortened, and very long selections may also be shortened in the context sent to Gemini. This workflow quotes text in Gemini's responses; it does not select content inside an image or PDF attachment.
+The same approach works when studying a technical explanation, reviewing a project plan, or comparing code suggestions: select the point that needs clarification, then ask a question that names the missing detail.
 
-### Does Ask Gemini send my follow-up automatically?
+## How do I edit a question before sending it?
 
-**Ask Gemini** attaches the quote and leaves the question for you to write and send. A saved skill runs its preset prompt and sends it automatically when you click its icon. Choose the action that matches whether you want to compose a question or reuse a finished prompt.
+While reviewing the answer, look for the small numbered **marker** beside a selected passage. Its number matches the reference card.
+
+1. Hover over the marker to highlight the passage it belongs to.
+2. Click the marker to reopen that passage's comment.
+3. Refine the question and choose **Save**. The matching card updates, and other questions stay in place.
+
+<video controls playsinline preload="none" poster="/videos/quick-follow-up-edit-from-marker-poster.jpg" width="1020" height="720" class="feature-image feature-image-full" aria-label="Hover over a numbered source marker and click to edit a pending quote reply comment" aria-describedby="tips-marker-caption">
+  <source src="/videos/quick-follow-up-edit-from-marker.mp4" type="video/mp4" />
+  <a href="/videos/quick-follow-up-edit-from-marker.mp4">Watch how to edit a comment from its source marker.</a>
+</video>
+
+<p id="tips-marker-caption"><em>Edit where you are reading: hover to identify the passage, click its marker, change the question, and save.</em></p>
+
+You can also open the same editor from a pending card's comment control or edit icon. Choose **Cancel**, press **Esc**, or click outside to discard an unsaved edit. To remove a reference and its question, click the card's **×**; your main request stays in place.
+
+## What happens to quoted text after I send my reply?
+
+The sent message keeps the reference cards and their comments. While reading Gemini's answer, you can look back at which question belonged to which passage.
+
+<FocusedScreenshot
+  id="sent-comments"
+  src={historyImg}
+  title="Your sent message keeps the references"
+  alt="Gemini’s conversation area showing the sent message with two outlined reference cards, the reply below, and the input at the bottom."
+  caption="Your sent message keeps the outlined reference cards at the top. Gemini’s reply appears below, with the input at the bottom."
+  fullImageLabel="View full screenshot"
+  crop={{ x: 345, y: 20, width: 880, height: 781 }}
+  focus={[{ x: 767, y: 90, width: 335, height: 128 }]}
+  arrows={[{ from: [663, 153], to: [758, 153], number: '1' }]}
+/>
+
+These sent cards are read-only. Editing from a card or marker applies to comments you are still preparing to send.
+
+## What if Ask Gemini does not appear after I select text?
+
+1. Start with a short passage **inside a Gemini response** and finish selecting it.
+2. Open **Gemini Power Kit → Prompt → Quick Follow-up** in Gemini's navigation and check **Enable Quick Follow-up**.
+3. If you installed or updated the extension while Gemini was open, refresh the Gemini tab and try again. Send or copy any reference draft you need before refreshing: reference drafts are not restored after a reload.
+
+For settings, keyboard-send screenshots, and both editing entry points, see the [Quick Follow-up feature guide](/features/quick-follow-up/).
+
+## What else should I know about Ask Gemini and quote reply?
+
+### What is Ask Gemini, and what does quote reply mean?
+
+**Ask Gemini** is the button in Gemini Power Kit's text-selection menu. It opens a question field beside the selected text.
+
+**Quote reply** means sending the original passage with your question. If you ask “Can you give an example?”, Gemini can see which idea you mean.
+
+### Does clicking Ask Gemini send a message immediately?
+
+It opens the comment field and creates a reference card. The checkmark or **Enter** adds a new comment without sending. Gemini's main Send button, or the modifier-based send action described above, sends the draft.
+
+### Is long selected text shortened before it is sent?
+
+Card previews shorten long text to save space. The full selected text and comment are included when you send. Hover over or focus a card's text preview to review the full content first.
+
+### What is the difference between Ask Gemini and a saved prompt skill?
+
+Ask Gemini lets you compose a question for the selected passage. A saved skill reuses an instruction, such as translation or explanation. With no reference cards, a skill sends its expanded prompt automatically; with cards already present, choose **Add to draft** or **Send separately**. See the [saved-prompt instructions](/features/quick-follow-up/#save-custom-prompts-for-repeated-tasks) before using those actions with an existing draft.
 
 ## Keep exploring
 
-- [Browse Tips & Tutorials](/tips/)
-- [Navigate a long Gemini chat with Chat Outline](/tips/find-earlier-gemini-prompts/)
+- [Browse Tips & Tutorials](/tips/) for other tasks you want to complete in Gemini.
+- [Navigate a long Gemini chat with Chat Outline](/tips/find-earlier-gemini-prompts/) to return to earlier parts of the conversation.

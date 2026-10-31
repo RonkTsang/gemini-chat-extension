@@ -585,10 +585,10 @@
   "whatsnew": {
     "title": "更新內容",
     "releaseNotes": "更新說明",
-    "themeBloom": {
-      "title": "最有趣的 Gemini 變身",
-      "description": "拖入喜歡的圖片，就能立刻建立相符的 Gemini 主題，輕鬆又有趣，讓每次對話都更有你的風格。",
-      "action": "試用 Theme Bloom"
+    "multiAsk": {
+      "title": "Multi-Ask 登場，長回答多點一起問！",
+      "description": "邊讀邊記下疑問，不必一直記在心上。準備好後一起追問，附上正確原文脈絡。",
+      "action": "查看用法"
     }
   }
 }
