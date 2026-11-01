@@ -161,10 +161,6 @@ const injectEntryStyle = () => {
   );
 }
 
-[${MAVATAR_ENTRY_ATTR}][data-gpk-variant="collapsed"] {
-  margin: 4px;
-}
-
 [${MAVATAR_ENTRY_BUTTON_ATTR}] {
   appearance: none;
   -webkit-appearance: none;
@@ -302,6 +298,7 @@ const setTextIfDifferent = (el: Element, value: string) => {
 }
 
 const bindSettingsOpenHandler = (button: HTMLElement) => {
+  setAttrIfDifferent(button, 'data-gpk-tour', 'settings-entry')
   if (button.dataset.gpkBound === '1') return
   button.dataset.gpkBound = '1'
   button.addEventListener('click', (event) => {

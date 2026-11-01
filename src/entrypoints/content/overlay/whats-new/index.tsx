@@ -8,6 +8,7 @@ import { WhatsNewToast } from './WhatsNewToast'
 import { CURRENT_RELEASE_NOTES } from './config'
 import { getLastSeenVersion, setLastSeenVersion, compareVersions } from './storage'
 import React from 'react'
+import { initializeOnboarding } from '../onboarding/storage'
 
 function WhatsNew() {
   const [showToast, setShowToast] = useState(false)
@@ -16,6 +17,8 @@ function WhatsNew() {
   useEffect(() => {
     const checkVersion = async () => {
       try {
+        const onboarding = await initializeOnboarding()
+        if (!onboarding) return
         // Get current version from manifest
         const manifest = browser.runtime.getManifest()
         const version = manifest.version
@@ -27,9 +30,11 @@ function WhatsNew() {
         // If no last version (first install)
         if (!lastVersion) {
           // Check if there are release notes to show
-          if (CURRENT_RELEASE_NOTES.length > 0) {
-            setShowToast(true)
-          }
+          await setLastSeenVersion(version)
+          return
+        }
+
+        if (onboarding === 'pending') {
           await setLastSeenVersion(version)
           return
         }

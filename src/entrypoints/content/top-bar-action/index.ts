@@ -5,6 +5,7 @@ import {
   createGeminiTooltip,
   destroyGeminiTooltip,
   destroyGeminiTooltipsWhere,
+  getGeminiTooltip,
 } from '../gemini-tooltip'
 
 const APP_ROOT_SELECTOR = 'chat-app-orchestrator#app-root'
@@ -202,6 +203,7 @@ function createEntry(kind: EntryKind): HTMLDivElement {
   button.className =
     'mdc-icon-button mat-mdc-icon-button mat-mdc-button-base mat-unthemed'
   button.dataset.testId = entrySelectors.buttonTestId
+  button.dataset.gpkTour = kind === 'theme' ? 'theme' : 'chat-width'
 
   const icon = document.createElement('span')
   icon.dataset.gpkTopBarIcon = kind
@@ -212,6 +214,7 @@ function createEntry(kind: EntryKind): HTMLDivElement {
   button.addEventListener('click', (event) => {
     event.preventDefault()
     event.stopPropagation()
+    getGeminiTooltip(button)?.hide()
     openPanel(kind)
   })
 

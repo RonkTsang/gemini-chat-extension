@@ -50,11 +50,6 @@
   "responseNotificationMessage": "답변이 준비되었습니다.",
   "bulkDelete": {
     "entryLabel": "일괄 삭제",
-    "entryHint": {
-      "title": "일괄 삭제",
-      "description": "다중 선택 모드로 들어가려면 누르세요. 삭제할 채팅을 선택한 다음 확인하세요.",
-      "dismiss": "닫기"
-    },
     "selectRecent": "최근 $1개 선택",
     "selectUnpinned": "최근 고정되지 않은 $1개 선택",
     "change": "변경",
@@ -590,5 +585,35 @@
       "description": "질문을 기억해 두지 않아도 계속 읽을 수 있어요. 읽으며 모아 두었다가 알맞은 맥락과 함께 한 번에 물어보세요.",
       "action": "사용 가이드 보기"
     }
+  },
+  "onboarding": {
+    "width": {
+      "title": "긴 답변도 편하게 읽기",
+      "description": "대화 너비를 조정해 긴 글과 코드가 보기 좋게 표시되도록 하세요."
+    },
+    "theme": {
+      "title": "내 취향에 맞는 Gemini",
+      "description": "매일 사용하는 작업 공간에 어울리는 색상과 배경을 선택하세요."
+    },
+    "bulkDelete": {
+      "title": "채팅을 더 빠르게 정리",
+      "description": "더 이상 필요 없는 대화를 여러 개 선택해 한 번에 정리하세요."
+    },
+    "settings": {
+      "title": "필요한 도구를 한곳에서",
+      "description": "언제든 Gemini Power Kit을 열어 필요한 도구와 설정을 찾아보세요."
+    },
+    "finish": {
+      "title": "모든 준비가 끝났어요!",
+      "description": "Gemini를 원하는 방식으로 사용해 보세요. 유용한 팁을 살펴보고, 필요할 때 언제든 도움을 받을 수 있어요.",
+      "guideDescription": "시작에 도움이 되는 실용적인 팁",
+      "supportDescription": "필요할 때 언제든 도움을 받을 수 있어요."
+    },
+    "next": "다음",
+    "skip": "건너뛰기",
+    "guide": "가이드 보기",
+    "support": "도움말 및 지원",
+    "done": "시작하기",
+    "progress": "$1 / $2"
   }
 }

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { eventBus } from '@/utils/eventbus'
 import tippy from 'tippy.js'
+import { getGeminiTooltip } from '../gemini-tooltip'
 import {
   startChatSettingsTopBarAction,
   startTopBarAction,
@@ -102,6 +103,7 @@ describe('Theme top bar action', () => {
 
     button?.click()
 
+    expect(vi.mocked(tippy).mock.results[0]?.value.hide).toHaveBeenCalledOnce()
     expect(eventBus.emitSync).toHaveBeenCalledWith('theme-floating-panel:open', {
       source: 'top-bar-action',
     })
@@ -124,6 +126,7 @@ describe('Theme top bar action', () => {
 
     chatButton?.click()
 
+    expect(chatButton && getGeminiTooltip(chatButton)?.hide).toHaveBeenCalledOnce()
     expect(eventBus.emitSync).toHaveBeenCalledWith(
       'chat-settings-panel:toggle',
       { source: 'top-bar-action' },

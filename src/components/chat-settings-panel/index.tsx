@@ -9,6 +9,7 @@ import { Box } from '@chakra-ui/react'
 import { ChatLayoutSettings } from '@/components/chat-layout-settings'
 import { useEvent, useEventEmitter } from '@/hooks/useEventBus'
 import { CHAT_SETTINGS_TOP_BAR_BUTTON_SELECTOR } from '@/entrypoints/content/top-bar-action'
+import { getGeminiTooltip } from '@/entrypoints/content/gemini-tooltip'
 import { tt } from '@/utils/i18n'
 
 const VIEWPORT_GAP = 8
@@ -25,9 +26,12 @@ export function ChatSettingsPanel() {
 
   const focusShortcut = useCallback(() => {
     window.requestAnimationFrame(() => {
-      document.querySelector<HTMLButtonElement>(
+      const shortcut = document.querySelector<HTMLButtonElement>(
         CHAT_SETTINGS_TOP_BAR_BUTTON_SELECTOR,
-      )?.focus()
+      )
+      if (!shortcut) return
+      shortcut.focus()
+      getGeminiTooltip(shortcut)?.hide()
     })
   }, [])
 

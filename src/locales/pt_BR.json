@@ -50,11 +50,6 @@
   "responseNotificationMessage": "Sua resposta está pronta.",
   "bulkDelete": {
     "entryLabel": "Exclusão em lote",
-    "entryHint": {
-      "title": "Exclusão em massa",
-      "description": "Toque para entrar no modo de seleção múltipla. Selecione os chats que deseja excluir e confirme.",
-      "dismiss": "Fechar"
-    },
     "selectRecent": "Selecionar as últimas $1",
     "selectUnpinned": "Selecionar as últimas $1 não fixadas",
     "change": "Alterar",
@@ -590,5 +585,35 @@
       "description": "Continue lendo sem precisar guardar as perguntas na memória. Anote-as durante a leitura e pergunte tudo junto com o contexto certo.",
       "action": "Ver guia de uso"
     }
+  },
+  "onboarding": {
+    "width": {
+      "title": "Leia respostas longas com mais facilidade",
+      "description": "Ajuste a largura da conversa para dar mais espaço a textos longos e códigos."
+    },
+    "theme": {
+      "title": "Deixe o Gemini com a sua cara",
+      "description": "Escolha cores e um plano de fundo que combinem com seu espaço de trabalho."
+    },
+    "bulkDelete": {
+      "title": "Organize conversas mais rápido",
+      "description": "Selecione várias conversas que não precisa mais e economize tempo ao excluí-las."
+    },
+    "settings": {
+      "title": "Mais ferramentas em um só lugar",
+      "description": "Abra o Gemini Power Kit quando quiser para encontrar as ferramentas e configurações de que precisa."
+    },
+    "finish": {
+      "title": "Tudo pronto!",
+      "description": "Use o Gemini do seu jeito. Confira algumas dicas ou peça ajuda sempre que precisar.",
+      "guideDescription": "Dicas práticas para começar.",
+      "supportDescription": "Ajuda sempre que você precisar."
+    },
+    "next": "Avançar",
+    "skip": "Pular",
+    "guide": "Ver guia",
+    "support": "Ajuda e suporte",
+    "done": "Vamos lá",
+    "progress": "$1 de $2"
   }
 }

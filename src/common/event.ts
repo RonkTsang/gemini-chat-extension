@@ -6,6 +6,7 @@ type SettingsOpenSource =
   | 'prompt-entrance'
   | 'popup'
   | 'whats-new'
+  | 'onboarding'
   | 'theme-floating-panel'
   | 'shortcut'
 

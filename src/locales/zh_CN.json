@@ -50,11 +50,6 @@
   "responseNotificationMessage": "你的回复已准备好。",
   "bulkDelete": {
     "entryLabel": "批量删除",
-    "entryHint": {
-      "title": "批量删除",
-      "description": "点击进入多选模式。选择要删除的聊天，然后确认。",
-      "dismiss": "关闭"
-    },
     "selectRecent": "选择最近 $1 个",
     "selectUnpinned": "选择最近 $1 个未置顶聊天",
     "change": "更改",
@@ -590,5 +585,35 @@
       "description": "边读边记下疑问，让阅读思路不断线。准备好后一起追问，不必反复翻找原文、重新交代上下文。",
       "action": "查看用法"
     }
+  },
+  "onboarding": {
+    "width": {
+      "title": "让长回答更好读",
+      "description": "按阅读习惯调整对话宽度，让长文和代码有更合适的展示空间。"
+    },
+    "theme": {
+      "title": "换成你喜欢的界面",
+      "description": "调整配色和背景，让每天使用的 Gemini 更合你的喜好。"
+    },
+    "bulkDelete": {
+      "title": "更快整理聊天记录",
+      "description": "一次选择多条不再需要的对话，减少逐条清理的重复操作。"
+    },
+    "settings": {
+      "title": "更多工具，都在这里",
+      "description": "随时打开 Gemini Power Kit，找到需要的功能和设置。"
+    },
+    "finish": {
+      "title": "准备好了，开始探索吧！",
+      "description": "让 Gemini 更合你的习惯。看看实用教程，遇到问题也能随时找到帮助。",
+      "guideDescription": "实用技巧，轻松上手",
+      "supportDescription": "遇到问题，随时求助"
+    },
+    "next": "下一步",
+    "skip": "跳过",
+    "guide": "查看教程",
+    "support": "帮助与支持",
+    "done": "开始探索",
+    "progress": "$1 / $2"
   }
 }

@@ -17,6 +17,7 @@ vi.mock('@/components/chat-settings-panel', () => ({ ChatSettingsPanel: () => nu
 vi.mock('@/hooks/useSyncColorMode', () => ({ useSyncColorMode: () => undefined }))
 vi.mock('./extension-update', () => ({ default: () => null }))
 vi.mock('./whats-new', () => ({ default: () => null }))
+vi.mock('./onboarding', () => ({ Onboarding: () => null }))
 vi.mock('@/components/theme-bloom-overlay', () => ({ ThemeBloomOverlay: () => null }))
 vi.mock('~/assets/quote.svg?react', () => ({ default: () => null }))
 vi.mock('./quick-follow-up/index', async () => {

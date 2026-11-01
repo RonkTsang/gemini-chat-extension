@@ -50,11 +50,6 @@
   "responseNotificationMessage": "Your response is ready.",
   "bulkDelete": {
     "entryLabel": "Bulk delete",
-    "entryHint": {
-      "title": "Bulk Delete",
-      "description": "Click to enter multi-select mode. Select the chats you want to delete, then confirm.",
-      "dismiss": "Dismiss"
-    },
     "selectRecent": "Select $1 recent",
     "selectUnpinned": "Select $1 unpinned",
     "change": "Change",
@@ -586,5 +581,35 @@
       "description": "Keep reading without forgetting what you wanted to ask. Capture questions along the way, then ask them together with the right context.",
       "action": "View Usage Guide"
     }
+  },
+  "onboarding": {
+    "width": {
+      "title": "Make long answers easier to read",
+      "description": "Adjust the conversation width to give long text and code the space you need."
+    },
+    "theme": {
+      "title": "Make Gemini feel like yours",
+      "description": "Choose colors and a background that make your everyday workspace feel right."
+    },
+    "bulkDelete": {
+      "title": "Tidy up chats faster",
+      "description": "Select multiple conversations you no longer need and save time clearing them out."
+    },
+    "settings": {
+      "title": "More tools, all in one place",
+      "description": "Open Gemini Power Kit anytime to find the tools and settings you need."
+    },
+    "finish": {
+      "title": "You’re all set!",
+      "description": "Make Gemini work your way. Explore a few tips, or get a hand whenever you need it.",
+      "guideDescription": "Practical tips to get you started.",
+      "supportDescription": "A hand whenever you need one."
+    },
+    "next": "Next",
+    "skip": "Skip",
+    "guide": "View guide",
+    "support": "Help & support",
+    "done": "Let’s go",
+    "progress": "$1 of $2"
   }
 }

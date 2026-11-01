@@ -50,11 +50,6 @@
   "responseNotificationMessage": "返信の準備ができました。",
   "bulkDelete": {
     "entryLabel": "一括削除",
-    "entryHint": {
-      "title": "一括削除",
-      "description": "タップして複数選択モードを開始し、削除したいチャットを選んで確定します。",
-      "dismiss": "閉じる"
-    },
     "selectRecent": "最近の$1件を選択",
     "selectUnpinned": "最近のピン留めされていない$1件を選択",
     "change": "変更",
@@ -590,5 +585,35 @@
       "description": "質問を覚えておかなくても、読み進めながらメモできます。準備ができたら、適切な引用元と一緒にまとめて質問できます。",
       "action": "使い方を見る"
     }
+  },
+  "onboarding": {
+    "width": {
+      "title": "長い回答を読みやすく",
+      "description": "会話の幅を調整して、長文やコードを見やすく表示できます。"
+    },
+    "theme": {
+      "title": "Geminiを自分好みに",
+      "description": "毎日使う作業スペースに合う色や背景を選べます。"
+    },
+    "bulkDelete": {
+      "title": "チャットをまとめて整理",
+      "description": "不要な会話を複数選択して、一度に削除できます。"
+    },
+    "settings": {
+      "title": "便利なツールをひとまとめに",
+      "description": "Gemini Power Kitをいつでも開いて、必要なツールや設定を見つけられます。"
+    },
+    "finish": {
+      "title": "準備完了です！",
+      "description": "Geminiを自分好みに使いましょう。便利なヒントを見たり、困ったときにサポートを利用したりできます。",
+      "guideDescription": "すぐに役立つ実践的なヒント。",
+      "supportDescription": "困ったときはいつでも相談できます。"
+    },
+    "next": "次へ",
+    "skip": "スキップ",
+    "guide": "ガイドを見る",
+    "support": "ヘルプとサポート",
+    "done": "さあ、始めましょう",
+    "progress": "$1 / $2"
   }
 }
