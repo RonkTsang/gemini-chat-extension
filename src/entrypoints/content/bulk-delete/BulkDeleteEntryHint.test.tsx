@@ -3,6 +3,9 @@ import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { markFeatureHintSeen, shouldShowFeatureHint } from '@/components/feature-hint/storage'
 import { BulkDeleteEntryHint } from './BulkDeleteEntryHint'
+import { suppressBulkDeleteHint } from '../overlay/onboarding/storage'
+
+vi.mock('../overlay/onboarding/storage', () => ({ suppressBulkDeleteHint: vi.fn() }))
 
 vi.mock('@/components/feature-hint/storage', () => ({
   markFeatureHintSeen: vi.fn(),
@@ -35,6 +38,7 @@ describe('BulkDeleteEntryHint', () => {
       IS_REACT_ACT_ENVIRONMENT?: boolean
     }).IS_REACT_ACT_ENVIRONMENT = true
     vi.mocked(shouldShowFeatureHint).mockResolvedValue(true)
+    vi.mocked(suppressBulkDeleteHint).mockResolvedValue(false)
     container = document.createElement('div')
     document.body.append(container)
     root = createRoot(container)
@@ -57,6 +61,13 @@ describe('BulkDeleteEntryHint', () => {
     expect(hint?.textContent).toContain('clear unwanted conversations')
     expect(hint?.parentElement).toBe(container.querySelector('.gpk-bulk-delete-entry-anchor'))
     expect(shouldShowFeatureHint).toHaveBeenCalledWith('bulk-delete-entry', '1')
+  })
+
+  it('does not overlap with first-use onboarding', async () => {
+    vi.mocked(suppressBulkDeleteHint).mockResolvedValue(true)
+    await renderHint()
+    expect(shouldShowFeatureHint).not.toHaveBeenCalled()
+    expect(document.querySelector('[data-gpk-bulk-delete-entry-hint]')).toBeNull()
   })
 
   it('marks the hint as seen when the entry is used', async () => {

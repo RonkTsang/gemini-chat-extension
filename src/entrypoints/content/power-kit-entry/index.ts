@@ -302,6 +302,7 @@ const setTextIfDifferent = (el: Element, value: string) => {
 }
 
 const bindSettingsOpenHandler = (button: HTMLElement) => {
+  setAttrIfDifferent(button, 'data-gpk-tour', 'settings-entry')
   if (button.dataset.gpkBound === '1') return
   button.dataset.gpkBound = '1'
   button.addEventListener('click', (event) => {

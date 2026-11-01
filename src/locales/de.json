@@ -590,5 +590,35 @@
       "description": "Lies einfach weiter, ohne deine Fragen im Kopf behalten zu müssen. Sammle sie unterwegs und stelle sie zusammen mit dem passenden Kontext.",
       "action": "Anleitung ansehen"
     }
+  },
+  "onboarding": {
+    "width": {
+      "title": "Lange Antworten leichter lesen",
+      "description": "Passe die Gesprächsbreite an, damit lange Texte und Code mehr Platz haben."
+    },
+    "theme": {
+      "title": "Gemini nach deinem Geschmack",
+      "description": "Wähle Farben und einen Hintergrund, die zu deinem Arbeitsalltag passen."
+    },
+    "bulkDelete": {
+      "title": "Chats schneller aufräumen",
+      "description": "Wähle mehrere nicht mehr benötigte Unterhaltungen aus und lösche sie auf einmal."
+    },
+    "settings": {
+      "title": "Mehr Tools an einem Ort",
+      "description": "Öffne Gemini Power Kit jederzeit, um die passenden Tools und Einstellungen zu finden."
+    },
+    "finish": {
+      "title": "Du bist startklar!",
+      "description": "Passe Gemini an deine Wünsche an. Entdecke hilfreiche Tipps oder hol dir Unterstützung, wenn du sie brauchst.",
+      "guideDescription": "Praktische Tipps für den Einstieg.",
+      "supportDescription": "Hilfe, wann immer du sie brauchst."
+    },
+    "next": "Weiter",
+    "skip": "Überspringen",
+    "guide": "Anleitung ansehen",
+    "support": "Hilfe & Support",
+    "done": "Los geht’s",
+    "progress": "$1 von $2"
   }
 }

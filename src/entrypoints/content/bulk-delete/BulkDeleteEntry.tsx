@@ -32,6 +32,7 @@ export function BulkDeleteEntry({ active, onToggle }: BulkDeleteEntryProps) {
   return (
     <button
       ref={buttonRef}
+      data-gpk-tour="bulk-delete"
       type="button"
       className="gpk-bulk-delete-entry-button"
       aria-label={t('bulkDelete.entryLabel')}

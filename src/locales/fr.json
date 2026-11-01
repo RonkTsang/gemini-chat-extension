@@ -590,5 +590,35 @@
       "description": "Continuez à lire sans retenir vos questions. Notez-les au fil de la lecture, puis posez-les ensemble avec le bon contexte.",
       "action": "Voir le guide"
     }
+  },
+  "onboarding": {
+    "width": {
+      "title": "Lisez plus facilement les longues réponses",
+      "description": "Ajustez la largeur de la conversation pour donner plus de place aux longs textes et au code."
+    },
+    "theme": {
+      "title": "Faites de Gemini votre espace",
+      "description": "Choisissez des couleurs et un arrière-plan adaptés à votre espace de travail."
+    },
+    "bulkDelete": {
+      "title": "Triez vos discussions plus vite",
+      "description": "Sélectionnez plusieurs conversations inutiles et gagnez du temps en les supprimant."
+    },
+    "settings": {
+      "title": "Plus d’outils au même endroit",
+      "description": "Ouvrez Gemini Power Kit à tout moment pour trouver les outils et réglages dont vous avez besoin."
+    },
+    "finish": {
+      "title": "Tout est prêt !",
+      "description": "Adaptez Gemini à vos besoins. Découvrez quelques conseils ou demandez de l’aide dès que nécessaire.",
+      "guideDescription": "Des conseils pratiques pour bien démarrer.",
+      "supportDescription": "De l’aide dès que vous en avez besoin."
+    },
+    "next": "Suivant",
+    "skip": "Passer",
+    "guide": "Voir le guide",
+    "support": "Aide et assistance",
+    "done": "C’est parti",
+    "progress": "$1 sur $2"
   }
 }

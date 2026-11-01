@@ -202,6 +202,7 @@ function createEntry(kind: EntryKind): HTMLDivElement {
   button.className =
     'mdc-icon-button mat-mdc-icon-button mat-mdc-button-base mat-unthemed'
   button.dataset.testId = entrySelectors.buttonTestId
+  button.dataset.gpkTour = kind === 'theme' ? 'theme' : 'chat-width'
 
   const icon = document.createElement('span')
   icon.dataset.gpkTopBarIcon = kind

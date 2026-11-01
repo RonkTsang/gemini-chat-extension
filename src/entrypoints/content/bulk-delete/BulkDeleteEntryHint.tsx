@@ -3,6 +3,7 @@ import { LuX } from 'react-icons/lu'
 import { markFeatureHintSeen, shouldShowFeatureHint } from '@/components/feature-hint/storage'
 import { t } from '@/utils/i18n'
 import { BulkDeleteEntry } from './BulkDeleteEntry'
+import { suppressBulkDeleteHint } from '../overlay/onboarding/storage'
 
 const HINT_ID = 'bulk-delete-entry'
 const HINT_VERSION = '1'
@@ -36,7 +37,7 @@ export function BulkDeleteEntryHint({ active, onToggle }: BulkDeleteEntryHintPro
 
     let cancelled = false
 
-    void shouldShowFeatureHint(HINT_ID, HINT_VERSION).then((shouldShow) => {
+    void suppressBulkDeleteHint().then(suppress => suppress ? false : shouldShowFeatureHint(HINT_ID, HINT_VERSION)).then((shouldShow) => {
       if (!cancelled && !dismissedRef.current && shouldShow) {
         setShowHint(true)
       }

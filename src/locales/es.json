@@ -590,5 +590,35 @@
       "description": "Sigue leyendo sin tener que recordar tus preguntas. Anótalas mientras avanzas y hazlas juntas con el contexto adecuado.",
       "action": "Ver la guía"
     }
+  },
+  "onboarding": {
+    "width": {
+      "title": "Lee mejor las respuestas largas",
+      "description": "Ajusta el ancho de la conversación para dar más espacio al texto largo y al código."
+    },
+    "theme": {
+      "title": "Haz que Gemini sea más tuyo",
+      "description": "Elige colores y un fondo que encajen con tu espacio de trabajo diario."
+    },
+    "bulkDelete": {
+      "title": "Ordena tus chats más rápido",
+      "description": "Selecciona varias conversaciones que ya no necesitas y ahorra tiempo al eliminarlas."
+    },
+    "settings": {
+      "title": "Más herramientas en un solo lugar",
+      "description": "Abre Gemini Power Kit cuando quieras para encontrar las herramientas y opciones que necesitas."
+    },
+    "finish": {
+      "title": "¡Todo listo!",
+      "description": "Adapta Gemini a tu manera. Descubre algunos consejos o pide ayuda cuando la necesites.",
+      "guideDescription": "Consejos prácticos para empezar.",
+      "supportDescription": "Ayuda siempre que la necesites."
+    },
+    "next": "Siguiente",
+    "skip": "Omitir",
+    "guide": "Ver guía",
+    "support": "Ayuda y soporte",
+    "done": "Vamos allá",
+    "progress": "$1 de $2"
   }
 }
