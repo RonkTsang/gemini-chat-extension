@@ -26,11 +26,11 @@ describe('onboarding targets', () => {
     expect(click).toHaveBeenCalledOnce()
   })
 
-  it('times out missing targets and cancels waits on shutdown without leftover timers', async () => {
+  it('times out missing targets after one second and cancels waits without leftover timers', async () => {
     vi.useFakeTimers()
     const controller = new AbortController()
     const missing = waitForElement(() => null, controller.signal)
-    await vi.advanceTimersByTimeAsync(2000)
+    await vi.advanceTimersByTimeAsync(1000)
     expect(await missing).toBeNull()
     const cancelled = waitForElement(() => null, controller.signal)
     controller.abort()
