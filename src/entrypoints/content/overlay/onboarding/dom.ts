@@ -38,7 +38,7 @@ export function waitForElement<T>(
 ): Promise<T | null> {
   return new Promise((finish) => {
     let timer: ReturnType<typeof setTimeout>
-    const deadline = Date.now() + 2000
+    const deadline = Date.now() + 1000
     const done = (value: T | null) => {
       clearTimeout(timer)
       signal.removeEventListener('abort', abort)
