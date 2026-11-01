@@ -161,10 +161,6 @@ const injectEntryStyle = () => {
   );
 }
 
-[${MAVATAR_ENTRY_ATTR}][data-gpk-variant="collapsed"] {
-  margin: 4px;
-}
-
 [${MAVATAR_ENTRY_BUTTON_ATTR}] {
   appearance: none;
   -webkit-appearance: none;

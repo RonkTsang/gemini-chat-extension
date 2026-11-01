@@ -39,8 +39,3 @@ export async function claimOnboarding(canStart: () => boolean): Promise<boolean>
     return true
   })) === true
 }
-
-export async function suppressBulkDeleteHint(): Promise<boolean> {
-  const state = await initializeOnboarding()
-  return state !== 'excluded'
-}

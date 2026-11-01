@@ -4,6 +4,7 @@ import { ChakraProvider } from '@chakra-ui/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { system } from '@/components/ui/system'
 import { eventBus } from '@/utils/eventbus'
+import { createGeminiTooltip, destroyGeminiTooltip } from '@/entrypoints/content/gemini-tooltip'
 import { ChatSettingsPanel } from './index'
 
 const { watch, setValue } = vi.hoisted(() => ({
@@ -71,6 +72,7 @@ describe('ChatSettingsPanel', () => {
     act(() => {
       root.unmount()
     })
+    destroyGeminiTooltip(shortcut)
     shortcut.remove()
     container.remove()
     vi.clearAllMocks()
@@ -122,6 +124,38 @@ describe('ChatSettingsPanel', () => {
     })
 
     expect(container.querySelector('[data-chat-settings-panel]')).toBeNull()
+  })
+
+  it('restores focus without reopening the shortcut tooltip', async () => {
+    const tooltip = createGeminiTooltip(shortcut, {
+      content: 'Chat layout',
+      owner: 'top-bar-action',
+      placement: 'bottom',
+    })
+    await act(async () => {
+      root.render(
+        <ChakraProvider value={system}>
+          <ChatSettingsPanel />
+        </ChakraProvider>,
+      )
+    })
+    act(() => {
+      eventBus.emitSync('chat-settings-panel:toggle', {
+        source: 'top-bar-action',
+      })
+    })
+    await act(async () => {
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+    })
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    })
+    await act(async () => {
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+    })
+
+    expect(document.activeElement).toBe(shortcut)
+    expect(tooltip?.state.isVisible).toBe(false)
   })
 
   it('stays open for a click whose composed path includes the Shadow DOM panel', async () => {

@@ -5,6 +5,7 @@ import {
   createGeminiTooltip,
   destroyGeminiTooltip,
   destroyGeminiTooltipsWhere,
+  getGeminiTooltip,
 } from '../gemini-tooltip'
 
 const APP_ROOT_SELECTOR = 'chat-app-orchestrator#app-root'
@@ -213,6 +214,7 @@ function createEntry(kind: EntryKind): HTMLDivElement {
   button.addEventListener('click', (event) => {
     event.preventDefault()
     event.stopPropagation()
+    getGeminiTooltip(button)?.hide()
     openPanel(kind)
   })
 

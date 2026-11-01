@@ -50,11 +50,6 @@
   "responseNotificationMessage": "답변이 준비되었습니다.",
   "bulkDelete": {
     "entryLabel": "일괄 삭제",
-    "entryHint": {
-      "title": "일괄 삭제",
-      "description": "다중 선택 모드로 들어가려면 누르세요. 삭제할 채팅을 선택한 다음 확인하세요.",
-      "dismiss": "닫기"
-    },
     "selectRecent": "최근 $1개 선택",
     "selectUnpinned": "최근 고정되지 않은 $1개 선택",
     "change": "변경",

@@ -50,11 +50,6 @@
   "responseNotificationMessage": "Sua resposta está pronta.",
   "bulkDelete": {
     "entryLabel": "Exclusão em lote",
-    "entryHint": {
-      "title": "Exclusão em massa",
-      "description": "Toque para entrar no modo de seleção múltipla. Selecione os chats que deseja excluir e confirme.",
-      "dismiss": "Fechar"
-    },
     "selectRecent": "Selecionar as últimas $1",
     "selectUnpinned": "Selecionar as últimas $1 não fixadas",
     "change": "Alterar",

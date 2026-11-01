@@ -50,11 +50,6 @@
   "responseNotificationMessage": "Votre réponse est prête.",
   "bulkDelete": {
     "entryLabel": "Suppression groupée",
-    "entryHint": {
-      "title": "Suppression groupée",
-      "description": "Cliquez pour passer en mode multi-sélection. Sélectionnez les chats à supprimer, puis confirmez.",
-      "dismiss": "Fermer"
-    },
     "selectRecent": "Sélectionner les $1 dernières",
     "selectUnpinned": "Sélectionner les $1 derniers chats non épinglés",
     "change": "Modifier",

@@ -50,11 +50,6 @@
   "responseNotificationMessage": "返信の準備ができました。",
   "bulkDelete": {
     "entryLabel": "一括削除",
-    "entryHint": {
-      "title": "一括削除",
-      "description": "タップして複数選択モードを開始し、削除したいチャットを選んで確定します。",
-      "dismiss": "閉じる"
-    },
     "selectRecent": "最近の$1件を選択",
     "selectUnpinned": "最近のピン留めされていない$1件を選択",
     "change": "変更",

@@ -1,7 +1,7 @@
 import { createRoot, type Root } from 'react-dom/client'
 import { t } from '@/utils/i18n'
 import { destroyGeminiTooltipsWhere } from '../gemini-tooltip'
-import { BulkDeleteEntryHint } from './BulkDeleteEntryHint'
+import { BulkDeleteEntry } from './BulkDeleteEntry'
 import { toaster } from '@/components/ui/toaster'
 import {
   cleanupChatCheckboxes,
@@ -57,7 +57,7 @@ function renderEntry(): void {
   }
 
   entryRoot?.render(
-    <BulkDeleteEntryHint
+    <BulkDeleteEntry
       active={active}
       onToggle={() => {
         if (active) {

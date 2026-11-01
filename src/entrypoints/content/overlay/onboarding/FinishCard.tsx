@@ -52,7 +52,7 @@ export function FinishCard({ onFinish }: { onFinish: () => void }) {
     >
       <CloseButton position="absolute" top={2} right={2} size="sm" aria-label={t('onboarding.skip')} onClick={onFinish} />
       <Text textAlign="center" fontSize="xs" fontWeight="medium" color="fg.muted" letterSpacing="0.04em" mt={1}>
-        {PRODUCT_NAME}-111
+        {PRODUCT_NAME}
       </Text>
       <Box aria-hidden="true" position="relative" w="80px" h="80px" mx="auto" mt={5} mb={5}
         display="grid" placeItems="center">
