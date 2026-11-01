@@ -1,3 +1,17 @@
+# [0.14.0](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.13.0...v0.14.0) (2026-11-01)
+
+
+### Bug Fixes
+
+* **multi-ask:** complete release announcements and documentation ([#74](https://github.com/RonkTsang/gemini-chat-extension/issues/74)) ([4af8fb0](https://github.com/RonkTsang/gemini-chat-extension/commit/4af8fb0a802b5f44f3abc854c74839a7e1ec74e1))
+* **onboarding:** shorten missing-target wait to one second ([#76](https://github.com/RonkTsang/gemini-chat-extension/issues/76)) ([dc50e2e](https://github.com/RonkTsang/gemini-chat-extension/commit/dc50e2e29fc55c91e0dd539283fd12e367f44b7d))
+* **theme:** remove input top padding with background enabled ([07c19ae](https://github.com/RonkTsang/gemini-chat-extension/commit/07c19aefc9ec83055fc18b8baed87fc1f5f03fcb))
+
+
+### Features
+
+* **onboarding:** add new user guide ([#75](https://github.com/RonkTsang/gemini-chat-extension/issues/75)) ([afd4a6b](https://github.com/RonkTsang/gemini-chat-extension/commit/afd4a6b8e2934e099da95168b7579a371bfda747))
+
 # [0.13.0](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.12.7...v0.13.0) (2026-10-31)
 
 
