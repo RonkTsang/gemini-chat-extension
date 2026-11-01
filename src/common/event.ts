@@ -22,6 +22,7 @@ export const GEM_EXT_EVENTS = {
   STREAM_GENERATE_CONTROL: 'gem-ext:stream-generate-control',
   STREAM_GENERATE_OBSERVATION: 'gem-ext:stream-generate-observation',
   STREAM_GENERATE_ACTIVITY: 'gem-ext:stream-generate-activity',
+  CHAT_DELETED: 'gem-ext:chat-deleted',
   STUFF_MEDIA_DATA: 'gem-ext:stuff-media-data',
   LIBRARY_MEDIA_DATA: 'gem-ext:library-media-data',
   LIBRARY_MEDIA_REQUEST: 'gem-ext:library-media-request',

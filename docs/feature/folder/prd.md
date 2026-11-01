@@ -77,6 +77,8 @@ Folder 内 Chat 菜单顺序为 `Rename` → `Pin / Unpin` → 分隔线 → `Re
    - 用户确认后先保存当前 Folder 组织的保护恢复点，再调用 Gemini 的删除接口执行删除；只有收到 Gemini 删除成功的结果后，才删除该 Chat 在 GPK 中的全部 Folder 索引和缓存标题。保护点失败时不得调用 Gemini 删除。
    - Gemini 删除失败、当前页面无法确认目标 Chat，或删除接口不可用时，必须保留全部 GPK 索引并提示失败；不得以本地删除替代 Gemini 删除。
 
+当前页面通过 Gemini 原生菜单或批量删除移除 Chat 时，Folders 也会在收到匹配的删除成功响应后，保存组织保护点并清理当前账号下该 Chat 的全部归属和标题缓存。此监听不阻塞或重试 Gemini 请求；清理失败时保留 Folder 索引并记录错误。它不覆盖其他设备上的删除；同一请求包含多个删除 RPC、无法唯一对应成功结果时，也不会自动清理。
+
 #### Folder 内 Chat 置顶
 
 1. 未置顶 Chat 的菜单显示 `Pin` 与 `<LuPin />`；已置顶时显示 `Unpin` 与 `<LuPinOff />`，位于 Rename 下方。

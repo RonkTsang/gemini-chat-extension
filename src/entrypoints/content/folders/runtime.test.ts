@@ -214,6 +214,56 @@ describe('FolderRuntime background boundary', () => {
     await expect(runtime.recreateSyncReplica(request)).rejects.toThrow('Folders are unavailable')
   })
 
+  it('cleans confirmed native deletions and stops listening on stop', async () => {
+    const runtime = new FolderRuntime()
+    await runtime.start()
+    state.request.mockClear().mockResolvedValue({ data: undefined })
+    const deleted = () => window.dispatchEvent(new CustomEvent(GEM_EXT_EVENTS.CHAT_DELETED, {
+      detail: { accountPath: '', conversationId: 'c_abc123' },
+    }))
+    deleted()
+    await vi.waitFor(() => expect(state.request).toHaveBeenCalledExactlyOnceWith(
+      'account-scope-0001', 'observed', 'removeChatAfterGeminiDelete',
+      { chatId: 'abc123', deletionReceipt: 'gemini-native-confirmed' },
+    ))
+    runtime.stop()
+    deleted()
+    expect(state.request).toHaveBeenCalledTimes(1)
+  })
+
+  it('ignores deletion events for invalid identities and disabled folders', async () => {
+    const runtime = new FolderRuntime()
+    await runtime.start()
+    state.request.mockClear()
+    for (const detail of [
+      { accountPath: '/u/2', conversationId: 'c_abc123' },
+      { accountPath: '', conversationId: 'bad' },
+      { conversationId: 'c_abc123' },
+    ]) window.dispatchEvent(new CustomEvent(GEM_EXT_EVENTS.CHAT_DELETED, { detail }))
+    expect(state.request).not.toHaveBeenCalled()
+    runtime.stop()
+    state.getProjection.mockResolvedValueOnce({ ...state.projection, settings: { ...state.projection.settings, enabled: false } })
+    await runtime.start()
+    state.request.mockClear()
+    window.dispatchEvent(new CustomEvent(GEM_EXT_EVENTS.CHAT_DELETED, { detail: { accountPath: '', conversationId: 'c_abc123' } }))
+    expect(state.request).not.toHaveBeenCalled()
+    runtime.stop()
+  })
+
+  it('lets the Folder delete flow own cleanup when its request is also observed', async () => {
+    const runtime = new FolderRuntime()
+    await runtime.start()
+    state.request.mockClear().mockImplementation(async (_scope, _source, method) => ({
+      data: method === 'prepareChatDeletion' ? { id: 'snapshot-1', protectionToken: 'lease-1' } : undefined,
+    }))
+    state.deleteNative.mockImplementation(async () => {
+      window.dispatchEvent(new CustomEvent(GEM_EXT_EVENTS.CHAT_DELETED, { detail: { accountPath: '', conversationId: 'c_abc123' } }))
+    })
+    await runtime.deleteChat('folder-1', 'abc123')
+    expect(state.request.mock.calls.map((call) => call[2])).toEqual(['prepareChatDeletion', 'removeChatAfterGeminiDelete', 'releaseSnapshot'])
+    runtime.stop()
+  })
+
   it('never calls Gemini deletion if the protection point cannot be saved', async () => {
     const runtime = new FolderRuntime()
     await runtime.start()

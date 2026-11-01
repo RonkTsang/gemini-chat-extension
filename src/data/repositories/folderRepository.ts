@@ -830,6 +830,12 @@ export class FolderRepositoryImpl implements FolderRepository {
 
   async removeChatAfterGeminiDelete(accountScopeId: string, chatId: string, protectionSnapshotId?: string): Promise<FolderMutationResult<void>> {
     requireScope(accountScopeId)
+    // Native deletion also covers unorganized chats and duplicate observations.
+    const reference = await db.folder_chat_references.get([accountScopeId, chatId])
+    if (!reference && !await db.folder_memberships.where('[accountScopeId+chatId]').equals([accountScopeId, chatId]).first()) {
+      const result = await runFolderMutation('removeChatAfterGeminiDelete', accountScopeId, [], async () => undefined)
+      return { ...result, commit: { ...result.commit, affected: { chatIds: [chatId] } } }
+    }
     const deviceId = await this.preheatDevice()
     const remove = async () => {
       const folderIds = new Set<string>()

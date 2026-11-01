@@ -628,11 +628,22 @@ describe('retained local organization regressions', () => {
     const second = await repository.createFolder(scopeA, { name: 'Second folder' }).then((result) => result.data)
     await repository.upsertMembership(scopeA, { folderId: first.id, chatId: 'chat-delete', cachedTitle: 'Delete me' }).then((result) => result.data)
     await repository.upsertMembership(scopeA, { folderId: second.id, chatId: 'chat-delete' }).then((result) => result.data)
+    const foreign = (await repository.createFolder(scopeB, { name: 'Other account' })).data
+    await repository.upsertMembership(scopeB, { folderId: foreign.id, chatId: 'chat-delete', cachedTitle: 'Keep me' })
+    const foreignBefore = await repository.getAccountData(scopeB)
 
     await repository.removeChatAfterGeminiDelete(scopeA, 'chat-delete').then((result) => result.data)
 
     expect((await repository.getProjection(scopeA)).memberships).toEqual([])
     expect(await db.folder_chat_references.get([scopeA, 'chat-delete'])).toBeUndefined()
+    expect(await repository.getAccountData(scopeB)).toEqual(foreignBefore)
+    const protect = vi.spyOn(repository, 'createSnapshot')
+    const duplicate = await repository.removeChatAfterGeminiDelete(scopeA, 'chat-delete')
+    const unorganized = await repository.removeChatAfterGeminiDelete(scopeA, 'unorganized')
+    expect(duplicate.commit.effect).toBeUndefined()
+    expect(unorganized.commit.effect).toBeUndefined()
+    expect(unorganized.commit.affected).toEqual({ chatIds: ['unorganized'] })
+    expect(protect).not.toHaveBeenCalled()
   })
 })
 

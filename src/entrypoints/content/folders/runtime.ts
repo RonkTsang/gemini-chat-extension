@@ -25,6 +25,7 @@ import { browser } from 'wxt/browser'
 import { eventBus } from '@/utils/eventbus'
 import { GEM_EXT_EVENTS } from '@/common/event'
 import { streamGenerateActivitySchema } from '@/utils/streamGenerateProtocol'
+import { chatDeletedSchema } from '@/utils/chatDeleteProtocol'
 import { getAccountPath } from './new-chat.dom'
 import { folderBackgroundClient, type BrowserSyncStatusProjection } from './client'
 import {
@@ -111,6 +112,7 @@ export class FolderRuntime {
   private lastChangeRequestId?: string
   private settingsSequence = 0
   private accountSequence = 0
+  private readonly deletingChats = new Set<string>()
 
   private readonly handleBackgroundMessage = (message: unknown): void => {
     if (!message || typeof message !== 'object' || (message as { type?: unknown }).type !== 'folders:data-changed') return
@@ -145,6 +147,17 @@ export class FolderRuntime {
       .catch((error: unknown) => console.warn('[Folders] Could not move the active chat to the front', error))
   }
 
+  private readonly handleChatDeleted = (event: Event): void => {
+    const parsed = chatDeletedSchema.safeParse((event as CustomEvent<unknown>).detail)
+    if (!parsed.success || parsed.data.accountPath !== getAccountPath()
+      || this.state.identity.status !== 'available' || !this.state.projection?.settings.enabled) return
+    const chatId = parsed.data.conversationId.slice(2)
+    const accountScopeId = this.state.identity.identity.accountScopeId
+    if (this.deletingChats.has(`${accountScopeId}:${chatId}`)) return
+    void this.command('removeChatAfterGeminiDelete', { chatId, deletionReceipt: 'gemini-native-confirmed' })
+      .catch((error: unknown) => console.warn('[Folders] Could not remove the deleted Gemini chat', error))
+  }
+
   getSnapshot = (): FolderRuntimeState => this.state
 
   subscribe = (listener: Listener): (() => void) => {
@@ -163,6 +176,7 @@ export class FolderRuntime {
       window.addEventListener('focus', this.handleSyncSignal)
       window.addEventListener('online', this.handleSyncSignal)
       window.addEventListener(GEM_EXT_EVENTS.STREAM_GENERATE_ACTIVITY, this.handleChatActivity)
+      window.addEventListener(GEM_EXT_EVENTS.CHAT_DELETED, this.handleChatDeleted)
       this.invalidationListenerStarted = true
     }
     await geminiIdentityService.start()
@@ -201,6 +215,7 @@ export class FolderRuntime {
       window.removeEventListener('focus', this.handleSyncSignal)
       window.removeEventListener('online', this.handleSyncSignal)
       window.removeEventListener(GEM_EXT_EVENTS.STREAM_GENERATE_ACTIVITY, this.handleChatActivity)
+      window.removeEventListener(GEM_EXT_EVENTS.CHAT_DELETED, this.handleChatDeleted)
       this.invalidationListenerStarted = false
     }
     this.state = { identity: { status: 'unavailable', reason: 'surface-not-ready' } }
@@ -683,6 +698,8 @@ export class FolderRuntime {
     const accountScopeId = this.scope()
     const identitySource = this.identitySource()
     const protection = (await folderBackgroundClient.request<FolderSnapshotProtection>(accountScopeId, identitySource, 'prepareChatDeletion', {})).data
+    const deletionKey = `${accountScopeId}:${chatId}`
+    this.deletingChats.add(deletionKey)
     try {
       if (this.scope() !== accountScopeId) throw new Error('The Gemini account changed during deletion')
       await deleteGeminiChat(chatId)
@@ -691,6 +708,7 @@ export class FolderRuntime {
       })
       this.closeDialog()
     } finally {
+      this.deletingChats.delete(deletionKey)
       try { await folderBackgroundClient.request(accountScopeId, identitySource, 'releaseSnapshot', { snapshotId: protection.id, protectionToken: protection.protectionToken }) } catch (error) {
         if (import.meta.env.DEV) logFolderTraceError('native-delete', 'recovery.protection-release-failed', error, { accountScopeId })
       }
