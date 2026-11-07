@@ -7,6 +7,7 @@ import Dexie, { type Table } from 'dexie'
 
 import type { GemAvatarAssetRow } from '@/domain/gem-avatar/types'
 import type { QuickFollowIconKey } from '@/domain/quick-follow/iconKeys'
+import type { SelectionDisplayMode } from '@/domain/quick-follow/types'
 import type { ThemeAssetRow } from '@/entrypoints/content/gemini-theme/background/types'
 
 export interface QuickFollowPromptRow {
@@ -23,6 +24,7 @@ export interface QuickFollowSettingsRow {
   id: 'default'
   orderedIds: string[]
   enabled: boolean
+  selectionDisplayMode?: SelectionDisplayMode
 }
 
 export interface ChainPromptRow {

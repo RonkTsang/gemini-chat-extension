@@ -1,6 +1,7 @@
 import tippy, { type Instance } from 'tippy.js'
 
 import { t } from '@/utils/i18n'
+import { mountCompactDraftCards } from './compact-draft-cards'
 import { hasQuoteAnchor, readQueryLines, readRawQuery, resolveQueryText } from './dom'
 import { effectiveComment, parseDisplayMessage, type SelectionItem } from './protocol'
 
@@ -8,7 +9,7 @@ const I18N = 'quickFollow.multiSelection'
 const HISTORY_VIEW_CLASS = 'gpk-follow-history'
 const CARD_CLASS = 'gpk-follow-card'
 
-type CardCallbacks = {
+export type CardCallbacks = {
   onComment: (id: string) => void
   onJumpToSource: (id: string) => boolean | void
   onRemove: (id: string) => boolean | void
@@ -39,9 +40,11 @@ type DraftCard = {
 
 const historyStates = new WeakMap<Element, HistoryState>()
 let activeCardTooltip: Instance | null = null
+let closeCompactPopover: (() => void) | null = null
 const tooltipEscapeCleanup = new WeakMap<Instance, () => void>()
 
 function setActiveCardTooltip(instance: Instance): void {
+  closeCompactPopover?.()
   if (activeCardTooltip && activeCardTooltip !== instance) activeCardTooltip.hide()
   activeCardTooltip = instance
   if (tooltipEscapeCleanup.has(instance)) return
@@ -64,12 +67,46 @@ function clearActiveCardTooltip(instance: Instance): void {
 
 export function closeActiveFollowUpPopovers(): void {
   activeCardTooltip?.hide()
+  closeCompactPopover?.()
+}
+
+export function measureDraftCardInsertion(
+  input: HTMLElement, row: HTMLElement, count: number,
+): { inputHeight: number; rowHeight: number } {
+  // Let the native composer react to a non-empty row without rendering any cards.
+  const probes = Array.from({ length: count }, () => {
+    const probe = document.createElement('div')
+    probe.className = 'gpk-follow-draft-card-probe'
+    probe.setAttribute('aria-hidden', 'true')
+    return probe
+  })
+  row.append(...probes)
+  try {
+    return {
+      inputHeight: input.getBoundingClientRect().height,
+      rowHeight: row.getBoundingClientRect().height,
+    }
+  } finally {
+    probes.forEach(probe => probe.remove())
+  }
 }
 
 export function mountDraftCards(
   inputEditor: HTMLElement,
-  callbacks: CardCallbacks
-): { render(items: readonly SelectionItem[]): void; setDisabled(disabled: boolean): void; destroy(): void } {
+  callbacks: CardCallbacks,
+  mode: 'cards' | 'compact' = 'cards'
+): { element: HTMLElement; render(items: readonly SelectionItem[]): void; setDisabled(disabled: boolean): void; destroy(): void } {
+  if (mode === 'compact') {
+    const view = mountCompactDraftCards(inputEditor, callbacks, () => activeCardTooltip?.hide())
+    closeCompactPopover = view.closePopover
+    return {
+      ...view,
+      destroy() {
+        if (closeCompactPopover === view.closePopover) closeCompactPopover = null
+        view.destroy()
+      },
+    }
+  }
   const container = document.createElement('div')
   container.className = 'gpk-follow-draft-cards'
   container.setAttribute('role', 'list')
@@ -188,7 +225,7 @@ export function mountDraftCards(
     for (const card of cards.values()) applyDisabledState(card, disabled)
   }
 
-  return { render, setDisabled, destroy }
+  return { element: container, render, setDisabled, destroy }
 }
 
 function applyDisabledState(card: DraftCard, disabled: boolean): void {

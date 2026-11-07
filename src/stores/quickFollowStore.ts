@@ -7,7 +7,8 @@ import {
   type QuickFollowPrompt,
   type QuickFollowPromptCreateInput,
   type QuickFollowPromptUpdateInput,
-  type QuickFollowSettings
+  type QuickFollowSettings,
+  type SelectionDisplayMode
 } from '@/domain/quick-follow/types'
 import { DEFAULT_QUICK_FOLLOW_ICON_KEY } from '@/domain/quick-follow/iconKeys'
 import { quickFollowRepository } from '@/data/repositories'
@@ -29,13 +30,15 @@ interface QuickFollowActions {
   deletePrompt: (id: string) => Promise<void>
   reorder: (idsInOrder: string[]) => Promise<void>
   setEnabled: (enabled: boolean) => Promise<void>
+  setSelectionDisplayMode: (mode: SelectionDisplayMode) => Promise<void>
 }
 
 export type QuickFollowStore = QuickFollowState & QuickFollowActions
 
 const DEFAULT_SETTINGS: QuickFollowSettings = {
   orderedIds: [],
-  enabled: true
+  enabled: true,
+  selectionDisplayMode: 'cards'
 }
 
 const DEFAULT_ICON_KEY = DEFAULT_QUICK_FOLLOW_ICON_KEY
@@ -158,6 +161,11 @@ export const useQuickFollowStore = create<QuickFollowStore>((set, get) => ({
   async setEnabled(enabled) {
     const settings = await quickFollowRepository.setEnabled(enabled)
     set(state => ({ prompts: state.prompts, settings, isHydrated: true }))
+  },
+
+  async setSelectionDisplayMode(selectionDisplayMode) {
+    const settings = await quickFollowRepository.updateSettings({ selectionDisplayMode })
+    set({ settings, isHydrated: true })
   }
 }))
 

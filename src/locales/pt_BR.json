@@ -90,7 +90,10 @@
       "sendUnknown": "Não foi possível confirmar o envio. O rascunho foi mantido.",
       "restoreDraft": "Restaurar rascunho",
       "restoreFailed": "Não foi possível restaurar o rascunho. Limpe o campo de entrada e tente novamente.",
-      "unsupportedDraft": "Este rascunho não pode ser guardado com segurança. Envie ou remova os anexos e o conteúdo formatado primeiro."
+      "unsupportedDraft": "Este rascunho não pode ser guardado com segurança. Envie ou remova os anexos e o conteúdo formatado primeiro.",
+      "selectionCountOne": "$1 seleção",
+      "selectionCountMany": "$1 seleções",
+      "noComment": "Nenhum comentário adicionado"
     }
   },
   "settings": {
@@ -132,6 +135,15 @@
       "chip": {
         "label": "Texto selecionado",
         "tooltip": "Este é o texto que você selecionou no Gemini"
+      },
+      "selectionDisplayMode": {
+        "label": "Exibição das seleções no campo de entrada",
+        "cards": "Cartões",
+        "compact": "Compacto",
+        "cardsDescription": "Mostra cada seleção como um cartão no campo de entrada.",
+        "compactDescription": "Mostra apenas a quantidade de seleções. Passe o cursor para ver e gerenciar todas.",
+        "auto": "Automático",
+        "autoDescription": "Muda para o modo compacto quando a área de entrada ocupa mais de 40% da altura visível da janela."
       }
     },
     "enhancements": {

@@ -1,9 +1,10 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { act } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const settings = vi.hoisted(() => {
-  type State = { settings: { enabled: boolean }; hydrate: () => Promise<void> }
+  type State = { settings: { enabled: boolean; selectionDisplayMode?: SelectionDisplayMode }; hydrate: () => Promise<void> }
   const listeners = new Set<(next: State, previous: State) => void>()
   const state: State = { settings: { enabled: true }, hydrate: async () => undefined }
   return { state, listeners }
@@ -24,7 +25,7 @@ vi.mock('wxt/browser', () => ({ browser: { storage: { onChanged: { addListener: 
 
 import { eventBus } from '@/utils/eventbus'
 import { toaster } from '@/components/ui/toaster'
-import type { QuickFollowPrompt } from '@/domain/quick-follow/types'
+import type { QuickFollowPrompt, SelectionDisplayMode } from '@/domain/quick-follow/types'
 import { createFollowUpController } from './controller'
 import { appendRequestText, getConversationScope, readRequest, replaceRequestText, resolveInput, type Candidate } from './dom'
 import { serializeMessage } from './protocol'
@@ -92,8 +93,23 @@ async function flushMutations(): Promise<void> {
 
 function setEnabled(enabled: boolean): void {
   const previous = { ...settings.state, settings: { ...settings.state.settings } }
-  settings.state.settings = { enabled }
+  settings.state.settings = { ...settings.state.settings, enabled }
   settings.listeners.forEach(listener => listener(settings.state, previous))
+}
+
+function switchMode(selectionDisplayMode: SelectionDisplayMode): void {
+  const previous = { ...settings.state, settings: { ...settings.state.settings } }
+  settings.state.settings = { ...settings.state.settings, selectionDisplayMode }
+  settings.listeners.forEach(listener => listener(settings.state, previous))
+}
+
+function mockShadowReattachment(): void {
+  const attachShadow = HTMLElement.prototype.attachShadow
+  vi.spyOn(HTMLElement.prototype, 'attachShadow').mockImplementation(function (this: HTMLElement, init) {
+    // Match the browser error that react-shadow handles when its layout effect runs again.
+    if (this.shadowRoot) throw new DOMException('Shadow root already exists', 'NotSupportedError')
+    return attachShadow.call(this, init)
+  })
 }
 
 beforeEach(() => {
@@ -115,6 +131,109 @@ afterEach(() => {
 })
 
 describe('Follow-up lifecycle regressions', () => {
+  it('switches only the draft view while preserving editor nodes, selections and pending comments', async () => {
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
+    mockShadowReattachment()
+    controller.add(candidate('a'))
+    controller.changeQuickComment('a', 'pending comment')
+    const { editor } = resolveInput()!
+    const prefix = editor.innerHTML
+    const nodes = [...editor.childNodes]
+    await act(async () => switchMode('compact'))
+    expect(document.querySelector('.gpk-follow-compact-host')).not.toBeNull()
+    expect(document.querySelectorAll('.gpk-follow-draft-cards')).toHaveLength(1)
+    expect(editor.innerHTML).toBe(prefix)
+    expect([...editor.childNodes]).toEqual(nodes)
+    expect(controller.hasDraftCards()).toBe(true)
+    await act(async () => switchMode('cards'))
+    expect(document.querySelector('.gpk-follow-compact-host')).toBeNull()
+    expect(document.querySelector('.gpk-follow-card-comment')?.textContent).toBe('pending comment')
+    expect(editor.innerHTML).toBe(prefix)
+    expect([...editor.childNodes]).toEqual(nodes)
+    expect(controller.addComment('a')).toBe(true)
+    expect(readRequest(editor)).toBe('line-1\nline-2')
+  })
+
+  it('uses the 40% viewport threshold in auto mode without expanding as soon as the row shrinks', async () => {
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
+    mockShadowReattachment()
+    vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame'] })
+    const input = document.querySelector('input-container')!
+    let notifyResize: () => void = () => undefined
+    const disconnect = vi.fn()
+    vi.stubGlobal('ResizeObserver', class {
+      constructor(callback: () => void) { notifyResize = callback }
+      observe = vi.fn()
+      disconnect = disconnect
+    })
+    const limit = (window.visualViewport?.height ?? window.innerHeight) * 0.4
+    let nativeHeight = limit - 128
+    const isCompact = () => Boolean(input.querySelector('.gpk-follow-compact-host'))
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      const rowHeight = isCompact() ? 44 : 128
+      return new DOMRect(0, 0, 700, this === input ? nativeHeight + rowHeight : rowHeight)
+    })
+    const resize = () => act(async () => {
+      notifyResize()
+      await vi.advanceTimersByTimeAsync(32)
+    })
+    controller.add(candidate('a'))
+    const { editor } = resolveInput()!
+    const draft = editor.innerHTML
+    switchMode('auto')
+    await resize()
+    expect(isCompact()).toBe(false)
+
+    nativeHeight += 1
+    await resize()
+    expect(isCompact()).toBe(true)
+    await resize()
+    expect(isCompact()).toBe(true)
+    expect(editor.innerHTML).toBe(draft)
+    expect(settings.state.settings.selectionDisplayMode).toBe('auto')
+
+    nativeHeight -= 16
+    await resize()
+    expect(isCompact()).toBe(false)
+    expect(editor.innerHTML).toBe(draft)
+    switchMode('cards')
+    expect(disconnect).toHaveBeenCalledOnce()
+    nativeHeight += 200
+    window.dispatchEvent(new Event('resize'))
+    await vi.advanceTimersByTimeAsync(32)
+    expect(isCompact()).toBe(false)
+  })
+
+  it.each([0, 1])('chooses compact before inserting a card with %i existing cards', async existingCount => {
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
+    mockShadowReattachment()
+    vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame'] })
+    const input = document.querySelector('input-container')!
+    const row = input.querySelector<HTMLElement>('.gpk-follow-draft-cards')!
+    const limit = (window.visualViewport?.height ?? window.innerHeight) * 0.4
+    vi.spyOn(row, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 350, 128))
+    vi.spyOn(input, 'getBoundingClientRect').mockImplementation(() => {
+      const overflows = row.childElementCount > existingCount
+      return new DOMRect(0, 0, 350, limit + (overflows ? 1 : -1))
+    })
+    switchMode('auto')
+    if (existingCount) {
+      expect(controller.add(candidate('a'))).toBe('a')
+      expect(row.querySelectorAll('.gpk-follow-card')).toHaveLength(existingCount)
+    }
+    const insertCard = vi.spyOn(row, 'insertBefore')
+
+    await act(async () => {
+      expect(controller.add(candidate('b'))).toBe('b')
+      expect(input.querySelector('.gpk-follow-compact-host')).not.toBeNull()
+      expect(input.querySelector('.gpk-follow-card')).toBeNull()
+    })
+    expect(insertCard).not.toHaveBeenCalled()
+    expect(row.querySelector('.gpk-follow-draft-card-probe')).toBeNull()
+    expect(resolveInput()!.editor.querySelector('[data-gpk-follow-sentinel="b"]')).not.toBeNull()
+    await act(async () => controller.stop())
+  })
+
   it('hides native Ask menus only while enabled and cleans up on stop', () => {
     const nativeStyle = document.createElement('style')
     nativeStyle.textContent = 'highlight-to-ask-menu { display: flex; }'
@@ -550,14 +669,19 @@ describe('Follow-up lifecycle regressions', () => {
     expect(controller.add(candidate('b'))).not.toBeNull()
   })
 
-  it('keeps a saved comment when reopening Quick Comment', () => {
+  it('returns focus to the Gemini draft after adding a comment and keeps it when reopened', () => {
     const change = vi.fn()
     controller.stop()
     controller = createFollowUpController(change)
     controller.start()
     controller.add(candidate('a'))
     controller.changeQuickComment('a', 'keep my comment')
-    controller.addComment('a')
+    const { editor } = resolveInput()!
+    expect(controller.addComment('a')).toBe(true)
+    expect(document.activeElement).toBe(editor)
+    expect(window.getSelection()?.isCollapsed).toBe(true)
+    expect(window.getSelection()?.anchorNode).toBe(editor.lastElementChild)
+    expect(readRequest(editor)).toBe('line-1\nline-2')
     mountSource('a')
     controller.openQuickComment('a')
     expect(change).toHaveBeenLastCalledWith(expect.objectContaining({

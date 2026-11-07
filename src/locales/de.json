@@ -90,7 +90,10 @@
       "sendUnknown": "Der Versandstatus ist unklar. Dein Entwurf wurde beibehalten.",
       "restoreDraft": "Entwurf wiederherstellen",
       "restoreFailed": "Entwurf konnte nicht wiederhergestellt werden. Leere das Eingabefeld und versuche es erneut.",
-      "unsupportedDraft": "Dieser Entwurf kann nicht sicher beiseitegelegt werden. Sende oder entferne zuerst Anhänge und formatierte Inhalte."
+      "unsupportedDraft": "Dieser Entwurf kann nicht sicher beiseitegelegt werden. Sende oder entferne zuerst Anhänge und formatierte Inhalte.",
+      "selectionCountOne": "$1 Auswahl",
+      "selectionCountMany": "$1 Auswahlen",
+      "noComment": "Kein Kommentar hinzugefügt"
     }
   },
   "settings": {
@@ -132,6 +135,15 @@
       "chip": {
         "label": "Ausgewählter Text",
         "tooltip": "Dies ist der Text, den Sie in Gemini ausgewählt haben"
+      },
+      "selectionDisplayMode": {
+        "label": "Auswahlanzeige im Eingabefeld",
+        "cards": "Karten",
+        "compact": "Kompakt",
+        "cardsDescription": "Jede Auswahl als Karte im Eingabefeld anzeigen.",
+        "compactDescription": "Nur die Anzahl der Auswahlen anzeigen. Fahre darüber, um alle Auswahlen anzusehen und zu verwalten.",
+        "auto": "Automatisch",
+        "autoDescription": "Zu „Kompakt“ wechseln, wenn der Eingabebereich mehr als 40 % der sichtbaren Fensterhöhe einnimmt."
       }
     },
     "enhancements": {

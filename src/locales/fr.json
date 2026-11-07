@@ -90,7 +90,10 @@
       "sendUnknown": "L’envoi n’a pas pu être confirmé. Votre brouillon a été conservé.",
       "restoreDraft": "Restaurer le brouillon",
       "restoreFailed": "Impossible de restaurer le brouillon. Effacez le champ de saisie et réessayez.",
-      "unsupportedDraft": "Ce brouillon ne peut pas être mis de côté en toute sécurité. Envoyez ou supprimez d’abord les pièces jointes et le contenu mis en forme."
+      "unsupportedDraft": "Ce brouillon ne peut pas être mis de côté en toute sécurité. Envoyez ou supprimez d’abord les pièces jointes et le contenu mis en forme.",
+      "selectionCountOne": "$1 sélection",
+      "selectionCountMany": "$1 sélections",
+      "noComment": "Aucun commentaire ajouté"
     }
   },
   "settings": {
@@ -132,6 +135,15 @@
       "chip": {
         "label": "Texte sélectionné",
         "tooltip": "Ceci est le texte que vous avez sélectionné dans Gemini"
+      },
+      "selectionDisplayMode": {
+        "label": "Affichage des sélections dans le champ de saisie",
+        "cards": "Cartes",
+        "compact": "Compact",
+        "cardsDescription": "Afficher chaque sélection sous forme de carte dans le champ de saisie.",
+        "compactDescription": "Afficher uniquement le nombre de sélections. Survolez pour toutes les consulter et les gérer.",
+        "auto": "Automatique",
+        "autoDescription": "Passer en mode compact lorsque la zone de saisie occupe plus de 40 % de la hauteur visible de la fenêtre."
       }
     },
     "enhancements": {

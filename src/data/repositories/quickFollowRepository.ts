@@ -3,6 +3,7 @@ import { z } from 'zod'
 
 import {
   QUICK_FOLLOW_PLACEHOLDER,
+  SELECTION_DISPLAY_MODES,
   type QuickFollowPrompt,
   type QuickFollowPromptCreateInput,
   type QuickFollowPromptUpdateInput,
@@ -78,7 +79,8 @@ function domainToRow(prompt: QuickFollowPrompt): QuickFollowPromptRow {
 function settingsRowToDomain(row: QuickFollowSettingsRow): QuickFollowSettings {
   return {
     orderedIds: row.orderedIds,
-    enabled: row.enabled
+    enabled: row.enabled,
+    selectionDisplayMode: row.selectionDisplayMode ?? 'cards'
   }
 }
 
@@ -87,14 +89,16 @@ function ensureSettingsRow(row?: QuickFollowSettingsRow): QuickFollowSettingsRow
     return {
       id: 'default',
       orderedIds: [],
-      enabled: true
+      enabled: true,
+      selectionDisplayMode: 'cards'
     }
   }
 
   return {
     id: 'default',
     orderedIds: row.orderedIds ?? [],
-    enabled: row.enabled ?? true
+    enabled: row.enabled ?? true,
+    selectionDisplayMode: row.selectionDisplayMode ?? 'cards'
   }
 }
 
@@ -239,7 +243,8 @@ class QuickFollowRepository implements IQuickFollowRepository {
 
 const QuickFollowSettingsSchema = z.object({
   orderedIds: z.array(z.string()).optional(),
-  enabled: z.boolean().optional()
+  enabled: z.boolean().optional(),
+  selectionDisplayMode: z.enum(SELECTION_DISPLAY_MODES).optional()
 })
 
 export const quickFollowRepository = new QuickFollowRepository()

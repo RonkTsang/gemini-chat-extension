@@ -90,7 +90,10 @@
       "sendUnknown": "No se pudo confirmar el envío. Se conservó el borrador.",
       "restoreDraft": "Restaurar borrador",
       "restoreFailed": "No se pudo restaurar el borrador. Borra el campo de entrada e inténtalo de nuevo.",
-      "unsupportedDraft": "No se puede apartar este borrador de forma segura. Envía o quita primero los archivos adjuntos y el contenido con formato."
+      "unsupportedDraft": "No se puede apartar este borrador de forma segura. Envía o quita primero los archivos adjuntos y el contenido con formato.",
+      "selectionCountOne": "$1 selección",
+      "selectionCountMany": "$1 selecciones",
+      "noComment": "No se ha añadido ningún comentario"
     }
   },
   "settings": {
@@ -132,6 +135,15 @@
       "chip": {
         "label": "Texto seleccionado",
         "tooltip": "Este es el texto que seleccionaste en Gemini"
+      },
+      "selectionDisplayMode": {
+        "label": "Mostrar selecciones en el campo de entrada",
+        "cards": "Tarjetas",
+        "compact": "Compacto",
+        "cardsDescription": "Muestra cada selección como una tarjeta en el campo de entrada.",
+        "compactDescription": "Muestra solo el número de selecciones. Pasa el cursor para verlas y gestionarlas.",
+        "auto": "Automático",
+        "autoDescription": "Cambia a compacto cuando el área de entrada ocupa más del 40 % de la altura visible de la ventana."
       }
     },
     "enhancements": {

@@ -2,7 +2,7 @@ import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 import { t } from '@/utils/i18n'
-import { findCurrentChatWindow, observeQuoteAnchorLayout, readQuoteAnchorEndPosition } from '../../quick-follow-up/dom'
+import { findSelectionMarkerHost, observeQuoteAnchorLayout, readQuoteAnchorEndPosition } from '../../quick-follow-up/dom'
 import type { SelectionItem } from '../../quick-follow-up/protocol'
 
 interface SelectionMarkersProps {
@@ -33,7 +33,7 @@ export function SelectionMarkers({ items, disabled, onEdit, onPreview }: Selecti
 
   useLayoutEffect(() => {
     const update = () => {
-      const nextHost = findCurrentChatWindow()
+      const nextHost = findSelectionMarkerHost()
       setHost(nextHost)
       const next = nextHost ? items.flatMap((item, index) => {
         const position = item.anchor ? readQuoteAnchorEndPosition(item.anchor) : null

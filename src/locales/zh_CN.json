@@ -90,7 +90,10 @@
       "sendUnknown": "无法确认是否发送成功。草稿已保留。",
       "restoreDraft": "恢复草稿",
       "restoreFailed": "无法恢复草稿。请清空输入框后重试。",
-      "unsupportedDraft": "无法安全暂存此草稿。请先发送或移除附件和带格式的内容。"
+      "unsupportedDraft": "无法安全暂存此草稿。请先发送或移除附件和带格式的内容。",
+      "selectionCountOne": "$1 个选区",
+      "selectionCountMany": "$1 个选区",
+      "noComment": "未添加评论"
     }
   },
   "settings": {
@@ -132,6 +135,15 @@
       "chip": {
         "label": "选中的文本",
         "tooltip": "此处是你在 Gemini 中所选中的内容"
+      },
+      "selectionDisplayMode": {
+        "label": "输入框选区展示",
+        "cards": "卡片",
+        "compact": "紧凑",
+        "cardsDescription": "在输入框中逐张展示选区，方便直接查看。",
+        "compactDescription": "仅显示选区数量，悬停可查看和管理全部选区。",
+        "auto": "自动",
+        "autoDescription": "输入区超过可视窗口高度的 40% 时，自动切换为紧凑展示。"
       }
     },
     "enhancements": {

@@ -16,9 +16,13 @@ export interface QuickFollowPrompt {
   updatedAt: string
 }
 
+export const SELECTION_DISPLAY_MODES = ['auto', 'cards', 'compact'] as const
+export type SelectionDisplayMode = (typeof SELECTION_DISPLAY_MODES)[number]
+
 export interface QuickFollowSettings {
   orderedIds: string[]
   enabled: boolean
+  selectionDisplayMode: SelectionDisplayMode
 }
 
 export type QuickFollowPromptCreateInput = {

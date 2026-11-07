@@ -77,7 +77,8 @@ export class LocalDexieDataSource {
     return {
       id: 'default',
       orderedIds: row.orderedIds ?? [],
-      enabled: row.enabled ?? true
+      enabled: row.enabled ?? true,
+      selectionDisplayMode: row.selectionDisplayMode ?? 'cards'
     }
   }
 
