@@ -90,7 +90,10 @@
       "sendUnknown": "送信を確認できませんでした。下書きは保持されています。",
       "restoreDraft": "下書きを復元",
       "restoreFailed": "下書きを復元できませんでした。入力欄を空にして、もう一度お試しください。",
-      "unsupportedDraft": "この下書きは安全に退避できません。添付ファイルや書式付きコンテンツを送信または削除してください。"
+      "unsupportedDraft": "この下書きは安全に退避できません。添付ファイルや書式付きコンテンツを送信または削除してください。",
+      "selectionCountOne": "$1 件の選択範囲",
+      "selectionCountMany": "$1 件の選択範囲",
+      "noComment": "コメントはありません"
     }
   },
   "settings": {
@@ -132,6 +135,15 @@
       "chip": {
         "label": "選択したテキスト",
         "tooltip": "これは Gemini で選択したテキストです"
+      },
+      "selectionDisplayMode": {
+        "label": "入力欄での選択範囲の表示",
+        "cards": "カード",
+        "compact": "コンパクト",
+        "cardsDescription": "入力欄に選択範囲をカード形式で表示します。",
+        "compactDescription": "選択範囲の数だけを表示します。カーソルを合わせると一覧を確認、管理できます。",
+        "auto": "自動",
+        "autoDescription": "入力欄がウィンドウの表示領域の高さの 40% を超えたら、コンパクト表示に切り替えます。"
       }
     },
     "enhancements": {

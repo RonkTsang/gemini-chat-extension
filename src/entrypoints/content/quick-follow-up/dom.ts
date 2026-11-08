@@ -112,6 +112,17 @@ export function readRequest(editor: HTMLElement): string | null {
   return readPlainEditorChildren(editor)
 }
 
+export function focusRequestEditor(editor: HTMLElement): void {
+  editor.focus()
+  const lastParagraph = [...editor.children].reverse().find(child => !isOwnedNode(child))
+  const range = document.createRange()
+  range.selectNodeContents(lastParagraph ?? editor)
+  range.collapse(false)
+  const selection = window.getSelection()
+  selection?.removeAllRanges()
+  selection?.addRange(range)
+}
+
 export function hasEditorDraft(editor: HTMLElement): boolean {
   const request = readRequest(editor)
   return request === null || request.trim().length > 0
@@ -371,6 +382,19 @@ export function currentSentinelIds(editor: Element): string[] {
 export function findCurrentChatWindow(): HTMLElement | null {
   const matches = document.querySelectorAll<HTMLElement>('chat-window')
   return matches.length === 1 ? matches[0] : null
+}
+
+export function findSelectionMarkerHost(): HTMLElement | null {
+  const chatWindow = findCurrentChatWindow()
+  const inputContainer = chatWindow && resolveInputContainer(chatWindow)
+  const host = inputContainer?.parentElement
+  if (!host) return null
+
+  // Keep markers in the composer's stacking context so it can cover them during scrolling.
+  if (host === chatWindow) return host
+  return host.parentElement === chatWindow && host.matches('div:has(> chat-window-content)')
+    ? host
+    : null
 }
 
 export function attachSelectionAnchors(query: Element, anchors: readonly (QuoteAnchor | undefined)[]): void {

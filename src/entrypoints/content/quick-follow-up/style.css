@@ -2,6 +2,8 @@
   --gpk-follow-card-bg: #fff;
   --gpk-follow-card-fg: #242424;
   --gpk-follow-card-hover: #f1f1f1;
+  --gpk-follow-card-border: rgba(128, 128, 128, .22);
+  --gpk-follow-card-border-hover: rgba(128, 128, 128, .36);
 }
 
 body.dark-theme {
@@ -24,7 +26,7 @@ body.dark-theme {
   align-items: center;
   justify-content: center;
   border-radius: 50% 50% 50% 4px;
-  background: var(--theme-500, var(--gem-sys-color--primary, #1a73e8));
+  background: var(--theme-500, #0b57d0);
   color: #fff;
   font: 600 13px/1 "Google Sans Flex", "Google Sans Text", "Google Sans", Arial, sans-serif;
   cursor: pointer;
@@ -38,7 +40,7 @@ body.dark-theme .gpk-follow-source-marker-button {
 }
 
 .gpk-follow-source-marker-button:focus-visible {
-  outline: 2px solid var(--theme-500, var(--gem-sys-color--primary, #1a73e8));
+  outline: 2px solid var(--theme-500, #0b57d0);
   outline-offset: 3px;
 }
 
@@ -111,15 +113,27 @@ rich-textarea:has(> .gpk-follow-draft-cards:not(:empty)) {
   display: none;
 }
 
-.gpk-follow-card {
-  position: relative;
+.gpk-follow-compact-host {
+  overflow: visible;
+}
+
+.gpk-follow-compact-host[hidden] {
+  display: none;
+}
+
+.gpk-follow-card,
+.gpk-follow-draft-card-probe {
   box-sizing: border-box;
   flex: 0 0 160px;
   width: 160px;
   height: 120px;
   min-width: 0;
+}
+
+.gpk-follow-card {
+  position: relative;
   padding: 10px;
-  border: 1px solid rgba(128, 128, 128, .22);
+  border: 1px solid var(--gpk-follow-card-border);
   border-radius: 16px;
   background: var(--gpk-follow-card-bg, #fff);
   color: var(--gpk-follow-card-fg, #242424);
@@ -133,7 +147,7 @@ rich-textarea:has(> .gpk-follow-draft-cards:not(:empty)) {
 .gpk-follow-card:hover,
 .gpk-follow-card:focus-within {
   background: var(--gpk-follow-card-hover, #f1f1f1);
-  border-color: rgba(128, 128, 128, .36);
+  border-color: var(--gpk-follow-card-border-hover);
 }
 
 body.dark-theme .gpk-follow-card,

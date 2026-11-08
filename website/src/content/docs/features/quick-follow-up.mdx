@@ -44,6 +44,7 @@ head:
       }
 ---
 
+import { Image } from 'astro:assets';
 import FocusedScreenshot from '../../../components/FocusedScreenshot.astro';
 import entryDemo from '../../../assets/features/quick-follow-up/quick-follow-up.gif';
 import customPromptImg from '../../../assets/features/quick-follow-up/custom-prompt.png';
@@ -51,6 +52,8 @@ import quickCommentImg from '../../../assets/features/quick-follow-up/instant-co
 import modifierImg from '../../../assets/features/quick-follow-up/quick-comment-send.jpg';
 import multipleCommentsImg from '../../../assets/features/quick-follow-up/multiple-comment-cards.jpg';
 import historyImg from '../../../assets/features/quick-follow-up/sent-follow-up-conversation.jpg';
+import displaySettingsImg from '../../../assets/features/quick-follow-up/setting.png';
+import compactListImg from '../../../assets/features/quick-follow-up/input-area.png';
 
 **Quick Follow-up** lets you jot down a question beside the text, then keep reading. When you're ready, send your questions together with the original passages. You don't have to remember them all, find the text again, or explain which part you mean.
 
@@ -64,9 +67,9 @@ Open [gemini.google.com](https://gemini.google.com) with Gemini Power Kit enable
 
 ## 2. Write Your Question Beside the Passage
 
-A small comment field opens **beside the selected passage**, and a reference card appears above Gemini's main input. You can ask about that passage immediately, without scrolling down to write your question.
+A small comment field opens **beside the selected passage**, and the selection is added to Gemini's input. You can ask about that passage immediately, without scrolling down to write your question.
 
-Type a question such as “Can you give a concrete example?”. Click the **checkmark** or press **Enter** to add it to the card without sending. Use **Shift+Enter** for a new line.
+Type a question such as “Can you give a concrete example?”. Click the **checkmark** or press **Enter** to save it with the selection without sending. Use **Shift+Enter** for a new line.
 
 <FocusedScreenshot
   id="instant-comment"
@@ -110,7 +113,7 @@ These shortcuts apply to a **new** comment. When reopening an existing comment, 
 
 ## 3. Collect a Separate Comment for Each Point
 
-Keep reading, select another passage, and click **Ask Gemini** again. Write a question for that passage. Earlier cards, comments, and text in the main input stay in place, so you can collect your questions before sending. You can add up to **10 references**.
+Keep reading, select another passage, and click **Ask Gemini** again. Write a question for that passage. Earlier selections, comments, and text in the main input stay in place, so you can collect your questions before sending. You can add up to **10 references**.
 
 <FocusedScreenshot
   id="multiple-comments"
@@ -125,9 +128,39 @@ Keep reading, select another passage, and click **Ask Gemini** again. Write a qu
 />
 
 
-When ready, optionally add an overall request in Gemini's main input, such as “Answer each selection separately, with a practical example”. Review the cards, then use Gemini's **Send** button to send the references, comments, and overall request together.
+When ready, optionally add an overall request in Gemini's main input, such as “Answer each selection separately, with a practical example”. Review your selections, then use Gemini's **Send** button to send the references, comments, and overall request together.
 
 Comments and the overall request can be left empty. Card previews may be shortened to save space; the full selected text and comments are sent.
+
+### Choose How Selections Appear in the Input
+
+Open **Gemini Power Kit → Prompt → Quick Follow-up**. Under **Input selection display**, choose a mode:
+
+| Mode | What you see |
+| --- | --- |
+| **Auto** (default) | Shows cards when there’s room. Uses Compact when the input area with cards would take up more than 40% of the visible window height. |
+| **Cards** | Shows one card per selection inside the input so you can review your references at a glance. |
+| **Compact** | Shows a single button with the selection count, leaving more room to read the conversation. |
+
+<Image
+  src={displaySettingsImg}
+  alt="Quick Follow-up settings with Input selection display highlighted and Auto, Cards, and Compact options visible"
+  class="feature-image feature-image-full"
+  loading="lazy"
+/>
+
+*In Quick Follow-up settings, choose how draft selections appear in the input.*
+
+In Compact mode, hover over the count, such as **2 Selections**, to open the list. Scroll inside it to review longer drafts. Click a passage to return to its source, use the **pencil** to edit its comment, or use the **trash icon** to remove that selection and its comment from the draft.
+
+<Image
+  src={compactListImg}
+  alt="Gemini's input showing a 2 Selections button and an open list with both passages, their comments, and edit and remove icons"
+  class="feature-image feature-image-full"
+  loading="lazy"
+/>
+
+*Hover over the selection count to see the original passages and comments.*
 
 ## 4. Review the References in Your Sent Message
 
@@ -231,10 +264,10 @@ Use **Add Starter Templates** for **Tell me more**, **Search**, and **ELI5**, or
 
 | Current draft | Behavior |
 | --- | --- |
-| No reference cards | The expanded prompt sends automatically. |
-| Reference cards already added | Choose **Add to draft** or **Send separately**. |
+| No selections in the draft | The expanded prompt sends automatically. |
+| Selections already in the draft | Choose **Add to draft** or **Send separately**. |
 
-**Add to draft** appends the expanded prompt to your main request and keeps your cards and comments. It does not send yet.
+**Add to draft** appends the expanded prompt to your main request and keeps your selections and comments. It does not send yet.
 
 **Send separately** sends only that skill's expanded prompt, setting the reference draft aside and restoring it after Gemini clears the input. If the extension says the draft cannot be safely set aside, send or remove attachments and formatted content before trying again.
 

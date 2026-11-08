@@ -63,7 +63,7 @@ describe('onboarding eligibility', () => {
     stored.onboardingState = 'pending'
     const winners = await Promise.all([claimOnboarding(() => true), claimOnboarding(() => true)])
     expect(winners).toEqual([true, false])
-    expect(stored).toMatchObject({ onboardingState: 'shown', lastSeenVersion: '0.13.0' })
+    expect(stored).toEqual({ onboardingState: 'shown' })
   })
 
   it('keeps the tour pending when the requesting page loses focus', async () => {

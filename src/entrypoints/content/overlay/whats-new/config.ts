@@ -1,6 +1,6 @@
 /**
  * What's New feature configuration
- * Defines the release notes for the current version
+ * Defines the release notes available to users across versions
  */
 
 import { EXTERNAL_LINKS } from '@/common/config'
@@ -36,6 +36,7 @@ export type ReleaseNotePromoAction =
   | ExternalLinkPromoAction
 
 export interface ReleaseNote {
+  introducedInVersion?: string
   titleKey: string // i18n key for feature title
   descriptionKey: string // i18n key for feature description
   actionLabelKey?: string // optional i18n key for feature CTA
@@ -44,12 +45,13 @@ export interface ReleaseNote {
 }
 
 /**
- * Current release notes (version is auto-detected from manifest)
- * Update this array when releasing a new version with features to announce
+ * Omit introducedInVersion for new notes. Set it to the original release version
+ * only when carrying a note into a later release.
  * Maximum 2 features recommended for optimal display
  */
 export const CURRENT_RELEASE_NOTES: ReleaseNote[] = [
   {
+    introducedInVersion: '0.14.0',
     titleKey: 'whatsnew.multiAsk.title',
     descriptionKey: 'whatsnew.multiAsk.description',
     actionLabelKey: 'whatsnew.multiAsk.action',

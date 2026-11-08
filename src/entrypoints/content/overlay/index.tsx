@@ -28,7 +28,7 @@ function App() {
       <Toaster />
       <QuickFollowUp />
       <ExtensionUpdate />
-      <WhatsNew />
+      <WhatsNew onboardingFinished={onboardingFinished} />
       <ThemeBloomOverlay />
     </>
   )

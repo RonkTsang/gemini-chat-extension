@@ -3,7 +3,11 @@ import 'tippy.js/dist/tippy.css'
 
 import { toaster } from '@/components/ui/toaster'
 import { type AppEvents } from '@/common/event'
-import { QUICK_FOLLOW_PLACEHOLDER, type QuickFollowPrompt } from '@/domain/quick-follow/types'
+import {
+  QUICK_FOLLOW_PLACEHOLDER,
+  QUICK_FOLLOW_SELECTION_DISPLAY_MODE_KEY,
+  type QuickFollowPrompt,
+} from '@/domain/quick-follow/types'
 import { quickFollowStore } from '@/stores/quickFollowStore'
 import { t } from '@/utils/i18n'
 import { i18nCache } from '@/utils/i18nCache'
@@ -11,11 +15,12 @@ import { eventBus } from '@/utils/eventbus'
 import { logDevEvent } from '@/utils/devLogger'
 import { browser } from 'wxt/browser'
 import { createHistoryAnchorTracker } from './history-anchors'
-import { closeActiveFollowUpPopovers, mountDraftCards, renderHistory, restoreHistory } from './cards'
+import { closeActiveFollowUpPopovers, measureDraftCardInsertion, mountDraftCards, renderHistory, restoreHistory } from './cards'
 import {
   appendRequestText,
   captureCandidate,
   captureEditorDraft,
+  focusRequestEditor,
   hasEditorDraft,
   hideNativeAskMenu,
   getConversationScope,
@@ -57,6 +62,14 @@ const NOTICE_KEYS = [
   'quickFollow.multiSelection.unsupportedDraft',
 ] as const
 
+const COMPACT_VIEWPORT_FRACTION = 0.4
+const EXPAND_HEADROOM = 8
+type DraftLayout = NonNullable<Parameters<typeof mountDraftCards>[2]>
+
+function draftHeightLimit(): number {
+  return (window.visualViewport?.height ?? window.innerHeight) * COMPACT_VIEWPORT_FRACTION
+}
+
 export type FollowUpUI =
   | { mode: 'closed' }
   | { mode: 'capsule'; candidate: Candidate; hasDraftCards: boolean }
@@ -92,11 +105,15 @@ export function createFollowUpController(
 ) {
   let started = false
   let enabled = quickFollowStore.getState().settings.enabled
+  let selectionDisplayMode = quickFollowStore.getState().settings.selectionDisplayMode
   let items: SelectionItem[] = []
   let currentUI: FollowUpUI = { mode: 'closed' }
   let chatWindow: HTMLElement | null = null
   let binding: EditorBinding | null = null
   let cards: ReturnType<typeof mountDraftCards> | null = null
+  let draftLayout: DraftLayout = 'cards'
+  let expandedRowHeight = 0
+  let stopObservingDraftLayout: (() => void) | null = null
   let bodyObserver: MutationObserver | null = null
   let chatObserver: MutationObserver | null = null
   let editorObserver: MutationObserver | null = null
@@ -125,10 +142,15 @@ export function createFollowUpController(
     onUIChange(ui)
   }
 
-  const syncCards = () => {
-    historyAnchors.update(items, chatWindow, currentScope)
+  const renderDraftCards = () => {
     cards?.render(items)
     cards?.setDisabled(isBusy())
+  }
+
+  const syncCards = () => {
+    historyAnchors.update(items, chatWindow, currentScope)
+    if (!items.length && selectionDisplayMode === 'auto') setDraftLayout('cards')
+    else renderDraftCardsWithAutoLayout()
     const commentId = currentUI.mode === 'comment' ? currentUI.selectionId : null
     if (commentId && !items.some(item => item.id === commentId)) {
       setUI({ mode: 'closed' })
@@ -150,15 +172,9 @@ export function createFollowUpController(
     return live?.editor === candidate.editor && live.richTextarea === candidate.richTextarea
   }
 
-  const mountEditor = (nextBinding: EditorBinding) => {
-    if (binding?.editor === nextBinding.editor) {
-      binding = nextBinding
-      return
-    }
-    editorObserver?.disconnect()
-    editorInputCleanup?.()
+  const mountCards = (nextBinding: EditorBinding, layout: DraftLayout) => {
     cards?.destroy()
-    binding = nextBinding
+    draftLayout = layout
     cards = mountDraftCards(nextBinding.editor, {
       onRemove: id => remove(id),
       onComment: id => openQuickComment(id),
@@ -166,11 +182,95 @@ export function createFollowUpController(
         const anchor = items.find(item => item.id === id)?.anchor
         if (anchor) jumpToQuoteAnchor(anchor)
       },
-    })
-    syncCards()
+    }, layout)
+  }
+
+  const setDraftLayout = (layout: DraftLayout) => {
+    if (!enabled || !binding?.editor.isConnected || !cards) return
+    if (layout !== draftLayout) {
+      closeActiveFollowUpPopovers()
+      mountCards(binding, layout)
+    }
+    renderDraftCards()
+  }
+
+  const renderDraftCardsWithAutoLayout = () => {
+    if (selectionDisplayMode !== 'auto' || draftLayout !== 'cards' || !binding || !cards) {
+      return renderDraftCards()
+    }
+    const row = cards.element
+    const addedCount = items.length - row.childElementCount
+    if (addedCount <= 0) return renderDraftCards()
+
+    const input = resolveInputContainer(binding.chatWindow)
+    const limit = draftHeightLimit()
+    if (limit <= 0 || !input?.contains(row)) return renderDraftCards()
+
+    const { inputHeight, rowHeight } = measureDraftCardInsertion(input, row, addedCount)
+    if (inputHeight > 0 && rowHeight > 0) {
+      expandedRowHeight = rowHeight
+      if (inputHeight > limit) return setDraftLayout('compact')
+    }
+    renderDraftCards()
+  }
+
+  const observeDraftLayout = (currentBinding: EditorBinding) => {
+    stopObservingDraftLayout?.()
+    stopObservingDraftLayout = null
+    if (selectionDisplayMode !== 'auto') return
+    const input = resolveInputContainer(currentBinding.chatWindow)
+    if (!input?.contains(currentBinding.editor)) return
+
+    const viewport = window.visualViewport
+    let frame: number | null = null
+    const schedule = () => {
+      if (frame !== null) return
+      frame = requestAnimationFrame(() => {
+        frame = null
+        if (!items.length || !cards || !input.contains(cards.element)) return
+        const inputHeight = input.getBoundingClientRect().height
+        const rowHeight = cards.element.getBoundingClientRect().height
+        const limit = draftHeightLimit()
+        if (!inputHeight || !rowHeight || !limit) return
+
+        if (draftLayout === 'cards') {
+          expandedRowHeight = rowHeight
+          if (inputHeight > limit) setDraftLayout('compact')
+        } else {
+          // Budget for the taller card row so collapsing alone cannot trigger expansion.
+          const expandedHeight = inputHeight + Math.max(0, expandedRowHeight - rowHeight)
+          if (expandedHeight <= limit - EXPAND_HEADROOM) setDraftLayout('cards')
+        }
+      })
+    }
+    const observer = new ResizeObserver(schedule)
+    observer.observe(input, { box: 'border-box' })
+    window.addEventListener('resize', schedule)
+    viewport?.addEventListener('resize', schedule)
+    schedule()
+    stopObservingDraftLayout = () => {
+      observer.disconnect()
+      window.removeEventListener('resize', schedule)
+      viewport?.removeEventListener('resize', schedule)
+      if (frame !== null) cancelAnimationFrame(frame)
+    }
+  }
+
+  const mountEditor = (nextBinding: EditorBinding) => {
+    if (binding?.editor === nextBinding.editor) {
+      binding = nextBinding
+      return
+    }
+    editorObserver?.disconnect()
+    editorInputCleanup?.()
+    binding = nextBinding
+    expandedRowHeight = 0
+    mountCards(nextBinding, selectionDisplayMode === 'compact' ? 'compact' : 'cards')
     if (enabled && items.length && !writePrefix(nextBinding.editor, items)) {
       dismissNotice('quickFollow.multiSelection.updateFailed')
     }
+    syncCards()
+    observeDraftLayout(nextBinding)
     if (backup?.scope === currentScope && backup.editor !== nextBinding.editor) {
       backup.clearObserver?.()
       backup.editor = nextBinding.editor
@@ -251,6 +351,8 @@ export function createFollowUpController(
   }
 
   const detachChatWindow = () => {
+    stopObservingDraftLayout?.()
+    stopObservingDraftLayout = null
     cancelReadinessWaits.forEach(cancel => cancel())
     if (binding) writePrefix(binding.editor, [])
     if (chatWindow) {
@@ -455,7 +557,9 @@ export function createFollowUpController(
 
   function handleMouseUp(event: MouseEvent): void {
     if (!enabled || !chatWindow) return
-    if (event.composedPath().some(node => node instanceof Element && node.hasAttribute('data-quick-follow-marker'))) return
+    if (event.composedPath().some(node => node instanceof Element && (
+      node.hasAttribute('data-quick-follow-marker') || node.hasAttribute('data-quick-follow-popover')
+    ))) return
     const selection = window.getSelection()
     if (!selection || selection.rangeCount !== 1) return setUI({ mode: 'closed' })
     const pathTarget = event.composedPath().find(node => node instanceof Element) as Element | undefined
@@ -503,7 +607,7 @@ export function createFollowUpController(
   const currentBindingSafe = () => resolveCurrentBinding()
 
   const onQuickFollowStorageChanged = (changes: Record<string, unknown>, namespace: string) => {
-    if (namespace === 'sync' && 'enableQuickQuote' in changes) {
+    if (namespace === 'sync' && ('enableQuickQuote' in changes || QUICK_FOLLOW_SELECTION_DISPLAY_MODE_KEY in changes)) {
       void quickFollowStore.getState().hydrate().catch(error => console.warn('Failed to refresh Follow-up settings:', error))
     }
   }
@@ -554,11 +658,28 @@ export function createFollowUpController(
     started = true
     for (const key of NOTICE_KEYS) i18nCache.preCache([{ key }])
     settingsUnsubscribe = quickFollowStore.subscribe((state, previous) => {
+      const nextMode = state.settings.selectionDisplayMode
+      if (nextMode !== selectionDisplayMode) {
+        selectionDisplayMode = nextMode
+        if (enabled && binding) {
+          if (nextMode === 'auto') {
+            if (draftLayout === 'compact') {
+              closeActiveFollowUpPopovers()
+              mountCards(binding, 'cards')
+            }
+            renderDraftCardsWithAutoLayout()
+          } else {
+            setDraftLayout(nextMode)
+          }
+          observeDraftLayout(binding)
+        }
+      }
       if (state.settings.enabled !== previous.settings.enabled) handleEnabledChanged(state.settings.enabled)
     })
     browser.storage.onChanged.addListener(onQuickFollowStorageChanged)
     quickFollowStore.getState().hydrate().catch(error => console.warn('Failed to hydrate Follow-up settings:', error))
     eventBus.on('chatchange', onChatChange)
+    selectionDisplayMode = quickFollowStore.getState().settings.selectionDisplayMode
     handleEnabledChanged(quickFollowStore.getState().settings.enabled)
   }
 
@@ -667,7 +788,10 @@ export function createFollowUpController(
       commentDraft: undefined,
       revision: current.revision + 1,
     }))
-    if (updated && currentUI.mode === 'comment' && currentUI.selectionId === id) setUI({ mode: 'closed' })
+    if (updated && currentUI.mode === 'comment' && currentUI.selectionId === id) {
+      setUI({ mode: 'closed' })
+      if (isCurrentBinding(binding)) focusRequestEditor(binding.editor)
+    }
     return updated
   }
 

@@ -3,6 +3,8 @@
  * Manages version tracking in browser local storage
  */
 
+import { browser } from 'wxt/browser'
+
 const STORAGE_KEY = 'lastSeenVersion'
 
 /**
@@ -10,14 +12,9 @@ const STORAGE_KEY = 'lastSeenVersion'
  * @returns The last seen version string, or null if not found
  */
 export async function getLastSeenVersion(): Promise<string | null> {
-  try {
-    const result = await browser.storage.local.get(STORAGE_KEY)
-    const lastSeenVersion = result[STORAGE_KEY]
-    return typeof lastSeenVersion === 'string' ? lastSeenVersion : null
-  } catch (error) {
-    console.error('Failed to get last seen version:', error)
-    return null
-  }
+  const result = await browser.storage.local.get(STORAGE_KEY)
+  const lastSeenVersion = result[STORAGE_KEY]
+  return typeof lastSeenVersion === 'string' ? lastSeenVersion : null
 }
 
 /**
@@ -25,11 +22,7 @@ export async function getLastSeenVersion(): Promise<string | null> {
  * @param version - The version string to save (e.g., "0.4.0")
  */
 export async function setLastSeenVersion(version: string): Promise<void> {
-  try {
-    await browser.storage.local.set({ [STORAGE_KEY]: version })
-  } catch (error) {
-    console.error('Failed to set last seen version:', error)
-  }
+  await browser.storage.local.set({ [STORAGE_KEY]: version })
 }
 
 /**

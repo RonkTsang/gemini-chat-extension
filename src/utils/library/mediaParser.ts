@@ -34,11 +34,24 @@ const mediaNodeSchema = z.object({
   metadata: z.object({ thumbnailUrl: z.url().nullish() }).nullish(),
 })
 
+const mediaConnectionSchema = z.object({ edges: z.array(z.object({ node: z.unknown() })) })
+
 const mediaPacketSchema = z.object({
   data: z.object({
     viewer: z.object({
-      media: z.object({ edges: z.array(z.object({ node: z.unknown() })) }),
+      media: mediaConnectionSchema,
     }),
+  }),
+})
+
+const deferredMediaPacketSchema = z.object({
+  path: z.tuple([
+    z.literal('viewer'),
+    z.string().regex(/^__defer__:\d+:LibraryOverviewPageQuery\$defer\$LibraryMediaSection_viewer$/),
+  ]),
+  data: z.object({
+    __typename: z.literal('Viewer'),
+    media: mediaConnectionSchema,
   }),
 })
 
@@ -83,16 +96,18 @@ export function inspectLibraryMediaResponse(responseText: string): LibraryMediaP
   let hasMediaConnection = false
   for (const packet of response) {
     const parsedPacket = mediaPacketSchema.safeParse(packet)
-    if (!parsedPacket.success) {
+    const deferredPacket = parsedPacket.success ? null : deferredMediaPacketSchema.safeParse(packet)
+    const media = parsedPacket.data?.data.viewer.media ?? deferredPacket?.data?.data.media
+    if (!media) {
       if (result.issues.length < 3) {
-        const issue = parsedPacket.error.issues[0]
+        const issue = parsedPacket.error?.issues[0]
         if (issue) result.issues.push({ path: issue.path.map(String).join('.'), code: issue.code })
       }
       continue
     }
     hasMediaConnection = true
 
-    for (const edge of parsedPacket.data.data.viewer.media.edges) {
+    for (const edge of media.edges) {
       result.edgeCount++
       const node = mediaNodeSchema.safeParse(edge.node)
       if (!node.success) {
