@@ -4,12 +4,13 @@ import { z } from 'zod'
 import {
   DEFAULT_SELECTION_DISPLAY_MODE,
   QUICK_FOLLOW_PLACEHOLDER,
+  QUICK_FOLLOW_SELECTION_DISPLAY_MODE_KEY,
   SELECTION_DISPLAY_MODES,
   type QuickFollowPrompt,
   type QuickFollowPromptCreateInput,
   type QuickFollowPromptUpdateInput,
   type QuickFollowSettings,
-  type QuickFollowSettingsUpdateInput
+  type SelectionDisplayMode
 } from '@/domain/quick-follow/types'
 import {
   QUICK_FOLLOW_ICON_KEYS,
@@ -77,12 +78,20 @@ function domainToRow(prompt: QuickFollowPrompt): QuickFollowPromptRow {
   }
 }
 
-function settingsRowToDomain(row: QuickFollowSettingsRow): QuickFollowSettings {
-  return {
+async function readSettings(row: QuickFollowSettingsRow): Promise<QuickFollowSettings> {
+  const settings: QuickFollowSettings = {
     orderedIds: row.orderedIds,
     enabled: row.enabled,
-    selectionDisplayMode: row.selectionDisplayMode ?? DEFAULT_SELECTION_DISPLAY_MODE
+    selectionDisplayMode: DEFAULT_SELECTION_DISPLAY_MODE
   }
+  try {
+    const values = await browser.storage.sync.get(QUICK_FOLLOW_SELECTION_DISPLAY_MODE_KEY)
+    const mode = SelectionDisplayModeSchema.safeParse(values[QUICK_FOLLOW_SELECTION_DISPLAY_MODE_KEY])
+    if (mode.success) settings.selectionDisplayMode = mode.data
+  } catch (error) {
+    console.warn('Failed to read Quick Follow-up display mode from sync storage:', error)
+  }
+  return settings
 }
 
 function ensureSettingsRow(row?: QuickFollowSettingsRow): QuickFollowSettingsRow {
@@ -90,16 +99,14 @@ function ensureSettingsRow(row?: QuickFollowSettingsRow): QuickFollowSettingsRow
     return {
       id: 'default',
       orderedIds: [],
-      enabled: true,
-      selectionDisplayMode: DEFAULT_SELECTION_DISPLAY_MODE
+      enabled: true
     }
   }
 
   return {
     id: 'default',
     orderedIds: row.orderedIds ?? [],
-    enabled: row.enabled ?? true,
-    selectionDisplayMode: row.selectionDisplayMode ?? DEFAULT_SELECTION_DISPLAY_MODE
+    enabled: row.enabled ?? true
   }
 }
 
@@ -111,7 +118,7 @@ export interface IQuickFollowRepository {
   delete(id: string): Promise<void>
   reorder(idsInOrder: string[]): Promise<QuickFollowPrompt[]>
   getSettings(): Promise<QuickFollowSettings>
-  updateSettings(patch: QuickFollowSettingsUpdateInput): Promise<QuickFollowSettings>
+  setSelectionDisplayMode(mode: SelectionDisplayMode): Promise<void>
   setEnabled(enabled: boolean): Promise<QuickFollowSettings>
 }
 
@@ -213,13 +220,12 @@ class QuickFollowRepository implements IQuickFollowRepository {
 
   async getSettings(): Promise<QuickFollowSettings> {
     const settingsRow = ensureSettingsRow(await localDexieDataSource.getQuickFollowSettings())
-    return settingsRowToDomain(settingsRow)
+    return readSettings(settingsRow)
   }
 
-  async updateSettings(patch: QuickFollowSettingsUpdateInput): Promise<QuickFollowSettings> {
-    const parsed = QuickFollowSettingsSchema.parse(patch)
-    const settingsRow = await localDexieDataSource.updateQuickFollowSettings(parsed)
-    return settingsRowToDomain(settingsRow)
+  async setSelectionDisplayMode(mode: SelectionDisplayMode): Promise<void> {
+    const selectionDisplayMode = SelectionDisplayModeSchema.parse(mode)
+    await browser.storage.sync.set({ [QUICK_FOLLOW_SELECTION_DISPLAY_MODE_KEY]: selectionDisplayMode })
   }
 
   async setEnabled(enabled: boolean): Promise<QuickFollowSettings> {
@@ -229,7 +235,7 @@ class QuickFollowRepository implements IQuickFollowRepository {
     } catch (error) {
       console.error('Failed to sync quick follow toggle to storage:', error)
     }
-    return settingsRowToDomain(settingsRow)
+    return readSettings(settingsRow)
   }
 
   private parsePromptInput(data: QuickFollowPromptCreateInput): PromptBaseInput {
@@ -242,11 +248,7 @@ class QuickFollowRepository implements IQuickFollowRepository {
   }
 }
 
-const QuickFollowSettingsSchema = z.object({
-  orderedIds: z.array(z.string()).optional(),
-  enabled: z.boolean().optional(),
-  selectionDisplayMode: z.enum(SELECTION_DISPLAY_MODES).optional()
-})
+const SelectionDisplayModeSchema = z.enum(SELECTION_DISPLAY_MODES)
 
 export const quickFollowRepository = new QuickFollowRepository()
 

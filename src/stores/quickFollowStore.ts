@@ -43,6 +43,7 @@ const DEFAULT_SETTINGS: QuickFollowSettings = {
 }
 
 const DEFAULT_ICON_KEY = DEFAULT_QUICK_FOLLOW_ICON_KEY
+let hydrationRequest = 0
 
 async function fetchLatest(): Promise<Pick<QuickFollowStore, 'prompts' | 'settings'>> {
   const [prompts, settings] = await Promise.all([
@@ -52,7 +53,7 @@ async function fetchLatest(): Promise<Pick<QuickFollowStore, 'prompts' | 'settin
   return { prompts, settings }
 }
 
-export const useQuickFollowStore = create<QuickFollowStore>((set, get) => ({
+export const useQuickFollowStore = create<QuickFollowStore>((set) => ({
   prompts: [],
   settings: DEFAULT_SETTINGS,
   isHydrated: false,
@@ -60,10 +61,7 @@ export const useQuickFollowStore = create<QuickFollowStore>((set, get) => ({
   error: undefined,
 
   async hydrate() {
-    if (get().isHydrating && get().isHydrated) {
-      return
-    }
-
+    const request = ++hydrationRequest
     set({ isHydrating: true })
 
     try {
@@ -72,6 +70,7 @@ export const useQuickFollowStore = create<QuickFollowStore>((set, get) => ({
       let settings = data.settings
       try {
         const storageResult = await browser.storage.sync.get('enableQuickQuote')
+        if (request !== hydrationRequest) return
         const storageEnabled = storageResult?.enableQuickQuote
         if (typeof storageEnabled === 'boolean' && storageEnabled !== settings.enabled) {
           settings = await quickFollowRepository.setEnabled(storageEnabled)
@@ -80,6 +79,7 @@ export const useQuickFollowStore = create<QuickFollowStore>((set, get) => ({
         console.warn('Failed to read quick follow toggle from storage:', error)
       }
 
+      if (request !== hydrationRequest) return
       set({
         prompts: data.prompts,
         settings,
@@ -89,7 +89,7 @@ export const useQuickFollowStore = create<QuickFollowStore>((set, get) => ({
       })
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to hydrate quick follow store'
-      set({ isHydrating: false, error: message })
+      if (request === hydrationRequest) set({ isHydrating: false, error: message })
       throw error
     }
   },
@@ -116,11 +116,11 @@ export const useQuickFollowStore = create<QuickFollowStore>((set, get) => ({
     const newOrderedIds = [prompt.id, ...latest.settings.orderedIds.filter(id => id !== prompt.id)]
     await quickFollowRepository.reorder(newOrderedIds)
 
-    set({
+    set(state => ({
       prompts: latest.prompts,
-      settings: { ...latest.settings, orderedIds: newOrderedIds },
+      settings: { ...state.settings, orderedIds: newOrderedIds },
       isHydrated: true
-    })
+    }))
     return prompt
   },
 
@@ -137,7 +137,11 @@ export const useQuickFollowStore = create<QuickFollowStore>((set, get) => ({
   async deletePrompt(id) {
     await quickFollowRepository.delete(id)
     const latest = await fetchLatest()
-    set({ ...latest, isHydrated: true })
+    set(state => ({
+      prompts: latest.prompts,
+      settings: { ...state.settings, orderedIds: latest.settings.orderedIds },
+      isHydrated: true
+    }))
   },
 
   async reorder(idsInOrder) {
@@ -154,19 +158,29 @@ export const useQuickFollowStore = create<QuickFollowStore>((set, get) => ({
     } catch (error) {
       // Rollback on error: refetch latest state
       const latest = await fetchLatest()
-      set({ ...latest, isHydrated: true })
+      set(state => ({
+        prompts: latest.prompts,
+        settings: { ...state.settings, orderedIds: latest.settings.orderedIds },
+        isHydrated: true
+      }))
       throw error
     }
   },
 
   async setEnabled(enabled) {
     const settings = await quickFollowRepository.setEnabled(enabled)
-    set(state => ({ prompts: state.prompts, settings, isHydrated: true }))
+    set(state => ({
+      settings: { ...state.settings, enabled: settings.enabled },
+      isHydrated: true
+    }))
   },
 
   async setSelectionDisplayMode(selectionDisplayMode) {
-    const settings = await quickFollowRepository.updateSettings({ selectionDisplayMode })
-    set({ settings, isHydrated: true })
+    await quickFollowRepository.setSelectionDisplayMode(selectionDisplayMode)
+    set(state => ({
+      settings: { ...state.settings, selectionDisplayMode },
+      isHydrated: true
+    }))
   }
 }))
 

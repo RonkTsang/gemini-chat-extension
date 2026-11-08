@@ -8,8 +8,8 @@ import { useQuickFollowStore } from '@/stores/quickFollowStore'
 import { toaster } from '@/components/ui/toaster'
 import { QuickFollowSettingsView } from './index'
 
-const updateSettings = vi.hoisted(() => vi.fn())
-vi.mock('@/data/repositories', () => ({ quickFollowRepository: { updateSettings } }))
+const setSelectionDisplayMode = vi.hoisted(() => vi.fn())
+vi.mock('@/data/repositories', () => ({ quickFollowRepository: { setSelectionDisplayMode } }))
 vi.mock('wxt/browser', () => ({ browser: {} }))
 vi.mock('@/components/ui/toaster', () => ({ toaster: { create: vi.fn() } }))
 vi.mock('@/utils/i18n', () => ({ t: (key: string) => key }))
@@ -42,9 +42,7 @@ beforeEach(() => {
     prompts: [], isHydrated: true, isHydrating: false,
     settings: { enabled: true, orderedIds: [], selectionDisplayMode: 'cards' },
   })
-  updateSettings.mockImplementation(async patch => ({
-    ...useQuickFollowStore.getState().settings, ...patch,
-  }))
+  setSelectionDisplayMode.mockReset().mockResolvedValue(undefined)
   container = document.createElement('div')
   document.body.append(container)
   root = createRoot(container)
@@ -73,22 +71,22 @@ describe('selection display mode settings with Chakra controls', () => {
   it('switches display modes with label clicks and updates Chakra selected styling', async () => {
     await mount()
     await clickOption('compact')
-    expect(updateSettings).toHaveBeenLastCalledWith({ selectionDisplayMode: 'compact' })
+    expect(setSelectionDisplayMode).toHaveBeenLastCalledWith('compact')
     expect(option('compact').checked).toBe(true)
     expect(option('compact').closest('label')?.dataset.state).toBe('checked')
     expect(option('cards').closest('label')?.dataset.state).toBe('unchecked')
     await clickOption('auto')
-    expect(updateSettings).toHaveBeenLastCalledWith({ selectionDisplayMode: 'auto' })
+    expect(setSelectionDisplayMode).toHaveBeenLastCalledWith('auto')
     expect(option('auto').checked).toBe(true)
     await clickOption('cards')
-    expect(updateSettings).toHaveBeenLastCalledWith({ selectionDisplayMode: 'cards' })
+    expect(setSelectionDisplayMode).toHaveBeenLastCalledWith('cards')
     expect(option('cards').closest('label')?.dataset.state).toBe('checked')
   })
 
   it('disables both options while saving and shows the new selection only after success', async () => {
     let finish: () => void = () => undefined
-    updateSettings.mockReturnValue(new Promise(resolve => {
-      finish = () => resolve({ enabled: true, orderedIds: [], selectionDisplayMode: 'compact' })
+    setSelectionDisplayMode.mockReturnValue(new Promise<void>(resolve => {
+      finish = resolve
     }))
     await mount()
     await clickOption('compact')
@@ -101,7 +99,7 @@ describe('selection display mode settings with Chakra controls', () => {
   })
 
   it('keeps the previous selected appearance and reports a failed save', async () => {
-    updateSettings.mockRejectedValue(new Error('write failed'))
+    setSelectionDisplayMode.mockRejectedValue(new Error('write failed'))
     await mount()
     await clickOption('compact')
     expect(option('cards').closest('label')?.dataset.state).toBe('checked')

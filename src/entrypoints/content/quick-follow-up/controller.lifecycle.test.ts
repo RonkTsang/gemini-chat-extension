@@ -4,9 +4,9 @@ import { act } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const settings = vi.hoisted(() => {
-  type State = { settings: { enabled: boolean; selectionDisplayMode?: SelectionDisplayMode }; hydrate: () => Promise<void> }
+  type State = { settings: { enabled: boolean; selectionDisplayMode: SelectionDisplayMode }; hydrate: () => Promise<void> }
   const listeners = new Set<(next: State, previous: State) => void>()
-  const state: State = { settings: { enabled: true }, hydrate: async () => undefined }
+  const state: State = { settings: { enabled: true, selectionDisplayMode: 'cards' }, hydrate: async () => undefined }
   return { state, listeners }
 })
 vi.mock('@/stores/quickFollowStore', () => ({
@@ -26,6 +26,7 @@ vi.mock('wxt/browser', () => ({ browser: { storage: { onChanged: { addListener: 
 import { eventBus } from '@/utils/eventbus'
 import { toaster } from '@/components/ui/toaster'
 import type { QuickFollowPrompt, SelectionDisplayMode } from '@/domain/quick-follow/types'
+import { browser } from 'wxt/browser'
 import { createFollowUpController } from './controller'
 import { appendRequestText, getConversationScope, readRequest, replaceRequestText, resolveInput, type Candidate } from './dom'
 import { serializeMessage } from './protocol'
@@ -131,6 +132,27 @@ afterEach(() => {
 })
 
 describe('Follow-up lifecycle regressions', () => {
+  it('refreshes display mode on sync storage changes and detaches the listener on stop', async () => {
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
+    mockShadowReattachment()
+    controller.add(candidate('a'))
+    const { editor } = resolveInput()!
+    const prefix = editor.innerHTML
+    const refresh = vi.spyOn(settings.state, 'hydrate').mockImplementation(async () => switchMode('compact'))
+    const onStorageChanged = vi.mocked(browser.storage.onChanged.addListener).mock.lastCall![0]
+    const changes = { quickFollowSelectionDisplayMode: { oldValue: 'cards', newValue: 'compact' } }
+
+    onStorageChanged(changes, 'local')
+    expect(refresh).not.toHaveBeenCalled()
+    await act(async () => onStorageChanged(changes, 'sync'))
+    expect(refresh).toHaveBeenCalledOnce()
+    expect(document.querySelector('.gpk-follow-compact-host')).not.toBeNull()
+    expect(editor.innerHTML).toBe(prefix)
+
+    await act(async () => controller.stop())
+    expect(browser.storage.onChanged.removeListener).toHaveBeenCalledWith(onStorageChanged)
+  })
+
   it('switches only the draft view while preserving editor nodes, selections and pending comments', async () => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
     mockShadowReattachment()

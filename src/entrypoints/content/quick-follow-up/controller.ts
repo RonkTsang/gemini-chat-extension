@@ -3,7 +3,11 @@ import 'tippy.js/dist/tippy.css'
 
 import { toaster } from '@/components/ui/toaster'
 import { type AppEvents } from '@/common/event'
-import { DEFAULT_SELECTION_DISPLAY_MODE, QUICK_FOLLOW_PLACEHOLDER, type QuickFollowPrompt } from '@/domain/quick-follow/types'
+import {
+  QUICK_FOLLOW_PLACEHOLDER,
+  QUICK_FOLLOW_SELECTION_DISPLAY_MODE_KEY,
+  type QuickFollowPrompt,
+} from '@/domain/quick-follow/types'
 import { quickFollowStore } from '@/stores/quickFollowStore'
 import { t } from '@/utils/i18n'
 import { i18nCache } from '@/utils/i18nCache'
@@ -101,7 +105,7 @@ export function createFollowUpController(
 ) {
   let started = false
   let enabled = quickFollowStore.getState().settings.enabled
-  let selectionDisplayMode = quickFollowStore.getState().settings.selectionDisplayMode ?? DEFAULT_SELECTION_DISPLAY_MODE
+  let selectionDisplayMode = quickFollowStore.getState().settings.selectionDisplayMode
   let items: SelectionItem[] = []
   let currentUI: FollowUpUI = { mode: 'closed' }
   let chatWindow: HTMLElement | null = null
@@ -603,7 +607,7 @@ export function createFollowUpController(
   const currentBindingSafe = () => resolveCurrentBinding()
 
   const onQuickFollowStorageChanged = (changes: Record<string, unknown>, namespace: string) => {
-    if (namespace === 'sync' && 'enableQuickQuote' in changes) {
+    if (namespace === 'sync' && ('enableQuickQuote' in changes || QUICK_FOLLOW_SELECTION_DISPLAY_MODE_KEY in changes)) {
       void quickFollowStore.getState().hydrate().catch(error => console.warn('Failed to refresh Follow-up settings:', error))
     }
   }
@@ -654,7 +658,7 @@ export function createFollowUpController(
     started = true
     for (const key of NOTICE_KEYS) i18nCache.preCache([{ key }])
     settingsUnsubscribe = quickFollowStore.subscribe((state, previous) => {
-      const nextMode = state.settings.selectionDisplayMode ?? DEFAULT_SELECTION_DISPLAY_MODE
+      const nextMode = state.settings.selectionDisplayMode
       if (nextMode !== selectionDisplayMode) {
         selectionDisplayMode = nextMode
         if (enabled && binding) {
@@ -675,7 +679,7 @@ export function createFollowUpController(
     browser.storage.onChanged.addListener(onQuickFollowStorageChanged)
     quickFollowStore.getState().hydrate().catch(error => console.warn('Failed to hydrate Follow-up settings:', error))
     eventBus.on('chatchange', onChatChange)
-    selectionDisplayMode = quickFollowStore.getState().settings.selectionDisplayMode ?? DEFAULT_SELECTION_DISPLAY_MODE
+    selectionDisplayMode = quickFollowStore.getState().settings.selectionDisplayMode
     handleEnabledChanged(quickFollowStore.getState().settings.enabled)
   }
 
