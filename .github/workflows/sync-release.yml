@@ -164,3 +164,13 @@ jobs:
             -m "chore(release): sync $RELEASE_TAG to main (#$PR_NUMBER)")
           # Push the tested merge without force. GitHub marks the PR merged when its head reaches main.
           git push origin "$merge:refs/heads/main"
+      - name: Delete merged sync branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+          RELEASE_COMMIT: ${{ needs.open.outputs.commit }}
+          PR_NUMBER: ${{ needs.open.outputs.pr }}
+        run: |
+          if ! bash scripts/cleanup-release-branch.sh "release/sync-$RELEASE_TAG" "$RELEASE_COMMIT" main "$PR_NUMBER"; then
+            echo '::warning::Automatic sync branch cleanup failed.'
+          fi

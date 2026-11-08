@@ -17,6 +17,7 @@ Open the hotfix branch from `stable` and target `stable` in the PR. Use a `fix:`
 
 ## Recovery and settings
 
+- After an automatic merge, the workflow deletes its temporary `release/candidate-*` or `release/sync-*` branch once GitHub confirms the PR is merged. Failed checks and merge conflicts leave the branch available for retry.
 - If publication succeeded but sync did not finish, run **Sync Release to Main** on `main` or `stable` with the published tag. It reuses the open PR and checks the current merge without publishing again. Resolve conflicts manually using a merge commit. If `main` rules reject the workflow's push, merge the PR through GitHub after the checks and required approvals.
 - If publication fails after pushing the release commit or tag, inspect `stable`, the tag, and the GitHub Release and its assets before retrying. Do not move or reuse a tag for different code.
 - Keep force pushes and deletion disabled for `stable`. The release job needs to push the version commit with `GITHUB_TOKEN`; requiring a PR for every push needs a separately configured release identity with bypass access. GitHub Actions must be allowed to create PRs for the candidate and sync jobs. If that setting is unavailable, open the corresponding PR manually from the pinned commit or tag.
