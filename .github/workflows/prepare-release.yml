@@ -93,3 +93,13 @@ jobs:
           fi
           gh api --method PUT "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/merge" \
             -f merge_method=merge -f "sha=$CANDIDATE" | jq -e '.merged == true'
+      - uses: actions/checkout@v6
+      - name: Delete merged candidate branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CANDIDATE: ${{ needs.prepare.outputs.commit }}
+          PR_NUMBER: ${{ needs.prepare.outputs.pr }}
+        run: |
+          if ! bash scripts/cleanup-release-branch.sh "release/candidate-$CANDIDATE" "$CANDIDATE" stable "$PR_NUMBER"; then
+            echo '::warning::The candidate merged, but automatic branch cleanup failed.'
+          fi
