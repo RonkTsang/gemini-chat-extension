@@ -1,6 +1,11 @@
 name: Release Checks
 
 on:
+  workflow_call:
+    inputs:
+      commit:
+        required: true
+        type: string
   pull_request:
     branches: [stable]
 
@@ -14,6 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
+          ref: ${{ inputs.commit || github.sha }}
           persist-credentials: false
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v6

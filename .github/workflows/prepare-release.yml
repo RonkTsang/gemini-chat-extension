@@ -7,9 +7,7 @@ on:
         description: 'Optional full main commit SHA; leave blank to use the selected main revision'
         type: string
 
-permissions:
-  contents: write
-  pull-requests: write
+permissions: {}
 
 concurrency:
   group: extension-prepare-release
@@ -18,6 +16,13 @@ concurrency:
 jobs:
   prepare:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      commit: ${{ steps.candidate.outputs.commit }}
+      base: ${{ steps.candidate.outputs.base }}
+      pr: ${{ steps.candidate.outputs.pr }}
     steps:
       - name: Require main
         run: test "$GITHUB_REF" = refs/heads/main
@@ -25,6 +30,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Open pinned release candidate PR
+        id: candidate
         env:
           GH_TOKEN: ${{ github.token }}
           REQUESTED_COMMIT: ${{ inputs.commit }}
@@ -35,11 +41,55 @@ jobs:
             echo '::error::Choose a full SHA from main history.'
             exit 1
           fi
-          if ! git merge-base --is-ancestor refs/remotes/origin/stable "$commit"; then
+          base=$(git rev-parse refs/remotes/origin/stable)
+          if git merge-base --is-ancestor "$commit" "$base"; then
+            echo 'The candidate is already in stable.'
+            exit 0
+          fi
+          if ! git merge-base --is-ancestor "$base" "$commit"; then
             echo '::error::Sync stable into main before choosing the release candidate.'
             exit 1
           fi
 
-          bash scripts/open-release-pr.sh "$commit" "release/candidate-$commit" stable \
+          branch="release/candidate-$commit"
+          bash scripts/open-release-pr.sh "$commit" "$branch" stable \
             "chore(release): promote ${commit:0:12} to stable" \
-            "Promote main commit $commit. Merge using a merge commit after Release checks pass, then run Release on stable."
+            "Promote main commit $commit. Prepare Release checks this candidate before merging. Publication is a separate manual step."
+          pr=$(gh pr list --base stable --head "$branch" --state open --json number --jq '.[0].number // empty')
+          test -n "$pr"
+          printf 'commit=%s\nbase=%s\npr=%s\n' "$commit" "$base" "$pr" >> "$GITHUB_OUTPUT"
+
+  verify:
+    needs: prepare
+    if: needs.prepare.outputs.pr != ''
+    permissions:
+      contents: read
+    uses: ./.github/workflows/release-checks.yml
+    with:
+      commit: ${{ needs.prepare.outputs.commit }}
+
+  merge:
+    name: Merge verified candidate
+    needs: [prepare, verify]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - name: Merge the pinned candidate PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CANDIDATE: ${{ needs.prepare.outputs.commit }}
+          CHECKED_BASE: ${{ needs.prepare.outputs.base }}
+          PR_NUMBER: ${{ needs.prepare.outputs.pr }}
+        run: |
+          pr=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER")
+          if ! jq -e --arg base "$CHECKED_BASE" --arg head "$CANDIDATE" --arg repo "$GITHUB_REPOSITORY" '
+            .state == "open" and (.draft | not) and .base.ref == "stable" and .base.sha == $base
+            and .head.repo.full_name == $repo and .head.sha == $head
+          ' <<< "$pr" > /dev/null; then
+            echo '::error::The PR or stable changed during checks. Review the open PR or rerun Prepare Release.'
+            exit 1
+          fi
+          gh api --method PUT "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/merge" \
+            -f merge_method=merge -f "sha=$CANDIDATE" | jq -e '.merged == true'
