@@ -12,11 +12,27 @@ on:
 permissions: {}
 
 concurrency:
-  group: extension-release-stable
+  group: extension-release-${{ github.ref_name }}
   cancel-in-progress: false
 
 jobs:
+  dispatch-stable:
+    name: Start Release on stable
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Forward the selected release mode to stable
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DRY_RUN: ${{ inputs.dry-run }}
+        run: |
+          result=$(gh workflow run release.yml --repo "$GITHUB_REPOSITORY" --ref stable -f "dry-run=$DRY_RUN")
+          printf 'Started Release on `stable` (`dry-run=%s`).\n\n%s\n' "$DRY_RUN" "$result" >> "$GITHUB_STEP_SUMMARY"
+
   validate-ref:
+    if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Require stable
