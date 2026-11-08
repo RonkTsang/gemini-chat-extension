@@ -13,17 +13,21 @@ on:
         required: true
         type: string
 
-permissions:
-  contents: write
-  pull-requests: write
+permissions: {}
 
 concurrency:
   group: extension-sync-release-${{ inputs.tag }}
   cancel-in-progress: false
 
 jobs:
-  sync:
+  open:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      commit: ${{ steps.pr.outputs.commit }}
+      pr: ${{ steps.pr.outputs.number }}
     steps:
       - name: Require a trusted branch
         run: test "$GITHUB_REF" = refs/heads/main || test "$GITHUB_REF" = refs/heads/stable
@@ -31,6 +35,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Open release sync PR
+        id: pr
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ inputs.tag }}
@@ -59,6 +64,103 @@ jobs:
             exit 1
           fi
 
-          bash scripts/open-release-pr.sh "$commit" "release/sync-$RELEASE_TAG" main \
+          if git merge-base --is-ancestor "$commit" refs/remotes/origin/main; then
+            echo "$RELEASE_TAG is already part of main."
+            exit 0
+          fi
+
+          branch="release/sync-$RELEASE_TAG"
+          bash scripts/open-release-pr.sh "$commit" "$branch" main \
             "chore(release): sync $RELEASE_TAG to main" \
-            "Sync published release $RELEASE_TAG ($commit). Merge using a merge commit to preserve release and hotfix history."
+            "Sync published release $RELEASE_TAG ($commit). The sync workflow merges after checking the merge result."
+          number=$(gh pr list --repo "$GITHUB_REPOSITORY" --base main --head "$branch" \
+            --state open --json number --jq '.[0].number // empty')
+          test -n "$number"
+          printf 'commit=%s\nnumber=%s\n' "$commit" "$number" >> "$GITHUB_OUTPUT"
+
+  verify:
+    name: Verify sync merge
+    needs: open
+    if: needs.open.outputs.pr != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      base: ${{ steps.snapshot.outputs.base }}
+      tree: ${{ steps.snapshot.outputs.tree }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check out the merged snapshot
+        id: snapshot
+        env:
+          RELEASE_COMMIT: ${{ needs.open.outputs.commit }}
+        run: |
+          base=$(git rev-parse HEAD)
+          tree=$(git merge-tree --write-tree "$base" "$RELEASE_COMMIT") || {
+            echo '::error::Release sync has merge conflicts. Resolve them in the open PR.'
+            printf '%s\n' "$tree"
+            exit 1
+          }
+          git read-tree --reset -u "$tree"
+          printf 'base=%s\ntree=%s\n' "$base" "$tree" >> "$GITHUB_OUTPUT"
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.14.0'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm compile
+      - run: pnpm test:run
+
+  merge:
+    name: Merge verified sync PR
+    needs: [open, verify]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Merge the checked snapshot
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+          RELEASE_COMMIT: ${{ needs.open.outputs.commit }}
+          PR_NUMBER: ${{ needs.open.outputs.pr }}
+          CHECKED_BASE: ${{ needs.verify.outputs.base }}
+          CHECKED_TREE: ${{ needs.verify.outputs.tree }}
+        run: |
+          if git merge-base --is-ancestor "$RELEASE_COMMIT" HEAD; then
+            echo "$RELEASE_TAG is already part of main."
+            exit 0
+          fi
+          if [[ "$(git rev-parse HEAD)" != "$CHECKED_BASE" ]]; then
+            echo '::error::main changed during verification. Re-run Sync Release to Main to check the new merge.'
+            exit 1
+          fi
+
+          valid_pr=$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" \
+            --json state,isDraft,isCrossRepository,baseRefName,headRefOid | \
+            jq --arg commit "$RELEASE_COMMIT" '
+              .state == "OPEN" and (.isDraft | not) and (.isCrossRepository | not)
+              and .baseRefName == "main" and .headRefOid == $commit')
+          if [[ "$valid_pr" != true ]]; then
+            echo '::error::The sync PR changed during verification. Inspect the PR before merging.'
+            exit 1
+          fi
+
+          tree=$(git merge-tree --write-tree "$CHECKED_BASE" "$RELEASE_COMMIT")
+          test "$tree" = "$CHECKED_TREE"
+          merge=$(git -c user.name='github-actions[bot]' \
+            -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+            commit-tree "$tree" -p "$CHECKED_BASE" -p "$RELEASE_COMMIT" \
+            -m "chore(release): sync $RELEASE_TAG to main (#$PR_NUMBER)")
+          # Push the tested merge without force. GitHub marks the PR merged when its head reaches main.
+          git push origin "$merge:refs/heads/main"
