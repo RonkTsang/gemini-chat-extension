@@ -113,7 +113,7 @@ function mockShadowReattachment(): void {
 }
 
 beforeEach(() => {
-  settings.state.settings = { enabled: true }
+  settings.state.settings = { enabled: true, selectionDisplayMode: 'cards' }
   window.history.replaceState({}, '', '/app/conversation-1')
   mountFixture()
   controller = createFollowUpController(vi.fn())

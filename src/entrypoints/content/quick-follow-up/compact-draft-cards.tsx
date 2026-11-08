@@ -130,13 +130,13 @@ function CompactDraftCards({ items, disabled, callbacks, onOpen, ref }: CompactP
           maxHeight="min(400px, 50vh, var(--available-height, 50vh))"
           overflowY="auto"
           overscrollBehavior="contain"
-          borderRadius="lg"
+          borderRadius="2xl"
           colorPalette="gray"
           bg="var(--gpk-follow-card-bg)"
           color="fg"
           borderColor="border.muted"
           boxShadow="lg"
-          p={3}
+          p={2}
           onPointerOver={clearTimer}
           onPointerOut={event => {
             const related = event.relatedTarget instanceof Node ? event.relatedTarget : null
@@ -154,9 +154,21 @@ function CompactDraftCards({ items, disabled, callbacks, onOpen, ref }: CompactP
                   data-selection-id={item.id}
                   align="start"
                   gap={1.5}
-                  py={2}
-                  borderBottomWidth={index < items.length - 1 ? '1px' : '0'}
-                  borderColor="border.muted"
+                  p={2}
+                  borderRadius="lg"
+                  position="relative"
+                  _notLast={{
+                    _after: {
+                      content: '""',
+                      position: 'absolute',
+                      insetInline: 2,
+                      bottom: 0,
+                      borderBottomWidth: '1px',
+                      borderColor: 'var(--gpk-follow-card-border)',
+                      pointerEvents: 'none',
+                    },
+                  }}
+                  _hover={{ bg: 'var(--gpk-follow-card-hover)' }}
                 >
                   <Text color="fg.muted" fontSize="xs">{index + 1}.</Text>
                   <chakra.button

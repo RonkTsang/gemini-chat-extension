@@ -3,6 +3,7 @@ import { create } from 'zustand'
 import {
   DEFAULT_QUICK_FOLLOW_TEMPLATE_FALLBACK,
   DEFAULT_QUICK_FOLLOW_TEMPLATE_KEY,
+  DEFAULT_SELECTION_DISPLAY_MODE,
   QUICK_FOLLOW_PLACEHOLDER,
   type QuickFollowPrompt,
   type QuickFollowPromptCreateInput,
@@ -38,7 +39,7 @@ export type QuickFollowStore = QuickFollowState & QuickFollowActions
 const DEFAULT_SETTINGS: QuickFollowSettings = {
   orderedIds: [],
   enabled: true,
-  selectionDisplayMode: 'cards'
+  selectionDisplayMode: DEFAULT_SELECTION_DISPLAY_MODE
 }
 
 const DEFAULT_ICON_KEY = DEFAULT_QUICK_FOLLOW_ICON_KEY

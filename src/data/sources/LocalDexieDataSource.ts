@@ -10,6 +10,7 @@ import {
   type QuickFollowSettingsRow
 } from '../db'
 import type { GemAvatarAssetRow } from '@/domain/gem-avatar/types'
+import { DEFAULT_SELECTION_DISPLAY_MODE } from '@/domain/quick-follow/types'
 
 export class LocalDexieDataSource {
   async getAllChainPrompts(): Promise<ChainPromptRow[]> {
@@ -78,7 +79,7 @@ export class LocalDexieDataSource {
       id: 'default',
       orderedIds: row.orderedIds ?? [],
       enabled: row.enabled ?? true,
-      selectionDisplayMode: row.selectionDisplayMode ?? 'cards'
+      selectionDisplayMode: row.selectionDisplayMode ?? DEFAULT_SELECTION_DISPLAY_MODE
     }
   }
 

@@ -3,7 +3,7 @@ import 'tippy.js/dist/tippy.css'
 
 import { toaster } from '@/components/ui/toaster'
 import { type AppEvents } from '@/common/event'
-import { QUICK_FOLLOW_PLACEHOLDER, type QuickFollowPrompt } from '@/domain/quick-follow/types'
+import { DEFAULT_SELECTION_DISPLAY_MODE, QUICK_FOLLOW_PLACEHOLDER, type QuickFollowPrompt } from '@/domain/quick-follow/types'
 import { quickFollowStore } from '@/stores/quickFollowStore'
 import { t } from '@/utils/i18n'
 import { i18nCache } from '@/utils/i18nCache'
@@ -101,7 +101,7 @@ export function createFollowUpController(
 ) {
   let started = false
   let enabled = quickFollowStore.getState().settings.enabled
-  let selectionDisplayMode = quickFollowStore.getState().settings.selectionDisplayMode ?? 'cards'
+  let selectionDisplayMode = quickFollowStore.getState().settings.selectionDisplayMode ?? DEFAULT_SELECTION_DISPLAY_MODE
   let items: SelectionItem[] = []
   let currentUI: FollowUpUI = { mode: 'closed' }
   let chatWindow: HTMLElement | null = null
@@ -654,7 +654,7 @@ export function createFollowUpController(
     started = true
     for (const key of NOTICE_KEYS) i18nCache.preCache([{ key }])
     settingsUnsubscribe = quickFollowStore.subscribe((state, previous) => {
-      const nextMode = state.settings.selectionDisplayMode ?? 'cards'
+      const nextMode = state.settings.selectionDisplayMode ?? DEFAULT_SELECTION_DISPLAY_MODE
       if (nextMode !== selectionDisplayMode) {
         selectionDisplayMode = nextMode
         if (enabled && binding) {
@@ -675,7 +675,7 @@ export function createFollowUpController(
     browser.storage.onChanged.addListener(onQuickFollowStorageChanged)
     quickFollowStore.getState().hydrate().catch(error => console.warn('Failed to hydrate Follow-up settings:', error))
     eventBus.on('chatchange', onChatChange)
-    selectionDisplayMode = quickFollowStore.getState().settings.selectionDisplayMode ?? 'cards'
+    selectionDisplayMode = quickFollowStore.getState().settings.selectionDisplayMode ?? DEFAULT_SELECTION_DISPLAY_MODE
     handleEnabledChanged(quickFollowStore.getState().settings.enabled)
   }
 

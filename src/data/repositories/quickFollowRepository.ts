@@ -2,6 +2,7 @@ import { nanoid } from 'nanoid'
 import { z } from 'zod'
 
 import {
+  DEFAULT_SELECTION_DISPLAY_MODE,
   QUICK_FOLLOW_PLACEHOLDER,
   SELECTION_DISPLAY_MODES,
   type QuickFollowPrompt,
@@ -80,7 +81,7 @@ function settingsRowToDomain(row: QuickFollowSettingsRow): QuickFollowSettings {
   return {
     orderedIds: row.orderedIds,
     enabled: row.enabled,
-    selectionDisplayMode: row.selectionDisplayMode ?? 'cards'
+    selectionDisplayMode: row.selectionDisplayMode ?? DEFAULT_SELECTION_DISPLAY_MODE
   }
 }
 
@@ -90,7 +91,7 @@ function ensureSettingsRow(row?: QuickFollowSettingsRow): QuickFollowSettingsRow
       id: 'default',
       orderedIds: [],
       enabled: true,
-      selectionDisplayMode: 'cards'
+      selectionDisplayMode: DEFAULT_SELECTION_DISPLAY_MODE
     }
   }
 
@@ -98,7 +99,7 @@ function ensureSettingsRow(row?: QuickFollowSettingsRow): QuickFollowSettingsRow
     id: 'default',
     orderedIds: row.orderedIds ?? [],
     enabled: row.enabled ?? true,
-    selectionDisplayMode: row.selectionDisplayMode ?? 'cards'
+    selectionDisplayMode: row.selectionDisplayMode ?? DEFAULT_SELECTION_DISPLAY_MODE
   }
 }
 

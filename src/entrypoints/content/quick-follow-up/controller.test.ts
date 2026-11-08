@@ -9,7 +9,7 @@ const mockCards = vi.hoisted(() => ({
   closeActiveFollowUpPopovers: vi.fn(),
 }))
 const mockStore = vi.hoisted(() => ({
-  getState: vi.fn(() => ({ settings: { enabled: true }, hydrate: vi.fn().mockResolvedValue(undefined) })),
+  getState: vi.fn(() => ({ settings: { enabled: true, selectionDisplayMode: 'cards' }, hydrate: vi.fn().mockResolvedValue(undefined) })),
   subscribe: vi.fn(() => vi.fn()),
 }))
 const mockEventBus = vi.hoisted(() => {

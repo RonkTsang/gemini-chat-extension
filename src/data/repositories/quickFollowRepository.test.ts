@@ -29,13 +29,13 @@ beforeEach(() => {
 
 describe('quick follow settings persistence', () => {
   it.each([undefined, { id: 'default', orderedIds: ['one'], enabled: false }] as const)(
-    'defaults a missing display mode to cards for %j', async row => {
+    'defaults a missing display mode to auto for %j', async row => {
       storage.row = row ? { ...row, orderedIds: [...row.orderedIds] } : undefined
-      expect((await quickFollowRepository.getSettings()).selectionDisplayMode).toBe('cards')
+      expect((await quickFollowRepository.getSettings()).selectionDisplayMode).toBe('auto')
     },
   )
 
-  it.each(['compact', 'auto'] as const)('round-trips %s and preserves other settings', async selectionDisplayMode => {
+  it.each(['cards', 'compact', 'auto'] as const)('round-trips %s and preserves other settings', async selectionDisplayMode => {
     storage.row = { id: 'default', orderedIds: ['one'], enabled: false }
     expect(await quickFollowRepository.updateSettings({ selectionDisplayMode })).toEqual({
       orderedIds: ['one'], enabled: false, selectionDisplayMode,
