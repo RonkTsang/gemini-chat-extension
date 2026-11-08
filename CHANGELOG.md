@@ -1,3 +1,17 @@
+# [0.15.0](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.14.0...v0.15.0) (2026-11-08)
+
+
+### Bug Fixes
+
+* **library:** parse deferred media responses ([#79](https://github.com/RonkTsang/gemini-chat-extension/issues/79)) ([d9f446e](https://github.com/RonkTsang/gemini-chat-extension/commit/d9f446edf72e0647dc8115a1c90a8242124a0d26))
+* **whats-new:** improve release note version tracking ([#80](https://github.com/RonkTsang/gemini-chat-extension/issues/80)) ([f0095bc](https://github.com/RonkTsang/gemini-chat-extension/commit/f0095bc4425eee128edf1d798b259085bd674a6e))
+
+
+### Features
+
+* **chat-outline:** support native quoted messages ([#82](https://github.com/RonkTsang/gemini-chat-extension/issues/82)) ([f18196c](https://github.com/RonkTsang/gemini-chat-extension/commit/f18196c1f52061a9c6f421159994e780dcec935b))
+* **quick-follow-up:** add compact and auto selection display ([#77](https://github.com/RonkTsang/gemini-chat-extension/issues/77)) ([92dc2f2](https://github.com/RonkTsang/gemini-chat-extension/commit/92dc2f2794caa4e9b77a5db9fd547210e7e2a267))
+
 # [0.14.0](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.13.0...v0.14.0) (2026-11-01)
 
 
