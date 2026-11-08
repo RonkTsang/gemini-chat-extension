@@ -10,7 +10,7 @@ import { getLastSeenVersion, setLastSeenVersion, compareVersions } from './stora
 import React from 'react'
 import { initializeOnboarding } from '../onboarding/storage'
 
-function WhatsNew() {
+function WhatsNew({ onboardingFinished }: { onboardingFinished: boolean }) {
   const [showToast, setShowToast] = useState(false)
   const [currentVersion, setCurrentVersion] = useState<string>('')
 
@@ -27,10 +27,16 @@ function WhatsNew() {
         // Get last seen version from storage
         const lastVersion = await getLastSeenVersion()
 
-        // If no last version (first install)
+        // A new installation waits until onboarding finishes before recording its version.
         if (!lastVersion) {
-          // Check if there are release notes to show
-          await setLastSeenVersion(version)
+          if (onboarding !== 'pending' && onboarding !== 'shown') {
+            await setLastSeenVersion(version)
+            return
+          }
+          if (onboardingFinished) {
+            if (CURRENT_RELEASE_NOTES.length > 0) setShowToast(true)
+            await setLastSeenVersion(version)
+          }
           return
         }
 
@@ -67,7 +73,7 @@ function WhatsNew() {
       // Fallback for browsers without requestIdleCallback
       setTimeout(checkVersion, 1000)
     }
-  }, [])
+  }, [onboardingFinished])
 
   const handleClose = () => {
     setShowToast(false)

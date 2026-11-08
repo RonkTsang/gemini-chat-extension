@@ -34,7 +34,6 @@ export async function claimOnboarding(canStart: () => boolean): Promise<boolean>
     // A pending tour takes precedence over release notes for this first visit.
     await browser.storage.local.set({
       onboardingState: 'shown',
-      lastSeenVersion: browser.runtime.getManifest().version,
     })
     return true
   })) === true
