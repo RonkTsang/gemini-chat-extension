@@ -8,6 +8,7 @@ import { type AppEvents } from '@/common/event';
 import { browser } from 'wxt/browser';
 import { i18nCache } from '@/utils/i18nCache'
 import { getOutlineSummary } from '../quick-follow-up/cards'
+import { readSubmittedQuoteText } from './dom'
 
 /**
  * i18n keys used by legacy content script features
@@ -87,13 +88,13 @@ function updateTocList(popover, chatWindow) {
     const button = document.createElement('button');
     
     const summary = getOutlineSummary(query, regardingThisText);
-    const isQuote = summary.selectionCount > 0;
-    const questionText = summary.questionText;
-    const quoteText = summary.quoteText;
+    const submittedQuoteText = readSubmittedQuoteText(query);
+    const isQuote = Boolean(submittedQuoteText) || summary.selectionCount > 0;
+    const quoteText = submittedQuoteText || summary.quoteText;
     const hasQueryTextLines = query.querySelector('.query-text p.query-text-line') !== null;
     const fullTextToDisplay = hasQueryTextLines
-      ? questionText
-      : (query.querySelector('.query-text')?.innerText || query.innerText || '').trim();
+      ? summary.questionText
+      : (query.querySelector('.query-text')?.innerText || (submittedQuoteText ? '' : query.innerText) || '').trim();
 
     const filePreview = query.querySelector('.new-file-icon, .preview-image');
     
@@ -122,7 +123,7 @@ function updateTocList(popover, chatWindow) {
     const actualVideoCount = videoThumbnails.length;
     totalAttachments += actualVideoCount;
     
-    if (!fullTextToDisplay && !filePreview && totalAttachments === 0) {
+    if (!fullTextToDisplay && !submittedQuoteText && !filePreview && totalAttachments === 0) {
       return; // Skip empty or unprocessed queries
     }
 
@@ -145,11 +146,13 @@ function updateTocList(popover, chatWindow) {
 
         button.appendChild(quoteLine);
 
-        const textSpan = document.createElement('span');
-        textSpan.className = 'toc-item-text';
-        const buttonText = fullTextToDisplay.substring(0, 80) + (fullTextToDisplay.length > 80 ? '...' : '');
-        textSpan.textContent = buttonText;
-        button.appendChild(textSpan);
+        if (fullTextToDisplay) {
+          const textSpan = document.createElement('span');
+          textSpan.className = 'toc-item-text';
+          const buttonText = fullTextToDisplay.substring(0, 80) + (fullTextToDisplay.length > 80 ? '...' : '');
+          textSpan.textContent = buttonText;
+          button.appendChild(textSpan);
+        }
 
     } else {
         button.className = 'toc-item-button';
@@ -259,8 +262,7 @@ function updateTocList(popover, chatWindow) {
     }
 
     if (isQuote) {
-      button.title = `"${quoteText}"
-${questionText}`;
+      button.title = fullTextToDisplay ? `"${quoteText}"\n${fullTextToDisplay}` : `"${quoteText}"`;
     } else {
       // Logic 2: Build tooltip with file names and user message
       let tooltipParts: string[] = [];
