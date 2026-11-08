@@ -26,6 +26,25 @@ describe('Library GraphQL media parser', () => {
     expect(items?.[0].thumbnailUrl).toBeUndefined()
   })
 
+  it('reads the deferred Library media section without accepting media from unrelated patches', () => {
+    const [music, image] = fixture[0].data.viewer.media.edges
+    const response = [
+      { path: [], data: { viewer: { id: 'viewer-id' }, documents: { edges: [] } } },
+      {
+        path: ['viewer', '__defer__:0:LibraryOverviewPageQuery$defer$CollectionsSection_viewer'],
+        data: { __typename: 'Viewer', media: { edges: [music] } },
+      },
+      {
+        path: ['viewer', '__defer__:1:LibraryOverviewPageQuery$defer$LibraryMediaSection_viewer'],
+        data: { __typename: 'Viewer', media: { edges: [image] } },
+      },
+    ]
+
+    expect(parseLibraryMediaResponse(JSON.stringify(response))).toEqual([
+      expect.objectContaining({ ...image.node.responseIdentifier, thumbnailUrl: image.node.metadata.thumbnailUrl }),
+    ])
+  })
+
   it('ignores unrelated queries and invalid JSON, while accepting an empty media list', () => {
     expect(parseLibraryMediaResponse('not json')).toBeNull()
     expect(parseLibraryMediaResponse(JSON.stringify([{ data: { viewer: { documents: { edges: [] } } } }]))).toBeNull()
