@@ -7,7 +7,7 @@ For the initial rollout, put this workflow on `main` and `stable` before running
 ## Regular release
 
 1. Confirm the intended `main` revision has passed [manual acceptance](manual-acceptance/release.md). In Actions, run **Prepare Release** on `main`. It opens a PR to `stable` from a fixed commit. If `stable` has a release that is missing from `main`, merge its sync PR first.
-2. Review the candidate scope and run **Release Checks**. If GitHub requests approval for checks on a bot-created PR, approve the workflow run. Use **Create a merge commit** to preserve the original `feat:` and `fix:` commits for version analysis.
+2. **Prepare Release** checks the pinned candidate and merges the PR with a merge commit after the checks pass. If checks fail or the PR or `stable` changes during checks, review the open PR before retrying. Review the candidate scope before starting **Prepare Release**.
 3. Run **Release** on `stable` with dry-run enabled. Review the predicted version and preview packages. To publish the verified revision, run **Release** again on `stable` with dry-run disabled. Leave `stable` unchanged between verification and publication.
 4. Verify the GitHub Release tag and both browser packages. The workflow opens a **sync** PR, checks the merged result with TypeScript and tests, then merges it into `main`. The merge brings back the release commit, version, changelog, and any fixes together. Conflicts, failed checks, or changes to `main` during verification leave the PR open.
 
