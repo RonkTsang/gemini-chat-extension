@@ -129,6 +129,7 @@ jobs:
           ref: main
           fetch-depth: 0
       - name: Merge the checked snapshot
+        id: merge
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ inputs.tag }}
@@ -158,13 +159,23 @@ jobs:
 
           tree=$(git merge-tree --write-tree "$CHECKED_BASE" "$RELEASE_COMMIT")
           test "$tree" = "$CHECKED_TREE"
+          workflow_changes=$(git diff --name-only --no-renames "$CHECKED_BASE" "$tree" -- .github/workflows/)
+          if [[ -n "$workflow_changes" ]]; then
+            echo '::warning::This verified sync changes workflow files. A maintainer must merge the PR.'
+            printf 'Verified sync [%s](%s/%s/pull/%s) needs a maintainer merge because it changes workflow files. Use a merge commit.\n' \
+              "#$PR_NUMBER" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$PR_NUMBER" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
           merge=$(git -c user.name='github-actions[bot]' \
             -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
             commit-tree "$tree" -p "$CHECKED_BASE" -p "$RELEASE_COMMIT" \
             -m "chore(release): sync $RELEASE_TAG to main (#$PR_NUMBER)")
           # Push the tested merge without force. GitHub marks the PR merged when its head reaches main.
           git push origin "$merge:refs/heads/main"
+          echo 'merged=true' >> "$GITHUB_OUTPUT"
       - name: Delete merged sync branch
+        if: steps.merge.outputs.merged == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ inputs.tag }}
