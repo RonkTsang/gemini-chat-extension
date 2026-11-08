@@ -2,6 +2,7 @@ import { Box, Button, Icon, Textarea } from '@chakra-ui/react'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { FiTrash2 } from 'react-icons/fi'
 
+import { useColorModeValue } from '@/components/ui/color-mode'
 import { Tooltip } from '@/components/ui/tooltip'
 import { t } from '@/utils/i18n'
 import { readQuoteAnchorPosition, type QuoteCommentPosition } from '../../quick-follow-up/dom'
@@ -29,11 +30,12 @@ const MULTILINE_PADDING_BLOCK = 12
 const LINE_HEIGHT = 20
 const BUTTON_SIZE = 28
 const BUTTON_GAP = 10
-const BUTTON_BACKGROUND = 'var(--theme-500, var(--mat-icon-button-icon-color, var(--chakra-colors-gray-800)))'
 const RESIZE_TRANSITION = '180ms cubic-bezier(0.22, 1, 0.36, 1)'
 
 export function QuickComment({ selectionText, value, position, sourceAnchor, onCancel, onDelete, onChange, onAdd, onSend }: QuickCommentProps) {
   const editing = Boolean(sourceAnchor)
+  const buttonFallback = useColorModeValue('var(--chakra-colors-gray-800)', '#0b57d0')
+  const buttonBackground = `var(--theme-500, ${buttonFallback})`
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const measureRef = useRef<HTMLDivElement>(null)
   const [viewport, setViewport] = useState(() => ({ width: window.innerWidth, height: window.innerHeight }))
@@ -321,11 +323,11 @@ export function QuickComment({ selectionText, value, position, sourceAnchor, onC
                 minWidth={`${BUTTON_SIZE}px`}
                 padding={0}
                 colorPalette="gray"
-                bg={BUTTON_BACKGROUND}
+                bg={buttonBackground}
                 color="white"
                 borderRadius="full"
                 transition="background-color 150ms ease, transform 150ms ease"
-                _hover={{ bg: BUTTON_BACKGROUND, filter: 'brightness(0.94)' }}
+                _hover={{ bg: buttonBackground, filter: 'brightness(0.94)' }}
                 _active={{ transform: 'scale(0.96)' }}
                 _motionReduce={{ transition: 'none', transform: 'none' }}
                 onClick={sendModifierPressed ? onSend : onAdd}

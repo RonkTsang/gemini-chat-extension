@@ -4,12 +4,14 @@ import {
   Button,
   Container,
   Heading,
+  HStack,
   IconButton,
+  SegmentGroup,
   Stack,
   Switch,
   Text
 } from '@chakra-ui/react'
-import { FiPlus } from 'react-icons/fi'
+import { FiColumns, FiList, FiPlus, FiZap } from 'react-icons/fi'
 import {
   DndContext,
   closestCenter,
@@ -29,12 +31,14 @@ import { PreviewSection } from './PreviewSection'
 import { PromptListItem } from './PromptListItem'
 import { PromptEditModal } from './PromptEditModal'
 import { useQuickFollowStore } from '@/stores/quickFollowStore'
-import type { QuickFollowPrompt } from '@/domain/quick-follow/types'
+import { SELECTION_DISPLAY_MODES, type QuickFollowPrompt, type SelectionDisplayMode } from '@/domain/quick-follow/types'
 import { MAX_QUICK_FOLLOW_UP_SHOW_ITEMS } from '@/common/config'
 import { QUICK_FOLLOW_STARTER_TEMPLATES } from '@/data/templates/quickFollow'
 import { t } from '@/utils/i18n'
 import { toaster } from '@/components/ui/toaster'
 import { Tooltip } from '@/components/ui/tooltip'
+
+const DISPLAY_MODE_ICONS = { cards: FiColumns, compact: FiList, auto: FiZap }
 
 function sortPrompts(prompts: QuickFollowPrompt[], orderedIds: string[]) {
   const orderMap = new Map(orderedIds.map((id, index) => [id, index]))
@@ -68,6 +72,7 @@ export function QuickFollowSettingsView() {
   const deletePrompt = useQuickFollowStore(state => state.deletePrompt)
   const reorder = useQuickFollowStore(state => state.reorder)
   const setEnabled = useQuickFollowStore(state => state.setEnabled)
+  const setSelectionDisplayMode = useQuickFollowStore(state => state.setSelectionDisplayMode)
   const isHydrated = useQuickFollowStore(state => state.isHydrated)
   const isHydrating = useQuickFollowStore(state => state.isHydrating)
 
@@ -79,6 +84,7 @@ export function QuickFollowSettingsView() {
   // Modal state for editing/creating
   const [editingPrompt, setEditingPrompt] = useState<QuickFollowPrompt | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isSavingDisplayMode, setIsSavingDisplayMode] = useState(false)
 
   useEffect(() => {
     if (!isHydrated && !isHydrating) {
@@ -188,6 +194,18 @@ export function QuickFollowSettingsView() {
     }
   }
 
+  const handleDisplayModeChange = async (mode: SelectionDisplayMode) => {
+    setIsSavingDisplayMode(true)
+    try {
+      await setSelectionDisplayMode(mode)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to update setting'
+      toaster.create({ type: 'error', title: message })
+    } finally {
+      setIsSavingDisplayMode(false)
+    }
+  }
+
   return (
     <Box 
       position="relative" 
@@ -210,7 +228,9 @@ export function QuickFollowSettingsView() {
             <Container backgroundColor="gemSurfaceContainer" p={4} borderRadius="2xl">
               <Stack direction="row" align="center" justify="space-between" gap={3}>
                 <Stack gap={1}>
-                  <Text id="quick-follow-enable-label">{t('settings.quickFollow.enable')}</Text>
+                  <Text id="quick-follow-enable-label" fontSize="sm" fontWeight="medium">
+                    {t('settings.quickFollow.enable')}
+                  </Text>
                   <Text id="quick-follow-enable-description" fontSize="xs" color="fg.muted">
                     {t('settings.quickFollow.enableDescription')}
                   </Text>
@@ -228,6 +248,56 @@ export function QuickFollowSettingsView() {
                     <Switch.Thumb />
                   </Switch.Control>
                 </Switch.Root>
+              </Stack>
+            </Container>
+
+            {/* Selection Display Mode */}
+            <Container backgroundColor="gemSurfaceContainer" p={4} borderRadius="2xl">
+              <Stack direction={{ base: 'column', md: 'row' }} align={{ base: 'stretch', md: 'center' }} justify="space-between" gap={3}>
+                <Text id="quick-follow-display-mode-label" fontSize="sm" fontWeight="medium">
+                  {t('settings.quickFollow.selectionDisplayMode.label')}
+                </Text>
+                <SegmentGroup.Root
+                  aria-labelledby="quick-follow-display-mode-label"
+                  value={settings.selectionDisplayMode}
+                  disabled={!isHydrated || isHydrating || isSavingDisplayMode}
+                  onValueChange={({ value }) => {
+                    const mode = SELECTION_DISPLAY_MODES.find(mode => mode === value)
+                    if (mode) void handleDisplayModeChange(mode)
+                  }}
+                  size="xs"
+                  width="fit-content"
+                  bg="bg.subtle"
+                  borderRadius="xl"
+                  borderWidth="1px"
+                  borderColor="border.muted"
+                  p={0.5}
+                >
+                  <SegmentGroup.Indicator bg="colorPalette.solid" borderRadius="lg" shadow="sm" />
+                  {SELECTION_DISPLAY_MODES.map(mode => (
+                    <Tooltip key={mode} content={t(`settings.quickFollow.selectionDisplayMode.${mode}Description`)}>
+                      {/* Keep Tooltip props off the segment item so its ID and checked state remain intact. */}
+                      <Box as="span" display="inline-flex">
+                        <SegmentGroup.Item
+                          value={mode}
+                          cursor="pointer"
+                          borderRadius="lg"
+                          px={2}
+                          color="gemOnSurfaceVariant"
+                          fontWeight="medium"
+                          _checked={{ color: 'colorPalette.contrast' }}
+                          _hover={{ color: 'gemOnSurface', _checked: { color: 'colorPalette.contrast' } }}
+                        >
+                          <HStack gap={1}>
+                            <Box as={DISPLAY_MODE_ICONS[mode]} boxSize={3} aria-hidden="true" display={{ base: 'none', sm: 'block' }} />
+                            <SegmentGroup.ItemText>{t(`settings.quickFollow.selectionDisplayMode.${mode}`)}</SegmentGroup.ItemText>
+                          </HStack>
+                          <SegmentGroup.ItemHiddenInput />
+                        </SegmentGroup.Item>
+                      </Box>
+                    </Tooltip>
+                  ))}
+                </SegmentGroup.Root>
               </Stack>
             </Container>
 

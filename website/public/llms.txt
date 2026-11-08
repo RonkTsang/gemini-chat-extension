@@ -31,7 +31,7 @@ This website documents the public product, installation flow, feature behavior, 
 ## Features
 
 - [Chat Outline](https://gpk.ronktsang.com/features/chat-outline/): Navigate long Gemini conversations and jump between key sections.
-- [Quick Follow-up](https://gpk.ronktsang.com/features/quick-follow-up/): Note questions beside a long Gemini answer as you read, then ask them together without remembering every question or finding the passages again. Includes illustrated steps for up to 10 references, sending, and editing.
+- [Quick Follow-up](https://gpk.ronktsang.com/features/quick-follow-up/): Note questions beside a long Gemini answer as you read, then ask them together without remembering every question or finding the passages again. Includes illustrated steps for up to 10 references, sending, editing, and choosing Auto, Cards, or Compact for draft selections.
 - [Chain Prompt](https://gpk.ronktsang.com/features/chain-prompt/): Build reusable multi-step Gemini prompt workflows.
 - [Open in New Tab](https://gpk.ronktsang.com/features/stuff-open-new-tab/): Open Gemini Library items in new tabs without interrupting the current page.
 - [Tab Title Sync](https://gpk.ronktsang.com/features/tab-title-sync/): Sync browser tab titles with Gemini conversation titles.

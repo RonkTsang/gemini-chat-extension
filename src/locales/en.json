@@ -90,7 +90,10 @@
       "sendUnknown": "Submission could not be confirmed. Your draft has been kept.",
       "restoreDraft": "Restore draft",
       "restoreFailed": "Couldn’t restore the draft. Clear the input and try again.",
-      "unsupportedDraft": "This draft cannot be safely set aside. Send or remove attachments and formatted content first."
+      "unsupportedDraft": "This draft cannot be safely set aside. Send or remove attachments and formatted content first.",
+      "selectionCountOne": "$1 Selection",
+      "selectionCountMany": "$1 Selections",
+      "noComment": "No comment added"
     }
   },
   "settings": {
@@ -132,6 +135,15 @@
       "chip": {
         "label": "Selected Text",
         "tooltip": "This is the text you selected in Gemini"
+      },
+      "selectionDisplayMode": {
+        "label": "Input selection display",
+        "cards": "Cards",
+        "compact": "Compact",
+        "cardsDescription": "Show each selection as a card in the input box.",
+        "compactDescription": "Show only the selection count. Hover to view and manage all selections.",
+        "auto": "Auto",
+        "autoDescription": "Switch to compact when the input area takes up more than 40% of the visible window."
       }
     },
     "enhancements": {

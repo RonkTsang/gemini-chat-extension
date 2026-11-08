@@ -44,6 +44,7 @@ head:
       }
 ---
 
+import { Image } from 'astro:assets';
 import FocusedScreenshot from '../../../../components/FocusedScreenshot.astro';
 import entryDemo from '../../../../assets/features/quick-follow-up/quick-follow-up.gif';
 import customPromptImg from '../../../../assets/features/quick-follow-up/custom-prompt.png';
@@ -51,6 +52,8 @@ import quickCommentImg from '../../../../assets/features/quick-follow-up/instant
 import modifierImg from '../../../../assets/features/quick-follow-up/quick-comment-send.jpg';
 import multipleCommentsImg from '../../../../assets/features/quick-follow-up/multiple-comment-cards.jpg';
 import historyImg from '../../../../assets/features/quick-follow-up/sent-follow-up-conversation.jpg';
+import displaySettingsImg from '../../../../assets/features/quick-follow-up/setting.png';
+import compactListImg from '../../../../assets/features/quick-follow-up/input-area.png';
 
 <strong>划词追问（Quick Follow-up）</strong>让你读到哪里，就在哪里记下问题，再接着读。准备好后，把问题连同原文一起发给 Gemini，不用一直记着，也不用回头翻找、重新解释你问的是哪一段。
 
@@ -64,9 +67,9 @@ import historyImg from '../../../../assets/features/quick-follow-up/sent-follow-
 
 ## 2. 直接在原文旁写下问题
 
-点击 Ask 后，<strong>所选文字旁边</strong>会打开一个即时评论输入框，Gemini 主输入框上方也会新增一张引用卡片。你可以在阅读位置直接提问，无需先滚动到页面底部。
+点击 Ask 后，<strong>所选文字旁边</strong>会打开一个即时评论输入框，同时选区会加入 Gemini 输入框。你可以在阅读位置直接提问，无需先滚动到页面底部。
 
-输入针对这段文字的问题，例如“可以给一个具体例子吗？”。点击<strong>勾号</strong>或按 <strong>Enter</strong>，把评论添加到对应卡片，暂不发送。按 <strong>Shift+Enter</strong> 可以换行。
+输入针对这段文字的问题，例如“可以给一个具体例子吗？”。点击<strong>勾号</strong>或按 <strong>Enter</strong>，把评论添加到对应选区，暂不发送。按 <strong>Shift+Enter</strong> 可以换行。
 
 <FocusedScreenshot
   id="instant-comment"
@@ -110,7 +113,7 @@ import historyImg from '../../../../assets/features/quick-follow-up/sent-follow-
 
 ## 3. 继续选取其他内容，为每段添加评论
 
-继续阅读，选中另一个需要追问的点，再次点击 <strong>Ask Gemini</strong>，为这段内容填写问题。已有卡片、评论和主输入框中的文字都会保留，让你先逐段收集问题，再一起发送。每份草稿最多添加 <strong>10 段引用</strong>。
+继续阅读，选中另一个需要追问的点，再次点击 <strong>Ask Gemini</strong>，为这段内容填写问题。已有选区、评论和主输入框中的文字都会保留，让你先逐段收集问题，再一起发送。每份草稿最多添加 <strong>10 段引用</strong>。
 
 <FocusedScreenshot
   id="multiple-comments"
@@ -125,9 +128,39 @@ import historyImg from '../../../../assets/features/quick-follow-up/sent-follow-
 />
 
 
-准备好后，可以在 Gemini 主输入框中补充总体要求，例如“请逐段回答，每段给一个实际例子”。检查卡片后点击 Gemini 的<strong>发送</strong>按钮，所有引用、各自的评论和总体要求会一起发出。
+准备好后，可以在 Gemini 主输入框中补充总体要求，例如“请逐段回答，每段给一个实际例子”。检查选区后点击 Gemini 的<strong>发送</strong>按钮，所有引用、各自的评论和总体要求会一起发出。
 
 每段评论和总体要求都可以留空。卡片会省略较长的预览以节省空间，实际发送时仍包含完整原文和评论。
+
+### 选择输入框中的选区展示方式
+
+打开 <strong>Gemini Power Kit → Prompt（提示词）→ 划词追问</strong>，在<strong>输入框选区展示</strong>中选择：
+
+| 模式 | 展示方式 |
+| --- | --- |
+| **自动（Auto，默认）** | 空间足够时显示卡片。如果展开卡片后的输入区会超过可视窗口高度的 40%，就切换为紧凑展示。 |
+| **卡片（Cards）** | 每个选区在输入框内各显示一张卡片，方便直接查看。 |
+| **紧凑（Compact）** | 输入框内只显示选区数量，为阅读对话留出更多空间。 |
+
+<Image
+  src={displaySettingsImg}
+  alt="划词追问设置中高亮的输入框选区展示选项，包含 Auto、Cards 和 Compact 三种模式"
+  class="feature-image feature-image-full"
+  loading="lazy"
+/>
+
+*在划词追问设置中选择输入框的选区展示方式。*
+
+在紧凑模式下，将鼠标移到选区数量上，例如<strong>2 个选区</strong>，即可展开列表。内容较多时可以在列表内滚动。点击选区正文可回到原文，点击<strong>铅笔图标</strong>可编辑评论，点击<strong>垃圾桶图标</strong>会从草稿中移除该选区及其评论。
+
+<Image
+  src={compactListImg}
+  alt="Gemini 输入框显示 2 Selections 按钮，展开的列表中有两段原文、对应评论和编辑、移除图标"
+  class="feature-image feature-image-full"
+  loading="lazy"
+/>
+
+*将鼠标移到选区数量上，即可查看原文和评论。*
 
 ## 4. 在已发送消息中回看问题与引用
 
@@ -231,10 +264,10 @@ import historyImg from '../../../../assets/features/quick-follow-up/sent-follow-
 
 | 当前草稿 | 行为 |
 | --- | --- |
-| 没有引用卡片 | 展开提示词后自动发送。 |
-| 已有引用卡片 | 选择<strong>添加到草稿（Add to draft）</strong>或<strong>分别发送（Send separately）</strong>。 |
+| 草稿没有选区 | 展开提示词后自动发送。 |
+| 草稿已有选区 | 选择<strong>添加到草稿（Add to draft）</strong>或<strong>分别发送（Send separately）</strong>。 |
 
-<strong>添加到草稿</strong>：把替换好选中文字的完整提示词追加到主输入框末尾，保留已有卡片和评论，暂不发送。
+<strong>添加到草稿</strong>：把替换好选中文字的完整提示词追加到主输入框末尾，保留已有选区和评论，暂不发送。
 
 <strong>分别发送</strong>：只发送本次技能展开后的提示词，暂存原来的引用草稿，并在 Gemini 清空输入框后恢复。如果扩展提示无法安全暂存草稿，请先发送或移除附件和带格式的内容，再重试。
 

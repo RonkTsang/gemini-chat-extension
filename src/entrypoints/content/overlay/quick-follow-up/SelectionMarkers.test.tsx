@@ -2,13 +2,15 @@ import { act, createElement } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 
-import { findCurrentChatWindow, observeQuoteAnchorLayout, readQuoteAnchorEndPosition } from '../../quick-follow-up/dom'
+import { observeQuoteAnchorLayout, readQuoteAnchorEndPosition } from '../../quick-follow-up/dom'
 import type { SelectionItem } from '../../quick-follow-up/protocol'
 import { SelectionMarkers } from './SelectionMarkers'
 
 vi.mock('@/utils/i18n', () => ({ t: (key: string, number?: string) => number ? `${key} ${number}` : key }))
-vi.mock('../../quick-follow-up/dom', () => ({
-  findCurrentChatWindow: vi.fn(), readQuoteAnchorEndPosition: vi.fn(), observeQuoteAnchorLayout: vi.fn(),
+vi.mock('../../quick-follow-up/dom', async importOriginal => ({
+  ...await importOriginal<typeof import('../../quick-follow-up/dom')>(),
+  readQuoteAnchorEndPosition: vi.fn(),
+  observeQuoteAnchorLayout: vi.fn(),
 }))
 
 const items: SelectionItem[] = ['a', 'b'].map(id => ({
@@ -19,6 +21,7 @@ const items: SelectionItem[] = ['a', 'b'].map(id => ({
 let root: Root
 let container: HTMLDivElement
 let chatWindow: HTMLElement
+let chatHost: HTMLDivElement
 const cleanup = vi.fn()
 const onEdit = vi.fn()
 const onPreview = vi.fn()
@@ -30,8 +33,10 @@ beforeEach(() => {
   reactGlobal.IS_REACT_ACT_ENVIRONMENT = true
   container = document.createElement('div')
   chatWindow = document.createElement('chat-window')
+  chatHost = document.createElement('div')
+  chatHost.append(document.createElement('chat-window-content'), document.createElement('input-container'))
+  chatWindow.append(chatHost)
   document.body.append(container, chatWindow)
-  vi.mocked(findCurrentChatWindow).mockReturnValue(chatWindow)
   root = createRoot(container)
   vi.mocked(readQuoteAnchorEndPosition).mockReturnValue({ clientX: 100, clientY: 150 })
   vi.mocked(observeQuoteAnchorLayout).mockReturnValue(cleanup)
@@ -53,7 +58,7 @@ it('opens the numbered source and updates numbering when a preceding selection i
   render()
   const buttons = [...chatWindow.querySelectorAll('button')]
   expect(container.childElementCount).toBe(0)
-  expect(buttons[0].parentElement?.parentElement).toBe(chatWindow)
+  expect(buttons[0].parentElement?.parentElement).toBe(chatHost)
   expect(buttons[0].getRootNode()).toBe(document)
   expect(buttons.map(button => button.textContent)).toEqual(['1', '2'])
   act(() => buttons[1].click())
@@ -67,15 +72,22 @@ it('opens the numbered source and updates numbering when a preceding selection i
 it('removes portal elements on unmount and does not mount without a unique chat host', () => {
   render()
   expect(chatWindow.querySelectorAll('button')).toHaveLength(2)
-  vi.mocked(findCurrentChatWindow).mockReturnValue(null)
+  const otherChat = document.createElement('chat-window')
+  document.body.append(otherChat)
   const update = vi.mocked(observeQuoteAnchorLayout).mock.calls[0][1]
   act(update)
   expect(chatWindow.querySelector('button')).toBeNull()
-  vi.mocked(findCurrentChatWindow).mockReturnValue(chatWindow)
+  otherChat.remove()
   act(update)
   expect(chatWindow.querySelectorAll('button')).toHaveLength(2)
   act(() => root.unmount())
-  expect(chatWindow.childElementCount).toBe(0)
+  expect(chatHost.querySelector('button')).toBeNull()
+})
+
+it('mounts in the chat window when the composer is a direct child', () => {
+  chatWindow.append(chatHost.querySelector('input-container')!)
+  render()
+  expect(chatWindow.querySelectorAll(':scope > .gpk-follow-source-marker')).toHaveLength(2)
 })
 
 it('tracks scrolling, hides unavailable sources, and cleans up positioning on unmount', () => {
