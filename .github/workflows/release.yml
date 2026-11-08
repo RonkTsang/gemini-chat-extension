@@ -108,6 +108,7 @@ jobs:
         with:
           name: extension-preview-${{ steps.version.outputs.version }}
           path: .output/*.zip
+          include-hidden-files: true
           if-no-files-found: error
 
       # Step 3: Execute actual release
