@@ -3,58 +3,37 @@
  * Displays a toast notification when the extension is updated to a new version
  */
 
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { browser } from 'wxt/browser'
 import { WhatsNewToast } from './WhatsNewToast'
-import { CURRENT_RELEASE_NOTES } from './config'
+import { CURRENT_RELEASE_NOTES, type ReleaseNote } from './config'
 import { getLastSeenVersion, setLastSeenVersion, compareVersions } from './storage'
-import React from 'react'
 import { initializeOnboarding } from '../onboarding/storage'
 
-function WhatsNew() {
-  const [showToast, setShowToast] = useState(false)
-  const [currentVersion, setCurrentVersion] = useState<string>('')
+function WhatsNew({ onboardingFinished }: { onboardingFinished: boolean }) {
+  const [toast, setToast] = useState<{ version: string; features: ReleaseNote[] } | null>(null)
 
   useEffect(() => {
+    let disposed = false
     const checkVersion = async () => {
       try {
         const onboarding = await initializeOnboarding()
-        if (!onboarding) return
-        // Get current version from manifest
-        const manifest = browser.runtime.getManifest()
-        const version = manifest.version
-        setCurrentVersion(version)
+        if (disposed || !onboarding || onboarding === 'pending') return
 
-        // Get last seen version from storage
-        const lastVersion = await getLastSeenVersion()
+        // Serialize the read and write so two tabs cannot announce the same update.
+        await navigator.locks.request(`gpk:${browser.runtime.id}:whats-new`, async () => {
+          const version = browser.runtime.getManifest().version
+          const lastVersion = await getLastSeenVersion()
+          if (disposed) return
+          if (!lastVersion && onboarding === 'shown' && !onboardingFinished) return
+          if (lastVersion && compareVersions(version, lastVersion) <= 0) return
 
-        // If no last version (first install)
-        if (!lastVersion) {
-          // Check if there are release notes to show
+          const features = CURRENT_RELEASE_NOTES.filter(note =>
+            !lastVersion || compareVersions(lastVersion, note.introducedInVersion ?? version) < 0,
+          )
+          if (features.length > 0) setToast({ version, features })
           await setLastSeenVersion(version)
-          return
-        }
-
-        if (onboarding === 'pending') {
-          await setLastSeenVersion(version)
-          return
-        }
-
-        // Compare versions (only major.minor)
-        const versionDiff = compareVersions(version, lastVersion)
-        console.log('WhatsNew: versionDiff', versionDiff)
-        console.log('WhatsNew:version', version)
-        console.log('WhatsNew:lastVersion', lastVersion)
-
-        // If current version is greater than last version
-        if (versionDiff > 0) {
-          // Check if there are release notes to show
-          if (CURRENT_RELEASE_NOTES.length > 0) {
-            // Show the toast
-            setShowToast(true)
-          }
-          // Update last seen version
-          await setLastSeenVersion(version)
-        }
+        })
       } catch (error) {
         console.error('Failed to check version for What\'s New:', error)
       }
@@ -62,26 +41,26 @@ function WhatsNew() {
 
     // Use requestIdleCallback to avoid blocking the main thread
     if ('requestIdleCallback' in window) {
-      requestIdleCallback(checkVersion)
-    } else {
-      // Fallback for browsers without requestIdleCallback
-      setTimeout(checkVersion, 1000)
+      const idleCallback = requestIdleCallback(checkVersion)
+      return () => {
+        disposed = true
+        cancelIdleCallback(idleCallback)
+      }
     }
-  }, [])
+    const timeout = setTimeout(checkVersion, 1000)
+    return () => {
+      disposed = true
+      clearTimeout(timeout)
+    }
+  }, [onboardingFinished])
 
-  const handleClose = () => {
-    setShowToast(false)
-  }
-
-  if (!(showToast && currentVersion)) {
-    return null
-  }
+  if (!toast) return null
 
   return (
     <WhatsNewToast
-      version={currentVersion}
-      features={CURRENT_RELEASE_NOTES}
-      onClose={handleClose}
+      version={toast.version}
+      features={toast.features}
+      onClose={() => setToast(null)}
     />
   )
 }
