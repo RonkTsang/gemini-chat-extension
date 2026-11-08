@@ -1,8 +1,9 @@
 {
   "branches": [
-    "main"
+    "stable"
   ],
   "plugins": [
+    "./scripts/verify-release-version.mjs",
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
     "@semantic-release/changelog",

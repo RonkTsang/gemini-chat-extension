@@ -1,0 +1,45 @@
+name: Prepare Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: 'Optional full main commit SHA; leave blank to use the selected main revision'
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: extension-prepare-release
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require main
+        run: test "$GITHUB_REF" = refs/heads/main
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Open pinned release candidate PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REQUESTED_COMMIT: ${{ inputs.commit }}
+        run: |
+          commit=${REQUESTED_COMMIT:-$GITHUB_SHA}
+          if [[ ! "$commit" =~ ^[0-9a-f]{40}$ ]] ||
+            ! git merge-base --is-ancestor "$commit" refs/remotes/origin/main; then
+            echo '::error::Choose a full SHA from main history.'
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor refs/remotes/origin/stable "$commit"; then
+            echo '::error::Sync stable into main before choosing the release candidate.'
+            exit 1
+          fi
+
+          bash scripts/open-release-pr.sh "$commit" "release/candidate-$commit" stable \
+            "chore(release): promote ${commit:0:12} to stable" \
+            "Promote main commit $commit. Merge using a merge commit after Release checks pass, then run Release on stable."

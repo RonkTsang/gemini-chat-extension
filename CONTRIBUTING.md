@@ -67,6 +67,8 @@ For Gemini UI changes, also test the affected path on `gemini.google.com`. If a 
 
 Maintainers may ask for adjustments to scope, tests, copy, documentation, or cross-browser behavior before merging.
 
+Use `main` for normal contributions. Maintainers use `stable` to publish the browser extension and ship urgent fixes. See the [maintainer release guide](docs/release-workflow.md) for that process.
+
 ## Report a bug or suggest an improvement
 
 Use [GitHub Issues](https://github.com/RonkTsang/gemini-chat-extension/issues) and include:

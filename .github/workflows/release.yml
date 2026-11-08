@@ -7,17 +7,34 @@ on:
         description: 'Run in dry-run mode (preview only, no actual release)'
         required: false
         type: boolean
-        default: false
+        default: true
 
-permissions:
-  contents: write
-  issues: write
-  pull-requests: write
+permissions: {}
+
+concurrency:
+  group: extension-release-stable
+  cancel-in-progress: false
 
 jobs:
+  validate-ref:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require stable
+        run: |
+          if [[ "$GITHUB_REF" != refs/heads/stable ]]; then
+            echo '::error::Run the extension release from stable.'
+            exit 1
+          fi
   release:
     name: Release
+    needs: validate-ref
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    outputs:
+      tag: ${{ steps.publish.outputs.tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -44,37 +61,71 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Run semantic-release in dry-run mode to predict the next version
-          DRY_RUN_OUTPUT=$(pnpm exec semantic-release --dry-run 2>&1 || true)
-          echo "$DRY_RUN_OUTPUT"
-          
-          # Extract version from dry-run output
-          NEXT_VERSION=$(echo "$DRY_RUN_OUTPUT" | grep -oP 'The next release version is \K[0-9.]+' || echo "")
-          
-          if [ -z "$NEXT_VERSION" ]; then
-            echo "No release will be created (no relevant commits)"
-            echo "skip=true" >> $GITHUB_OUTPUT
-          else
-            echo "Next release version: $NEXT_VERSION"
-            echo "version=$NEXT_VERSION" >> $GITHUB_OUTPUT
-            echo "skip=false" >> $GITHUB_OUTPUT
-          fi
+          node --input-type=module <<'JS'
+          import { appendFileSync } from 'node:fs';
+          import semanticRelease from 'semantic-release';
+
+          const result = await semanticRelease({ dryRun: true });
+          if (result?.nextRelease) {
+            appendFileSync(process.env.GITHUB_OUTPUT, `version=${result.nextRelease.version}\n`);
+          }
+          JS
 
       # Step 2: Build and package both browser targets with the predicted version.
       # 'pnpm run zip' commands automatically run WXT build before packaging.
       # The RELEASE_VERSION env var is read by wxt.config.ts for both build and zip.
       - name: Build and Package
-        if: steps.version.outputs.skip == 'false'
+        if: steps.version.outputs.version != ''
         env:
           RELEASE_VERSION: ${{ steps.version.outputs.version }}
         run: |
           pnpm run zip
           pnpm run zip:firefox
+          for target in chrome firefox; do
+            archive=".output/gemini-extension-$RELEASE_VERSION-$target.zip"
+            unzip -p "$archive" manifest.json | jq -e --arg version "$RELEASE_VERSION" '.version == $version'
+          done
+
+      - name: Upload preview packages
+        if: steps.version.outputs.version != '' && inputs.dry-run
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-preview-${{ steps.version.outputs.version }}
+          path: .output/*.zip
+          if-no-files-found: error
 
       # Step 3: Execute actual release
       # semantic-release will update version, create changelog, commit, tag, and publish
-      - name: Release
-        if: steps.version.outputs.skip == 'false' && github.event.inputs.dry-run == 'false'
+      - name: Publish release
+        id: publish
+        if: steps.version.outputs.version != '' && !inputs.dry-run
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: pnpm exec semantic-release
+          EXPECTED_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git fetch --no-tags origin stable
+          if [[ "$(git rev-parse HEAD)" != "$(git rev-parse FETCH_HEAD)" ]]; then
+            echo '::error::stable changed during packaging. Start a fresh release run.'
+            exit 1
+          fi
+
+          node --input-type=module <<'JS'
+          import { appendFileSync } from 'node:fs';
+          import semanticRelease from 'semantic-release';
+
+          const result = await semanticRelease();
+          if (result?.nextRelease?.version !== process.env.EXPECTED_VERSION) {
+            throw new Error('Release version does not match the packaged version. Inspect the release before retrying.');
+          }
+          appendFileSync(process.env.GITHUB_OUTPUT, `tag=${result.nextRelease.gitTag}\n`);
+          JS
+
+  sync:
+    needs: release
+    if: needs.release.outputs.tag != ''
+    permissions:
+      contents: write
+      pull-requests: write
+    uses: ./.github/workflows/sync-release.yml
+    with:
+      tag: ${{ needs.release.outputs.tag }}
