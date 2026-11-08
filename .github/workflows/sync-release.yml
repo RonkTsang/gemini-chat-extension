@@ -1,0 +1,64 @@
+name: Sync Release to Main
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Published stable release tag, e.g. v0.14.1'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: extension-sync-release-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require a trusted branch
+        run: test "$GITHUB_REF" = refs/heads/main || test "$GITHUB_REF" = refs/heads/stable
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Open release sync PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          if [[ ! "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo '::error::Use a stable release tag such as v0.14.1.'
+            exit 1
+          fi
+
+          git fetch origin --tags \
+            '+refs/heads/main:refs/remotes/origin/main' \
+            '+refs/heads/stable:refs/remotes/origin/stable'
+          commit=$(git rev-parse --verify "refs/tags/$RELEASE_TAG^{commit}")
+          if ! git merge-base --is-ancestor "$commit" refs/remotes/origin/stable; then
+            echo '::error::The release tag must point to a commit on stable.'
+            exit 1
+          fi
+
+          published=$(gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --json isDraft,isPrerelease,assets --jq '
+              ((.isDraft or .isPrerelease) | not)
+              and any(.assets[]; .name | endswith("-chrome.zip"))
+              and any(.assets[]; .name | endswith("-firefox.zip"))')
+          if [[ "$published" != true ]]; then
+            echo '::error::The stable GitHub Release and browser packages must be published before syncing.'
+            exit 1
+          fi
+
+          bash scripts/open-release-pr.sh "$commit" "release/sync-$RELEASE_TAG" main \
+            "chore(release): sync $RELEASE_TAG to main" \
+            "Sync published release $RELEASE_TAG ($commit). Merge using a merge commit to preserve release and hotfix history."
