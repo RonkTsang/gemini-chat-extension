@@ -64,6 +64,7 @@ vi.mock('./welcome-greeting', () => ({
 import {
   __resetThemeBackgroundServiceForTests,
   getThemeBackgroundSettings,
+  removeThemeBackground,
   resolveThemeBackgroundPreviewUrl,
   ThemeBackgroundError,
   uploadThemeBackground,
@@ -156,6 +157,7 @@ describe('theme background service', () => {
     })
 
     __resetThemeBackgroundServiceForTests()
+    revokeObjectURLMock.mockClear()
   })
 
   it('validates file type and size', () => {
@@ -382,18 +384,54 @@ describe('theme background service', () => {
     expect(mockDelete).toHaveBeenCalledWith('old-asset')
   })
 
+  it('lets the storage listener use the displayed preview before upload finishes', async () => {
+    const file = new File(['image'], 'wallpaper.png', { type: 'image/png' })
+    const previewUrl = 'blob:bloom-preview'
+    const onAdopted = vi.fn()
+    mockPut.mockImplementation(async (asset) => {
+      mockGet.mockResolvedValue(asset)
+    })
+    mockSetStored.mockImplementationOnce(async (next: ThemeBackgroundSettings) => {
+      await expect(resolveThemeBackgroundPreviewUrl(next)).resolves.toBe(previewUrl)
+      mockGetStored.mockResolvedValue(next)
+      return next
+    })
+
+    const result = await uploadThemeBackground(file, { dimensions: {} }, {
+      url: previewUrl,
+      onAdopted,
+    })
+
+    expect(result.resolvedBackgroundUrl).toBe(previewUrl)
+    expect(mockApplyStyle).toHaveBeenCalledWith(result)
+    expect(onAdopted).toHaveBeenCalledOnce()
+    expect(createObjectURLMock).not.toHaveBeenCalled()
+    expect(revokeObjectURLMock).not.toHaveBeenCalledWith(previewUrl)
+
+    await removeThemeBackground()
+
+    expect(revokeObjectURLMock).toHaveBeenCalledExactlyOnceWith(previewUrl)
+  })
+
   it('rolls back new asset when persisting settings fails', async () => {
     let objectUrlCounter = 0
     createObjectURLMock.mockImplementation(() => `blob:test-${++objectUrlCounter}`)
 
     mockSetStored.mockRejectedValueOnce(new Error('persist failed'))
+    const onAdopted = vi.fn()
 
     await expect(
-      uploadThemeBackground(new File(['new-image'], 'new.png', { type: 'image/png' })),
+      uploadThemeBackground(
+        new File(['new-image'], 'new.png', { type: 'image/png' }),
+        { dimensions: {} },
+        { url: 'blob:bloom-preview', onAdopted },
+      ),
     ).rejects.toThrow('persist failed')
 
     const insertedAsset = mockPut.mock.calls[0]?.[0] as { id?: string } | undefined
     expect(insertedAsset?.id).toBeTruthy()
     expect(mockDelete).toHaveBeenCalledWith(insertedAsset?.id)
+    expect(onAdopted).not.toHaveBeenCalled()
+    expect(revokeObjectURLMock).not.toHaveBeenCalledWith('blob:bloom-preview')
   })
 })

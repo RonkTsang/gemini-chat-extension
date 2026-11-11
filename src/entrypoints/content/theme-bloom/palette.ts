@@ -1,4 +1,5 @@
 import { themePresets, type ThemePreset } from '@/entrypoints/content/gemini-theme'
+import type { GeminiTheme } from '@/entrypoints/content/gemini-theme/appearance'
 
 const SAMPLE_EDGE_LENGTH = 96
 const DEFAULT_CLUSTER_COUNT = 5
@@ -6,6 +7,11 @@ const MAX_CLUSTER_ITERATIONS = 8
 const GRAY_CHROMA_THRESHOLD = 0.04
 const COLORED_POPULATION_THRESHOLD = 0.08
 const DISTANCE_EPSILON = 1e-9
+const DARK_LIGHTNESS_MAX = 0.35
+const LIGHT_LIGHTNESS_MIN = 0.75
+const DARK_APPEARANCE_MIN_COVERAGE = 0.8
+const LIGHT_APPEARANCE_MIN_COVERAGE = 0.4
+const LIGHT_APPEARANCE_MAX_DARK_COVERAGE = 0.2
 
 export interface OklabColor {
   lightness: number
@@ -31,6 +37,7 @@ export interface ThemeBloomPaletteResult {
   accentColor: string
   presetKey: string
   presetDistance: number
+  appearance: GeminiTheme | null
 }
 
 interface RgbColor {
@@ -39,7 +46,7 @@ interface RgbColor {
   blue: number
 }
 
-interface ImageSample extends RgbColor {
+interface ImageSample extends RgbaSample {
   lab: OklabColor
 }
 
@@ -333,12 +340,22 @@ export function calculateThemeBloomPaletteFromPixels(
   const samples = pixels
     .filter((pixel) => pixel.alpha > 0)
     .map((pixel) => ({
-      red: pixel.red,
-      green: pixel.green,
-      blue: pixel.blue,
+      ...pixel,
       lab: srgbToOklab(pixel.red, pixel.green, pixel.blue),
     }))
   const clusters = clusterSamples(samples)
+  let darkCoverage = 0
+  let lightCoverage = 0
+  for (const { alpha, lab } of samples) {
+    if (lab.lightness <= DARK_LIGHTNESS_MAX) darkCoverage += alpha / 255
+    if (lab.lightness >= LIGHT_LIGHTNESS_MIN) lightCoverage += alpha / 255
+  }
+  // Transparent and midtone pixels count toward the area, but vote for neither mode.
+  const isLight = lightCoverage >= pixels.length * LIGHT_APPEARANCE_MIN_COVERAGE
+    && darkCoverage <= pixels.length * LIGHT_APPEARANCE_MAX_DARK_COVERAGE
+  const appearance: GeminiTheme | null = darkCoverage >= pixels.length * DARK_APPEARANCE_MIN_COVERAGE
+    ? 'dark'
+    : isLight ? 'light' : null
   const sampledColors = clusters.map((cluster) => {
     const lch = oklabToOklch(cluster.lab)
     return {
@@ -366,6 +383,7 @@ export function calculateThemeBloomPaletteFromPixels(
       accentColor: rgbToHex(gray),
       presetKey: 'gray',
       presetDistance: 0,
+      appearance,
     }
   }
 
@@ -377,6 +395,7 @@ export function calculateThemeBloomPaletteFromPixels(
     accentColor: rgbToHex(accent),
     presetKey: preset.key,
     presetDistance: preset.distance,
+    appearance,
   }
 }
 

@@ -18,6 +18,11 @@ interface ThemeAppearanceApplyEventDetail {
   bardColorTheme: BardColorTheme
 }
 
+interface AppearancePreview {
+  isCurrent: () => boolean
+  restore: () => void
+}
+
 function getSafeLocalStorage(): Storage | null {
   try {
     if (typeof window === 'undefined') return null
@@ -95,8 +100,8 @@ function applyBodyTheme(theme: GeminiTheme): void {
   if (typeof document === 'undefined' || !document.body) return
 
   const body = document.body
-  body.classList.remove(BODY_LIGHT_THEME_CLASS, BODY_DARK_THEME_CLASS)
-  body.classList.add(theme === 'dark' ? BODY_DARK_THEME_CLASS : BODY_LIGHT_THEME_CLASS)
+  body.classList.toggle(BODY_LIGHT_THEME_CLASS, theme === 'light')
+  body.classList.toggle(BODY_DARK_THEME_CLASS, theme === 'dark')
 }
 
 function buildAppearanceState(mode: AppearanceMode): AppearanceState {
@@ -163,6 +168,31 @@ function applyAppearanceLocally(
 
 export function getAppearanceState(): AppearanceState {
   return buildAppearanceState(resolveAppearanceMode())
+}
+
+export function previewAppearance(theme: GeminiTheme): AppearancePreview | null {
+  if (typeof document === 'undefined' || !document.body) return null
+
+  const previous = getAppearanceState()
+  if (previous.effectiveTheme === theme) return null
+
+  const body = document.body
+  const wasLight = body.classList.contains(BODY_LIGHT_THEME_CLASS)
+  const wasDark = body.classList.contains(BODY_DARK_THEME_CLASS)
+  applyBodyTheme(theme)
+
+  const isCurrent = () => document.body === body
+    && getThemeFromBodyClass() === theme
+    && resolveAppearanceMode() === previous.mode
+
+  return {
+    isCurrent,
+    restore: () => {
+      if (!isCurrent()) return
+      body.classList.toggle(BODY_LIGHT_THEME_CLASS, wasLight)
+      body.classList.toggle(BODY_DARK_THEME_CLASS, wasDark)
+    },
+  }
 }
 
 export function setAppearanceMode(mode: AppearanceMode): AppearanceState {

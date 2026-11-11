@@ -79,6 +79,13 @@ let pendingBackgroundResolution: {
   generation: number
   promise: Promise<string | null>
 } | null = null
+const pendingUploadPreviews = new Map<string, ThemeBackgroundUploadPreview>()
+
+interface ThemeBackgroundUploadPreview {
+  url: string
+  // The caller owns the URL until the background service adopts it.
+  onAdopted: () => void
+}
 
 interface PersistAndApplyOptions {
   readabilityAsset?: ThemeAssetRow | null
@@ -225,6 +232,16 @@ async function resolveBackgroundUrlFromSettings(
       pendingBackgroundResolution = null
     }
     return activeObjectUrl
+  }
+
+  const uploadPreview = pendingUploadPreviews.get(assetId)
+  if (uploadPreview) {
+    pendingUploadPreviews.delete(assetId)
+    backgroundResolutionGeneration += 1
+    pendingBackgroundResolution = null
+    resetActiveObjectUrl(assetId, uploadPreview.url)
+    uploadPreview.onAdopted()
+    return uploadPreview.url
   }
 
   if (pendingBackgroundResolution?.assetId === assetId) {
@@ -405,6 +422,7 @@ export async function updateThemeBackgroundSettings(
 export async function uploadThemeBackground(
   file: File,
   validation?: ThemeBackgroundImageValidation,
+  preview?: ThemeBackgroundUploadPreview,
 ): Promise<ThemeBackgroundResolvedState> {
   validateThemeBackgroundFile(file)
   const dimensions = validation?.dimensions ?? await getImageDimensions(file)
@@ -442,6 +460,8 @@ export async function uploadThemeBackground(
       updatedAt: nowIso(),
     })
 
+    // The storage watcher can resolve the asset before this upload resumes.
+    if (preview) pendingUploadPreviews.set(id, preview)
     state = await persistAndApplySettings(next, {
       readabilityAsset: assetRow,
       forceRecomputeWelcomeGreeting: true,
@@ -449,6 +469,8 @@ export async function uploadThemeBackground(
   } catch (error) {
     await deleteThemeAssetById(id).catch(() => undefined)
     throw error
+  } finally {
+    pendingUploadPreviews.delete(id)
   }
 
   if (oldAssetId && oldAssetId !== id) {
@@ -526,6 +548,7 @@ export async function resolveThemeBackgroundPreviewUrlForPanel(
 export function __resetThemeBackgroundServiceForTests(): void {
   backgroundResolutionGeneration += 1
   pendingBackgroundResolution = null
+  pendingUploadPreviews.clear()
   resetActiveObjectUrl(null, null)
   resetPanelPreviewUrl(null, null)
   clearThemeBackgroundStyle()

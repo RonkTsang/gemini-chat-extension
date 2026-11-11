@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import type { uploadThemeBackground } from '@/entrypoints/content/gemini-theme'
 import { createThemeBloomService } from './service'
 
 const palette = {
@@ -6,6 +7,7 @@ const palette = {
   accentColor: '#16a34a',
   presetKey: 'green',
   presetDistance: 0.1,
+  appearance: null,
 }
 
 function createDependencies(overrides = {}) {
@@ -49,6 +51,8 @@ function createDependencies(overrides = {}) {
       updatedAt: '',
     }),
     applyTheme: vi.fn().mockResolvedValue(undefined),
+    previewAppearance: vi.fn().mockReturnValue(null),
+    setAppearanceMode: vi.fn().mockImplementation((mode) => ({ mode, effectiveTheme: mode })),
     uploadBackground: vi.fn().mockResolvedValue({}),
     restoreBackground: vi.fn().mockResolvedValue(undefined),
     applyBackgroundPreview: vi.fn(),
@@ -66,8 +70,14 @@ function createDependencies(overrides = {}) {
 }
 
 describe('Theme Bloom service', () => {
-  it('previews then persists wallpaper and preset exactly once', async () => {
+  it('previews then persists wallpaper and transfers ownership of the displayed URL', async () => {
     const dependencies = createDependencies()
+    dependencies.uploadBackground.mockImplementation(
+      async (_file, _validation, preview: Parameters<typeof uploadThemeBackground>[2]) => {
+        preview?.onAdopted()
+        return {}
+      },
+    )
     const service = createThemeBloomService(dependencies)
     const result = await service.apply({
       file: new File(['theme'], 'theme.png', { type: 'image/png' }),
@@ -86,8 +96,51 @@ describe('Theme Bloom service', () => {
     expect(dependencies.uploadBackground).toHaveBeenCalledWith(
       expect.any(File),
       { dimensions: { width: 1920, height: 1080 } },
+      { url: 'blob:theme-bloom', onAdopted: expect.any(Function) },
     )
-    expect(dependencies.revokeObjectUrl).toHaveBeenCalledWith('blob:theme-bloom')
+    expect(dependencies.revokeObjectUrl).not.toHaveBeenCalled()
+    expect(dependencies.setAppearanceMode).not.toHaveBeenCalled()
+  })
+
+  it.each(['dark', 'light'])('previews %s inside the reveal and saves it after the wallpaper', async (detected) => {
+    const restore = vi.fn()
+    const dependencies = createDependencies({
+      calculatePalette: vi.fn().mockResolvedValue({ ...palette, appearance: detected }),
+      previewAppearance: vi.fn().mockReturnValue({ isCurrent: () => true, restore }),
+    })
+    dependencies.startTransition.mockImplementation(({ apply }) => {
+      expect(dependencies.previewAppearance).not.toHaveBeenCalled()
+      apply()
+      expect(dependencies.previewAppearance).toHaveBeenCalledExactlyOnceWith(detected)
+      return dependencies.transition
+    })
+    dependencies.uploadBackground.mockImplementation(async () => {
+      expect(dependencies.setAppearanceMode).not.toHaveBeenCalled()
+      return {}
+    })
+    const service = createThemeBloomService(dependencies)
+
+    await service.apply({
+      file: new File(['theme'], 'theme.png', { type: 'image/png' }),
+      origin: { clientX: 10, clientY: 20 },
+    })
+
+    expect(dependencies.setAppearanceMode).toHaveBeenCalledExactlyOnceWith(detected)
+    expect(restore).not.toHaveBeenCalled()
+  })
+
+  it('preserves system mode when the detected appearance already matches it', async () => {
+    const dependencies = createDependencies({
+      calculatePalette: vi.fn().mockResolvedValue({ ...palette, appearance: 'light' }),
+    })
+    const service = createThemeBloomService(dependencies)
+
+    await service.apply({
+      file: new File(['theme'], 'theme.png', { type: 'image/png' }),
+      origin: { clientX: 10, clientY: 20 },
+    })
+
+    expect(dependencies.setAppearanceMode).not.toHaveBeenCalled()
   })
 
   it('stops before palette sampling when image validation fails', async () => {
@@ -140,8 +193,11 @@ describe('Theme Bloom service', () => {
     expect(dependencies.uploadBackground).toHaveBeenCalledOnce()
   })
 
-  it('restores the persisted theme and background when persistence fails', async () => {
+  it('restores the appearance, preset, and background when persistence fails', async () => {
+    const restore = vi.fn()
     const dependencies = createDependencies({
+      calculatePalette: vi.fn().mockResolvedValue({ ...palette, appearance: 'dark' }),
+      previewAppearance: vi.fn().mockReturnValue({ isCurrent: () => true, restore }),
       uploadBackground: vi.fn().mockRejectedValue(new Error('storage failed')),
     })
     const service = createThemeBloomService(dependencies)
@@ -154,7 +210,10 @@ describe('Theme Bloom service', () => {
     expect(dependencies.applyTheme).toHaveBeenNthCalledWith(1, 'green')
     expect(dependencies.applyTheme).toHaveBeenNthCalledWith(2, 'purple')
     expect(dependencies.restoreBackground).toHaveBeenCalledOnce()
+    expect(restore).toHaveBeenCalledOnce()
+    expect(dependencies.setAppearanceMode).not.toHaveBeenCalled()
     expect(dependencies.transition.cancel).toHaveBeenCalledOnce()
     expect(dependencies.revokeObjectUrl).toHaveBeenCalledWith('blob:theme-bloom')
+    expect(dependencies.restoreBackground).toHaveBeenCalledBefore(dependencies.revokeObjectUrl)
   })
 })

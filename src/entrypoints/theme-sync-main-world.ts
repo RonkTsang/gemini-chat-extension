@@ -16,8 +16,8 @@ interface ThemeAppearanceApplyEventDetail {
 
 function applyBodyTheme(theme: GeminiTheme): void {
   const body = document.body
-  body.classList.remove(BODY_LIGHT_THEME_CLASS, BODY_DARK_THEME_CLASS)
-  body.classList.add(theme === 'dark' ? BODY_DARK_THEME_CLASS : BODY_LIGHT_THEME_CLASS)
+  body.classList.toggle(BODY_LIGHT_THEME_CLASS, theme === 'light')
+  body.classList.toggle(BODY_DARK_THEME_CLASS, theme === 'dark')
 }
 
 function safeGetStorageValue(key: string): string | null {

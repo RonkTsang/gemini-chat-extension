@@ -1,6 +1,7 @@
 import { NavigationSection } from "@/components/setting-panel/config";
 import type { MediaItem } from "@/utils/stuffMediaParser";
 import type { LibraryMediaData } from '@/utils/library/mediaParser'
+import type { AppearanceState } from '@/entrypoints/content/gemini-theme/appearance'
 
 type SettingsOpenSource =
   | 'prompt-entrance'
@@ -96,6 +97,7 @@ export interface AppEvents {
   };
 
   // Theme floating panel
+  'theme:appearance-changed': AppearanceState;
   'theme-floating-panel:open': {
     source: 'setting-panel' | 'whats-new' | 'top-bar-action'
     returnToSettings?: boolean
