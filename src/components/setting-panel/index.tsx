@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { CloseButton, Dialog, Portal, Flex, Box } from "@chakra-ui/react"
 import { useUpdateEffect } from "ahooks"
 import { useEvent, useEventEmitter } from "../../hooks/useEventBus"
@@ -8,11 +8,17 @@ import { registerDefaultViews } from "./views"
 import { setActiveSection } from "../../stores/settingStore"
 import type { AppEvents } from "@/common/event"
 
+import { browser } from 'wxt/browser'
+import { eventBus } from '@/utils/eventbus'
+import { isSettingsOpenPanelMessage, type SettingsPanelResult } from '@/types/runtime-messages'
+
 registerDefaultViews()
 
 export const SettingPanel = () => {
   const [open, setOpen] = useState(false)
   const { emit } = useEventEmitter()
+  const openRef = useRef(open)
+  const pendingReply = useRef<{ reply: (result: SettingsPanelResult) => void; expiresAt: number; timer: ReturnType<typeof setTimeout> } | undefined>(undefined)
 
   useEvent('settings:open', (data: AppEvents['settings:open']) => {
     setOpen(data.open)
@@ -26,6 +32,49 @@ export const SettingPanel = () => {
   useEvent('settings:close', () => {
     setOpen(false)
   })
+
+  // Register after the settings:open subscription; acknowledge only committed state.
+  useEffect(() => {
+    const settle = (opened: boolean) => {
+      const pending = pendingReply.current
+      pendingReply.current = undefined
+      if (!pending) return
+      clearTimeout(pending.timer)
+      pending.reply({ opened: opened && Date.now() < pending.expiresAt })
+    }
+    const listener: Parameters<typeof browser.runtime.onMessage.addListener>[0] = (message, sender, sendResponse) => {
+      if (!isSettingsOpenPanelMessage(message) || sender.id !== browser.runtime.id) return
+      if (Date.now() >= message.expiresAt) {
+        sendResponse({ opened: false })
+        return
+      }
+      if (openRef.current) {
+        sendResponse({ opened: true })
+        return
+      }
+      settle(false)
+      pendingReply.current = {
+        reply: sendResponse, expiresAt: message.expiresAt,
+        timer: setTimeout(() => settle(false), Math.min(10_000, message.expiresAt - Date.now())),
+      }
+      eventBus.emitSync('settings:open', { from: 'popup', open: true, module: 'enhancements' })
+      return true
+    }
+    browser.runtime.onMessage.addListener(listener)
+    return () => {
+      browser.runtime.onMessage.removeListener(listener)
+      settle(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    openRef.current = open
+    const pending = pendingReply.current
+    if (!open || !pending) return
+    pendingReply.current = undefined
+    clearTimeout(pending.timer)
+    pending.reply({ opened: Date.now() < pending.expiresAt })
+  }, [open])
 
   // Emit state change event when open state changes
   useUpdateEffect(() => {
