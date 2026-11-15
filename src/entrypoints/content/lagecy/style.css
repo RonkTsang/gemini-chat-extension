@@ -45,24 +45,45 @@ body.dark-theme,
   display: none !important;
 }
 
-#gemini-entry-icon {
+#gemini-toc-controls {
   position: absolute;
   top: 16px;
   left: 16px;
   z-index: 9998;
+  display: flex;
+  gap: 4px;
+}
+
+#gemini-toc-controls > button {
   cursor: pointer;
   width: 40px;
   height: 40px;
+  border: 0;
+  padding: 0;
   border-radius: 50%;
+  background-color: transparent;
+  color: var(--toc-text-color);
+}
+
+#gemini-toc-controls > button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: -2px;
+}
+
+#gemini-entry-icon {
+  position: relative;
   background-image: var(--icon-svg);
   background-position: center;
   background-repeat: no-repeat;
-  transition: background-color 0.2s, top 0.2s, left 0.2s;
 }
 
-#gemini-entry-icon:hover,
+#gemini-toc-controls > button:hover,
 #gemini-entry-icon.active {
   background-color: var(--icon-hover-bg);
+}
+
+.gemini-toc-jump-button {
+  font: 22px/1 system-ui, sans-serif;
 }
 
 #gemini-pin-badge {
@@ -351,7 +372,7 @@ body.dark-theme,
 
 /* --- Immersive Mode --- */
 /* When chat-window has this class, move the icon and popover to the top-left corner */
-chat-window.immersives-mode #gemini-entry-icon {
+chat-window.immersives-mode #gemini-toc-controls {
   top: 0;
   left: 0;
 }

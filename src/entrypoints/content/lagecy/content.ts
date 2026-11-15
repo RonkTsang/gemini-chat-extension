@@ -8,7 +8,8 @@ import { type AppEvents } from '@/common/event';
 import { browser } from 'wxt/browser';
 import { i18nCache } from '@/utils/i18nCache'
 import { getOutlineSummary } from '../quick-follow-up/cards'
-import { readSubmittedQuoteText } from './dom'
+import { containsOutlineContent, readOutlineQueries, readSubmittedQuoteText, scrollToOutlineQuery } from './dom'
+import { createOutlineNavigation } from './navigation'
 
 /**
  * i18n keys used by legacy content script features
@@ -67,7 +68,7 @@ function updateTocList(popover, chatWindow) {
   }
 
   list.innerHTML = ''; // Clear old items
-  const userQueries = chatWindow.querySelectorAll('user-query');
+  const userQueries = readOutlineQueries(chatWindow);
 
   if (userQueries.length === 0) {
     const message = i18nCache.get(LEGACY_I18N_KEYS.EMPTY_TOC_MESSAGE);
@@ -301,7 +302,7 @@ function updateTocList(popover, chatWindow) {
 
     button.onclick = (e) => {
       e.stopPropagation();
-      query.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      scrollToOutlineQuery(chatWindow, query);
       hidePopover();
     };
 
@@ -464,6 +465,8 @@ function hidePopover() {
 }
 
 function initializeUI(chatWindow) {
+  if (chatWindow.querySelector(':scope > #gemini-toc-controls')) return;
+
   if (window.getComputedStyle(chatWindow).position === 'static') {
     chatWindow.style.position = 'relative';
   }
@@ -475,11 +478,20 @@ function initializeUI(chatWindow) {
   popover.appendChild(document.createElement('ul'));
   chatWindow.appendChild(popover);
 
-  const entryIcon = document.createElement('div');
+  const controls = document.createElement('div');
+  controls.id = 'gemini-toc-controls';
+
+  const entryIcon = document.createElement('button');
+  entryIcon.type = 'button';
   entryIcon.id = 'gemini-entry-icon';
+  entryIcon.setAttribute('aria-label', i18nCache.get('settings.enhancements.chatOutline.title'));
+  entryIcon.setAttribute('aria-controls', popover.id);
+  entryIcon.setAttribute('aria-pressed', 'false');
   // Add the badge element inside the icon
-  entryIcon.innerHTML = '<div id="gemini-pin-badge"></div>';
-  chatWindow.appendChild(entryIcon);
+  entryIcon.innerHTML = '<span id="gemini-pin-badge"></span>';
+  controls.appendChild(entryIcon);
+  chatWindow.appendChild(controls);
+  const navigation = createOutlineNavigation(chatWindow, controls);
 
   const entryTooltip = tippy(entryIcon, {
     content: i18nCache.get(LEGACY_I18N_KEYS.CLICK_TO_PIN),
@@ -513,6 +525,7 @@ function initializeUI(chatWindow) {
     // isNowPinned is true if the class was added, false if removed.
     const isNowPinned = popover.classList.toggle('pinned');
     entryIcon.classList.toggle('active');
+    entryIcon.setAttribute('aria-pressed', String(isNowPinned));
 
     if (isNowPinned) {
       // This runs when we PIN the element.
@@ -531,20 +544,11 @@ function initializeUI(chatWindow) {
   // --- Hybrid Hover and Click Logic ---
 
   // 1. Hover Logic
-  const setupHoverListeners = (element) => {
-    element.addEventListener('mouseenter', () => {
-      if (popover.classList.contains('pinned')) return;
-      popover._clearHideTimeout();
-      showPopover();
-    });
-
-    element.addEventListener('mouseleave', () => {
-      popover._setHideTimeout(300);
-    });
-  };
-
-  setupHoverListeners(entryIcon);
-  setupHoverListeners(popover);
+  entryIcon.addEventListener('mouseenter', showPopover);
+  for (const element of [controls, popover]) {
+    element.addEventListener('mouseenter', popover._clearHideTimeout);
+    element.addEventListener('mouseleave', () => popover._setHideTimeout(300));
+  }
 
   // 2. Click Logic
   entryIcon.addEventListener('click', (e) => {
@@ -553,38 +557,26 @@ function initializeUI(chatWindow) {
     togglePinState();
   });
 
+  let updateTimeout;
   const observer = new MutationObserver((mutations) => {
-    let shouldUpdate = false;
-    const checkMessaNodeMutation = (nodes: NodeList) => {
-      for (const node of nodes) {
-        if (node.nodeType !== 1) continue;
-        if (node.matches('user-query, model-response') || node.querySelector('user-query, model-response')) {
-          shouldUpdate = true;
-          break;
-        }
-      }
-    }
-    for (const mutation of mutations) {
-      if (mutation.type === 'childList') {
-        if (mutation.addedNodes.length > 0) {
-          checkMessaNodeMutation(mutation.addedNodes);
-        }
-        if (mutation.removedNodes.length > 0) {
-          checkMessaNodeMutation(mutation.removedNodes);
-        }
-      }
-      if (shouldUpdate) break;
-    }
+    const shouldUpdate = mutations.some(({ addedNodes, removedNodes }) =>
+      [...addedNodes, ...removedNodes].some(containsOutlineContent)
+    );
+    if (!shouldUpdate) return;
 
-    if (shouldUpdate && !popover.classList.contains('hidden')) {
-      clearTimeout(window.geminiTocUpdater);
-      window.geminiTocUpdater = setTimeout(() => updateTocList(popover, chatWindow), 300);
+    navigation.refresh();
+    if (!popover.classList.contains('hidden')) {
+      clearTimeout(updateTimeout);
+      updateTimeout = setTimeout(() => updateTocList(popover, chatWindow), 300);
     }
   });
   observer.observe(chatWindow, { childList: true, subtree: true });
-  
-  // Store observer reference for cleanup
-  chatWindow._tocObserver = observer;
+
+  chatWindow._tocCleanup = () => {
+    observer.disconnect();
+    clearTimeout(updateTimeout);
+    navigation.destroy();
+  };
 }
 
 // --- Robust Initialization ---
@@ -592,6 +584,9 @@ function initializeUI(chatWindow) {
 let isChatOutlineEnabled = true;
 
 function destroyUI(chatWindow) {
+  chatWindow._tocCleanup?.();
+  delete chatWindow._tocCleanup;
+
   const popover = chatWindow.querySelector('#gemini-toc-popover');
   if (popover) {
     // Clear any pending hide timeout
@@ -623,14 +618,8 @@ function destroyUI(chatWindow) {
     if (entryIcon._tippy) {
       entryIcon._tippy.destroy();
     }
-    entryIcon.remove();
   }
-
-  // Disconnect mutation observer if it exists
-  if (chatWindow._tocObserver) {
-    chatWindow._tocObserver.disconnect();
-    chatWindow._tocObserver = null;
-  }
+  chatWindow.querySelector(':scope > #gemini-toc-controls')?.remove();
 }
 
 function findAndInitialize(node) {
@@ -638,9 +627,7 @@ function findAndInitialize(node) {
 
   const processChatWindow = (cw) => {
     if (isChatOutlineEnabled) {
-      if (!cw.querySelector('#gemini-entry-icon')) {
-        initializeUI(cw);
-      }
+      initializeUI(cw);
     } else {
       destroyUI(cw);
     }
