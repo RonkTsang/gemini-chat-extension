@@ -1,4 +1,5 @@
 {
+  "storeSummary": "Amplía los chats de Gemini y encuentra consultas anteriores con el esquema. Personaliza el fondo y elimina chats antiguos en lote.",
   "emptyTocMessage": "Aún no se han encontrado consultas de usuario en este chat.",
   "attachmentLabel": "[Archivo adjunto]",
   "clickToPin": "Hacer clic para fijar",

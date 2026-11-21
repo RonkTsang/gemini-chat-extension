@@ -18,7 +18,7 @@ PROMPT CHAINS
 Save repeatable multi-step tasks as reusable prompt chains. Use variables for different inputs, arrange steps in a drag-and-drop editor, and track progress as the chain runs.
 
 REPLY NOTIFICATIONS
-Enable desktop notifications to know when a reply, generated image or video, or Deep Research report is ready. Click a notification to return to its conversation; optional sounds are available on Chrome.
+Enable desktop notifications to know when a reply, generated image or video, or Deep Research report is ready. Click a notification to return to its conversation.
 
 MORE EVERYDAY TOOLS
 • Give individual Gems custom avatars.

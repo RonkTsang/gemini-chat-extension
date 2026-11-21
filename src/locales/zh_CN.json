@@ -1,4 +1,5 @@
 {
+  "storeSummary": "加宽 Gemini 对话，用大纲跳回之前的提问。设置自定义背景，批量删除不再需要的聊天。",
   "emptyTocMessage": "此聊天中尚未发现用户查询。",
   "attachmentLabel": "[附件]",
   "clickToPin": "点击固定",

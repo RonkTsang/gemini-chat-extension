@@ -36,7 +36,8 @@ export default defineConfig({
     const version = process.env.RELEASE_VERSION || require('./package.json').version;
 
     const manifest: any = {
-      name: "Gemini Power Kit: Your Essential Companion",
+      name: "Gemini Power Kit",
+      description: "__MSG_storeSummary__",
       version: version,
       default_locale: "en",
       permissions: [
@@ -57,11 +58,6 @@ export default defineConfig({
         }
       ]
     };
-
-    if (env.browser === 'chrome') {
-      manifest.name = 'Gemini Power Kit'
-      manifest.description = 'Widen Gemini chats and find earlier prompts with a chat outline. Set a custom background and delete old chats in bulk.'
-    }
 
     if (env.browser === 'firefox') {
       delete manifest.optional_permissions
