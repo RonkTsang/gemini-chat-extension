@@ -8,7 +8,10 @@ import { type AppEvents } from '@/common/event';
 import { browser } from 'wxt/browser';
 import { i18nCache } from '@/utils/i18nCache'
 import { getOutlineSummary } from '../quick-follow-up/cards'
-import { containsOutlineContent, readOutlineQueries, readSubmittedQuoteText, scrollToOutlineQuery } from './dom'
+import {
+  containsOutlineContent, isOutlineChatWindow, readOutlineQueries,
+  readSubmittedQuoteText, scrollToOutlineQuery,
+} from './dom'
 import { createOutlineNavigation } from './navigation'
 
 /**
@@ -437,6 +440,8 @@ function updateTocList(popover, chatWindow) {
 
 function showPopover() {
   const popover = document.getElementById('gemini-toc-popover');
+  const chatWindow = popover?.parentElement;
+  if (!chatWindow || !isOutlineChatWindow(chatWindow, window.location.pathname)) return;
   // --- BUG FIX ---
   // If the popover is already visible, do nothing. This prevents
   // the list from being destructively re-rendered during quick mouse movements.
@@ -446,8 +451,7 @@ function showPopover() {
   // --- END FIX ---
 
   const icon = document.getElementById('gemini-entry-icon');
-  const chatWindow = document.querySelector('chat-window');
-  if (popover && icon && chatWindow) {
+  if (icon) {
     updateTocList(popover, chatWindow);
     popover.classList.remove('hidden');
   }
@@ -467,7 +471,9 @@ function hidePopover() {
 function initializeUI(chatWindow) {
   if (chatWindow.querySelector(':scope > #gemini-toc-controls')) return;
 
-  if (window.getComputedStyle(chatWindow).position === 'static') {
+  const needsPosition = window.getComputedStyle(chatWindow).position === 'static';
+  const originalPosition = chatWindow.style.position;
+  if (needsPosition) {
     chatWindow.style.position = 'relative';
   }
 
@@ -576,6 +582,9 @@ function initializeUI(chatWindow) {
     observer.disconnect();
     clearTimeout(updateTimeout);
     navigation.destroy();
+    if (needsPosition && chatWindow.style.position === 'relative') {
+      chatWindow.style.position = originalPosition;
+    }
   };
 }
 
@@ -622,11 +631,11 @@ function destroyUI(chatWindow) {
   chatWindow.querySelector(':scope > #gemini-toc-controls')?.remove();
 }
 
-function findAndInitialize(node) {
+function syncOutlineIn(node) {
   if (node.nodeType !== 1) return; // We only care about elements
 
   const processChatWindow = (cw) => {
-    if (isChatOutlineEnabled) {
+    if (isChatOutlineEnabled && cw.isConnected && isOutlineChatWindow(cw, window.location.pathname)) {
       initializeUI(cw);
     } else {
       destroyUI(cw);
@@ -679,14 +688,15 @@ async function initializeLegacyMainExecution(): Promise<void> {
           if (addedNode.nodeType !== 1) continue
 
           // Initialize main features if a chat-window is added
-          findAndInitialize(addedNode)
+          syncOutlineIn(addedNode)
 
         }
       }
     })
 
     // Start by checking if the chat-window is already on the page
-    findAndInitialize(document.body)
+    syncOutlineIn(document.body)
+    eventBus.on('urlchange', () => syncOutlineIn(document.body))
     // Then, observe the entire body for future changes
     mainObserver.observe(document.body, {
       childList: true,
@@ -701,22 +711,9 @@ void initializeLegacyMainExecution()
 
 // 2. Listen for changes in settings
 browser.storage.onChanged.addListener((changes, namespace) => {
-    if (namespace !== 'sync') return;
-    const chatWindows = document.querySelectorAll('chat-window');
-
-    if (changes.enableChatOutline) {
-        isChatOutlineEnabled = safeParseBoolean(changes.enableChatOutline.newValue);
-        chatWindows.forEach(cw => {
-            if (isChatOutlineEnabled) {
-                initializeUI(cw);
-            } else {
-                destroyUI(cw);
-            }
-        });
-    }
-
-
-
+  if (namespace !== 'sync' || !changes.enableChatOutline) return;
+  isChatOutlineEnabled = safeParseBoolean(changes.enableChatOutline.newValue);
+  syncOutlineIn(document.body);
 });
 
 async function openChatoutline() {

@@ -6,7 +6,6 @@
   --toc-hover-bg: #f1f3f4;
   --toc-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 0 1px rgba(0, 0, 0, 0.1);
   --icon-hover-bg: rgba(60, 64, 67, 0.08);
-  --icon-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%235f6368' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='4' y1='6' x2='20' y2='6' /%3E%3Cline x1='4' y1='12' x2='20' y2='12' /%3E%3Cline x1='4' y1='18' x2='12' y2='18' /%3E%3C/svg%3E");
   --icon-pin-badge-filled: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%235f6368' fill-rule='evenodd' d='M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12S6.477 2 12 2s10 4.477 10 10m-7.89-3.581l1.482 1.484c1.006 1.006 1.509 1.51 1.392 2.053c-.118.543-.784.793-2.116 1.293l-.922.346c-.356.134-.535.201-.672.32q-.091.08-.161.177c-.106.148-.157.332-.258.7c-.23.836-.345 1.254-.62 1.41a.76.76 0 0 1-.378.1c-.315 0-.622-.307-1.234-.92l-.473-.473l-1.619 1.62a.75.75 0 0 1-1.062-1.059l1.62-1.622l-.446-.448c-.61-.61-.914-.914-.916-1.228c0-.135.035-.269.102-.386c.157-.271.572-.386 1.402-.615c.368-.101.552-.152.7-.259a1 1 0 0 0 .18-.166c.119-.138.185-.318.316-.677l.334-.911c.494-1.347.74-2.02 1.285-2.14s1.05.386 2.064 1.4' clip-rule='evenodd'/%3E%3C/svg%3E");
   --icon-refer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 512 512'%3E%3Cg fill='%23606060' fill-rule='evenodd'%3E%3Cpath d='M106.667 85.333V128c0 80.756 64.102 146.54 144.2 149.246l5.133.087h149.333V320H256c-104.145 0-188.924-82.919-191.918-186.34L64 128.001V85.333z'/%3E%3Cpath fill-rule='nonzero' d='m315.582 217.751l30.17-30.17l111.085 111.085l-111.085 111.085l-30.17-30.17l80.898-80.915z'/%3E%3C/g%3E%3C/svg%3E");
   --tooltip-bg: #3c4043;
@@ -21,7 +20,6 @@ body.dark-theme,
   --toc-hover-bg: #3a3a3a;
   --toc-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 1px rgba(0, 0, 0, 0.3);
   --icon-hover-bg: rgba(232, 234, 237, 0.08);
-  --icon-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%239aa0a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='4' y1='6' x2='20' y2='6' /%3E%3Cline x1='4' y1='12' x2='20' y2='12' /%3E%3Cline x1='4' y1='18' x2='12' y2='18' /%3E%3C/svg%3E");
   --icon-pin-badge-filled: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' fill-rule='evenodd' d='M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12S6.477 2 12 2s10 4.477 10 10' clip-rule='evenodd' opacity='0.3'/%3E%3Cpath fill='%23fff' d='m15.592 9.903l-1.483-1.484c-1.013-1.015-1.52-1.522-2.064-1.402s-.79.794-1.284 2.14l-.334.912c-.132.36-.197.539-.316.677a1 1 0 0 1-.18.166c-.148.107-.332.158-.7.26c-.83.228-1.246.342-1.402.614a.77.77 0 0 0-.102.386c.002.314.306.618.915 1.228l.447.448l-1.62 1.622a.75.75 0 0 0 1.062 1.06l1.618-1.621l.473.473c.613.613.92.92 1.235.92a.76.76 0 0 0 .379-.1c.274-.156.389-.574.619-1.41c.1-.368.152-.552.258-.7q.07-.098.16-.176c.138-.12.316-.187.673-.32l.922-.347c1.332-.5 1.998-.75 2.115-1.293s-.385-1.046-1.391-2.053'/%3E%3C/svg%3E");
   --icon-refer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 512 512'%3E%3Cg fill='%23fff' fill-rule='evenodd'%3E%3Cpath d='M106.667 85.333V128c0 80.756 64.102 146.54 144.2 149.246l5.133.087h149.333V320H256c-104.145 0-188.924-82.919-191.918-186.34L64 128.001V85.333z'/%3E%3Cpath fill-rule='nonzero' d='m315.582 217.751l30.17-30.17l111.085 111.085l-111.085 111.085l-30.17-30.17l80.898-80.915z'/%3E%3C/g%3E%3C/svg%3E");
   --tooltip-bg: #e8eaed;
@@ -72,9 +70,14 @@ body.dark-theme,
 
 #gemini-entry-icon {
   position: relative;
-  background-image: var(--icon-svg);
-  background-position: center;
-  background-repeat: no-repeat;
+}
+
+#gemini-entry-icon::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='4' y1='6' x2='20' y2='6' /%3E%3Cline x1='4' y1='12' x2='20' y2='12' /%3E%3Cline x1='4' y1='18' x2='12' y2='18' /%3E%3C/svg%3E") center / 24px 24px no-repeat;
 }
 
 #gemini-toc-controls > button:hover,

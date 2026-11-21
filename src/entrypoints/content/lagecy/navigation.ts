@@ -10,11 +10,14 @@ import {
 } from './dom'
 
 const MAX_REALIGNMENTS = 3
+const MIN_RETARGET_DISTANCE_PX = 16
 
 interface JumpTarget {
+  id: number
   query: HTMLElement
   boundary?: 'top' | 'bottom'
   top: number
+  scrollHeight: number
   inProgress: boolean
   realignments: number
 }
@@ -55,6 +58,7 @@ export function createOutlineNavigation(chatWindow: HTMLElement, controls: HTMLE
   let scroller: HTMLElement | undefined
   let queries: HTMLElement[] = []
   let jumpTarget: JumpTarget | undefined
+  let jumpId = 0
   let frame: number | undefined
 
   function currentIndex(): number {
@@ -93,16 +97,20 @@ export function createOutlineNavigation(chatWindow: HTMLElement, controls: HTMLE
       boundary: neighbor ? undefined : step === -1 ? 'top' : 'bottom',
     }
     const top = getDestinationTop(scroller, destination)
+    const scrollHeight = scroller.scrollHeight
+    const id = ++jumpId
     logDevEvent('info', '[ChatOutline]', 'jump', () => ({
-      step, fromIndex: index, targetIndex: queries.indexOf(destination.query),
+      jumpId: id, step, fromIndex: index, targetIndex: queries.indexOf(destination.query),
       boundary: destination.boundary, from: scroller?.scrollTop,
-      targetTop: top, scrollHeight: scroller?.scrollHeight, promptCount: queries.length,
+      targetTop: top, scrollHeight, promptCount: queries.length,
     }))
     scrollOutlineTo(scroller, top)
     // Fast clicks advance from the destination, including prompts that share a clamped offset.
     jumpTarget = {
       ...destination,
+      id,
       top,
+      scrollHeight,
       inProgress: !matchesScrollTop(scroller.scrollTop, top),
       realignments: 0,
     }
@@ -116,24 +124,33 @@ export function createOutlineNavigation(chatWindow: HTMLElement, controls: HTMLE
     if (event.target !== scroller || frame !== undefined) return
     frame = requestAnimationFrame(() => {
       frame = undefined
+      if (scroller && jumpTarget?.inProgress && scroller.scrollHeight !== jumpTarget.scrollHeight) {
+        reconcileJump('scroll')
+      }
       updateButtons()
     })
   }
 
-  function settleJump(): void {
+  function reconcileJump(trigger: 'scroll' | 'scrollend' | 'history-prepended'): void {
     const target = jumpTarget
     if (!scroller || !target || !queries.includes(target.query)) return
 
-    const scrollTop = scroller.scrollTop
+    const stillScrolling = target.inProgress && trigger !== 'scrollend'
+    const scrollHeight = scroller.scrollHeight
+    target.scrollHeight = scrollHeight
     const requestedTop = target.top
     const measuredTop = getDestinationTop(scroller, target)
-    const targetMoved = !matchesScrollTop(measuredTop, requestedTop)
-    const realign = targetMoved && !matchesScrollTop(scrollTop, measuredTop)
-      && target.realignments < MAX_REALIGNMENTS
+    const scrollTop = scroller.scrollTop
+    const aligned = matchesScrollTop(scrollTop, measuredTop)
+    const targetMoved = Math.abs(measuredTop - requestedTop) > (stillScrolling ? MIN_RETARGET_DISTANCE_PX : 1)
+    // Reserve one correction for changes that appear when the animation finishes.
+    const limit = stillScrolling ? MAX_REALIGNMENTS - 1 : MAX_REALIGNMENTS
+    const realign = targetMoved && (!aligned || stillScrolling) && target.realignments < limit
+    if (stillScrolling && !realign) return
 
     logDevEvent('info', '[ChatOutline]', realign ? 'realign' : 'settled', () => ({
-      targetIndex: queries.indexOf(target.query), boundary: target.boundary,
-      requestedTop, measuredTop, scrollTop, scrollHeight: scroller?.scrollHeight,
+      jumpId: target.id, trigger, targetIndex: queries.indexOf(target.query), boundary: target.boundary,
+      requestedTop, measuredTop, scrollTop, scrollHeight,
       promptCount: queries.length, realignments: target.realignments,
     }))
 
@@ -141,15 +158,21 @@ export function createOutlineNavigation(chatWindow: HTMLElement, controls: HTMLE
     target.inProgress = false
     if (realign) {
       target.realignments++
-      // Offscreen Gemini turns can expand from estimated heights during a smooth scroll.
-      scrollOutlineTo(scroller, measuredTop, 'instant')
-      target.inProgress = !matchesScrollTop(scroller.scrollTop, measuredTop)
+      // If already aligned, stop the obsolete animation before it scrolls past the prompt.
+      scrollOutlineTo(scroller, measuredTop, aligned ? 'instant' : undefined)
+      const afterScrollTop = scroller.scrollTop
+      target.inProgress = !matchesScrollTop(afterScrollTop, measuredTop)
+      logDevEvent('info', '[ChatOutline]', 'realign-applied', () => ({
+        jumpId: target.id, trigger, realignments: target.realignments,
+        beforeScrollTop: scrollTop, afterScrollTop, appliedDeltaPx: afterScrollTop - scrollTop,
+      }))
     }
-    updateButtons()
   }
 
   function onScrollEnd(event: Event): void {
-    if (event.target === scroller) settleJump()
+    if (event.target !== scroller || !jumpTarget) return
+    reconcileJump('scrollend')
+    updateButtons()
   }
 
   function onScrollInput(event: Event): void {
@@ -172,12 +195,12 @@ export function createOutlineNavigation(chatWindow: HTMLElement, controls: HTMLE
     const firstPromptShift = previousQueries.length ? queries.indexOf(previousQueries[0]) : 0
     if (previousQueries.length !== queries.length || firstPromptShift !== 0) {
       logDevEvent('info', '[ChatOutline]', 'history-changed', () => ({
+        jumpId: jumpTarget?.id, jumpInProgress: jumpTarget?.inProgress,
         before: previousQueries.length, after: queries.length,
         firstPromptShift, scrollTop: scroller?.scrollTop, scrollHeight: scroller?.scrollHeight,
       }))
-      if (firstPromptShift > 0 && jumpTarget && !jumpTarget.inProgress && queries.includes(jumpTarget.query)) {
-        settleJump()
-        return
+      if (firstPromptShift > 0) {
+        reconcileJump('history-prepended')
       }
     }
     updateButtons()

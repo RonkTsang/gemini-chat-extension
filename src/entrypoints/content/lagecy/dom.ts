@@ -2,6 +2,11 @@ const CHAT_HISTORY_SELECTOR = '#chat-history infinite-scroller[data-test-id="cha
 const OUTLINE_QUERY_SELECTOR = 'user-query'
 const OUTLINE_CONTENT_SELECTOR = `${OUTLINE_QUERY_SELECTOR}, model-response, ${CHAT_HISTORY_SELECTOR}`
 
+export function isOutlineChatWindow(chatWindow: Element, pathname: string): boolean {
+  return pathname !== '/images' && pathname !== '/images/' &&
+    chatWindow.closest('discovery-images-page') === null
+}
+
 export function resolveOutlineScroller(chatWindow: HTMLElement): HTMLElement | undefined {
   const scrollers = chatWindow.querySelectorAll<HTMLElement>(CHAT_HISTORY_SELECTOR)
   return scrollers.length === 1 ? scrollers[0] : undefined

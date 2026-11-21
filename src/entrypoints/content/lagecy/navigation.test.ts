@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { logDevEvent } from '@/utils/devLogger'
 import { createOutlineNavigation } from './navigation'
 
 vi.mock('@/utils/i18nCache', () => ({
@@ -6,7 +7,11 @@ vi.mock('@/utils/i18nCache', () => ({
 }))
 vi.mock('@/utils/devLogger', () => ({ logDevEvent: vi.fn() }))
 
-afterEach(() => document.body.replaceChildren())
+afterEach(() => {
+  document.body.replaceChildren()
+  vi.useRealTimers()
+  vi.clearAllMocks()
+})
 
 function setupNavigation(promptOffsets: number[], maxScrollTop = 800) {
   const chatWindow = document.createElement('chat-window')
@@ -17,7 +22,7 @@ function setupNavigation(promptOffsets: number[], maxScrollTop = 800) {
   scroller.style.scrollPaddingTop = '56px'
   Object.defineProperties(scroller, {
     clientHeight: { value: 500 },
-    scrollHeight: { value: 500 + maxScrollTop },
+    scrollHeight: { value: 500 + maxScrollTop, configurable: true },
   })
   const queries = promptOffsets.map((_, index) => {
     const query = document.createElement('user-query')
@@ -79,9 +84,32 @@ describe('Chat Outline prompt navigation', () => {
     offsets[1] = 650
     offsets[2] = 1050
     finishScrollAt(294)
-    expect(scrollTo).toHaveBeenLastCalledWith({ top: 594, behavior: 'instant' })
+    expect(scrollTo).toHaveBeenLastCalledWith({ top: 594, behavior: 'smooth' })
     finishScrollAt(594)
 
+    previous.click()
+    expect(scrollTo).toHaveBeenLastCalledWith({ top: 14, behavior: 'smooth' })
+    navigation.destroy()
+  })
+
+  it('updates the destination during scrolling before passing the shifted prompt', () => {
+    vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame'] })
+    const offsets = [70, 3983, 5030]
+    const { scroller, navigation, previous, scrollTo, finishScrollAt } = setupNavigation(offsets, 6953)
+    scroller.scrollTop = 5134
+
+    previous.click()
+    expect(scrollTo).toHaveBeenLastCalledWith({ top: 3927, behavior: 'smooth' })
+    scroller.scrollTop = 5050
+    offsets[1] += 984
+    offsets[2] += 984
+    Object.defineProperty(scroller, 'scrollHeight', { value: 8437 })
+    scroller.dispatchEvent(new Event('scroll'))
+    vi.advanceTimersToNextFrame()
+
+    expect(scrollTo).toHaveBeenLastCalledWith({ top: 4911, behavior: 'smooth' })
+    finishScrollAt(4911)
+    expect(scrollTo).toHaveBeenCalledTimes(2)
     previous.click()
     expect(scrollTo).toHaveBeenLastCalledWith({ top: 14, behavior: 'smooth' })
     navigation.destroy()
@@ -100,7 +128,19 @@ describe('Chat Outline prompt navigation', () => {
     olderPrompt.getBoundingClientRect = () => new DOMRect(0, 70 - scroller.scrollTop, 100, 40)
     scroller.prepend(olderPrompt)
     navigation.refresh()
-    expect(scrollTo).toHaveBeenLastCalledWith({ top: 614, behavior: 'instant' })
+    expect(scrollTo).toHaveBeenLastCalledWith({ top: 614, behavior: 'smooth' })
+    const events = Object.fromEntries(vi.mocked(logDevEvent).mock.calls.map(([, , event, details]) => [
+      event, typeof details === 'function' ? details() : details,
+    ]))
+    expect(events['history-changed']).toMatchObject({ jumpId: 1, firstPromptShift: 1 })
+    expect(events.realign).toMatchObject({ jumpId: 1, measuredTop: 614 })
+    expect(events['realign-applied']).toMatchObject({
+      jumpId: 1,
+      trigger: 'history-prepended',
+      beforeScrollTop: 14,
+      afterScrollTop: 14,
+      appliedDeltaPx: 0,
+    })
     finishScrollAt(614)
 
     previous.click()
