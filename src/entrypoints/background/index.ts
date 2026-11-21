@@ -1,3 +1,4 @@
+import { startSettingsEntryBackground } from './settingsEntry'
 import { startFirefoxBackground } from './firefox'
 import { startResponseCompleteNotificationBackground } from './responseCompleteNotification'
 
@@ -10,6 +11,7 @@ export default defineBackground({
   persistent: import.meta.env.FIREFOX,
   main() {
     startResponseCompleteNotificationBackground()
+    startSettingsEntryBackground()
 
     if (import.meta.env.FIREFOX) {
       startFirefoxBackground()

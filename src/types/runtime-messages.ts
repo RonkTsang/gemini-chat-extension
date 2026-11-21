@@ -322,3 +322,39 @@ export function isResponseCompleteNotificationAudioAssetDeleteMessage(
   const candidate = message as Partial<ResponseCompleteNotificationAudioAssetDeleteMessage>
   return candidate.type === RESPONSE_COMPLETE_NOTIFICATION_AUDIO_ASSET_DELETE_MESSAGE
 }
+
+export const SETTINGS_OPEN_FROM_POPUP_MESSAGE = 'settings:open-from-popup' as const
+export const SETTINGS_OPEN_PANEL_MESSAGE = 'settings:open-panel' as const
+export type SettingsEntryAction = 'open' | 'retry' | 'reload'
+export type SettingsEntryError = 'timeout' | 'target-closed' | 'target-left' | 'start-failed'
+export interface SettingsEntryStatus {
+  sourceTabId: number
+  targetTabId?: number
+  phase: 'opening' | 'opened' | 'failed'
+  error?: SettingsEntryError
+  expiresAt: number
+}
+export interface SettingsOpenFromPopupMessage {
+  type: typeof SETTINGS_OPEN_FROM_POPUP_MESSAGE
+  tabId: number
+  action: SettingsEntryAction
+}
+export interface SettingsOpenPanelMessage {
+  type: typeof SETTINGS_OPEN_PANEL_MESSAGE
+  expiresAt: number
+}
+export type SettingsEntryStartResult = { accepted: true } | { accepted: false; error: 'busy' | 'start-failed' }
+export interface SettingsPanelResult { opened: boolean }
+export function isSettingsOpenFromPopupMessage(value: unknown): value is SettingsOpenFromPopupMessage {
+  if (!value || typeof value !== 'object') return false
+  const message = value as Partial<SettingsOpenFromPopupMessage>
+  return message.type === SETTINGS_OPEN_FROM_POPUP_MESSAGE
+    && Number.isInteger(message.tabId) && (message.tabId ?? -1) >= 0
+    && ['open', 'retry', 'reload'].includes(message.action ?? '')
+}
+export function isSettingsOpenPanelMessage(value: unknown): value is SettingsOpenPanelMessage {
+  if (!value || typeof value !== 'object') return false
+  const message = value as Partial<SettingsOpenPanelMessage>
+  return message.type === SETTINGS_OPEN_PANEL_MESSAGE
+    && typeof message.expiresAt === 'number' && Number.isFinite(message.expiresAt)
+}

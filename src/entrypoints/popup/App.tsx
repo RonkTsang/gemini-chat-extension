@@ -1,3 +1,4 @@
+import { OpenSettingsButton } from './OpenSettingsButton';
 import { useState, useEffect, useRef } from 'react';
 import { browser } from 'wxt/browser';
 
@@ -320,6 +321,7 @@ function App() {
         
         <Card.Body px={4} py={3}>
           <Stack gap={3}>
+            <OpenSettingsButton />
             {/* Chat Outline Setting */}
             <Flex align="center" justify="space-between" gap={3}>
               <Flex align="center" gap={2}>
