@@ -83,6 +83,7 @@ export interface AppEvents {
     from: SettingsOpenSource,
     open: boolean
     module?: NavigationSection
+    params?: Record<string, unknown>
   };
   'settings:close': {
     from: SettingsCloseSource,

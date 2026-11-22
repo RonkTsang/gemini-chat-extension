@@ -592,6 +592,7 @@
   "whatsnew": {
     "title": "What's New",
     "releaseNotes": "Release notes",
+    "supportLink": "Support the project",
     "multiAsk": {
       "title": "Multi-Ask for Gemini Is Here",
       "description": "Keep reading without forgetting what you wanted to ask. Capture questions along the way, then ask them together with the right context.",

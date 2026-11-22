@@ -596,6 +596,7 @@
   "whatsnew": {
     "title": "更新內容",
     "releaseNotes": "更新說明",
+    "supportLink": "支援專案",
     "multiAsk": {
       "title": "Multi-Ask 登場，長回答多點一起問！",
       "description": "邊讀邊記下疑問，不必一直記在心上。準備好後一起追問，附上正確原文脈絡。",

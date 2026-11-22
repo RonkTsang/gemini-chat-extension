@@ -596,6 +596,7 @@
   "whatsnew": {
     "title": "新機能",
     "releaseNotes": "リリースノート",
+    "supportLink": "プロジェクトをサポート",
     "multiAsk": {
       "title": "Gemini向けMulti-Askが登場",
       "description": "質問を覚えておかなくても、読み進めながらメモできます。準備ができたら、適切な引用元と一緒にまとめて質問できます。",

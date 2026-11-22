@@ -596,6 +596,7 @@
   "whatsnew": {
     "title": "Quoi de neuf",
     "releaseNotes": "Notes de version",
+    "supportLink": "Soutenir le projet",
     "multiAsk": {
       "title": "Multi-Ask pour Gemini est arrivé",
       "description": "Continuez à lire sans retenir vos questions. Notez-les au fil de la lecture, puis posez-les ensemble avec le bon contexte.",

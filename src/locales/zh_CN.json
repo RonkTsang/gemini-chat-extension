@@ -596,6 +596,7 @@
   "whatsnew": {
     "title": "更新内容",
     "releaseNotes": "更新说明",
+    "supportLink": "支持项目",
     "multiAsk": {
       "title": "Multi-Ask 来了，多个重点一起问！",
       "description": "边读边记下疑问，让阅读思路不断线。准备好后一起追问，不必反复翻找原文、重新交代上下文。",

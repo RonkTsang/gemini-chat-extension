@@ -596,6 +596,7 @@
   "whatsnew": {
     "title": "새로운 기능",
     "releaseNotes": "릴리스 노트",
+    "supportLink": "프로젝트 지원",
     "multiAsk": {
       "title": "Gemini용 Multi-Ask 출시",
       "description": "질문을 기억해 두지 않아도 계속 읽을 수 있어요. 읽으며 모아 두었다가 알맞은 맥락과 함께 한 번에 물어보세요.",
