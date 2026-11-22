@@ -1,6 +1,6 @@
 {
   "name": "gemini-extension",
-  "description": "Widen Gemini chats and find earlier prompts with a chat outline. Set a custom background and delete old chats in bulk.",
+  "description": "Read and navigate long Gemini chats with adjustable width and an outline. Set a custom background and delete old chats in bulk.",
   "private": true,
   "version": "0.15.0",
   "author": "RonkTsang",

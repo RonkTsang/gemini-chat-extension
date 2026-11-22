@@ -1,5 +1,5 @@
 {
-  "storeSummary": "加寬 Gemini 聊天，透過大綱找回先前的提示詞。自訂背景，並批次刪除舊聊天。",
+  "storeSummary": "讓 Gemini 長篇對話更易閱讀。調整聊天區寬度，透過大綱找回先前提問，還可自訂背景並批次刪除舊聊天。",
   "emptyTocMessage": "對話開始後，目錄將記錄在此處。",
   "attachmentLabel": "[附件]",
   "clickToPin": "點擊固定",

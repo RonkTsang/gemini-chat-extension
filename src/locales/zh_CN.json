@@ -1,5 +1,5 @@
 {
-  "storeSummary": "加宽 Gemini 对话，用大纲跳回之前的提问。设置自定义背景，批量删除不再需要的聊天。",
+  "storeSummary": "让 Gemini 的长对话更易读。调整聊天区宽度，用大纲找回之前的提问，还能自定义背景、批量删除旧聊天。",
   "emptyTocMessage": "此聊天中尚未发现用户查询。",
   "attachmentLabel": "[附件]",
   "clickToPin": "点击固定",
