@@ -548,7 +548,7 @@
     "feedback": {
       "title": "Feedback",
       "featureRequest": "Solicitação de recurso",
-      "bugSupport": "Bug / Suporte",
+      "bugSupport": "Obter ajuda",
       "leaveReview": "Deixar uma avaliação"
     },
     "openSource": {
@@ -556,7 +556,7 @@
     },
     "donate": {
       "title": "Apoiar o projeto",
-      "description": "Se o $1 economiza seu tempo ou traz alegria, considere apoiar seu futuro",
+      "description": "Seu apoio me ajuda a manter e aprimorar o $1, especialmente corrigindo problemas de compatibilidade após atualizações do Gemini e testando essas correções no Chrome e no Firefox.",
       "buyMeCoffee": "Me pague um café",
       "share": "Compartilhar com amigos"
     }

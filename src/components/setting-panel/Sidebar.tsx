@@ -3,28 +3,29 @@ import { Box, VStack, Text, HStack } from '@chakra-ui/react'
 import useSettingStore from '../../stores/settingStore'
 import { settingSectionDefinitions, type NavigationSection } from './config'
 import type { SettingSectionDefinition } from './types'
+import { ABOUT_SUPPORT_ANCHOR, SupportProjectIcon } from './views/about/support'
+import { t } from '@/utils/i18n'
 
 interface SidebarProps {
   width?: string
 }
 
 interface NavigationButtonProps {
-  item: SettingSectionDefinition<NavigationSection>
+  label: string
+  icon: React.ReactNode
   isActive: boolean
-  onSelect: (section: NavigationSection) => void
+  onSelect: React.MouseEventHandler<HTMLElement>
 }
 
-const NavigationButton: React.FC<NavigationButtonProps> = ({ item, isActive, onSelect }) => {
-  const IconComponent = item.icon
-
+const NavigationButton: React.FC<NavigationButtonProps> = ({ label, icon, isActive, onSelect }) => {
   const itemBg = isActive ? 'gemPrimaryContainer' : 'transparent'
   const itemColor = isActive ? 'gemOnPrimaryContainer' : 'gemOnSurfaceVariant'
   const itemHoverBg = isActive ? 'gemPrimaryContainer' : 'surfaceContainerHover'
-  const iconColor = isActive ? 'gemOnPrimaryContainer' : 'gemOnSurfaceVariant'
 
   return (
     <Box
       as="button"
+      aria-current={isActive || undefined}
       display="flex"
       alignItems="center"
       width="100%"
@@ -39,14 +40,14 @@ const NavigationButton: React.FC<NavigationButtonProps> = ({ item, isActive, onS
       _hover={{
         bg: itemHoverBg,
       }}
-      onClick={() => onSelect(item.id)}
+      onClick={onSelect}
     >
       <HStack gap={3}>
-        <Box color={iconColor}>
-          <IconComponent size={20} width={20} height={20} />
+        <Box aria-hidden="true" flexShrink={0}>
+          {icon}
         </Box>
         <Text fontSize="sm" fontWeight={isActive ? 'medium' : 'normal'}>
-          {item.label}
+          {label}
         </Text>
       </HStack>
     </Box>
@@ -56,7 +57,7 @@ const NavigationButton: React.FC<NavigationButtonProps> = ({ item, isActive, onS
 interface NavigationGroupProps {
   label?: string
   items: Array<SettingSectionDefinition<NavigationSection>>
-  activeSection: NavigationSection
+  activeSection?: NavigationSection
   onSelect: (section: NavigationSection) => void
 }
 
@@ -74,12 +75,13 @@ const NavigationGroup: React.FC<NavigationGroupProps> = ({ label, items, activeS
         {label}
       </Text>
     ) : null}
-    {items.map((item) => (
+    {items.map(({ id, label, icon: Icon }) => (
       <NavigationButton
-        key={item.id}
-        item={item}
-        isActive={activeSection === item.id}
-        onSelect={onSelect}
+        key={id}
+        label={label}
+        icon={<Icon size={20} width={20} height={20} />}
+        isActive={activeSection === id}
+        onSelect={() => onSelect(id)}
       />
     ))}
   </VStack>
@@ -88,6 +90,7 @@ const NavigationGroup: React.FC<NavigationGroupProps> = ({ label, items, activeS
 export const Sidebar: React.FC<SidebarProps> = ({ width = '240px' }) => {
   const route = useSettingStore((state) => state.route)
   const setActiveSection = useSettingStore((state) => state.setActiveSection)
+  const navigateToView = useSettingStore((state) => state.navigateToView)
 
   const promptItems = React.useMemo(
     () => settingSectionDefinitions.filter((item) => item.group === 'prompt'),
@@ -102,6 +105,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ width = '240px' }) => {
     []
   )
   const activeSection = route.sectionId
+  const isSupportActive = activeSection === 'about' && route.params?.anchor === ABOUT_SUPPORT_ANCHOR
 
   return (
     <Box
@@ -130,13 +134,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ width = '240px' }) => {
           onSelect={setActiveSection}
         />
       </VStack>
-      <Box mt="auto">
+      <VStack mt="auto" align="stretch" gap={1}>
         <NavigationGroup
           items={supportItems}
-          activeSection={activeSection}
+          activeSection={isSupportActive ? undefined : activeSection}
           onSelect={setActiveSection}
         />
-      </Box>
+        <NavigationButton
+          label={t('aboutPage.donate.title')}
+          icon={<SupportProjectIcon />}
+          isActive={isSupportActive}
+          onSelect={(event) => navigateToView('about', 'index', {
+            anchor: ABOUT_SUPPORT_ANCHOR,
+            animateSupportBorder: event.detail > 0,
+          })}
+        />
+      </VStack>
     </Box>
   )
 }

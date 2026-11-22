@@ -548,7 +548,7 @@
     "feedback": {
       "title": "フィードバック",
       "featureRequest": "機能リクエスト",
-      "bugSupport": "バグ / サポート",
+      "bugSupport": "ヘルプを見る",
       "leaveReview": "レビューを残す"
     },
     "openSource": {
@@ -556,7 +556,7 @@
     },
     "donate": {
       "title": "プロジェクトをサポート",
-      "description": "$1が時間を節約したり、喜びをもたらしたりする場合は、その将来をサポートすることを検討してください",
+      "description": "ご支援は、$1の保守と改善に役立ちます。特にGeminiの更新後の互換性修正と、Chrome・Firefoxでの動作テストを支えていただけます。",
       "buyMeCoffee": "コーヒーを奢る",
       "share": "友達と共有"
     }

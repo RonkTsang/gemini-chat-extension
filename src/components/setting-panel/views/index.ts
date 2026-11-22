@@ -20,7 +20,6 @@ const enhancementsSettingsView = EnhancementsSettingsView as SettingViewComponen
 const notificationSettingsView = NotificationSettingsView as SettingViewComponent<NavigationSection>
 const shortcutSettingsView = ShortcutSettingsView as SettingViewComponent<NavigationSection>
 const themeSettingsView = ThemeSettingsView as SettingViewComponent<NavigationSection>
-const aboutView = AboutView as SettingViewComponent<NavigationSection>
 
 export function registerDefaultViews() {
   registerView('default/index', defaultIndexView)
@@ -32,5 +31,5 @@ export function registerDefaultViews() {
   registerView('notification/index', notificationSettingsView)
   registerView('shortcuts/index', shortcutSettingsView)
   registerView('theme/index', themeSettingsView)
-  registerView('about/index', aboutView)
+  registerView('about/index', AboutView)
 }

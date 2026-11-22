@@ -544,7 +544,7 @@
     "feedback": {
       "title": "Feedback",
       "featureRequest": "Feature Request",
-      "bugSupport": "Bug / Support",
+      "bugSupport": "Get help",
       "leaveReview": "Leave a review"
     },
     "openSource": {
@@ -552,7 +552,7 @@
     },
     "donate": {
       "title": "Support the Project",
-      "description": "If $1 saves you time or sparks joy, please consider supporting its future",
+      "description": "Your support helps me maintain and improve $1, especially fixing compatibility issues after Gemini updates and testing those fixes in Chrome and Firefox.",
       "buyMeCoffee": "Buy me a coffee",
       "share": "Share with friends"
     }
