@@ -1,4 +1,4 @@
-Transforme o Google Gemini no seu espaço de trabalho. Escolha um plano de fundo, amplie o espaço para código e tabelas e volte a prompts anteriores. Reúna perguntas complementares com Multi-Ask e exclua chats antigos em lote.
+Use o Multi-Ask para reunir perguntas sobre diferentes trechos e enviá-las com o texto original. Personalize o tema do Gemini, volte a prompts anteriores pelo outline do chat e exclua chats antigos em lote.
 
 TEMAS, PLANOS DE FUNDO E LAYOUT
 • Defina um plano de fundo e cores que combinem arrastando uma imagem para a página, fora da caixa de prompt.

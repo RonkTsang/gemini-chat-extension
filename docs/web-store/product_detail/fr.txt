@@ -1,4 +1,4 @@
-Faites de Google Gemini votre espace de travail. Choisissez un fond personnalisé, élargissez l’espace pour le code et les tableaux, et retrouvez vos anciens prompts. Regroupez les questions de suivi avec Multi-Ask et supprimez les anciens chats par lot.
+Avec Multi-Ask, regroupez les questions sur différents passages et envoyez-les avec le texte d’origine. Personnalisez le thème Gemini, retrouvez d’anciens prompts avec le plan du chat et supprimez les anciens chats par lot.
 
 THÈMES, FONDS D’ÉCRAN ET MISE EN PAGE
 • Définissez un fond d’écran et des couleurs assorties en déposant une image sur la page, en dehors de la zone de prompt.
