@@ -1,4 +1,4 @@
-Gemini Power Kit is a Firefox extension that helps you work with long Google Gemini chats. Use Multi-Ask to collect questions about different passages and send them together. Customize your Gemini theme, use Chat Outline to jump to earlier prompts, and delete old chats in bulk.
+Gemini Power Kit is a Firefox extension for Google Gemini. Use Multi-Ask to collect questions about different passages and send them together. Customize your Gemini theme and use Chat Outline to jump to earlier prompts. To clean up, select the chats you want to delete in bulk.
 
 **KEY FEATURES**
 

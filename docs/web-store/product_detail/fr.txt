@@ -1,4 +1,4 @@
-Avec Multi-Ask, regroupez les questions sur différents passages et envoyez-les avec le texte d’origine. Personnalisez le thème Gemini, retrouvez d’anciens prompts avec le plan du chat et supprimez les anciens chats par lot.
+Avec Multi-Ask, regroupez les questions sur différents passages et envoyez-les avec le texte d’origine. Personnalisez le thème Gemini et retrouvez d’anciens prompts avec le plan du chat. Pour faire le ménage, sélectionnez les chats à supprimer par lot.
 
 THÈMES, FONDS D’ÉCRAN ET MISE EN PAGE
 • Définissez un fond d’écran et des couleurs assorties en déposant une image sur la page, en dehors de la zone de prompt.

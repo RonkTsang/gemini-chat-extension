@@ -1,4 +1,4 @@
-Con Multi-Ask, reúne preguntas sobre distintos fragmentos y envíalas juntas con el texto original. Personaliza el tema de Gemini, vuelve a consultas anteriores con el esquema del chat y elimina chats antiguos en lote.
+Con Multi-Ask, reúne preguntas sobre distintos fragmentos y envíalas juntas con el texto original. Personaliza el tema de Gemini y vuelve a consultas anteriores con el esquema del chat. Para limpiar, selecciona los chats que quieras eliminar en lote.
 
 TEMAS, FONDOS Y DISEÑO
 • Elige un fondo y colores a juego: arrastra una imagen a la página, fuera del cuadro de consulta.

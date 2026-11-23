@@ -1,5 +1,5 @@
 {
-  "storeSummary": "用 Multi-Ask 一次追问多段内容。自定义主题，用对话大纲找回之前的提问，批量删除旧聊天。",
+  "storeSummary": "用 Multi-Ask 一次追问多段内容。自定义主题，用对话大纲找回之前的提问。需要清理时，可批量删除选中的聊天。",
   "emptyTocMessage": "此聊天中尚未发现用户查询。",
   "attachmentLabel": "[附件]",
   "clickToPin": "点击固定",

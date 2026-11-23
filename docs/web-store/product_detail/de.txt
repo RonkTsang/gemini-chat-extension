@@ -1,4 +1,4 @@
-Sammeln Sie mit Multi-Ask Fragen zu verschiedenen Textstellen und senden Sie sie zusammen mit den Originalpassagen. Passen Sie das Gemini-Design an, springen Sie über die Chat-Gliederung zu früheren Prompts und löschen Sie alte Chats gesammelt.
+Sammeln Sie mit Multi-Ask Fragen zu verschiedenen Textstellen und senden Sie sie zusammen mit den Originalpassagen. Passen Sie das Gemini-Design an und springen Sie über die Chat-Gliederung zu früheren Prompts. Zum Aufräumen wählen Sie die Chats aus, die Sie gesammelt löschen möchten.
 
 DESIGNS, HINTERGRÜNDE & LAYOUT
 • Legen Sie ein eigenes Hintergrundbild und passende Farben fest, indem Sie ein Bild außerhalb des Promptfelds auf die Seite ziehen.

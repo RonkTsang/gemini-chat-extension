@@ -1,6 +1,6 @@
 {
   "name": "gemini-extension",
-  "description": "Ask about several passages at once with Multi-Ask. Customize your theme, find prompts with a chat outline, and delete chats in bulk.",
+  "description": "Ask about several passages with Multi-Ask. Customize themes and revisit prompts with Chat Outline. Delete selected chats in bulk.",
   "private": true,
   "version": "0.15.0",
   "author": "RonkTsang",
