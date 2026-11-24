@@ -63,4 +63,15 @@ export const CURRENT_RELEASE_NOTES: ReleaseNote[] = [
       },
     },
   },
+  {
+    titleKey: 'whatsnew.promptNavigation.title',
+    descriptionKey: 'whatsnew.promptNavigation.description',
+    actionLabelKey: 'whatsnew.promptNavigation.action',
+    promoAction: {
+      action: 'external-link',
+      params: {
+        url: EXTERNAL_LINKS.PROMPT_NAVIGATION_GUIDE,
+      },
+    },
+  },
 ]

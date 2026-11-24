@@ -215,6 +215,8 @@ export function createOutlineNavigation(chatWindow: HTMLElement, controls: HTMLE
       chatWindow.removeEventListener('wheel', onScrollInput, true)
       chatWindow.removeEventListener('pointerdown', onScrollInput, true)
       if (frame !== undefined) cancelAnimationFrame(frame)
+      previous.remove()
+      next.remove()
     },
   }
 }

@@ -1,4 +1,5 @@
-import { afterEach, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, expect, it, vi } from 'vitest'
+import { browser } from 'wxt/browser'
 import { eventBus } from '@/utils/eventbus'
 
 vi.mock('wxt/browser', () => ({
@@ -16,13 +17,17 @@ vi.mock('@/utils/i18nCache', () => ({
 
 vi.mock('../quick-follow-up/cards', () => ({ getOutlineSummary: vi.fn() }))
 
+beforeAll(async () => {
+  vi.stubGlobal('requestIdleCallback', vi.fn())
+  await import('./content')
+})
+
 afterEach(() => {
   vi.unstubAllGlobals()
   document.body.replaceChildren()
 })
 
 it('skips image composers and cleans up an existing outline when the URL changes to Images', async () => {
-  vi.stubGlobal('requestIdleCallback', vi.fn())
   history.replaceState({}, '', '/app')
   const chatWindow = document.createElement('chat-window')
   const imagePage = document.createElement('discovery-images-page')
@@ -30,7 +35,6 @@ it('skips image composers and cleans up an existing outline when the URL changes
   imagePage.append(imageChatWindow)
   document.body.append(imagePage, chatWindow)
 
-  await import('./content')
   const controlsSelector = '#gemini-toc-controls'
   const popoverSelector = '#gemini-toc-popover'
   await vi.waitFor(() => expect(chatWindow.querySelector(controlsSelector)).not.toBeNull())
@@ -50,4 +54,28 @@ it('skips image composers and cleans up an existing outline when the URL changes
   expect(imageChatWindow.querySelector(controlsSelector)).toBeNull()
 
   await navigate('/images')
+})
+
+it('toggles only the arrows and restores them when the stored setting is cleared', async () => {
+  history.replaceState({}, '', '/app')
+  const chatWindow = document.createElement('chat-window')
+  document.body.append(chatWindow)
+  const selector = '.gemini-toc-jump-button'
+  await vi.waitFor(() => expect(chatWindow.querySelectorAll(selector)).toHaveLength(2))
+
+  const popover = chatWindow.querySelector('#gemini-toc-popover')
+  const onChange = vi.mocked(browser.storage.onChanged.addListener).mock.calls[0][0]
+  onChange({ enableChatOutlinePromptNavigation: { newValue: false } }, 'sync')
+  expect(chatWindow.querySelectorAll(selector)).toHaveLength(0)
+  expect(chatWindow.querySelector('#gemini-toc-popover')).toBe(popover)
+  expect(chatWindow.querySelector('#gemini-entry-icon')).not.toBeNull()
+
+  onChange({ enableChatOutline: { newValue: false } }, 'sync')
+  expect(chatWindow.querySelector('#gemini-toc-popover')).toBeNull()
+  onChange({ enableChatOutline: { newValue: true } }, 'sync')
+  expect(chatWindow.querySelector('#gemini-toc-popover')).not.toBeNull()
+  expect(chatWindow.querySelectorAll(selector)).toHaveLength(0)
+
+  onChange({ enableChatOutlinePromptNavigation: { oldValue: false } }, 'sync')
+  expect(chatWindow.querySelectorAll(selector)).toHaveLength(2)
 })

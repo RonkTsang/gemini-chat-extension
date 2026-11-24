@@ -153,7 +153,11 @@
     "enhancements": {
       "chatOutline": {
         "title": "聊天大綱",
-        "description": "加入可點擊的大綱，方便瀏覽較長的對話。"
+        "description": "加入可點擊的大綱，方便瀏覽較長的對話。",
+        "promptNavigation": {
+          "title": "顯示提示跳轉箭頭",
+          "description": "跳到上一則或下一則提示。"
+        }
       },
       "gemAvatar": {
         "title": "Gem 頭像",
@@ -601,6 +605,11 @@
       "title": "Multi-Ask 登場，長回答多點一起問！",
       "description": "邊讀邊記下疑問，不必一直記在心上。準備好後一起追問，附上正確原文脈絡。",
       "action": "查看用法"
+    },
+    "promptNavigation": {
+      "title": "一鍵跳到上一題或下一題",
+      "description": "點擊聊天大綱旁的上下箭頭，即可跳到上一個或下一個提問。",
+      "action": "進一步了解"
     }
   },
   "onboarding": {

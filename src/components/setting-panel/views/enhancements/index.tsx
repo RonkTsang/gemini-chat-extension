@@ -1,10 +1,11 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useId, useState, type ReactNode } from 'react'
 import { Box, Container, HStack, IconButton, Stack, Switch, Text } from '@chakra-ui/react'
 import { LuCircleHelp } from 'react-icons/lu'
 import { EXTERNAL_LINKS } from '@/common/config'
 import {
   enableBulkDelete,
   enableChatOutline,
+  enableChatOutlinePromptNavigation,
   enableGemAvatar,
 } from '@/common/storage'
 import {
@@ -21,7 +22,7 @@ import { t } from '@/utils/i18n'
 interface FeatureToggleCardProps {
   title: ReactNode
   switchLabel: string
-  description: string
+  description?: string
   checked: boolean
   disabled: boolean
   onCheckedChange: (checked: boolean) => void
@@ -35,13 +36,16 @@ function FeatureToggleRow({
   disabled,
   onCheckedChange,
 }: FeatureToggleCardProps) {
+  const descriptionId = useId()
   return (
     <Stack direction="row" align="center" justify="space-between" gap={4}>
       <Stack gap={1}>
         <Box>{title}</Box>
-        <Text fontSize="sm" color="fg.muted">
-          {description}
-        </Text>
+        {description && (
+          <Text id={descriptionId} fontSize="sm" color="fg.muted">
+            {description}
+          </Text>
+        )}
       </Stack>
       <Switch.Root
         checked={checked}
@@ -49,7 +53,10 @@ function FeatureToggleRow({
         onCheckedChange={(details) => onCheckedChange(details.checked)}
         flexShrink={0}
       >
-        <Switch.HiddenInput aria-label={switchLabel} />
+        <Switch.HiddenInput
+          aria-label={switchLabel}
+          aria-describedby={description ? descriptionId : undefined}
+        />
         <Switch.Control>
           <Switch.Thumb />
         </Switch.Control>
@@ -68,6 +75,7 @@ function FeatureToggleCard(props: FeatureToggleCardProps) {
 
 export function EnhancementsSettingsView() {
   const [chatOutlineEnabled, setChatOutlineEnabled] = useState(true)
+  const [promptNavigationEnabled, setPromptNavigationEnabled] = useState(true)
   const [bulkDeleteEnabled, setBulkDeleteEnabled] = useState(true)
   const [gemAvatarEnabled, setGemAvatarEnabled] = useState(false)
   const [topBarSettings, setTopBarSettings] = useState(DEFAULT_TOP_BAR_SETTINGS)
@@ -80,8 +88,9 @@ export function EnhancementsSettingsView() {
 
     const loadSettings = async () => {
       try {
-        const [chatOutline, bulkDelete, gemAvatar] = await Promise.all([
+        const [chatOutline, promptNavigation, bulkDelete, gemAvatar] = await Promise.all([
           enableChatOutline.getValue(),
+          enableChatOutlinePromptNavigation.getValue(),
           enableBulkDelete.getValue(),
           enableGemAvatar.getValue(),
         ])
@@ -90,6 +99,7 @@ export function EnhancementsSettingsView() {
         }
 
         setChatOutlineEnabled(chatOutline)
+        setPromptNavigationEnabled(promptNavigation)
         setBulkDeleteEnabled(bulkDelete)
         setGemAvatarEnabled(gemAvatar)
       } catch (error) {
@@ -125,6 +135,11 @@ export function EnhancementsSettingsView() {
         setChatOutlineEnabled(enabled)
       }
     })
+    const unwatchPromptNavigation = enableChatOutlinePromptNavigation.watch((enabled) => {
+      if (isMounted) {
+        setPromptNavigationEnabled(enabled)
+      }
+    })
     const unwatchBulkDelete = enableBulkDelete.watch((enabled) => {
       if (isMounted) {
         setBulkDeleteEnabled(enabled)
@@ -144,6 +159,7 @@ export function EnhancementsSettingsView() {
     return () => {
       isMounted = false
       unwatchChatOutline()
+      unwatchPromptNavigation()
       unwatchBulkDelete()
       unwatchGemAvatar()
       unwatchTopBarSettings()
@@ -162,6 +178,15 @@ export function EnhancementsSettingsView() {
   const updateBulkDeleteEnabled = async (enabled: boolean) => {
     try {
       await enableBulkDelete.setValue(enabled)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to update setting'
+      toaster.create({ type: 'error', title: message })
+    }
+  }
+
+  const updatePromptNavigationEnabled = async (enabled: boolean) => {
+    try {
+      await enableChatOutlinePromptNavigation.setValue(enabled)
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to update setting'
       toaster.create({ type: 'error', title: message })
@@ -190,6 +215,7 @@ export function EnhancementsSettingsView() {
   }
 
   const isTopBarDisabled = isTopBarLoading || isTopBarUpdating
+  const promptNavigationTitle = t('settings.enhancements.chatOutline.promptNavigation.title')
   return (
     <Box
       position="relative"
@@ -209,6 +235,16 @@ export function EnhancementsSettingsView() {
               disabled={isLoading}
               onCheckedChange={(enabled) => void updateChatOutlineEnabled(enabled)}
             />
+            {!isLoading && chatOutlineEnabled && (
+              <FeatureToggleCard
+                title={promptNavigationTitle}
+                switchLabel={promptNavigationTitle}
+                description={t('settings.enhancements.chatOutline.promptNavigation.description')}
+                checked={promptNavigationEnabled}
+                disabled={false}
+                onCheckedChange={(enabled) => void updatePromptNavigationEnabled(enabled)}
+              />
+            )}
             <FeatureToggleCard
               title={t('settings.enhancements.bulkDelete.title')}
               switchLabel={t('settings.enhancements.bulkDelete.title')}

@@ -153,7 +153,11 @@
     "enhancements": {
       "chatOutline": {
         "title": "聊天大纲",
-        "description": "添加可点击的大纲，方便浏览长对话。"
+        "description": "添加可点击的大纲，方便浏览长对话。",
+        "promptNavigation": {
+          "title": "显示提示跳转箭头",
+          "description": "跳到上一条或下一条提示。"
+        }
       },
       "gemAvatar": {
         "title": "Gem 头像",
@@ -601,6 +605,11 @@
       "title": "Multi-Ask 来了，多个重点一起问！",
       "description": "边读边记下疑问，让阅读思路不断线。准备好后一起追问，不必反复翻找原文、重新交代上下文。",
       "action": "查看用法"
+    },
+    "promptNavigation": {
+      "title": "一键跳到上一问或下一问",
+      "description": "点击聊天大纲旁的上下箭头，即可跳到上一条或下一条提问。",
+      "action": "了解更多"
     }
   },
   "onboarding": {
