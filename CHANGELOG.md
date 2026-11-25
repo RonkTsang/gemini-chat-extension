@@ -1,3 +1,13 @@
+# [0.16.0](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.15.0...v0.16.0) (2026-11-25)
+
+
+### Features
+
+* **chat-outline:** add previous and next prompt navigation ([#91](https://github.com/RonkTsang/gemini-chat-extension/issues/91)) ([87fc391](https://github.com/RonkTsang/gemini-chat-extension/commit/87fc391d13321cf202fd42443ef723c92bd52ae9))
+* **chat-outline:** add prompt navigation toggle and docs ([#94](https://github.com/RonkTsang/gemini-chat-extension/issues/94)) ([a9c82c4](https://github.com/RonkTsang/gemini-chat-extension/commit/a9c82c4bc8a94561636d9bc63b1c92855a71f737))
+* **feedback:** add uninstall survey ([#92](https://github.com/RonkTsang/gemini-chat-extension/issues/92)) ([0ef09ee](https://github.com/RonkTsang/gemini-chat-extension/commit/0ef09ee88e033cf42af794b6436a5dcbac5b105d))
+* **theme-bloom:** detect appearance and prevent wallpaper flicker ([fd321a1](https://github.com/RonkTsang/gemini-chat-extension/commit/fd321a1bcda91a9dcc54f93fffdd8632ab5bcd8f))
+
 # [0.15.0](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.14.0...v0.15.0) (2026-11-08)
 
 
