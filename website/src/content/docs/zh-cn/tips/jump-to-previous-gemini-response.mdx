@@ -1,0 +1,80 @@
+---
+title: 如何快速跳到 Gemini 的上一条答复
+description: "读到一半想回看 Gemini 的上一条答复？用 Gemini Power Kit 的上箭头跳到上一条提问，查看下方的回答，再用下箭头返回。"
+head:
+  - tag: meta
+    attrs:
+      property: og:image
+      content: https://gpk.ronktsang.com/og/gemini-prompt-navigation.jpg
+  - tag: meta
+    attrs:
+      property: og:image:alt
+      content: Gemini 对话左上角的聊天大纲图标与上下跳转箭头
+  - tag: meta
+    attrs:
+      name: twitter:image
+      content: https://gpk.ronktsang.com/og/gemini-prompt-navigation.jpg
+  - tag: meta
+    attrs:
+      name: twitter:image:alt
+      content: Gemini 对话左上角的聊天大纲图标与上下跳转箭头
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: |
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "如何快速跳到 Gemini 的上一条答复",
+        "description": "读到一半想回看 Gemini 的上一条答复？用 Gemini Power Kit 的上箭头跳到上一条提问，查看下方的回答，再用下箭头返回。",
+        "url": "https://gpk.ronktsang.com/zh-cn/tips/jump-to-previous-gemini-response/",
+        "image": "https://gpk.ronktsang.com/og/gemini-prompt-navigation.jpg",
+        "inLanguage": "zh-CN",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Gemini Power Kit",
+          "url": "https://gpk.ronktsang.com/"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "Gemini Power Kit",
+          "applicationCategory": "BrowserApplication"
+        }
+      }
+---
+
+正在读 Google Gemini 的长回答，想回看前一轮的答复？点击 Gemini Power Kit 的 **↑ 上一条提示**，就能跳到你上一轮发出的提问。那一轮的答复就在提问下方。
+
+## 在 Gemini 长对话里回看上一条答复
+
+1. [安装 Gemini Power Kit](/zh-cn/guide/install/)，打开一段包含多条提问的 [Gemini](https://gemini.google.com) 对话。如果安装时已经打开了 Gemini，请刷新该标签页。
+2. 阅读答复时，在对话区左上角找到聊天大纲图标旁边的 **↑** 和 **↓** 按钮。
+3. 点击 **↑** 跳到上一条提问，查看下方对应的答复。还想往前一轮，再点一次 **↑**。
+4. 点击 **↓** 跳到下一轮的提问。
+
+<video
+  src="/videos/prompt-nav-button.mp4"
+  poster="/videos/prompt-nav-button-poster.jpg"
+  controls
+  playsinline
+  preload="none"
+  width="952"
+  height="720"
+  class="feature-image feature-image-full"
+  aria-label="Gemini 对话中的上下跳转箭头演示"
+  aria-describedby="prompt-navigation-demo-caption"
+></video>
+
+<p id="prompt-navigation-demo-caption"><em>演示中，点击下箭头跳到后面的提问，再点击上箭头回到前面的提问。</em></p>
+
+## 示例：从长篇预算答复回看前一轮的酒店比较
+
+假设你先请 Gemini 制订三天的行程，接着请它比较酒店，最后又让它列出详细预算。读到预算时，点一次 **↑** 就能回到酒店提问，查看下面的比较结果。再点一次 **↑** 就能回到行程。从行程点两次 **↓**，就回到了预算提问。
+
+## 找不到上下箭头怎么办？
+
+点击 Gemini 侧边栏的拼图图标打开 Gemini Power Kit，进入**增强功能 → 聊天大纲**。开启**聊天大纲**，如果有**显示提示跳转箭头**开关，也将它打开。对话中至少有一条提问时才会显示箭头。
+
+如果鼠标悬停在 **↑** 上显示**滚动到顶部**，你已经在最早一条已加载的提问处。点击箭头可以滚动到顶部，Gemini 可能会继续加载更早的记录。如果要找的是隔了好几轮的一条提问，可以[打开对话大纲列表](/zh-cn/tips/find-earlier-gemini-prompts/)直接选中它。
+
+[查看提示词跳转按钮的完整用法](/zh-cn/features/prompt-navigation/)

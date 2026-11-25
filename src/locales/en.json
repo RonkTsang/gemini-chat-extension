@@ -153,7 +153,11 @@
     "enhancements": {
       "chatOutline": {
         "title": "Chat Outline",
-        "description": "Adds a clickable outline to help you navigate long conversations."
+        "description": "Adds a clickable outline to help you navigate long conversations.",
+        "promptNavigation": {
+          "title": "Show prompt navigation arrows",
+          "description": "Jump to the previous or next prompt."
+        }
       },
       "gemAvatar": {
         "title": "Gem Avatar",
@@ -597,6 +601,11 @@
       "title": "Multi-Ask for Gemini Is Here",
       "description": "Keep reading without forgetting what you wanted to ask. Capture questions along the way, then ask them together with the right context.",
       "action": "View Usage Guide"
+    },
+    "promptNavigation": {
+      "title": "Jump to the previous or next prompt",
+      "description": "Use the arrows beside Chat Outline to jump to the previous or next prompt.",
+      "action": "Learn more"
     }
   },
   "onboarding": {

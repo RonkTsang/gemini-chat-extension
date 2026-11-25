@@ -469,7 +469,10 @@ function hidePopover() {
 }
 
 function initializeUI(chatWindow) {
-  if (chatWindow.querySelector(':scope > #gemini-toc-controls')) return;
+  if (chatWindow.querySelector(':scope > #gemini-toc-controls')) {
+    chatWindow._tocSyncNavigation?.();
+    return;
+  }
 
   const needsPosition = window.getComputedStyle(chatWindow).position === 'static';
   const originalPosition = chatWindow.style.position;
@@ -497,7 +500,16 @@ function initializeUI(chatWindow) {
   entryIcon.innerHTML = '<span id="gemini-pin-badge"></span>';
   controls.appendChild(entryIcon);
   chatWindow.appendChild(controls);
-  const navigation = createOutlineNavigation(chatWindow, controls);
+  let navigation: ReturnType<typeof createOutlineNavigation> | undefined;
+  chatWindow._tocSyncNavigation = () => {
+    if (isPromptNavigationEnabled) {
+      navigation ??= createOutlineNavigation(chatWindow, controls);
+    } else {
+      navigation?.destroy();
+      navigation = undefined;
+    }
+  };
+  chatWindow._tocSyncNavigation();
 
   const entryTooltip = tippy(entryIcon, {
     content: i18nCache.get(LEGACY_I18N_KEYS.CLICK_TO_PIN),
@@ -570,7 +582,7 @@ function initializeUI(chatWindow) {
     );
     if (!shouldUpdate) return;
 
-    navigation.refresh();
+    navigation?.refresh();
     if (!popover.classList.contains('hidden')) {
       clearTimeout(updateTimeout);
       updateTimeout = setTimeout(() => updateTocList(popover, chatWindow), 300);
@@ -581,7 +593,8 @@ function initializeUI(chatWindow) {
   chatWindow._tocCleanup = () => {
     observer.disconnect();
     clearTimeout(updateTimeout);
-    navigation.destroy();
+    navigation?.destroy();
+    delete chatWindow._tocSyncNavigation;
     if (needsPosition && chatWindow.style.position === 'relative') {
       chatWindow.style.position = originalPosition;
     }
@@ -591,6 +604,7 @@ function initializeUI(chatWindow) {
 // --- Robust Initialization ---
 
 let isChatOutlineEnabled = true;
+let isPromptNavigationEnabled = true;
 
 function destroyUI(chatWindow) {
   chatWindow._tocCleanup?.();
@@ -676,10 +690,12 @@ function safeParseBoolean(value: any): boolean {
 async function initializeLegacyMainExecution(): Promise<void> {
   try {
     const data = await browser.storage.sync.get({
-      enableChatOutline: true
+      enableChatOutline: true,
+      enableChatOutlinePromptNavigation: true,
     })
 
     isChatOutlineEnabled = safeParseBoolean(data.enableChatOutline)
+    isPromptNavigationEnabled = data.enableChatOutlinePromptNavigation ?? true
 
     // Create a persistent observer to watch for chat-window additions
     const mainObserver = new MutationObserver((mutations) => {
@@ -711,8 +727,16 @@ void initializeLegacyMainExecution()
 
 // 2. Listen for changes in settings
 browser.storage.onChanged.addListener((changes, namespace) => {
-  if (namespace !== 'sync' || !changes.enableChatOutline) return;
-  isChatOutlineEnabled = safeParseBoolean(changes.enableChatOutline.newValue);
+  if (namespace !== 'sync') return;
+  const outlineChange = changes.enableChatOutline;
+  const navigationChange = changes.enableChatOutlinePromptNavigation;
+  if (!outlineChange && !navigationChange) return;
+  if (outlineChange) {
+    isChatOutlineEnabled = safeParseBoolean(outlineChange.newValue);
+  }
+  if (navigationChange) {
+    isPromptNavigationEnabled = navigationChange.newValue ?? true;
+  }
   syncOutlineIn(document.body);
 });
 

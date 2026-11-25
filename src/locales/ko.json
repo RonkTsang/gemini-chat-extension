@@ -153,7 +153,11 @@
     "enhancements": {
       "chatOutline": {
         "title": "채팅 개요",
-        "description": "긴 대화를 쉽게 탐색할 수 있는 클릭 가능한 개요를 추가합니다."
+        "description": "긴 대화를 쉽게 탐색할 수 있는 클릭 가능한 개요를 추가합니다.",
+        "promptNavigation": {
+          "title": "프롬프트 이동 화살표 표시",
+          "description": "이전 또는 다음 프롬프트로 이동합니다."
+        }
       },
       "gemAvatar": {
         "title": "Gem 아바타",
@@ -601,6 +605,11 @@
       "title": "Gemini용 Multi-Ask 출시",
       "description": "질문을 기억해 두지 않아도 계속 읽을 수 있어요. 읽으며 모아 두었다가 알맞은 맥락과 함께 한 번에 물어보세요.",
       "action": "사용 가이드 보기"
+    },
+    "promptNavigation": {
+      "title": "이전 또는 다음 질문으로 이동",
+      "description": "채팅 개요 옆의 화살표를 눌러 이전 질문이나 다음 질문으로 이동하세요.",
+      "action": "자세히 보기"
     }
   },
   "onboarding": {

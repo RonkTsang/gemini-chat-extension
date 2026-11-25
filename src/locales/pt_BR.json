@@ -153,7 +153,11 @@
     "enhancements": {
       "chatOutline": {
         "title": "Esboço de chat",
-        "description": "Adiciona um esboço clicável para navegar por conversas longas."
+        "description": "Adiciona um esboço clicável para navegar por conversas longas.",
+        "promptNavigation": {
+          "title": "Setas para navegar entre prompts",
+          "description": "Vá para o prompt anterior ou próximo."
+        }
       },
       "gemAvatar": {
         "title": "Avatar do Gem",
@@ -601,6 +605,11 @@
       "title": "Chegou o Multi-Ask para Gemini",
       "description": "Continue lendo sem precisar guardar as perguntas na memória. Anote-as durante a leitura e pergunte tudo junto com o contexto certo.",
       "action": "Ver guia de uso"
+    },
+    "promptNavigation": {
+      "title": "Vá para a pergunta anterior ou seguinte",
+      "description": "Use as setas ao lado do Chat Outline para ir à pergunta anterior ou seguinte.",
+      "action": "Saiba mais"
     }
   },
   "onboarding": {

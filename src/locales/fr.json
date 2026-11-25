@@ -153,7 +153,11 @@
     "enhancements": {
       "chatOutline": {
         "title": "Plan de discussion",
-        "description": "Ajoute un plan cliquable pour naviguer facilement dans les longues conversations."
+        "description": "Ajoute un plan cliquable pour naviguer facilement dans les longues conversations.",
+        "promptNavigation": {
+          "title": "Flèches de navigation entre les prompts",
+          "description": "Passer au prompt précédent ou suivant."
+        }
       },
       "gemAvatar": {
         "title": "Avatar des Gems",
@@ -601,6 +605,11 @@
       "title": "Multi-Ask pour Gemini est arrivé",
       "description": "Continuez à lire sans retenir vos questions. Notez-les au fil de la lecture, puis posez-les ensemble avec le bon contexte.",
       "action": "Voir le guide"
+    },
+    "promptNavigation": {
+      "title": "Passez à la question précédente ou suivante",
+      "description": "Utilisez les flèches à côté du plan de la conversation pour passer à la question précédente ou suivante.",
+      "action": "En savoir plus"
     }
   },
   "onboarding": {

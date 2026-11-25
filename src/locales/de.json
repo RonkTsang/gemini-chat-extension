@@ -153,7 +153,11 @@
     "enhancements": {
       "chatOutline": {
         "title": "Chat-Gliederung",
-        "description": "Fügt eine anklickbare Gliederung hinzu, um lange Unterhaltungen leichter zu navigieren."
+        "description": "Fügt eine anklickbare Gliederung hinzu, um lange Unterhaltungen leichter zu navigieren.",
+        "promptNavigation": {
+          "title": "Pfeile zur Navigation zwischen Prompts",
+          "description": "Springe zum vorherigen oder nächsten Prompt."
+        }
       },
       "gemAvatar": {
         "title": "Gem-Avatar",
@@ -601,6 +605,11 @@
       "title": "Multi-Ask für Gemini ist da",
       "description": "Lies einfach weiter, ohne deine Fragen im Kopf behalten zu müssen. Sammle sie unterwegs und stelle sie zusammen mit dem passenden Kontext.",
       "action": "Anleitung ansehen"
+    },
+    "promptNavigation": {
+      "title": "Mit Pfeilen zur nächsten Frage",
+      "description": "Mit den Pfeilen neben der Chat-Übersicht springst du zur vorherigen oder nächsten Frage.",
+      "action": "Mehr erfahren"
     }
   },
   "onboarding": {

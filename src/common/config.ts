@@ -16,6 +16,7 @@ export const EXTERNAL_LINKS = {
   RELEASE_NOTES: 'https://gpk.ronktsang.com/support/whats-new/',
   THEME_BLOOM_GUIDE: 'https://gpk.ronktsang.com/features/theme/#theme-bloom',
   QUICK_FOLLOW_UP_GUIDE: 'https://gpk.ronktsang.com/features/quick-follow-up/',
+  PROMPT_NAVIGATION_GUIDE: 'https://gpk.ronktsang.com/features/prompt-navigation/',
   GEM_AVATAR_GUIDE: 'https://gpk.ronktsang.com/features/gem-avatar/',
   NOTIFICATION_TROUBLESHOOTING: 'https://gpk.ronktsang.com/support/notification-troubleshooting/',
   NOTIFICATION_TROUBLESHOOTING_ZH_CN: 'https://gpk.ronktsang.com/zh-cn/support/notification-troubleshooting/',
