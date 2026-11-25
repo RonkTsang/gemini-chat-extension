@@ -6,12 +6,15 @@ import { EnhancementsSettingsView } from './index'
 
 const mocks = vi.hoisted(() => ({
   getChatOutline: vi.fn(),
+  getPromptNavigation: vi.fn(),
   getBulkDelete: vi.fn(),
   getGemAvatar: vi.fn(),
   watchChatOutline: vi.fn(),
+  watchPromptNavigation: vi.fn(),
   watchBulkDelete: vi.fn(),
   watchGemAvatar: vi.fn(),
   setChatOutline: vi.fn(),
+  setPromptNavigation: vi.fn(),
   setBulkDelete: vi.fn(),
   setGemAvatar: vi.fn(),
   getTopBarSettings: vi.fn(),
@@ -76,6 +79,11 @@ vi.mock('@/common/storage', () => ({
     setValue: mocks.setChatOutline,
     watch: mocks.watchChatOutline,
   },
+  enableChatOutlinePromptNavigation: {
+    getValue: mocks.getPromptNavigation,
+    setValue: mocks.setPromptNavigation,
+    watch: mocks.watchPromptNavigation,
+  },
   enableBulkDelete: {
     getValue: mocks.getBulkDelete,
     setValue: mocks.setBulkDelete,
@@ -132,6 +140,8 @@ vi.mock('@/utils/i18n', () => {
       "Hide Gemini's upgrade reminder from the top bar.",
     'settings.enhancements.chatOutline.title': 'Chat Outline',
     'settings.enhancements.chatOutline.description': 'Chat outline description',
+    'settings.enhancements.chatOutline.promptNavigation.title': 'Show prompt navigation arrows',
+    'settings.enhancements.chatOutline.promptNavigation.description': 'Jump to the previous or next prompt.',
     'settings.enhancements.bulkDelete.title': 'Bulk Delete',
     'settings.enhancements.bulkDelete.description': 'Bulk delete description',
     'settings.enhancements.gemAvatar.title': 'Gem Avatar',
@@ -167,7 +177,7 @@ let root: Root
 let container: HTMLDivElement
 let windowOpenSpy: ReturnType<typeof vi.spyOn>
 
-describe('EnhancementsSettingsView top bar customization', () => {
+describe('EnhancementsSettingsView', () => {
   beforeEach(() => {
     ;(globalThis as typeof globalThis & {
       IS_REACT_ACT_ENVIRONMENT?: boolean
@@ -175,9 +185,11 @@ describe('EnhancementsSettingsView top bar customization', () => {
 
     vi.clearAllMocks()
     mocks.getChatOutline.mockResolvedValue(true)
+    mocks.getPromptNavigation.mockResolvedValue(true)
     mocks.getBulkDelete.mockResolvedValue(true)
     mocks.getGemAvatar.mockResolvedValue(false)
     mocks.watchChatOutline.mockReturnValue(() => undefined)
+    mocks.watchPromptNavigation.mockReturnValue(() => undefined)
     mocks.watchBulkDelete.mockReturnValue(() => undefined)
     mocks.watchGemAvatar.mockReturnValue(() => undefined)
     mocks.watchTopBarSettings.mockImplementation((callback) => {
@@ -207,6 +219,41 @@ describe('EnhancementsSettingsView top bar customization', () => {
     })
     windowOpenSpy.mockRestore()
     container.remove()
+  })
+
+  it('hides the prompt buttons setting when Chat Outline is off and restores its preference', async () => {
+    await act(async () => {
+      root.render(<EnhancementsSettingsView />)
+    })
+
+    const label = 'Show prompt navigation arrows'
+    const description = 'Jump to the previous or next prompt.'
+    const promptNavigation = findSwitch(container, label)
+    const outlineWatcher = mocks.watchChatOutline.mock.calls[0][0]
+    const promptNavigationWatcher = mocks.watchPromptNavigation.mock.calls[0][0]
+    expect(promptNavigation.disabled).toBe(false)
+    expect(container.textContent).toContain(description)
+
+    await act(async () => {
+      promptNavigation.click()
+      promptNavigationWatcher(false)
+    })
+    expect(mocks.setPromptNavigation).toHaveBeenCalledWith(false)
+    expect(mocks.setChatOutline).not.toHaveBeenCalled()
+    expect(promptNavigation.getAttribute('aria-checked')).toBe('false')
+
+    await act(async () => {
+      outlineWatcher(false)
+    })
+    expect(container.textContent).not.toContain(label)
+    expect(container.textContent).not.toContain(description)
+    expect(promptNavigation.isConnected).toBe(false)
+    expect(mocks.setPromptNavigation).toHaveBeenCalledTimes(1)
+
+    await act(async () => {
+      outlineWatcher(true)
+    })
+    expect(findSwitch(container, label).getAttribute('aria-checked')).toBe('false')
   })
 
   it('opens the Gem Avatar guide from its title help icon', async () => {

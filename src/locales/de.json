@@ -3,6 +3,10 @@
   "attachmentLabel": "[Anhang]",
   "clickToPin": "Klicken zum Anheften",
   "unpin": "Lösen",
+  "chatOutlinePreviousPrompt": "Vorheriger Prompt",
+  "chatOutlineNextPrompt": "Nächster Prompt",
+  "chatOutlineScrollToTop": "Nach oben scrollen",
+  "chatOutlineScrollToBottom": "Nach unten scrollen",
   "askGemini": "Gemini fragen",
   "regardingThis": "Bezugnehmend auf diesen Punkt im Besonderen",
   "enableQuickQuoteLabel": "Schnellzitat aktivieren",
@@ -149,7 +153,11 @@
     "enhancements": {
       "chatOutline": {
         "title": "Chat-Gliederung",
-        "description": "Fügt eine anklickbare Gliederung hinzu, um lange Unterhaltungen leichter zu navigieren."
+        "description": "Fügt eine anklickbare Gliederung hinzu, um lange Unterhaltungen leichter zu navigieren.",
+        "promptNavigation": {
+          "title": "Pfeile zur Navigation zwischen Prompts",
+          "description": "Springe zum vorherigen oder nächsten Prompt."
+        }
       },
       "gemAvatar": {
         "title": "Gem-Avatar",
@@ -544,7 +552,7 @@
     "feedback": {
       "title": "Feedback",
       "featureRequest": "Funktionswunsch",
-      "bugSupport": "Fehler / Support",
+      "bugSupport": "Hilfe erhalten",
       "leaveReview": "Bewertung abgeben"
     },
     "openSource": {
@@ -552,7 +560,7 @@
     },
     "donate": {
       "title": "Projekt unterstützen",
-      "description": "Wenn $1 Ihnen Zeit spart oder Freude bereitet, erwägen Sie bitte, seine Zukunft zu unterstützen",
+      "description": "Deine Unterstützung hilft mir, $1 zu warten und weiterzuentwickeln, besonders bei Kompatibilitätsproblemen nach Gemini-Updates und beim Testen der Lösungen in Chrome und Firefox.",
       "buyMeCoffee": "Kaffee spenden",
       "share": "Mit Freunden teilen"
     }
@@ -592,10 +600,16 @@
   "whatsnew": {
     "title": "Was gibt's Neues",
     "releaseNotes": "Versionshinweise",
+    "supportLink": "Projekt unterstützen",
     "multiAsk": {
       "title": "Multi-Ask für Gemini ist da",
       "description": "Lies einfach weiter, ohne deine Fragen im Kopf behalten zu müssen. Sammle sie unterwegs und stelle sie zusammen mit dem passenden Kontext.",
       "action": "Anleitung ansehen"
+    },
+    "promptNavigation": {
+      "title": "Mit Pfeilen zur nächsten Frage",
+      "description": "Mit den Pfeilen neben der Chat-Übersicht springst du zur vorherigen oder nächsten Frage.",
+      "action": "Mehr erfahren"
     }
   },
   "onboarding": {

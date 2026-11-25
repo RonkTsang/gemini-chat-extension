@@ -1,0 +1,83 @@
+---
+title: Gemini 提示词跳转箭头
+description: "使用 Gemini Power Kit 聊天大纲旁的上下箭头，在 Gemini 长对话中跳到上一条或下一条提问，查看对应答复。"
+head:
+  - tag: meta
+    attrs:
+      property: og:image
+      content: https://gpk.ronktsang.com/og/gemini-prompt-navigation.jpg
+  - tag: meta
+    attrs:
+      property: og:image:alt
+      content: Gemini 对话左上角的聊天大纲图标与上下跳转箭头
+  - tag: meta
+    attrs:
+      name: twitter:image
+      content: https://gpk.ronktsang.com/og/gemini-prompt-navigation.jpg
+  - tag: meta
+    attrs:
+      name: twitter:image:alt
+      content: Gemini 对话左上角的聊天大纲图标与上下跳转箭头
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: |
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "Gemini 提示词跳转箭头",
+        "description": "使用 Gemini Power Kit 聊天大纲旁的上下箭头，在 Gemini 长对话中跳到上一条或下一条提问，查看对应答复。",
+        "url": "https://gpk.ronktsang.com/zh-cn/features/prompt-navigation/",
+        "image": "https://gpk.ronktsang.com/og/gemini-prompt-navigation.jpg",
+        "inLanguage": "zh-CN",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Gemini Power Kit",
+          "url": "https://gpk.ronktsang.com/"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "Gemini Power Kit",
+          "applicationCategory": "BrowserApplication"
+        }
+      }
+---
+
+用**聊天大纲**旁的 **↑** 和 **↓** 按钮，可以在当前 Google Gemini 对话中逐条跳转。每次跳转会定位到你发出的提问，Gemini 的答复就在下方。
+
+## 在哪里找到跳转箭头
+
+先[安装 Gemini Power Kit](/zh-cn/guide/install/)，再打开 [Gemini](https://gemini.google.com) 中的一段对话。如果安装时已经打开了 Gemini，请刷新该标签页。对话区左上角的三条横线是聊天大纲图标，两个箭头就在旁边。大纲面板收起时也能使用箭头。
+
+<video
+  src="/videos/prompt-nav-button.mp4"
+  poster="/videos/prompt-nav-button-poster.jpg"
+  controls
+  playsinline
+  preload="none"
+  width="952"
+  height="720"
+  class="feature-image feature-image-full"
+  aria-label="Gemini 对话中的上下跳转箭头演示"
+  aria-describedby="prompt-navigation-demo-caption"
+></video>
+
+<p id="prompt-navigation-demo-caption"><em>演示中，点击下箭头跳到后面的提问，再点击上箭头回到前面的提问。</em></p>
+
+## 向上和向下按钮各有什么用
+
+| 按钮 | 有相邻提问时 | 到达第一条或最后一条时 |
+| --- | --- | --- |
+| **↑ 上一条提示** | 跳到上一条提问。 | **滚动到顶部**会回到对话区顶部。 |
+| **↓ 下一条提示** | 跳到下一条提问。 | **滚动到底部**会回到对话区底部。 |
+
+箭头可以跳转到 Gemini 已加载的提问。如果更早的提问还没加载，先向上滚动加载更多记录，再继续使用箭头。空白对话里不会显示箭头。
+
+## 显示或隐藏提示跳转箭头
+
+从 Gemini 侧边栏的拼图图标打开 Gemini Power Kit，进入**增强功能 → 聊天大纲**。开启**聊天大纲**后，箭头默认显示。如果设置里有**显示提示跳转箭头**开关，可以单独显示或隐藏两个按钮，同时继续使用大纲列表。
+
+## 相关教程
+
+- [如何快速跳到 Gemini 的上一条答复](/zh-cn/tips/jump-to-previous-gemini-response/)
+- [用对话大纲查找指定的提问](/zh-cn/tips/find-earlier-gemini-prompts/)

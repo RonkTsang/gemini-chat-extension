@@ -3,6 +3,10 @@
   "attachmentLabel": "[Anexo]",
   "clickToPin": "Clicar para fixar",
   "unpin": "Desafixar",
+  "chatOutlinePreviousPrompt": "Prompt anterior",
+  "chatOutlineNextPrompt": "Próximo prompt",
+  "chatOutlineScrollToTop": "Rolar para o início",
+  "chatOutlineScrollToBottom": "Rolar para o fim",
   "askGemini": "Perguntar ao Gemini",
   "regardingThis": "Referindo-se a isto em particular",
   "enableQuickQuoteLabel": "Ativar Cotação Rápida",
@@ -149,7 +153,11 @@
     "enhancements": {
       "chatOutline": {
         "title": "Esboço de chat",
-        "description": "Adiciona um esboço clicável para navegar por conversas longas."
+        "description": "Adiciona um esboço clicável para navegar por conversas longas.",
+        "promptNavigation": {
+          "title": "Setas para navegar entre prompts",
+          "description": "Vá para o prompt anterior ou próximo."
+        }
       },
       "gemAvatar": {
         "title": "Avatar do Gem",
@@ -544,7 +552,7 @@
     "feedback": {
       "title": "Feedback",
       "featureRequest": "Solicitação de recurso",
-      "bugSupport": "Bug / Suporte",
+      "bugSupport": "Obter ajuda",
       "leaveReview": "Deixar uma avaliação"
     },
     "openSource": {
@@ -552,7 +560,7 @@
     },
     "donate": {
       "title": "Apoiar o projeto",
-      "description": "Se o $1 economiza seu tempo ou traz alegria, considere apoiar seu futuro",
+      "description": "Seu apoio me ajuda a manter e aprimorar o $1, especialmente corrigindo problemas de compatibilidade após atualizações do Gemini e testando essas correções no Chrome e no Firefox.",
       "buyMeCoffee": "Me pague um café",
       "share": "Compartilhar com amigos"
     }
@@ -592,10 +600,16 @@
   "whatsnew": {
     "title": "O que há de novo",
     "releaseNotes": "Notas da versão",
+    "supportLink": "Apoiar o projeto",
     "multiAsk": {
       "title": "Chegou o Multi-Ask para Gemini",
       "description": "Continue lendo sem precisar guardar as perguntas na memória. Anote-as durante a leitura e pergunte tudo junto com o contexto certo.",
       "action": "Ver guia de uso"
+    },
+    "promptNavigation": {
+      "title": "Vá para a pergunta anterior ou seguinte",
+      "description": "Use as setas ao lado do Chat Outline para ir à pergunta anterior ou seguinte.",
+      "action": "Saiba mais"
     }
   },
   "onboarding": {

@@ -3,11 +3,14 @@
  * A custom floating card that displays new features after version update
  */
 
-import { Box, Badge, Button, Card, HStack, Portal, Text, VStack, CloseButton, Image } from '@chakra-ui/react'
+import { Box, Badge, Button, Card, HStack, Icon, Link, Portal, Text, VStack, CloseButton, Image } from '@chakra-ui/react'
 import { useState } from 'react'
+import { FaHeart } from 'react-icons/fa'
 import { HiOutlineAdjustments, HiOutlineExternalLink } from 'react-icons/hi'
 import { t } from '@/utils/i18n'
 import { EXTERNAL_LINKS } from '@/common/config'
+import { ABOUT_SUPPORT_ANCHOR } from '@/components/setting-panel/views/about/support'
+import { useColorModeValue } from '@/components/ui/color-mode'
 import { useEventEmitter } from '@/hooks/useEventBus'
 import type { ReleaseNote, ReleaseNotePromoAction } from './config'
 
@@ -20,6 +23,7 @@ interface WhatsNewToastProps {
 export function WhatsNewToast({ version, features, onClose }: WhatsNewToastProps) {
   const [failedPromoImages, setFailedPromoImages] = useState<Set<string>>(new Set())
   const { emitSync } = useEventEmitter()
+  const supportHeartColor = useColorModeValue('pink.600', 'pink.400')
 
   const resolvePromoImageSrc = (promoImagePath: string) => {
     if (/^(https?:|data:|blob:|chrome-extension:|moz-extension:)/.test(promoImagePath)) {
@@ -33,8 +37,17 @@ export function WhatsNewToast({ version, features, onClose }: WhatsNewToastProps
     }
   }
 
-  const handleReleaseNotesClick = () => {
-    window.open(EXTERNAL_LINKS.RELEASE_NOTES, '_blank', 'noopener,noreferrer')
+  const handleSupportClick = () => {
+    emitSync('settings:open', {
+      from: 'whats-new',
+      open: true,
+      module: 'about',
+      params: {
+        anchor: ABOUT_SUPPORT_ANCHOR,
+        animateSupportBorder: true,
+      },
+    })
+    onClose()
   }
 
   const handlePromoActionClick = (action?: ReleaseNotePromoAction) => {
@@ -102,7 +115,7 @@ export function WhatsNewToast({ version, features, onClose }: WhatsNewToastProps
           </Card.Header>
 
           {/* Body - Feature List */}
-          <Card.Body pt="1" pb="2" overflowY="auto" flex="1" minH="0">
+          <Card.Body pt="1" pb="4" overflowY="auto" flex="1" minH="0">
             <VStack align="stretch" gap="4">
               {features.map((feature, index) => {
                 const promoImageSrc = feature.promoImagePath
@@ -187,14 +200,75 @@ export function WhatsNewToast({ version, features, onClose }: WhatsNewToastProps
 
 
           {/* Footer */}
-          <Card.Footer p="3" pt="2" justifyContent="flex-end" flexShrink="0">
-            <Button
-              variant="outline"
-              size="2xs"
-              onClick={handleReleaseNotesClick}
+          <Card.Footer
+            px="3"
+            py="3"
+            mt="1"
+            borderTopWidth="1px"
+            borderColor="border.subtle"
+            justifyContent="center"
+            alignItems="center"
+            gap="3"
+            flexWrap="wrap"
+            flexShrink="0"
+          >
+            <Box
+              as="button"
+              display="inline-flex"
+              alignItems="center"
+              gap="1.5"
+              py="1"
+              borderRadius="sm"
+              fontSize="xs"
+              color="fg.muted"
+              cursor="pointer"
+              transition="color 0.15s ease"
+              _hover={{
+                color: 'fg',
+                textDecoration: 'underline',
+              }}
+              _focusVisible={{
+                outline: '2px solid',
+                outlineColor: 'colorPalette.focusRing',
+                outlineOffset: '2px',
+              }}
+              onClick={handleSupportClick}
             >
-              {t('whatsnew.releaseNotes')}
-            </Button>
+              <Icon as={FaHeart} boxSize="12px" color={supportHeartColor} aria-hidden="true" flexShrink={0} />
+              <Text as="span">{t('whatsnew.supportLink')}</Text>
+            </Box>
+            <Box
+              as="span"
+              aria-hidden="true"
+              w="1px"
+              h="3"
+              bg="border"
+              flexShrink={0}
+            />
+            <Link
+              href={EXTERNAL_LINKS.RELEASE_NOTES}
+              target="_blank"
+              rel="noopener noreferrer"
+              display="inline-flex"
+              alignItems="center"
+              py="1"
+              borderRadius="sm"
+              fontSize="xs"
+              color="fg.muted"
+              textDecoration="none"
+              transition="color 0.15s ease"
+              _hover={{
+                color: 'fg',
+                textDecoration: 'underline',
+              }}
+              _focusVisible={{
+                outline: '2px solid',
+                outlineColor: 'colorPalette.focusRing',
+                outlineOffset: '2px',
+              }}
+            >
+              <Text as="span">{t('whatsnew.releaseNotes')}</Text>
+            </Link>
           </Card.Footer>
         </Card.Root>
       </Box>

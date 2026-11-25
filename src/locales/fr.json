@@ -3,6 +3,10 @@
   "attachmentLabel": "[Pièce jointe]",
   "clickToPin": "Cliquer pour épingler",
   "unpin": "Détacher",
+  "chatOutlinePreviousPrompt": "Prompt précédent",
+  "chatOutlineNextPrompt": "Prompt suivant",
+  "chatOutlineScrollToTop": "Faire défiler vers le haut",
+  "chatOutlineScrollToBottom": "Faire défiler vers le bas",
   "askGemini": "Demander à Gemini",
   "regardingThis": "En se référant à ceci en particulier",
   "enableQuickQuoteLabel": "Activer la citation rapide",
@@ -149,7 +153,11 @@
     "enhancements": {
       "chatOutline": {
         "title": "Plan de discussion",
-        "description": "Ajoute un plan cliquable pour naviguer facilement dans les longues conversations."
+        "description": "Ajoute un plan cliquable pour naviguer facilement dans les longues conversations.",
+        "promptNavigation": {
+          "title": "Flèches de navigation entre les prompts",
+          "description": "Passer au prompt précédent ou suivant."
+        }
       },
       "gemAvatar": {
         "title": "Avatar des Gems",
@@ -544,7 +552,7 @@
     "feedback": {
       "title": "Retour",
       "featureRequest": "Demande de fonctionnalité",
-      "bugSupport": "Bug / Support",
+      "bugSupport": "Obtenir de l’aide",
       "leaveReview": "Laisser un avis"
     },
     "openSource": {
@@ -552,7 +560,7 @@
     },
     "donate": {
       "title": "Soutenir le projet",
-      "description": "Si $1 vous fait gagner du temps ou vous apporte de la joie, veuillez envisager de soutenir son avenir",
+      "description": "Votre soutien m’aide à maintenir et à améliorer $1, notamment à corriger les problèmes de compatibilité après les mises à jour de Gemini et à tester ces correctifs sur Chrome et Firefox.",
       "buyMeCoffee": "Offrir un café",
       "share": "Partager avec des amis"
     }
@@ -592,10 +600,16 @@
   "whatsnew": {
     "title": "Quoi de neuf",
     "releaseNotes": "Notes de version",
+    "supportLink": "Soutenir le projet",
     "multiAsk": {
       "title": "Multi-Ask pour Gemini est arrivé",
       "description": "Continuez à lire sans retenir vos questions. Notez-les au fil de la lecture, puis posez-les ensemble avec le bon contexte.",
       "action": "Voir le guide"
+    },
+    "promptNavigation": {
+      "title": "Passez à la question précédente ou suivante",
+      "description": "Utilisez les flèches à côté du plan de la conversation pour passer à la question précédente ou suivante.",
+      "action": "En savoir plus"
     }
   },
   "onboarding": {

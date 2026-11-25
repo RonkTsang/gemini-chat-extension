@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   getAppearanceState,
+  previewAppearance,
   setAppearanceMode,
   subscribeSystemThemeChange,
 } from './service'
@@ -112,6 +113,35 @@ describe('appearance service', () => {
     expect(localStorage.getItem('Bard-Color-Theme')).toBe('Bard-Light-Theme')
     expect(document.body.classList.contains('light-theme')).toBe(true)
     expect(document.body.classList.contains('dark-theme')).toBe(false)
+  })
+
+  it('previews the page theme synchronously while keeping the system preference', () => {
+    document.body.classList.add('theme-host', 'light-theme')
+    localStorage.setItem('theme', 'light')
+
+    expect(previewAppearance('light')).toBeNull()
+    const preview = previewAppearance('dark')
+
+    expect(preview?.isCurrent()).toBe(true)
+    expect(document.body.className).toBe('theme-host dark-theme')
+    expect(getAppearanceState()).toEqual({ mode: 'system', effectiveTheme: 'dark' })
+    expect(localStorage.getItem('theme')).toBe('light')
+
+    preview?.restore()
+
+    expect(document.body.className).toBe('theme-host light-theme')
+    expect(getAppearanceState()).toEqual({ mode: 'system', effectiveTheme: 'light' })
+  })
+
+  it('keeps a newer explicit appearance choice when rolling back a preview', () => {
+    document.body.classList.add('light-theme')
+    const preview = previewAppearance('dark')
+
+    setAppearanceMode('dark')
+    expect(preview?.isCurrent()).toBe(false)
+    preview?.restore()
+
+    expect(getAppearanceState()).toEqual({ mode: 'dark', effectiveTheme: 'dark' })
   })
 
   it('removes Bard-Color-Theme and follows system when switching to system', () => {

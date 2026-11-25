@@ -1,5 +1,6 @@
 export {
   getAppearanceState,
+  previewAppearance,
   setAppearanceMode,
   subscribeSystemThemeChange,
 } from './service'

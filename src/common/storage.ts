@@ -8,6 +8,13 @@ export const enableChatOutline = storage.defineItem<boolean>(
   }
 );
 
+export const enableChatOutlinePromptNavigation = storage.defineItem<boolean>(
+  'sync:enableChatOutlinePromptNavigation',
+  {
+    fallback: true,
+  }
+);
+
 export const enableQuickQuote = storage.defineItem<boolean>(
   'sync:enableQuickQuote',
   {

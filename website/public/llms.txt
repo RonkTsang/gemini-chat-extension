@@ -20,6 +20,7 @@ This website documents the public product, installation flow, feature behavior, 
 ## Tips And Tutorials
 
 - [Tips & Tutorials](https://gpk.ronktsang.com/tips/): Task-focused guides with examples and practical Gemini Power Kit usage tips.
+- [How to Jump to the Previous Response in Gemini](https://gpk.ronktsang.com/tips/jump-to-previous-gemini-response/): Use the up arrow to return to the previous question and its reply during a long Gemini answer, then use the down arrow to move forward.
 - [Navigate Long Gemini Chats with Chat Outline](https://gpk.ronktsang.com/tips/find-earlier-gemini-prompts/): Browse Chat Outline as a clickable table of contents for the current Gemini conversation’s prompts and attachments, including image thumbnails, video covers, and file details. Select an entry to navigate directly to its message.
 - [Change Gemini Chat Background and Theme](https://gpk.ronktsang.com/tips/change-gemini-background/): Start with a Theme Bloom image drop to change the Gemini chat background and color preset, then adjust readability or troubleshoot common issues.
 
@@ -31,6 +32,7 @@ This website documents the public product, installation flow, feature behavior, 
 ## Features
 
 - [Chat Outline](https://gpk.ronktsang.com/features/chat-outline/): Navigate long Gemini conversations and jump between key sections.
+- [Gemini Prompt Navigation Arrows](https://gpk.ronktsang.com/features/prompt-navigation/): Use the buttons beside Chat Outline to jump between adjacent prompts or scroll to the top or bottom, and find the setting for showing the arrows.
 - [Quick Follow-up](https://gpk.ronktsang.com/features/quick-follow-up/): Note questions beside a long Gemini answer as you read, then ask them together without remembering every question or finding the passages again. Includes illustrated steps for up to 10 references, sending, editing, and choosing Auto, Cards, or Compact for draft selections.
 - [Chain Prompt](https://gpk.ronktsang.com/features/chain-prompt/): Build reusable multi-step Gemini prompt workflows.
 - [Open in New Tab](https://gpk.ronktsang.com/features/stuff-open-new-tab/): Open Gemini Library items in new tabs without interrupting the current page.
@@ -59,6 +61,7 @@ This website documents the public product, installation flow, feature behavior, 
 - [Chinese Privacy Policy](https://gpk.ronktsang.com/zh-cn/privacy-policy/): Chinese privacy policy.
 
 - [Chinese Tips & Tutorials](https://gpk.ronktsang.com/zh-cn/tips/): Chinese usage tutorials.
+- [Chinese Previous Gemini Response Tutorial](https://gpk.ronktsang.com/zh-cn/tips/jump-to-previous-gemini-response/): Chinese guide to jumping between adjacent questions and their replies in long Gemini chats.
 - [Chinese Chat Outline Navigation Tutorial](https://gpk.ronktsang.com/zh-cn/tips/find-earlier-gemini-prompts/): Chinese guide to browsing the current Gemini conversation’s prompts and attachments as a clickable outline and navigating directly to a message.
 - [Chinese Background Tutorial](https://gpk.ronktsang.com/zh-cn/tips/change-gemini-background/): Chinese guide to setting a custom Gemini chat wallpaper and matching theme colors with Theme Bloom.
 

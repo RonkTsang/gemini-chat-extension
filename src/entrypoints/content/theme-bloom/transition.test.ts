@@ -155,6 +155,38 @@ describe('Theme Bloom transition', () => {
     })
   })
 
+  it('waits for the browser to apply the update when it skips the reveal', async () => {
+    vi.useFakeTimers()
+    const apply = vi.fn()
+    Object.defineProperty(document, 'startViewTransition', {
+      configurable: true,
+      value: (update: () => void) => ({
+        ready: Promise.reject(new Error('transition skipped')),
+        finished: new Promise<void>((resolve) => {
+          window.setTimeout(() => {
+            update()
+            resolve()
+          }, 10)
+        }),
+      }),
+    })
+    const transition = startThemeBloomTransition({
+      origin: { clientX: 20, clientY: 30 },
+      apply,
+      document,
+      prefersReducedMotion: false,
+    })
+    const onFinished = vi.fn()
+    void transition.finished.then(onFinished)
+
+    await vi.advanceTimersByTimeAsync(0)
+    expect(onFinished).not.toHaveBeenCalled()
+
+    await vi.advanceTimersByTimeAsync(10)
+    await transition.finished
+    expect(apply).toHaveBeenCalledBefore(onFinished)
+  })
+
   it('primes a real View Transition pseudo-element without changing page state', async () => {
     const animate = vi.fn((_keyframes: Keyframe[], _options: KeyframeAnimationOptions) => ({
       finished: Promise.resolve(),

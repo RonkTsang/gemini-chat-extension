@@ -450,9 +450,10 @@ export function startThemeBloomTransition(
           await activeRevealAnimation.finished
           await viewTransition.finished
         })
-        .catch(() => {
+        .catch(async () => {
           if (cleaned) return
           viewTransition.skipTransition?.()
+          await viewTransition.finished.catch(() => undefined)
         })
         .finally(cleanup)
       return {

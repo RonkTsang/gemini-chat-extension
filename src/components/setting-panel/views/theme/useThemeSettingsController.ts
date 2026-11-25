@@ -167,6 +167,8 @@ export function useThemeSettingsController(
     setIsPanelOpen(data.open)
   })
 
+  useEvent('theme:appearance-changed', setAppearanceState)
+
   const loadBackgroundState = useCallback(async () => {
     setIsBackgroundLoading(true)
     try {

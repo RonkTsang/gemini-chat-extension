@@ -3,6 +3,10 @@
   "attachmentLabel": "[附件]",
   "clickToPin": "点击固定",
   "unpin": "取消固定",
+  "chatOutlinePreviousPrompt": "上一条提示",
+  "chatOutlineNextPrompt": "下一条提示",
+  "chatOutlineScrollToTop": "滚动到顶部",
+  "chatOutlineScrollToBottom": "滚动到底部",
   "askGemini": "询问 Gemini",
   "regardingThis": "特指这段内容",
   "enableQuickQuoteLabel": "启用划词追问",
@@ -149,7 +153,11 @@
     "enhancements": {
       "chatOutline": {
         "title": "聊天大纲",
-        "description": "添加可点击的大纲，方便浏览长对话。"
+        "description": "添加可点击的大纲，方便浏览长对话。",
+        "promptNavigation": {
+          "title": "显示提示跳转箭头",
+          "description": "跳到上一条或下一条提示。"
+        }
       },
       "gemAvatar": {
         "title": "Gem 头像",
@@ -544,7 +552,7 @@
     "feedback": {
       "title": "反馈",
       "featureRequest": "功能建议",
-      "bugSupport": "问题反馈 / 支持",
+      "bugSupport": "获取帮助",
       "leaveReview": "留下评价"
     },
     "openSource": {
@@ -552,7 +560,7 @@
     },
     "donate": {
       "title": "支持项目",
-      "description": "如果 $1 为你节省了时间或带来了快乐，请考虑支持它的未来发展",
+      "description": "你的支持将帮助我维护和迭代 $1，尤其是修复 Gemini 更新后的兼容问题，并在 Chrome 和 Firefox 上测试这些修复。",
       "buyMeCoffee": "请我喝咖啡",
       "share": "分享给朋友"
     }
@@ -592,10 +600,16 @@
   "whatsnew": {
     "title": "更新内容",
     "releaseNotes": "更新说明",
+    "supportLink": "支持项目",
     "multiAsk": {
       "title": "Multi-Ask 来了，多个重点一起问！",
       "description": "边读边记下疑问，让阅读思路不断线。准备好后一起追问，不必反复翻找原文、重新交代上下文。",
       "action": "查看用法"
+    },
+    "promptNavigation": {
+      "title": "一键跳到上一问或下一问",
+      "description": "点击聊天大纲旁的上下箭头，即可跳到上一条或下一条提问。",
+      "action": "了解更多"
     }
   },
   "onboarding": {

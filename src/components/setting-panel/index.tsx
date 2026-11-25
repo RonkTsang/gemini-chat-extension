@@ -5,7 +5,7 @@ import { useEvent, useEventEmitter } from "../../hooks/useEventBus"
 import { Sidebar } from "./Sidebar"
 import { ContentArea } from "./ContentArea"
 import { registerDefaultViews } from "./views"
-import { setActiveSection } from "../../stores/settingStore"
+import { navigateToView, setActiveSection } from "../../stores/settingStore"
 import type { AppEvents } from "@/common/event"
 
 registerDefaultViews()
@@ -19,7 +19,11 @@ export const SettingPanel = () => {
 
     // If data.module has a value, set settingPanel to the corresponding NavigationSection
     if (data.module) {
-      setActiveSection(data.module)
+      if (data.params) {
+        navigateToView(data.module, 'index', data.params)
+      } else {
+        setActiveSection(data.module)
+      }
     }
   })
 

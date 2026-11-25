@@ -2,7 +2,9 @@ import {
   applyTheme,
   getThemeBackgroundSettings,
   getThemeKey,
+  previewAppearance,
   resolveThemeBackgroundPreviewUrl,
+  setAppearanceMode,
   uploadThemeBackground,
   validateThemeBackgroundImage,
 } from '@/entrypoints/content/gemini-theme'
@@ -13,6 +15,7 @@ import {
   injectGeminiThemeOverride,
   removeGeminiThemeOverride,
 } from '@/entrypoints/content/gemini-theme/inject'
+import { eventBus } from '@/utils/eventbus'
 import {
   calculateThemeBloomPalette,
   type ThemeBloomPaletteResult,
@@ -41,6 +44,8 @@ interface ThemeBloomServiceDependencies {
   getThemeKey: typeof getThemeKey
   getBackgroundSettings: typeof getThemeBackgroundSettings
   applyTheme: typeof applyTheme
+  previewAppearance: typeof previewAppearance
+  setAppearanceMode: typeof setAppearanceMode
   uploadBackground: typeof uploadThemeBackground
   restoreBackground: () => Promise<void>
   applyBackgroundPreview: typeof applyThemeBackgroundStyle
@@ -104,6 +109,8 @@ function defaultDependencies(): ThemeBloomServiceDependencies {
     getThemeKey,
     getBackgroundSettings: getThemeBackgroundSettings,
     applyTheme,
+    previewAppearance,
+    setAppearanceMode,
     uploadBackground: uploadThemeBackground,
     restoreBackground: restoreThemeBloomBackground,
     applyBackgroundPreview: applyThemeBackgroundStyle,
@@ -151,6 +158,10 @@ export function createThemeBloomService(
       request.onPaletteResolved?.(palette)
 
       const previewUrl = dependencies.createObjectUrl(request.file)
+      const preview: {
+        backgroundAdopted: boolean
+        appearance: ReturnType<typeof previewAppearance>
+      } = { backgroundAdopted: false, appearance: null }
       let transition: ThemeBloomTransition | null = null
       const cancelTransition = () => transition?.cancel()
       request.signal?.addEventListener('abort', cancelTransition, { once: true })
@@ -170,6 +181,10 @@ export function createThemeBloomService(
         transition = dependencies.startTransition({
           origin: request.origin,
           apply: () => {
+            if (request.signal?.aborted) return
+            if (palette.appearance) {
+              preview.appearance = dependencies.previewAppearance(palette.appearance)
+            }
             dependencies.applyPresetPreview(palette.presetKey)
             dependencies.applyBackgroundPreview(previewState)
           },
@@ -187,16 +202,28 @@ export function createThemeBloomService(
         // persisted background without losing the old theme asset.
         await dependencies.applyTheme(palette.presetKey)
         throwIfAborted(request.signal)
-        await dependencies.uploadBackground(request.file, validation)
-        return palette
+        await dependencies.uploadBackground(request.file, validation, {
+          url: previewUrl,
+          onAdopted: () => {
+            preview.backgroundAdopted = true
+          },
+        })
+        if (!request.signal?.aborted && palette.appearance && preview.appearance?.isCurrent()) {
+          const appearance = dependencies.setAppearanceMode(palette.appearance)
+          preview.appearance = null
+          eventBus.emitSync('theme:appearance-changed', appearance)
+        }
       } catch (error) {
         transition?.cancel()
         await restorePreviousTheme(dependencies, previousThemeKey)
         throw error
       } finally {
         request.signal?.removeEventListener('abort', cancelTransition)
-        dependencies.revokeObjectUrl(previewUrl)
+        preview.appearance?.restore()
+        if (!preview.backgroundAdopted) dependencies.revokeObjectUrl(previewUrl)
       }
+
+      return palette
     },
   }
 }

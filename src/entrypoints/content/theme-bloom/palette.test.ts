@@ -61,6 +61,46 @@ describe('Theme Bloom palette', () => {
     ])
 
     expect(palette.presetKey).toBe('green')
+    expect(palette.appearance).toBeNull()
+  })
+
+  it.each([
+    { shade: 25, expected: 'dark' },
+    { shade: 245, expected: 'light' },
+    { shade: 125, expected: null },
+  ])('detects the appearance of an image dominated by shade $shade', ({ shade, expected }) => {
+    const palette = calculateThemeBloomPaletteFromPixels([
+      ...pixels({ red: shade, green: shade, blue: shade }, 80),
+      ...pixels({ red: 220, green: 38, blue: 38 }, 20),
+    ])
+
+    expect(palette.appearance).toBe(expected)
+    expect(palette.presetKey).toBe('red')
+  })
+
+  it('keeps the appearance for an image with strong light and dark areas', () => {
+    const palette = calculateThemeBloomPaletteFromPixels([
+      ...pixels({ red: 20, green: 20, blue: 20 }, 50),
+      ...pixels({ red: 240, green: 240, blue: 240 }, 50),
+    ])
+
+    expect(palette.appearance).toBeNull()
+  })
+
+  it.each([
+    { light: 42, dark: 13, expected: 'light' },
+    { light: 40, dark: 20, expected: 'light' },
+    { light: 39, dark: 13, expected: null },
+    { light: 42, dark: 21, expected: null },
+  ])('uses whole-image coverage with $light% light and $dark% dark', ({ light, dark, expected }) => {
+    const samples = [
+      ...pixels({ red: 240, green: 240, blue: 240 }, light),
+      ...pixels({ red: 20, green: 20, blue: 20 }, dark),
+      ...pixels({ red: 125, green: 125, blue: 125 }, 100 - light - dark),
+    ]
+
+    expect(calculateThemeBloomPaletteFromPixels(samples).appearance).toBe(expected)
+    expect(calculateThemeBloomPaletteFromPixels(samples.reverse()).appearance).toBe(expected)
   })
 
   it('uses registry order to break equal preset distances', () => {

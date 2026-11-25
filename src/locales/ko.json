@@ -3,6 +3,10 @@
   "attachmentLabel": "[첨부 파일]",
   "clickToPin": "클릭하여 고정",
   "unpin": "고정 해제",
+  "chatOutlinePreviousPrompt": "이전 프롬프트",
+  "chatOutlineNextPrompt": "다음 프롬프트",
+  "chatOutlineScrollToTop": "맨 위로 스크롤",
+  "chatOutlineScrollToBottom": "맨 아래로 스크롤",
   "askGemini": "Gemini에게 물어보기",
   "regardingThis": "특히 이 부분에 대하여",
   "enableQuickQuoteLabel": "빠른 인용 사용",
@@ -149,7 +153,11 @@
     "enhancements": {
       "chatOutline": {
         "title": "채팅 개요",
-        "description": "긴 대화를 쉽게 탐색할 수 있는 클릭 가능한 개요를 추가합니다."
+        "description": "긴 대화를 쉽게 탐색할 수 있는 클릭 가능한 개요를 추가합니다.",
+        "promptNavigation": {
+          "title": "프롬프트 이동 화살표 표시",
+          "description": "이전 또는 다음 프롬프트로 이동합니다."
+        }
       },
       "gemAvatar": {
         "title": "Gem 아바타",
@@ -544,7 +552,7 @@
     "feedback": {
       "title": "피드백",
       "featureRequest": "기능 요청",
-      "bugSupport": "버그 / 지원",
+      "bugSupport": "도움말 보기",
       "leaveReview": "리뷰 남기기"
     },
     "openSource": {
@@ -552,7 +560,7 @@
     },
     "donate": {
       "title": "프로젝트 지원",
-      "description": "$1가 시간을 절약하거나 기쁨을 주는 경우, 그 미래를 지원하는 것을 고려해 주세요",
+      "description": "후원해 주시면 $1을 유지하고 개선하는 데 큰 도움이 됩니다. 특히 Gemini 업데이트 후 호환성 문제를 수정하고 Chrome과 Firefox에서 테스트하는 데 도움이 됩니다.",
       "buyMeCoffee": "커피 사주기",
       "share": "친구와 공유"
     }
@@ -592,10 +600,16 @@
   "whatsnew": {
     "title": "새로운 기능",
     "releaseNotes": "릴리스 노트",
+    "supportLink": "프로젝트 지원",
     "multiAsk": {
       "title": "Gemini용 Multi-Ask 출시",
       "description": "질문을 기억해 두지 않아도 계속 읽을 수 있어요. 읽으며 모아 두었다가 알맞은 맥락과 함께 한 번에 물어보세요.",
       "action": "사용 가이드 보기"
+    },
+    "promptNavigation": {
+      "title": "이전 또는 다음 질문으로 이동",
+      "description": "채팅 개요 옆의 화살표를 눌러 이전 질문이나 다음 질문으로 이동하세요.",
+      "action": "자세히 보기"
     }
   },
   "onboarding": {

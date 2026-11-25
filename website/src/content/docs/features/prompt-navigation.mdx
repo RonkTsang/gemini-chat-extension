@@ -1,0 +1,83 @@
+---
+title: Gemini Prompt Navigation Arrows
+description: "Jump to the previous or next prompt in a long Gemini conversation using the Chat Outline arrows in Gemini Power Kit."
+head:
+  - tag: meta
+    attrs:
+      property: og:image
+      content: https://gpk.ronktsang.com/og/gemini-prompt-navigation.jpg
+  - tag: meta
+    attrs:
+      property: og:image:alt
+      content: Chat Outline and the up and down prompt navigation arrows in Gemini
+  - tag: meta
+    attrs:
+      name: twitter:image
+      content: https://gpk.ronktsang.com/og/gemini-prompt-navigation.jpg
+  - tag: meta
+    attrs:
+      name: twitter:image:alt
+      content: Chat Outline and the up and down prompt navigation arrows in Gemini
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: |
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "Gemini Prompt Navigation Arrows",
+        "description": "Jump to the previous or next prompt in a long Gemini conversation using the Chat Outline arrows in Gemini Power Kit.",
+        "url": "https://gpk.ronktsang.com/features/prompt-navigation/",
+        "image": "https://gpk.ronktsang.com/og/gemini-prompt-navigation.jpg",
+        "inLanguage": "en",
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "Gemini Power Kit",
+          "url": "https://gpk.ronktsang.com/"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "Gemini Power Kit",
+          "applicationCategory": "BrowserApplication"
+        }
+      }
+---
+
+Use the **↑** and **↓** buttons next to **Chat Outline** to move one prompt at a time through the current Google Gemini conversation. Each jump takes you to one of your messages, with Gemini’s reply directly below it.
+
+## Where to find the arrows
+
+[Install Gemini Power Kit](/guide/install/), then open a conversation in [Gemini](https://gemini.google.com). If Gemini was already open during installation, refresh the tab. Look for the arrows next to the stacked-lines icon in the upper-left corner of the conversation area. You can use them with the outline panel closed.
+
+<video
+  src="/videos/prompt-nav-button.mp4"
+  poster="/videos/prompt-nav-button-poster.jpg"
+  controls
+  playsinline
+  preload="none"
+  width="952"
+  height="720"
+  class="feature-image feature-image-full"
+  aria-label="Demo of the up and down prompt navigation arrows in Gemini"
+  aria-describedby="prompt-navigation-demo-caption"
+></video>
+
+<p id="prompt-navigation-demo-caption"><em>The demo shows the down arrow jumping to a later prompt and the up arrow returning to earlier prompts.</em></p>
+
+## What the up and down buttons do
+
+| Button | Between prompts | At the first or last prompt |
+| --- | --- | --- |
+| **↑ Previous prompt** | Jumps to the previous prompt. | **Scroll to top** takes you to the top of the conversation area. |
+| **↓ Next prompt** | Jumps to the next prompt. | **Scroll to bottom** takes you to the bottom of the conversation area. |
+
+The arrows work on prompts Gemini has loaded in the current chat. If an older prompt hasn’t loaded yet, scroll up to load more history and try again. In an empty chat, the arrows are hidden.
+
+## Turn prompt navigation arrows on or off
+
+Open Gemini Power Kit from the puzzle-piece entry in Gemini’s sidebar, then go to **Enhancements → Chat Outline**. The arrows are on by default when **Chat Outline** is enabled. If you see the **Show prompt navigation arrows** switch, you can use it to hide or show the buttons and keep using the outline list.
+
+## Related guides
+
+- [How to jump to the previous response in Gemini](/tips/jump-to-previous-gemini-response/)
+- [Find a specific prompt with Chat Outline](/tips/find-earlier-gemini-prompts/)
