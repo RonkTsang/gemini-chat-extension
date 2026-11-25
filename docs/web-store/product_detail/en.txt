@@ -1,50 +1,35 @@
-Work faster, automate smarter, and reclaim your time.
+Use Multi-Ask to collect questions about different passages and send them together. Customize your Gemini theme and use Chat Outline to jump to earlier prompts. To clean up, select the chats you want to delete in bulk.
 
-Gemini Power Kit turns your AI chat into a high-performance workspace. 
-Designed for those who demand more than just conversation, our toolkit eliminates repetitive manual work and provides the professional structure you need to stay focused.
+THEMES, WALLPAPERS & LAYOUT
+• Set your own wallpaper and matching colors by dropping an image onto the page outside the prompt box.
+• Widen the chat to give code and tables more room. Adjust the prompt box width separately or match it to the chat.
 
-KEY FEATURES
-⚡ SELECT & REPLY
-Keep reading Gemini replies without losing your questions or having to find the passages again.
-  ● Multi-Ask: Add questions to several selections and send them together with the original text.
-  ● Custom prompts: Reuse requests to summarize, explain, or translate.
+MULTI-ASK — COLLECT QUESTIONS AS YOU READ
+• Select passages as you read and write a separate question about each one.
+• Send the questions together with their original passages in one message, without copying and assembling the context yourself.
 
-🗂️ CHAT OUTLINE — KEEP LONG CHATS CLEAR
-Stop scrolling endlessly through long threads.
-  ● Instant Overview: See every prompt in your conversation at a glance.
-  ● Jump and Pin: Go directly to any part of the chat, or keep the outline visible for research sessions.
+CHAT OUTLINE
+Find your way through long conversations. See an outline of your prompts, jump to an earlier turn, or keep the outline pinned while you work.
 
-🗑️ BULK DELETE — CLEAN UP GEMINI CHATS WITHOUT TOUCHING PINNED ONES
-Clear temporary conversations in batches, while leaving the chats you pinned out of the cleanup.
-  ● Exclude pinned chats in one action: Turn on Exclude pinned to skip pinned conversations when selecting a recent batch—no need to manually remove them from the selection.
-  ● Delete the right-sized batch: Choose the 10, 20, 30, or 50 most recent chats, adjust individual selections if needed, then confirm and track deletion progress.
+BULK DELETE CHATS
+Select a batch of recent conversations, adjust the selection, and confirm deletion. Enable Exclude pinned to leave pinned chats out of the batch selection.
 
-🎨 VISUAL THEMES — PERSONALIZE YOUR GEMINI
-Transform your workspace and make Gemini truly yours.
-  ● Stunning Color Presets: Choose from a variety of vibrant themes to create a more personal environment.
-  ● Custom Wallpapers: Elevate your experience with personal backgrounds and elegant glass effects.
-  ● Chat layout: Adjust Chat Width and Input Width in Default, % or px; sync them, choose message alignment, and allow full-width messages.
+PROMPT CHAINS
+Save repeatable multi-step tasks as reusable prompt chains. Use variables for different inputs, arrange steps in a drag-and-drop editor, and track progress as the chain runs.
 
-🎭 GEM AVATARS — PERSONALIZE YOUR GEMS
-Give each Gemini Gem a custom avatar, so it is instantly recognizable in lists and chats.
+REPLY NOTIFICATIONS
+Enable desktop notifications to know when a reply, generated image or video, or Deep Research report is ready. Click a notification to return to its conversation.
 
-🔔 REPLY NOTIFICATIONS — KNOW WHEN GEMINI IS READY
-Let Gemini work in the background without constantly checking the tab.
-  ● Ready Alerts: Get a desktop notification when a standard reply, image, video, or Deep Research report is ready.
-  ● One-Click Return and Sound: Open the originating Gemini chat from the notification, with an optional built-in or custom audio cue.
+MORE EVERYDAY TOOLS
+• Give individual Gems custom avatars.
+• Match browser tab titles to conversation titles.
+• Open Library media in a new tab while keeping your place in the gallery.
 
-🔗 CHAIN PROMPT — AUTOMATE MULTI-STEP WORK
-Turn multi-step tasks into one-click automations.
-  ● Reusable Sequences: Execute prompt sequences with dynamic variables.
-  ● Visual Control: Manage chains in a drag-and-drop editor and track progress step by step.
+PRIVACY
+Gemini Power Kit processes its extension features in your browser and does not send your conversations to developer-controlled servers. Requests you submit to Gemini are handled by Google's services. Some preferences may sync through your browser account according to your browser settings.
 
-💎 SEAMLESS EXPERIENCE
-● Smart Tab Titles: Automatically renames browser tabs to match your chat titles, making it effortless to switch between multiple Gemini sessions.
-● Open Media in New Tab: From the Library gallery, open any item in a new tab and keep your place—review results without losing your scroll position.
+Privacy policy:
+https://github.com/RonkTsang/gemini-chat-extension/blob/main/PRIVACY_POLICY.md
 
-PRIVACY FIRST
-🔒 All processing happens locally on your machine. Your data never leaves your device.
-
-PERFORMANCE
-- Lightweight & Clean: Minimalist design that integrates seamlessly with the native UI.
-- Beautifully supports both Light and Dark modes.
+Guides and support:
+https://gpk.ronktsang.com/support/

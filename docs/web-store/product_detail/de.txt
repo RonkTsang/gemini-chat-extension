@@ -1,50 +1,35 @@
-Schneller arbeiten, smarter automatisieren und mehr Zeit zurückgewinnen.
+Sammeln Sie mit Multi-Ask Fragen zu verschiedenen Textstellen und senden Sie sie zusammen mit den Originalpassagen. Passen Sie das Gemini-Design an und springen Sie über die Chat-Gliederung zu früheren Prompts. Zum Aufräumen wählen Sie die Chats aus, die Sie gesammelt löschen möchten.
 
-Gemini Power Kit verwandelt deinen KI-Chat in einen leistungsstarken Arbeitsbereich.
-Entwickelt für Nutzer, die mehr als nur Unterhaltung erwarten: Dieses Toolkit reduziert wiederholte manuelle Arbeit und gibt dir die Struktur, die du brauchst, um fokussiert zu bleiben.
+DESIGNS, HINTERGRÜNDE & LAYOUT
+• Legen Sie ein eigenes Hintergrundbild und passende Farben fest, indem Sie ein Bild außerhalb des Promptfelds auf die Seite ziehen.
+• Verbreitern Sie den Chat für mehr Platz für Code und Tabellen. Passen Sie die Breite des Promptfelds separat an oder koppeln Sie sie an den Chat.
 
-HAUPTFUNKTIONEN
-⚡ SELECT & REPLY
-Lies Gemini-Antworten weiter, ohne Fragen zu vergessen oder Textstellen erneut zu suchen.
-  ● Multi-Ask: Stelle Fragen zu mehreren Textstellen und sende sie mit dem Originaltext zusammen.
-  ● Eigene Prompts: Wiederverwende Anfragen zum Zusammenfassen, Erklären oder Übersetzen.
+MULTI-ASK — FRAGEN BEIM LESEN SAMMELN
+• Markieren Sie beim Lesen Textstellen und schreiben Sie zu jeder eine eigene Frage.
+• Senden Sie die Fragen zusammen mit den ursprünglichen Textstellen in einer Nachricht, ohne den Kontext selbst kopieren und zusammensetzen zu müssen.
 
-🗂️ CHAT OUTLINE — NIE WIEDER DEN ÜBERBLICK VERLIEREN
-Sieh jeden Prompt, spring an jede Stelle und halte die Gliederung für Recherchen angeheftet.
-  ● Überblick über alle Prompts: Behalte die gesamte Unterhaltung sofort im Blick.
-  ● Direkt springen und anheften: Wechsle zu jeder Stelle im Chat und pinne die Gliederung für Recherche.
+CHAT-GLIEDERUNG
+Behalten Sie in langen Unterhaltungen den Überblick. Sehen Sie eine Gliederung Ihrer Prompts, springen Sie zu einem früheren Beitrag oder heften Sie die Gliederung während der Arbeit an.
 
-🗑️ BULK DELETE — GEMINI-CHATS AUFRÄUMEN, OHNE ANGEHEFTETE ZU BERÜHREN
-Räume temporäre Unterhaltungen in Stapeln auf und lasse angeheftete Chats außen vor.
-  ● Angeheftete Chats mit einem Schalter ausschließen: Aktiviere „Angeheftete ausschließen“, um sie bei der Auswahl eines aktuellen Stapels zu überspringen.
-  ● Die passende Menge löschen: Wähle die 10, 20, 30 oder 50 neuesten Chats, passe die Auswahl bei Bedarf einzeln an und verfolge danach den Löschfortschritt.
+CHATS GESAMMELT LÖSCHEN
+Wählen Sie mehrere aktuelle Unterhaltungen aus, passen Sie die Auswahl an und bestätigen Sie das Löschen. Aktivieren Sie „Angeheftete ausschließen“, damit angeheftete Chats bei der Auswahl übersprungen werden.
 
-🎨 VISUELLE THEMEN — PERSONALISIERE DEIN GEMINI
-Verwandle deinen Arbeitsbereich und mache Gemini wirklich zu deinem.
-  ● Farbvorlagen: Wähle aus verschiedenen lebendigen Themes für eine persönlichere Umgebung.
-  ● Eigene Hintergrundbilder: Werte dein Erlebnis mit persönlichen Hintergründen und eleganten Glaseffekten auf.
-  ● Chat-Layout: Passe Chat Width und Input Width in Default, % oder px an, synchronisiere sie, wähle die Ausrichtung der Nachrichten und erlaube Nachrichten über die volle Breite.
+PROMPT-KETTEN
+Speichern Sie wiederholbare Aufgaben mit mehreren Schritten als Prompt-Ketten. Nutzen Sie Variablen für unterschiedliche Eingaben, ordnen Sie Schritte im Drag-and-drop-Editor und verfolgen Sie den Fortschritt.
 
-🎭 GEM-AVATARE
-Avatare machen deine Gems erkennbar.
+ANTWORTBENACHRICHTIGUNGEN
+Aktivieren Sie Desktop-Benachrichtigungen, wenn eine Antwort, ein generiertes Bild oder Video oder ein Deep-Research-Bericht bereit ist. Klicken Sie auf eine Benachrichtigung, um zum Chat zurückzukehren.
 
-🔔 ANTWORT-BENACHRICHTIGUNGEN — SICHER WEGGEHEN
-Desktop-Benachrichtigungen halten dich auf dem Laufenden, ohne dass du den Chat offen lassen musst.
-  ● Fertige Inhalte sofort sehen: Erhalte Desktop-Alerts, wenn Antworten, Bilder, Videos oder Deep-Research-Berichte bereit sind.
-  ● Zurück per Klick mit Ton: Öffne den ursprünglichen Chat direkt und nutze optional integrierten oder eigenen Sound.
+WEITERE ALLTAGSFUNKTIONEN
+• Vergeben Sie individuelle Avatare für einzelne Gems.
+• Lassen Sie Browser-Titelleisten die Titel Ihrer Unterhaltungen anzeigen.
+• Öffnen Sie Medien aus der Library in einem neuen Tab und behalten Sie Ihren Platz in der Galerie.
 
-🔗 CHAIN PROMPT — KOMPLEXE WORKFLOWS AUTOMATISIEREN
-Wiederverwendbare Prompt-Sequenzen mit Variablen und einem visuellen Editor für klare Abläufe.
-  ● Flexible Sequenzen: Nutze dynamische Variablen in wiederverwendbaren Prompt-Reihen.
-  ● Fortschritt Schritt für Schritt: Ziehe Abläufe per Drag-and-drop auf und verfolge jeden Schritt.
+DATENSCHUTZ
+Gemini Power Kit verarbeitet seine Erweiterungsfunktionen in Ihrem Browser und sendet Ihre Unterhaltungen nicht an vom Entwickler kontrollierte Server. An Gemini gesendete Anfragen werden von Google-Diensten verarbeitet. Einige Einstellungen können je nach Browsereinstellungen über Ihr Browserkonto synchronisiert werden.
 
-💎 NAHTLOSE ERFAHRUNG
-● Smarte Tab-Titel: Benennt Browser-Tabs automatisch passend zu deinen Chat-Titeln um, damit du leicht zwischen mehreren Gemini-Sitzungen wechseln kannst.
-● Medien in neuem Tab öffnen: Öffne in der Library-Galerie jedes Element in einem neuen Tab und behalte deine Position, damit du Ergebnisse ansehen kannst, ohne die Scrollposition zu verlieren.
+Datenschutzerklärung:
+https://github.com/RonkTsang/gemini-chat-extension/blob/main/PRIVACY_POLICY.md
 
-DATENSCHUTZ ZUERST
-🔒 Die gesamte Verarbeitung findet lokal auf deinem Gerat statt. Deine Daten verlassen dein Gerat nicht.
-
-LEISTUNG
-- Leichtgewichtig und sauber: Minimalistisches Design, das sich nahtlos in die native Oberfläche einfügt.
-- Unterstützt sowohl den hellen als auch den dunklen Modus.
+Anleitungen und Support:
+https://gpk.ronktsang.com/support/

@@ -1,50 +1,35 @@
-Travaillez plus vite, automatisez mieux et récupérez votre temps.
+Avec Multi-Ask, regroupez les questions sur différents passages et envoyez-les avec le texte d’origine. Personnalisez le thème Gemini et retrouvez d’anciens prompts avec le plan du chat. Pour faire le ménage, sélectionnez les chats à supprimer par lot.
 
-Gemini Power Kit transforme votre chat IA en espace de travail haute performance.
-Conçu pour celles et ceux qui attendent plus qu'une simple conversation, cet ensemble d'outils élimine les manipulations répétitives et apporte la structure professionnelle nécessaire pour rester concentré.
+THÈMES, FONDS D’ÉCRAN ET MISE EN PAGE
+• Définissez un fond d’écran et des couleurs assorties en déposant une image sur la page, en dehors de la zone de prompt.
+• Élargissez le chat pour donner plus de place au code et aux tableaux. Réglez séparément la largeur de la zone de prompt ou synchronisez-la avec celle du chat.
 
-FONCTIONNALITÉS CLÉS
-⚡ SELECT & REPLY
-Continuez à lire sans oublier vos questions ni devoir retrouver les passages.
-  ● Multi-Ask : Ajoutez une question à chaque passage, puis envoyez-les ensemble avec le texte cité.
-  ● Prompts personnalisés : Réutilisez vos demandes pour résumer, expliquer ou traduire.
+MULTI-ASK — REGROUPEZ VOS QUESTIONS EN LISANT
+• Sélectionnez des passages pendant la lecture et rédigez une question distincte pour chacun.
+• Envoyez les questions avec leurs passages d’origine dans un seul message, sans copier ni rassembler le contexte vous-même.
 
-🗂️ CHAT OUTLINE — NE VOUS PERDEZ PLUS
-Voyez chaque prompt, allez partout et épinglez le plan pour la recherche.
-  ● Vue d'ensemble des prompts : Gardez toute la conversation immédiatement visible.
-  ● Aller partout et épingler : Accédez à n'importe quelle partie du chat et épinglez le plan pour la recherche.
+PLAN DU CHAT
+Repérez-vous dans les longues conversations. Consultez le plan de vos prompts, revenez à un échange précédent ou gardez le plan épinglé pendant votre travail.
 
-🗑️ BULK DELETE — CHATS GEMINI PAR LOTS
-Supprimez les chats par lots, épinglés exclus.
-  ● Exclure les épinglés : Activez « Exclure les épinglés » pour sauter les chats épinglés lors du choix d’un lot récent.
-  ● Bon lot : Choisissez 10, 20, 30 ou 50 chats récents, ajustez si besoin, puis confirmez et suivez la progression.
+SUPPRESSION GROUPÉE DES CHATS
+Sélectionnez plusieurs conversations récentes, ajustez la sélection et confirmez la suppression. Activez « Exclure les chats épinglés » pour les ignorer lors de la sélection.
 
-🎨 THÈMES VISUELS — PERSONNALISEZ VOTRE GEMINI
-Transformez votre espace de travail et faites de Gemini un environnement vraiment personnel.
-  ● Superbes presets de couleur : Choisissez parmi plusieurs thèmes dynamiques pour créer un espace plus personnel.
-  ● Fonds d'écran personnalisés : Améliorez l'expérience avec vos propres images et d'élégants effets de verre.
-  ● Mise en page du chat : Réglez Chat Width et Input Width en Default, %, ou px; synchronisez-les, choisissez l'alignement des messages et autorisez les messages pleine largeur.
+CHAÎNES DE PROMPTS
+Enregistrez les tâches répétitives en plusieurs étapes sous forme de chaînes réutilisables. Utilisez des variables pour différentes entrées, organisez les étapes dans un éditeur glisser-déposer et suivez leur progression.
 
-🎭 AVATARS DE GEM — PERSONNALISEZ VOS GEMS
-Attribuez un avatar unique à chaque Gemini Gem pour le repérer d’un coup d’œil dans les listes et les chats.
+NOTIFICATIONS DE RÉPONSE
+Activez les notifications de bureau pour savoir quand une réponse, une image ou une vidéo générée, ou un rapport Deep Research est prêt. Cliquez sur une notification pour revenir à la conversation.
 
-🔔 NOTIFICATIONS DE RÉPONSE — ÉLOIGNEZ-VOUS SEREINEMENT
-Recevez des notifications de bureau sans garder l'onglet sous les yeux.
-  ● Prêt à l'emploi : Une alerte arrive quand une réponse, une image, une vidéo ou un rapport Deep Research est prêt.
-  ● Retour et son : Rouvrez le chat d'origine en un clic, avec son intégré ou personnalisé en option.
+AUTRES OUTILS DU QUOTIDIEN
+• Attribuez des avatars personnalisés à chaque Gem.
+• Faites correspondre les titres des onglets du navigateur aux titres des conversations.
+• Ouvrez les médias de Library dans un nouvel onglet sans perdre votre place dans la galerie.
 
-🔗 CHAIN PROMPT — AUTOMATISEZ LES FLUX COMPLEXES
-Séquences de prompts réutilisables avec variables et éditeur visuel pour avancer étape par étape.
-  ● Séquences souples : Créez des chaînes réutilisables avec des variables dynamiques.
-  ● Édition et suivi : Glissez-déposez vos étapes et suivez la progression pas à pas.
+CONFIDENTIALITÉ
+Gemini Power Kit traite les fonctions de l’extension dans votre navigateur et n’envoie pas vos conversations à des serveurs contrôlés par le développeur. Les requêtes que vous envoyez à Gemini sont traitées par les services de Google. Certaines préférences peuvent être synchronisées via votre compte de navigateur selon ses paramètres.
 
-💎 EXPERIENCE FLUIDE
-● Titres d'onglets intelligents : Renomme automatiquement les onglets du navigateur selon les titres de vos chats, pour passer facilement d'une session Gemini à l'autre.
-● Ouvrir les médias dans un nouvel onglet : Depuis la galerie Library, ouvrez n'importe quel élément dans un nouvel onglet et conservez votre position pour consulter les résultats sans perdre le fil.
+Politique de confidentialité :
+https://github.com/RonkTsang/gemini-chat-extension/blob/main/PRIVACY_POLICY.md
 
-CONFIDENTIALITÉ D'ABORD
-🔒 Tout le traitement s'effectue localement sur votre machine. Vos données ne quittent jamais votre appareil.
-
-PERFORMANCES
-- Léger et propre : Design minimaliste qui s'intègre naturellement à l'interface native.
-- Prend parfaitement en charge les modes clair et sombre.
+Guides et assistance :
+https://gpk.ronktsang.com/support/

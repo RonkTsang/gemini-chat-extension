@@ -1,50 +1,35 @@
-Trabaja más rápido, automatiza mejor y recupera tu tiempo.
+Con Multi-Ask, reúne preguntas sobre distintos fragmentos y envíalas juntas con el texto original. Personaliza el tema de Gemini y vuelve a consultas anteriores con el esquema del chat. Para limpiar, selecciona los chats que quieras eliminar en lote.
 
-Gemini Power Kit convierte tu chat con IA en un espacio de trabajo de alto rendimiento.
-Diseñado para quienes necesitan más que una simple conversación, este kit elimina tareas manuales repetitivas y aporta la estructura profesional que necesitas para mantenerte enfocado.
+TEMAS, FONDOS Y DISEÑO
+• Elige un fondo y colores a juego: arrastra una imagen a la página, fuera del cuadro de consulta.
+• Amplía el chat para dar más espacio al código y las tablas. Ajusta el ancho del cuadro de consulta por separado o haz que coincida con el chat.
 
-FUNCIONES PRINCIPALES
-⚡ SELECT & REPLY
-Sigue leyendo respuestas de Gemini sin olvidar tus preguntas ni volver a buscar cada fragmento.
-  ● Multi-Ask: Añade preguntas a varios fragmentos y envíalas juntas con el texto original.
-  ● Prompts personalizados: Reutiliza instrucciones para resumir, explicar o traducir.
+MULTI-ASK — REÚNE PREGUNTAS MIENTRAS LEES
+• Selecciona fragmentos mientras lees y escribe una pregunta independiente para cada uno.
+• Envía todas las preguntas junto con sus fragmentos originales en un solo mensaje, sin copiar ni reunir el contexto manualmente.
 
-🗂️ CHAT OUTLINE — NO VUELVAS A PERDERTE
-Ve cada prompt, salta a cualquier punto y fija el índice para investigar.
-  ● Vista de todos los prompts: Ten toda la conversación clara de un vistazo.
-  ● Salta y fija: Ve a cualquier parte del chat y fija el índice para investigación.
+ESQUEMA DEL CHAT
+Oriéntate en conversaciones largas. Consulta un esquema de tus consultas, vuelve a un turno anterior o deja el esquema fijado mientras trabajas.
 
-🗑️ BULK DELETE — LIMPIA CHATS DE GEMINI SIN TOCAR LOS FIJADOS
-Borra conversaciones temporales por lotes y deja fuera de la limpieza los chats fijados.
-  ● Excluye los chats fijados con una sola acción: Activa “Excluir fijados” para omitir las conversaciones fijadas al seleccionar un lote reciente, sin tener que quitarlas a mano.
-  ● Borra el lote justo: Elige los 10, 20, 30 o 50 chats más recientes, ajusta selecciones individuales si hace falta y luego confirma y sigue el progreso del borrado.
+ELIMINAR CHATS EN LOTE
+Selecciona varias conversaciones recientes, ajusta la selección y confirma la eliminación. Activa «Excluir fijados» para omitir los chats fijados al seleccionar.
 
-🎨 TEMAS VISUALES — PERSONALIZA TU GEMINI
-Transforma tu espacio de trabajo y haz que Gemini sea realmente tuyo.
-  ● Preajustes de color atractivos: Elige entre varios temas vivos para crear un entorno más personal.
-  ● Fondos personalizados: Mejora la experiencia con fondos propios y elegantes efectos de cristal.
-  ● Diseño del chat: Ajusta Chat Width e Input Width en Default, %, o px; sincronízalos, elige la alineación de los mensajes y permite mensajes a ancho completo.
+CADENAS DE PROMPTS
+Guarda tareas repetibles de varios pasos como cadenas reutilizables. Usa variables para distintas entradas, organiza los pasos con el editor de arrastrar y soltar y sigue el progreso.
 
-🎭 AVATARES DE GEM — PERSONALIZA TUS GEMS
-Asigna a cada Gemini Gem un avatar propio para identificarlo al instante en listas y chats.
+NOTIFICACIONES DE RESPUESTA
+Activa las notificaciones de escritorio cuando esté lista una respuesta, una imagen o un vídeo generado, o un informe de Deep Research. Haz clic en una notificación para volver a la conversación.
 
-🔔 NOTIFICACIONES DE RESPUESTA — ALÉJATE CON CONFIANZA
-Recibe avisos de escritorio sin tener que vigilar el chat todo el tiempo.
-  ● Avisos cuando está listo: Llega una notificación al terminar respuestas, imágenes, videos o informes de Deep Research.
-  ● Vuelve y escucha: Abre el chat original con un clic y usa sonido integrado o personalizado si quieres.
+MÁS HERRAMIENTAS PARA EL DÍA A DÍA
+• Asigna avatares personalizados a cada Gem.
+• Haz que los títulos de las pestañas del navegador coincidan con los de las conversaciones.
+• Abre contenido multimedia de Library en una pestaña nueva sin perder tu posición en la galería.
 
-🔗 CHAIN PROMPT — AUTOMATIZA FLUJOS COMPLEJOS
-Secuencias reutilizables de prompts con variables y un editor visual para trabajar por pasos.
-  ● Secuencias flexibles: Crea flujos reutilizables con variables dinámicas.
-  ● Editor y progreso: Arrastra y suelta, y sigue cada paso del progreso.
+PRIVACIDAD
+Gemini Power Kit procesa las funciones de la extensión en tu navegador y no envía tus conversaciones a servidores controlados por el desarrollador. Las solicitudes que envías a Gemini son gestionadas por los servicios de Google. Algunas preferencias pueden sincronizarse mediante tu cuenta del navegador, según su configuración.
 
-💎 EXPERIENCIA FLUIDA
-● Títulos inteligentes de pestañas: Cambia automáticamente el nombre de las pestañas para que coincidan con los títulos de tus chats, facilitando alternar entre varias sesiones de Gemini.
-● Abrir medios en una pestaña nueva: Desde la galería Library, abre cualquier elemento en una pestaña nueva y conserva tu posición para revisar resultados sin perder el desplazamiento.
+Política de privacidad:
+https://github.com/RonkTsang/gemini-chat-extension/blob/main/PRIVACY_POLICY.md
 
-PRIVACIDAD PRIMERO
-🔒 Todo el procesamiento ocurre localmente en tu equipo. Tus datos nunca salen de tu dispositivo.
-
-RENDIMIENTO
-- Ligero y limpio: Diseño minimalista que se integra sin esfuerzo con la interfaz nativa.
-- Compatible con los modos claro y oscuro.
+Guías y ayuda:
+https://gpk.ronktsang.com/support/

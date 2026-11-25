@@ -1,4 +1,5 @@
 {
+  "storeSummary": "用 Multi-Ask 一次詢問多段內容。自訂主題，透過聊天大綱找回提示詞。需要整理時，可批次刪除選取的聊天。",
   "emptyTocMessage": "對話開始後，目錄將記錄在此處。",
   "attachmentLabel": "[附件]",
   "clickToPin": "點擊固定",

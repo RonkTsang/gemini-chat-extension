@@ -1,6 +1,6 @@
 {
   "name": "gemini-extension",
-  "description": "Supercharge Gemini with Chat Outline, Quick Follow-up & Prompt Chaining. The ultimate power kit for productivity.",
+  "description": "Ask about several passages with Multi-Ask. Customize themes and revisit prompts with Chat Outline. Delete selected chats in bulk.",
   "private": true,
   "version": "0.15.0",
   "author": "RonkTsang",
